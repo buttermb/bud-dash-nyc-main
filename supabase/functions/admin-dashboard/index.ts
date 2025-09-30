@@ -64,6 +64,8 @@ serve(async (req) => {
 
     const url = new URL(req.url);
     const endpoint = url.searchParams.get("endpoint");
+    
+    console.log("Admin dashboard request:", { endpoint, adminUser: adminUser.email });
 
     // ==================== DASHBOARD OVERVIEW ====================
     if (endpoint === "overview") {
@@ -269,6 +271,102 @@ serve(async (req) => {
           todayVerifications: todayVerifications || 0,
           failedVerifications: failedVerifications || 0,
           flaggedOrders: flaggedOrders || 0,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ==================== REALTIME STATS ====================
+    if (endpoint === "realtime-stats") {
+      const now = new Date();
+      const hourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      
+      const [
+        { count: ordersLastHour },
+        { data: revenueData },
+        { count: activeCouriers },
+      ] = await Promise.all([
+        supabase.from("orders").select("*", { count: "exact", head: true }).gte("created_at", hourAgo.toISOString()),
+        supabase.from("orders").select("total_amount").gte("created_at", hourAgo.toISOString()).neq("status", "cancelled"),
+        supabase.from("couriers").select("*", { count: "exact", head: true }).eq("is_online", true),
+      ]);
+
+      const revenueLastHour = revenueData?.reduce((sum, order) => sum + parseFloat(order.total_amount), 0) || 0;
+
+      // Calculate average delivery time
+      const { data: recentDeliveries } = await supabase
+        .from("deliveries")
+        .select("estimated_pickup_time, actual_dropoff_time")
+        .not("actual_dropoff_time", "is", null)
+        .gte("actual_dropoff_time", hourAgo.toISOString());
+
+      let avgDeliveryTime = 0;
+      if (recentDeliveries && recentDeliveries.length > 0) {
+        const totalMinutes = recentDeliveries.reduce((sum, del) => {
+          if (del.estimated_pickup_time && del.actual_dropoff_time) {
+            const diff = new Date(del.actual_dropoff_time).getTime() - new Date(del.estimated_pickup_time).getTime();
+            return sum + (diff / 1000 / 60);
+          }
+          return sum;
+        }, 0);
+        avgDeliveryTime = Math.round(totalMinutes / recentDeliveries.length);
+      }
+
+      return new Response(
+        JSON.stringify({
+          ordersLastHour: ordersLastHour || 0,
+          revenueLastHour,
+          activeCouriers: activeCouriers || 0,
+          avgDeliveryTime,
+          activeUsers: 0, // Would need Redis or session tracking
+          timestamp: now,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ==================== HEATMAP DATA ====================
+    if (endpoint === "heatmap") {
+      const days = parseInt(url.searchParams.get("days") || "30");
+      const type = url.searchParams.get("type") || "orders";
+      
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      
+      let heatmapData: Array<{ lat: number; lng: number; intensity: number }> = [];
+      
+      if (type === "orders") {
+        const { data: orders } = await supabase
+          .from("orders")
+          .select(`
+            total_amount,
+            address:addresses (lat, lng)
+          `)
+          .gte("created_at", startDate.toISOString())
+          .eq("status", "delivered");
+
+        heatmapData = orders?.filter(o => o.address).map(order => ({
+          lat: parseFloat(order.address.lat),
+          lng: parseFloat(order.address.lng),
+          intensity: parseFloat(order.total_amount),
+        })) || [];
+      } else if (type === "users") {
+        const { data: addresses } = await supabase
+          .from("addresses")
+          .select("lat, lng, user_id")
+          .eq("is_default", true);
+
+        heatmapData = addresses?.map(addr => ({
+          lat: parseFloat(addr.lat),
+          lng: parseFloat(addr.lng),
+          intensity: 1,
+        })) || [];
+      }
+      
+      return new Response(
+        JSON.stringify({
+          heatmapData,
+          count: heatmapData.length,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );

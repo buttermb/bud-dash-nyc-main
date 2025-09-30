@@ -3,24 +3,45 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/contexts/AdminContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Truck, Package, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { MapPin, Truck, Package, Clock, DollarSign, Users, Navigation } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 mapboxgl.accessToken = "pk.eyJ1IjoiYnV1dGVybWIiLCJhIjoiY21nNzNrd3U3MGlyNjJqcTNlMnhsenFwbCJ9.Ss9KyWJkDeSvZilooUFZgA";
 
+interface RealtimeStats {
+  ordersLastHour: number;
+  revenueLastHour: number;
+  activeCouriers: number;
+  avgDeliveryTime: number;
+  activeUsers: number;
+}
+
 const AdminLiveMap = () => {
   const { session } = useAdmin();
   const [deliveries, setDeliveries] = useState<any[]>([]);
+  const [stats, setStats] = useState<RealtimeStats | null>(null);
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const [heatmapData, setHeatmapData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
+  const heatmapSourceAdded = useRef(false);
 
   useEffect(() => {
     if (session) {
       fetchLiveDeliveries();
+      fetchRealtimeStats();
+      
+      // Refresh data every 10 seconds
+      const interval = setInterval(() => {
+        fetchLiveDeliveries();
+        fetchRealtimeStats();
+      }, 10000);
       
       // Set up real-time subscription
       const channel = supabase
@@ -39,6 +60,7 @@ const AdminLiveMap = () => {
         .subscribe();
 
       return () => {
+        clearInterval(interval);
         supabase.removeChannel(channel);
       };
     }
@@ -101,14 +123,71 @@ const AdminLiveMap = () => {
     }
   }, [deliveries]);
 
-  const fetchLiveDeliveries = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke("admin-dashboard", {
-        body: { endpoint: "live-deliveries" },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+  // Add heatmap layer when enabled
+  useEffect(() => {
+    if (!map.current || !heatmapData) return;
+
+    const mapInstance = map.current;
+
+    if (showHeatmap && !heatmapSourceAdded.current) {
+      mapInstance.addSource('heatmap-source', {
+        type: 'geojson',
+        data: heatmapData
       });
 
-      if (error) throw error;
+      mapInstance.addLayer({
+        id: 'heatmap-layer',
+        type: 'heatmap',
+        source: 'heatmap-source',
+        paint: {
+          'heatmap-weight': ['get', 'intensity'],
+          'heatmap-intensity': 0.5,
+          'heatmap-color': [
+            'interpolate',
+            ['linear'],
+            ['heatmap-density'],
+            0, 'rgba(33,102,172,0)',
+            0.2, 'rgb(103,169,207)',
+            0.4, 'rgb(209,229,240)',
+            0.6, 'rgb(253,219,199)',
+            0.8, 'rgb(239,138,98)',
+            1, 'rgb(178,24,43)'
+          ],
+          'heatmap-radius': 30,
+          'heatmap-opacity': 0.7
+        }
+      });
+
+      heatmapSourceAdded.current = true;
+    } else if (!showHeatmap && heatmapSourceAdded.current) {
+      if (mapInstance.getLayer('heatmap-layer')) {
+        mapInstance.removeLayer('heatmap-layer');
+      }
+      if (mapInstance.getSource('heatmap-source')) {
+        mapInstance.removeSource('heatmap-source');
+      }
+      heatmapSourceAdded.current = false;
+    }
+  }, [showHeatmap, heatmapData]);
+
+  const fetchLiveDeliveries = async () => {
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/admin-dashboard?endpoint=live-deliveries`,
+        {
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       setDeliveries(data.deliveries || []);
     } catch (error) {
       console.error("Failed to fetch live deliveries:", error);
@@ -116,6 +195,70 @@ const AdminLiveMap = () => {
       setLoading(false);
     }
   };
+
+  const fetchRealtimeStats = async () => {
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/admin-dashboard?endpoint=realtime-stats`,
+        {
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch realtime stats:", error);
+    }
+  };
+
+  const fetchHeatmapData = async () => {
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/admin-dashboard?endpoint=heatmap&days=7&type=orders`,
+        {
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Convert to GeoJSON for Mapbox
+        const geojson = {
+          type: 'FeatureCollection',
+          features: data.heatmapData.map((point: any) => ({
+            type: 'Feature',
+            properties: { intensity: point.intensity },
+            geometry: {
+              type: 'Point',
+              coordinates: [point.lng, point.lat]
+            }
+          }))
+        };
+        
+        setHeatmapData(geojson);
+      }
+    } catch (error) {
+      console.error("Failed to fetch heatmap:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (showHeatmap && !heatmapData) {
+      fetchHeatmapData();
+    }
+  }, [showHeatmap]);
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -139,12 +282,91 @@ const AdminLiveMap = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Live Delivery Map</h1>
-        <p className="text-muted-foreground">
-          Real-time tracking of active deliveries ({deliveries.length} active)
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Live Delivery Map</h1>
+          <p className="text-muted-foreground">
+            Real-time tracking of active deliveries ({deliveries.length} active)
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={showHeatmap}
+              onCheckedChange={setShowHeatmap}
+              id="heatmap-toggle"
+            />
+            <label htmlFor="heatmap-toggle" className="text-sm font-medium">
+              Show Heatmap
+            </label>
+          </div>
+        </div>
       </div>
+
+      {/* Real-time Stats Bar */}
+      {stats && (
+        <div className="grid gap-4 md:grid-cols-5">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Orders (1h)</p>
+                  <p className="text-2xl font-bold">{stats.ordersLastHour}</p>
+                </div>
+                <Clock className="h-8 w-8 text-blue-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Revenue (1h)</p>
+                  <p className="text-2xl font-bold">${stats.revenueLastHour.toFixed(2)}</p>
+                </div>
+                <DollarSign className="h-8 w-8 text-green-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Active Users</p>
+                  <p className="text-2xl font-bold">{stats.activeUsers}</p>
+                </div>
+                <Users className="h-8 w-8 text-purple-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Active Couriers</p>
+                  <p className="text-2xl font-bold">{stats.activeCouriers}</p>
+                </div>
+                <Truck className="h-8 w-8 text-orange-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Avg Delivery</p>
+                  <p className="text-2xl font-bold">{stats.avgDeliveryTime}m</p>
+                </div>
+                <Navigation className="h-8 w-8 text-indigo-500" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {deliveries.length === 0 ? (
