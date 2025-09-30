@@ -1,0 +1,278 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import { ArrowLeft, Bitcoin, DollarSign } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+const Checkout = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+  const [step, setStep] = useState(1);
+  const [address, setAddress] = useState("");
+  const [borough, setBorough] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate("/");
+        toast.error("Please sign in to checkout");
+      }
+      setUser(session?.user ?? null);
+    });
+  }, [navigate]);
+
+  const { data: cartItems = [] } = useQuery({
+    queryKey: ["cart", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("cart_items")
+        .select("*, products(*)")
+        .eq("user_id", user.id);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + (item.products?.price || 0) * item.quantity,
+    0
+  );
+
+  const calculateDeliveryFee = () => {
+    if (!borough) return 0;
+    let fee = 5; // Base fee
+    if (borough === "manhattan") {
+      fee += 5; // Manhattan surcharge
+    }
+    return fee;
+  };
+
+  const deliveryFee = calculateDeliveryFee();
+  const total = subtotal + deliveryFee;
+
+  const handlePlaceOrder = async () => {
+    if (!address || !borough) {
+      toast.error("Please enter a delivery address");
+      return;
+    }
+
+    try {
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          user_id: user.id,
+          delivery_address: address,
+          delivery_borough: borough,
+          payment_method: paymentMethod,
+          delivery_fee: deliveryFee,
+          subtotal: subtotal,
+          total_amount: total,
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Insert order items
+      const orderItems = cartItems.map((item) => ({
+        order_id: order.id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        price: item.products?.price || 0,
+        product_name: item.products?.name || "",
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("order_items")
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Clear cart
+      const { error: clearError } = await supabase
+        .from("cart_items")
+        .delete()
+        .eq("user_id", user.id);
+
+      if (clearError) throw clearError;
+
+      toast.success("Order placed successfully!");
+      navigate("/");
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  if (!user) return null;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container max-w-4xl mx-auto px-4 py-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/")}
+          className="mb-6"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Shop
+        </Button>
+
+        <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            {/* Step 1: Delivery Address */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
+                    1
+                  </span>
+                  Delivery Address
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="address">Street Address</Label>
+                  <Input
+                    id="address"
+                    placeholder="123 Main St, Apt 4B"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="borough">Borough</Label>
+                  <RadioGroup value={borough} onValueChange={setBorough}>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="brooklyn" id="brooklyn" />
+                      <Label htmlFor="brooklyn" className="cursor-pointer">Brooklyn</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="queens" id="queens" />
+                      <Label htmlFor="queens" className="cursor-pointer">Queens</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="manhattan" id="manhattan" />
+                      <Label htmlFor="manhattan" className="cursor-pointer">Manhattan (+$5 surcharge)</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Step 2: Payment Method */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
+                    2
+                  </span>
+                  Payment Method
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <div className="flex items-center space-x-2 p-4 border rounded-lg cursor-pointer hover:bg-muted/50">
+                    <RadioGroupItem value="cash" id="cash" />
+                    <Label htmlFor="cash" className="flex items-center gap-2 cursor-pointer flex-1">
+                      <DollarSign className="w-5 h-5 text-primary" />
+                      <div>
+                        <div className="font-medium">Cash on Delivery</div>
+                        <div className="text-sm text-muted-foreground">Pay when you receive your order</div>
+                      </div>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 p-4 border rounded-lg cursor-pointer hover:bg-muted/50">
+                    <RadioGroupItem value="bitcoin" id="bitcoin" />
+                    <Label htmlFor="bitcoin" className="flex items-center gap-2 cursor-pointer flex-1">
+                      <Bitcoin className="w-5 h-5 text-primary" />
+                      <div>
+                        <div className="font-medium">Bitcoin/USDC</div>
+                        <div className="text-sm text-muted-foreground">Cryptocurrency payment</div>
+                      </div>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Order Summary */}
+          <div>
+            <Card className="sticky top-4">
+              <CardHeader>
+                <CardTitle>Order Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  {cartItems.map((item) => (
+                    <div key={item.id} className="flex justify-between text-sm">
+                      <span>
+                        {item.products?.name} x{item.quantity}
+                      </span>
+                      <span>
+                        ${((item.products?.price || 0) * item.quantity).toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Subtotal</span>
+                    <span>${subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Delivery Fee</span>
+                    <span>${deliveryFee.toFixed(2)}</span>
+                  </div>
+                  {borough === "manhattan" && (
+                    <div className="text-xs text-muted-foreground">
+                      Includes $5 Manhattan surcharge
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
+                <div className="flex justify-between text-lg font-bold">
+                  <span>Total</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+
+                <Button
+                  variant="hero"
+                  className="w-full"
+                  size="lg"
+                  onClick={handlePlaceOrder}
+                  disabled={!address || !borough}
+                >
+                  Place Order
+                </Button>
+
+                <p className="text-xs text-center text-muted-foreground">
+                  ID verification required at delivery • Must be 21+
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Checkout;

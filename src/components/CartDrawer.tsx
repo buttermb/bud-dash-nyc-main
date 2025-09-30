@@ -1,0 +1,186 @@
+import { useState, useEffect } from "react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+
+interface CartDrawerProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
+  const [user, setUser] = useState<any>(null);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+  }, []);
+
+  const { data: cartItems = [] } = useQuery({
+    queryKey: ["cart", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("cart_items")
+        .select("*, products(*)")
+        .eq("user_id", user.id);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + (item.products?.price || 0) * item.quantity,
+    0
+  );
+
+  const updateQuantity = async (itemId: string, newQuantity: number) => {
+    try {
+      const { error } = await supabase
+        .from("cart_items")
+        .update({ quantity: newQuantity })
+        .eq("id", itemId);
+
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const removeItem = async (itemId: string) => {
+    try {
+      const { error } = await supabase
+        .from("cart_items")
+        .delete()
+        .eq("id", itemId);
+
+      if (error) throw error;
+      toast.success("Item removed from cart");
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleCheckout = () => {
+    onOpenChange(false);
+    navigate("/checkout");
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-full sm:max-w-lg flex flex-col">
+        <SheetHeader>
+          <SheetTitle className="text-2xl">Shopping Cart</SheetTitle>
+        </SheetHeader>
+
+        {cartItems.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
+            <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
+              <ShoppingBag className="w-12 h-12 text-muted-foreground" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg mb-2">Your cart is empty</h3>
+              <p className="text-muted-foreground">
+                Add some products to get started
+              </p>
+            </div>
+            <Button variant="hero" onClick={() => onOpenChange(false)}>
+              Browse Products
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className="flex-1 overflow-y-auto space-y-4 py-4">
+              {cartItems.map((item) => (
+                <div key={item.id} className="flex gap-4">
+                  <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span className="text-3xl">🌿</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-sm truncate">
+                      {item.products?.name}
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      ${item.products?.price?.toFixed(2)} each
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() =>
+                          updateQuantity(item.id, Math.max(1, item.quantity - 1))
+                        }
+                        disabled={item.quantity <= 1}
+                      >
+                        <Minus className="w-3 h-3" />
+                      </Button>
+                      <span className="text-sm font-medium w-8 text-center">
+                        {item.quantity}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 ml-auto"
+                        onClick={() => removeItem(item.id)}
+                      >
+                        <Trash2 className="w-3 h-3 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">
+                      ${((item.products?.price || 0) * item.quantity).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex justify-between text-lg font-semibold">
+                <span>Subtotal</span>
+                <span>${subtotal.toFixed(2)}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Delivery fees calculated at checkout
+              </p>
+              <Button 
+                variant="hero" 
+                className="w-full text-lg" 
+                size="lg"
+                onClick={handleCheckout}
+              >
+                Proceed to Checkout
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                Valid ID required at delivery • Must be 21+
+              </p>
+            </div>
+          </>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+export default CartDrawer;
