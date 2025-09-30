@@ -12,12 +12,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
+import MapboxAddressAutocomplete from "@/components/MapboxAddressAutocomplete";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [address, setAddress] = useState("");
+  const [addressLat, setAddressLat] = useState<number>();
+  const [addressLng, setAddressLng] = useState<number>();
   const [borough, setBorough] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [promoCode, setPromoCode] = useState("");
@@ -73,21 +76,55 @@ const Checkout = () => {
     }
   };
 
+  const handleAddressChange = (newAddress: string, lat?: number, lng?: number, detectedBorough?: string) => {
+    setAddress(newAddress);
+    if (lat) setAddressLat(lat);
+    if (lng) setAddressLng(lng);
+    if (detectedBorough) setBorough(detectedBorough);
+  };
+
   const handlePlaceOrder = async () => {
     if (!address || !borough) {
-      toast.error("Please enter a delivery address");
+      toast.error("Please enter a delivery address and select borough");
       return;
     }
 
     setLoading(true);
 
     try {
+      // First create/update address record if we have coordinates
+      let addressId = null;
+      if (addressLat && addressLng) {
+        const { data: addressData, error: addressError } = await supabase
+          .from("addresses")
+          .insert({
+            user_id: user.id,
+            street: address,
+            borough: borough,
+            city: "New York",
+            state: "NY",
+            zip_code: "00000", // Will be updated later
+            lat: addressLat,
+            lng: addressLng,
+            is_default: false,
+          })
+          .select()
+          .single();
+
+        if (addressError) {
+          console.error("Address creation error:", addressError);
+        } else {
+          addressId = addressData.id;
+        }
+      }
+
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
           user_id: user.id,
           delivery_address: address,
           delivery_borough: borough,
+          address_id: addressId,
           payment_method: paymentMethod,
           delivery_fee: deliveryFee,
           subtotal: subtotal,
@@ -162,17 +199,17 @@ const Checkout = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <MapboxAddressAutocomplete
+                  value={address}
+                  onChange={handleAddressChange}
+                  placeholder="Start typing your NYC address..."
+                  className="mb-4"
+                />
+                
                 <div className="space-y-2">
-                  <Label htmlFor="address">Street Address</Label>
-                  <Input
-                    id="address"
-                    placeholder="123 Main St, Apt 4B"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="borough">Borough</Label>
+                  <Label htmlFor="borough">
+                    Borough {borough && <span className="text-primary">({borough})</span>}
+                  </Label>
                   <RadioGroup value={borough} onValueChange={setBorough}>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="brooklyn" id="brooklyn" />
@@ -186,7 +223,18 @@ const Checkout = () => {
                       <RadioGroupItem value="manhattan" id="manhattan" />
                       <Label htmlFor="manhattan" className="cursor-pointer">Manhattan (+$5 surcharge)</Label>
                     </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="bronx" id="bronx" />
+                      <Label htmlFor="bronx" className="cursor-pointer">Bronx</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="staten_island" id="staten_island" />
+                      <Label htmlFor="staten_island" className="cursor-pointer">Staten Island</Label>
+                    </div>
                   </RadioGroup>
+                  <p className="text-xs text-muted-foreground">
+                    💡 Select your address above to auto-detect borough
+                  </p>
                 </div>
 
                 <div className="space-y-2">

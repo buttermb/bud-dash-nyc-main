@@ -173,6 +173,8 @@ const AdminLiveMap = () => {
   const fetchLiveDeliveries = async () => {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      console.log("Fetching live deliveries from:", `${supabaseUrl}/functions/v1/admin-dashboard?endpoint=live-deliveries`);
+      
       const response = await fetch(
         `${supabaseUrl}/functions/v1/admin-dashboard?endpoint=live-deliveries`,
         {
@@ -184,13 +186,17 @@ const AdminLiveMap = () => {
       );
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Response error:", errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log("Live deliveries data:", data);
       setDeliveries(data.deliveries || []);
     } catch (error) {
       console.error("Failed to fetch live deliveries:", error);
+      setDeliveries([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
