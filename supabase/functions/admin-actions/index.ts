@@ -182,35 +182,102 @@ serve(async (req) => {
         );
       }
 
+      // Get order with address
+      const { data: orderData, error: fetchError } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("id", orderId)
+        .single();
+
+      if (fetchError || !orderData) {
+        return new Response(
+          JSON.stringify({ error: "Order not found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Get address if available
+      let addressData = null;
+      if (orderData.address_id) {
+        const { data: addr } = await supabase
+          .from("addresses")
+          .select("*")
+          .eq("id", orderData.address_id)
+          .single();
+        addressData = addr;
+      }
+
+      // Find available courier
+      const { data: courier } = await supabase
+        .from("couriers")
+        .select("*")
+        .eq("is_active", true)
+        .eq("is_online", true)
+        .limit(1)
+        .single();
+
+      console.log("Found courier:", courier);
+
       // Update order to accepted status
       const { data: order, error: updateError } = await supabase
         .from("orders")
         .update({
           status: "accepted",
-          estimated_delivery: new Date(Date.now() + 45 * 60 * 1000).toISOString(), // 45 min estimate
+          estimated_delivery: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
+          courier_id: courier?.id || null,
         })
         .eq("id", orderId)
         .select()
         .single();
 
       if (updateError) {
+        console.error("Update error:", updateError);
         return new Response(
           JSON.stringify({ error: "Failed to accept order" }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
+      // Create delivery record if courier is available
+      if (courier) {
+        const pickupLat = 40.7589; // Default NYC coordinates
+        const pickupLng = -73.9851;
+        const dropoffLat = addressData?.lat || 40.7589;
+        const dropoffLng = addressData?.lng || -73.9851;
+
+        const { error: deliveryError } = await supabase
+          .from("deliveries")
+          .insert({
+            order_id: orderId,
+            courier_id: courier.id,
+            pickup_lat: pickupLat,
+            pickup_lng: pickupLng,
+            dropoff_lat: dropoffLat,
+            dropoff_lng: dropoffLng,
+            estimated_pickup_time: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+            estimated_dropoff_time: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
+          });
+
+        if (deliveryError) {
+          console.error("Delivery creation error:", deliveryError);
+        } else {
+          console.log("Delivery created successfully");
+        }
+      }
+
       // Add tracking entry
       await supabase.from("order_tracking").insert({
         order_id: orderId,
         status: "accepted",
-        message: "Order accepted by admin",
+        message: courier 
+          ? `Order accepted and assigned to ${courier.full_name}`
+          : "Order accepted, awaiting courier assignment",
       });
 
-      await logAdminAction(supabase, adminUser.id, "ACCEPT_ORDER", "order", orderId, {}, req);
+      await logAdminAction(supabase, adminUser.id, "ACCEPT_ORDER", "order", orderId, { courier_id: courier?.id }, req);
 
       return new Response(
-        JSON.stringify({ success: true, order }),
+        JSON.stringify({ success: true, order, courier }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
