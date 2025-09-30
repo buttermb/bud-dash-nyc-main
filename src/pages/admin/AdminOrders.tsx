@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Ban, Flag, Eye } from "lucide-react";
+import { Search, Ban, Flag, Eye, CheckCircle, XCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const AdminOrders = () => {
@@ -34,7 +34,7 @@ const AdminOrders = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  const [actionDialog, setActionDialog] = useState<"cancel" | "flag" | null>(null);
+  const [actionDialog, setActionDialog] = useState<"cancel" | "flag" | "accept" | "decline" | null>(null);
   const [reason, setReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -84,22 +84,46 @@ const AdminOrders = () => {
   const handleAction = async () => {
     if (!selectedOrder || !actionDialog) return;
     
+    // For accept action, no reason is required
+    if (actionDialog === "decline" && !reason) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please provide a reason for declining",
+      });
+      return;
+    }
+    
     setActionLoading(true);
     try {
+      const actionMap = {
+        cancel: "cancel-order",
+        flag: "flag-order",
+        accept: "accept-order",
+        decline: "decline-order"
+      };
+
       const { data, error } = await supabase.functions.invoke("admin-actions", {
         body: {
-          action: actionDialog === "cancel" ? "cancel-order" : "flag-order",
+          action: actionMap[actionDialog],
           orderId: selectedOrder.id,
-          reason,
+          reason: reason || undefined,
         },
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
 
       if (error) throw error;
 
+      const actionText = {
+        cancel: "cancelled",
+        flag: "flagged",
+        accept: "accepted",
+        decline: "declined"
+      };
+
       toast({
         title: "Success",
-        description: `Order ${actionDialog === "cancel" ? "cancelled" : "flagged"} successfully`,
+        description: `Order ${actionText[actionDialog]} successfully`,
       });
 
       setActionDialog(null);
@@ -201,6 +225,33 @@ const AdminOrders = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
+                        {order.status === "pending" && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="bg-green-600 hover:bg-green-700"
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setActionDialog("accept");
+                              }}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Accept
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setActionDialog("decline");
+                              }}
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Decline
+                            </Button>
+                          </>
+                        )}
                         <Button
                           size="sm"
                           variant="outline"
@@ -239,36 +290,43 @@ const AdminOrders = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {actionDialog === "cancel" ? "Cancel Order" : "Flag Order"}
+              {actionDialog === "cancel" && "Cancel Order"}
+              {actionDialog === "flag" && "Flag Order"}
+              {actionDialog === "accept" && "Accept Order"}
+              {actionDialog === "decline" && "Decline Order"}
             </DialogTitle>
             <DialogDescription>
-              {actionDialog === "cancel"
-                ? "This will cancel the order and notify the customer."
-                : "Flag this order for compliance review."}
+              {actionDialog === "accept" 
+                ? "Confirm order acceptance. The customer will be notified and order will proceed to preparation."
+                : actionDialog === "decline"
+                ? "Decline this order. Please provide a reason - the customer will be notified."
+                : actionDialog === "cancel"
+                ? "This action cannot be undone. The customer will be notified of the cancellation."
+                : "Flag this order for review. Provide details about the issue."}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="reason">Reason</Label>
-              <Textarea
-                id="reason"
-                placeholder={
-                  actionDialog === "cancel"
-                    ? "Reason for cancellation..."
-                    : "Reason for flagging..."
-                }
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                rows={4}
-              />
-            </div>
-            {selectedOrder && (
-              <div className="text-sm text-muted-foreground">
-                <p>Order: {selectedOrder.order_number}</p>
-                <p>Amount: ${parseFloat(selectedOrder.total_amount).toFixed(2)}</p>
+          
+          {actionDialog !== "accept" && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="reason">
+                  Reason {actionDialog === "decline" ? "(Required)" : "(Optional)"}
+                </Label>
+                <Textarea
+                  id="reason"
+                  placeholder={
+                    actionDialog === "decline" 
+                      ? "e.g., Out of stock, Outside delivery area..." 
+                      : "Enter reason..."
+                  }
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  rows={3}
+                />
               </div>
-            )}
-          </div>
+            </div>
+          )}
+          
           <DialogFooter>
             <Button
               variant="outline"
@@ -276,13 +334,15 @@ const AdminOrders = () => {
                 setActionDialog(null);
                 setReason("");
               }}
+              disabled={actionLoading}
             >
               Cancel
             </Button>
             <Button
               onClick={handleAction}
-              disabled={!reason.trim() || actionLoading}
-              variant={actionDialog === "cancel" ? "destructive" : "default"}
+              disabled={actionLoading || (actionDialog === "decline" && !reason)}
+              variant={actionDialog === "accept" ? "default" : "destructive"}
+              className={actionDialog === "accept" ? "bg-green-600 hover:bg-green-700" : ""}
             >
               {actionLoading ? "Processing..." : "Confirm"}
             </Button>

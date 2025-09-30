@@ -75,40 +75,46 @@ const AdminLiveMap = () => {
     };
   }, [session]);
 
+  // Initialize map with retry logic
   useEffect(() => {
-    if (!mapContainer.current) {
-      console.log("Map container not ready");
-      return;
-    }
+    // Delay initialization to ensure container is ready
+    const timer = setTimeout(() => {
+      if (!mapContainer.current) {
+        console.log("Map container not ready");
+        return;
+      }
 
-    if (map.current) {
-      console.log("Map already initialized");
-      return;
-    }
+      if (map.current) {
+        console.log("Map already initialized");
+        return;
+      }
 
-    console.log("Initializing Mapbox map...");
-    
-    try {
-      // Initialize map centered on New York
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: "mapbox://styles/mapbox/dark-v11",
-        center: [-73.935242, 40.730610], // NYC coordinates
-        zoom: 11,
-      });
+      console.log("Initializing Mapbox map...");
+      
+      try {
+        // Initialize map centered on New York
+        map.current = new mapboxgl.Map({
+          container: mapContainer.current,
+          style: "mapbox://styles/mapbox/dark-v11",
+          center: [-73.935242, 40.730610], // NYC coordinates
+          zoom: 11,
+        });
 
-      map.current.on('load', () => {
-        console.log("Mapbox map loaded successfully");
-      });
+        map.current.on('load', () => {
+          console.log("Mapbox map loaded successfully");
+        });
 
-      map.current.on('error', (e) => {
-        console.error("Mapbox error:", e);
-      });
+        map.current.on('error', (e) => {
+          console.error("Mapbox error:", e);
+        });
 
-      map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
-    } catch (error) {
-      console.error("Failed to initialize map:", error);
-    }
+        map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+      } catch (error) {
+        console.error("Failed to initialize map:", error);
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Cleanup on unmount

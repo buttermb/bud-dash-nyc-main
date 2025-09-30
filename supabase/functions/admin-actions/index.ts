@@ -173,6 +173,90 @@ serve(async (req) => {
       );
     }
 
+    // ==================== ACCEPT ORDER ====================
+    if (action === "accept-order") {
+      if (!orderId) {
+        return new Response(
+          JSON.stringify({ error: "Order ID required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Update order to accepted status
+      const { data: order, error: updateError } = await supabase
+        .from("orders")
+        .update({
+          status: "accepted",
+          estimated_delivery: new Date(Date.now() + 45 * 60 * 1000).toISOString(), // 45 min estimate
+        })
+        .eq("id", orderId)
+        .select()
+        .single();
+
+      if (updateError) {
+        return new Response(
+          JSON.stringify({ error: "Failed to accept order" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Add tracking entry
+      await supabase.from("order_tracking").insert({
+        order_id: orderId,
+        status: "accepted",
+        message: "Order accepted by admin",
+      });
+
+      await logAdminAction(supabase, adminUser.id, "ACCEPT_ORDER", "order", orderId, {}, req);
+
+      return new Response(
+        JSON.stringify({ success: true, order }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ==================== DECLINE ORDER ====================
+    if (action === "decline-order") {
+      if (!orderId || !reason) {
+        return new Response(
+          JSON.stringify({ error: "Order ID and reason required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Update order to cancelled status
+      const { data: order, error: updateError } = await supabase
+        .from("orders")
+        .update({
+          status: "cancelled",
+          payment_status: "refunded",
+        })
+        .eq("id", orderId)
+        .select()
+        .single();
+
+      if (updateError) {
+        return new Response(
+          JSON.stringify({ error: "Failed to decline order" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Add tracking entry
+      await supabase.from("order_tracking").insert({
+        order_id: orderId,
+        status: "cancelled",
+        message: `Order declined by admin: ${reason}`,
+      });
+
+      await logAdminAction(supabase, adminUser.id, "DECLINE_ORDER", "order", orderId, { reason }, req);
+
+      return new Response(
+        JSON.stringify({ success: true, order }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // ==================== SUSPEND USER ====================
     if (action === "suspend-user") {
       if (!userId || !reason) {
