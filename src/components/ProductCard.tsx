@@ -1,31 +1,37 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Plus, Minus } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProductCardProps {
   product: any;
+  onAuthRequired?: () => void;
 }
 
-const ProductCard = ({ product }: ProductCardProps) => {
-  const [user, setUser] = useState<any>(null);
+const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
+  const { user } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [added, setAdded] = useState(false);
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-  }, []);
 
   const handleAddToCart = async () => {
     if (!user) {
-      toast.error("Please sign in to add items to cart");
+      if (onAuthRequired) {
+        onAuthRequired();
+      } else {
+        toast.error("Please sign in to add items to cart");
+      }
+      return;
+    }
+
+    if (!product.in_stock) {
+      toast.error("This product is out of stock");
       return;
     }
 
@@ -36,7 +42,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         .select("*")
         .eq("user_id", user.id)
         .eq("product_id", product.id)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         const { error } = await supabase
@@ -58,10 +64,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
       }
 
       toast.success("Added to cart!");
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       setQuantity(1);
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to add to cart");
     } finally {
       setLoading(false);
     }
@@ -137,10 +145,19 @@ const ProductCard = ({ product }: ProductCardProps) => {
           variant="hero" 
           className="w-full"
           onClick={handleAddToCart}
-          disabled={loading}
+          disabled={loading || !product.in_stock || added}
         >
-          <ShoppingCart className="w-4 h-4 mr-2" />
-          {loading ? "Adding..." : "Add to Cart"}
+          {added ? (
+            <>
+              <Check className="w-4 h-4 mr-2" />
+              Added ✓
+            </>
+          ) : (
+            <>
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              {loading ? "Adding..." : product.in_stock ? "Add to Cart" : "Out of Stock"}
+            </>
+          )}
         </Button>
       </CardFooter>
     </Card>

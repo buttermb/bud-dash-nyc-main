@@ -3,10 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductCard from "./ProductCard";
+import AuthModal from "./AuthModal";
 import { Loader2 } from "lucide-react";
 
 const ProductCatalog = () => {
   const [category, setCategory] = useState<string>("all");
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["products", category],
@@ -58,7 +61,14 @@ const ProductCatalog = () => {
             <TabsContent value={category} className="mt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onAuthRequired={() => {
+                      setAuthMode("signin");
+                      setShowAuthModal(true);
+                    }}
+                  />
                 ))}
               </div>
 
@@ -72,6 +82,13 @@ const ProductCatalog = () => {
             </TabsContent>
           )}
         </Tabs>
+
+        <AuthModal
+          open={showAuthModal}
+          onOpenChange={setShowAuthModal}
+          mode={authMode}
+          onModeChange={setAuthMode}
+        />
       </div>
     </section>
   );

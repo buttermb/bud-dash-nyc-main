@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,26 +8,19 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Bitcoin, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import Navigation from "@/components/Navigation";
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
-  const [step, setStep] = useState(1);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [address, setAddress] = useState("");
   const [borough, setBorough] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/");
-        toast.error("Please sign in to checkout");
-      }
-      setUser(session?.user ?? null);
-    });
-  }, [navigate]);
+  const [loading, setLoading] = useState(false);
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ["cart", user?.id],
@@ -65,6 +58,8 @@ const Checkout = () => {
       toast.error("Please enter a delivery address");
       return;
     }
+
+    setLoading(true);
 
     try {
       const { data: order, error: orderError } = await supabase
@@ -107,25 +102,28 @@ const Checkout = () => {
       if (clearError) throw clearError;
 
       toast.success("Order placed successfully!");
-      navigate("/");
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      navigate(`/order-confirmation?orderId=${order.id}`);
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to place order");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!user) return null;
-
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container max-w-4xl mx-auto px-4 py-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/")}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Shop
-        </Button>
+    <>
+      <Navigation />
+      <div className="min-h-screen bg-background py-8">
+        <div className="container max-w-4xl mx-auto px-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="mb-6"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Shop
+          </Button>
 
         <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
@@ -258,9 +256,9 @@ const Checkout = () => {
                   className="w-full"
                   size="lg"
                   onClick={handlePlaceOrder}
-                  disabled={!address || !borough}
+                  disabled={!address || !borough || loading}
                 >
-                  Place Order
+                  {loading ? "Placing Order..." : "Place Order"}
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
@@ -270,8 +268,9 @@ const Checkout = () => {
             </Card>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

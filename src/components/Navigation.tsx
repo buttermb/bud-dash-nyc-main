@@ -1,29 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Leaf, Menu, ShoppingCart, User } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "./AuthModal";
 import CartDrawer from "./CartDrawer";
 
 const Navigation = () => {
-  const [user, setUser] = useState<any>(null);
+  const { user, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [showCart, setShowCart] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ["cart", user?.id],
@@ -41,9 +38,6 @@ const Navigation = () => {
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-  };
 
   const openAuth = (mode: "signin" | "signup") => {
     setAuthMode(mode);
@@ -99,12 +93,30 @@ const Navigation = () => {
 
             {user ? (
               <div className="hidden sm:flex items-center gap-2">
-                <Button variant="ghost" size="icon">
-                  <User className="w-5 h-5" />
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleSignOut}>
-                  Sign Out
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <User className="w-5 h-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col">
+                        <span className="font-medium">My Account</span>
+                        <span className="text-xs text-muted-foreground truncate">
+                          {user.email}
+                        </span>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>My Orders</DropdownMenuItem>
+                    <DropdownMenuItem>Profile Settings</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={signOut}>
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ) : (
               <div className="hidden sm:flex items-center gap-2">
@@ -136,11 +148,9 @@ const Navigation = () => {
                     </a>
                   ))}
                   {user ? (
-                    <>
-                      <Button variant="outline" onClick={handleSignOut}>
-                        Sign Out
-                      </Button>
-                    </>
+                    <Button variant="outline" onClick={signOut}>
+                      Sign Out
+                    </Button>
                   ) : (
                     <>
                       <Button variant="outline" onClick={() => openAuth("signin")}>
