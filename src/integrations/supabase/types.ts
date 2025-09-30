@@ -849,6 +849,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      decrement_inventory: {
+        Args: { _product_id: string; _quantity: number }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -856,9 +860,33 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       is_age_verified: {
         Args: { _user_id: string }
         Returns: boolean
+      }
+      log_security_event: {
+        Args: {
+          _action: string
+          _details?: Json
+          _entity_id: string
+          _entity_type: string
+          _ip_address?: string
+          _user_id: string
+        }
+        Returns: string
+      }
+      update_purchase_limits: {
+        Args: {
+          _concentrate_grams: number
+          _date: string
+          _flower_grams: number
+          _user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

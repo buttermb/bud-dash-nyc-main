@@ -54,25 +54,36 @@ serve(async (req) => {
     }
 
     if (paymentMethod === "crypto") {
-      // For crypto, generate payment instructions
-      const cryptoInstructions = {
-        bitcoin: {
-          address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+      // SECURITY: Crypto payments require proper verification
+      // This should integrate with a payment processor like Coinbase Commerce, BTCPay, or NOWPayments
+      // For MVP: Mark as pending and require manual verification
+      
+      await supabase
+        .from("orders")
+        .update({ 
+          payment_status: "pending_verification",
+          status: "pending_payment"
+        })
+        .eq("id", orderId);
+
+      // Log for manual verification
+      await supabase.from("audit_logs").insert({
+        entity_type: "payment",
+        entity_id: orderId,
+        action: "CRYPTO_PAYMENT_INITIATED",
+        user_id: user.id,
+        details: { 
           amount: order.total_amount,
-          network: "Bitcoin",
-        },
-        usdc: {
-          address: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
-          amount: order.total_amount,
-          network: "Ethereum (ERC-20)",
-        },
-      };
+          method: "crypto",
+          warning: "Requires manual verification"
+        }
+      });
 
       return new Response(
         JSON.stringify({
           success: true,
-          paymentInstructions: cryptoInstructions,
-          message: "Send payment to one of the provided addresses. Order will be processed after confirmation.",
+          message: "Crypto payment initiated. You will receive payment instructions via email. Order will be processed after payment confirmation.",
+          requiresVerification: true
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );

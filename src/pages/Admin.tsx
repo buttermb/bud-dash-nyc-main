@@ -51,14 +51,18 @@ const Admin = () => {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
+      // SECURITY: Server-side admin verification using RPC
+      const { data: isAdminUser, error } = await supabase.rpc('is_admin', {
+        _user_id: user.id
+      });
 
-      setIsAdmin(!!data && !error);
+      if (error) {
+        console.error('Admin verification error:', error);
+        setIsAdmin(false);
+      } else {
+        setIsAdmin(isAdminUser === true);
+      }
+      
       setLoading(false);
     };
 

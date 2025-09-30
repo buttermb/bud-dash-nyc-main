@@ -48,7 +48,34 @@ serve(async (req) => {
       });
     }
 
-    const { items, addressId, paymentMethod } = await req.json();
+    // Parse and validate input
+    const rawInput = await req.json();
+    
+    // Input validation
+    if (!rawInput.items || !Array.isArray(rawInput.items) || rawInput.items.length === 0) {
+      return new Response(JSON.stringify({ error: "Invalid items" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (rawInput.items.length > 50) {
+      return new Response(JSON.stringify({ error: "Too many items in order" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const items = rawInput.items;
+    const addressId = String(rawInput.addressId || '').slice(0, 36);
+    const paymentMethod = String(rawInput.paymentMethod || '').slice(0, 20);
+
+    if (!['cash', 'card', 'crypto'].includes(paymentMethod)) {
+      return new Response(JSON.stringify({ error: "Invalid payment method" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Verify age verification
     const { data: profile } = await supabase
@@ -223,21 +250,38 @@ serve(async (req) => {
       );
     }
 
-    // Update inventory
+    // Update inventory using secure RPC function
     for (const item of items) {
-      await supabase.rpc("decrement_inventory", {
-        p_product_id: item.productId,
-        p_quantity: item.quantity,
+      const { data: inventorySuccess, error: inventoryError } = await supabase.rpc('decrement_inventory', {
+        _product_id: item.productId,
+        _quantity: item.quantity
       });
+
+      if (inventoryError || !inventorySuccess) {
+        console.error('Inventory update error:', inventoryError);
+        // Rollback order creation
+        await supabase.from('orders').delete().eq('id', order.id);
+        await supabase.from('order_items').delete().eq('order_id', order.id);
+        
+        return new Response(
+          JSON.stringify({ error: 'Failed to update inventory - insufficient stock' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
-    // Update purchase limits
-    await supabase.from("purchase_limits").upsert({
-      user_id: user.id,
-      date: today.toISOString().split("T")[0],
-      flower_grams: currentFlower + flowerGrams,
-      concentrate_grams: currentConcentrate + concentrateGrams,
+    // Update purchase limits using secure function
+    const { error: limitsError } = await supabase.rpc('update_purchase_limits', {
+      _user_id: user.id,
+      _date: today.toISOString().split('T')[0],
+      _flower_grams: flowerGrams,
+      _concentrate_grams: concentrateGrams
     });
+
+    if (limitsError) {
+      console.error('Failed to update purchase limits:', limitsError);
+      // Continue anyway as order is already created
+    }
 
     // Create initial tracking entry
     await supabase.from("order_tracking").insert({
