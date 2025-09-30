@@ -31,6 +31,9 @@ import MerchantDashboard from "./pages/MerchantDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminLiveMap from "./pages/admin/AdminLiveMap";
+import AdminCompliance from "./pages/admin/AdminCompliance";
 
 const queryClient = new QueryClient();
 
@@ -68,10 +71,10 @@ const App = () => (
                 }
               >
                 <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="live-map" element={<div className="p-6">Live Map Coming Soon</div>} />
-                <Route path="orders" element={<div className="p-6">Orders Management Coming Soon</div>} />
+                <Route path="live-map" element={<AdminLiveMap />} />
+                <Route path="orders" element={<AdminOrders />} />
                 <Route path="users" element={<div className="p-6">Users Management Coming Soon</div>} />
-                <Route path="compliance" element={<div className="p-6">Compliance Dashboard Coming Soon</div>} />
+                <Route path="compliance" element={<AdminCompliance />} />
                 <Route path="analytics" element={<div className="p-6">Analytics Coming Soon</div>} />
                 <Route path="audit-logs" element={<div className="p-6">Audit Logs Coming Soon</div>} />
               </Route>
