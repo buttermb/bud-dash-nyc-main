@@ -40,14 +40,14 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Legal */}
+          {/* Support */}
           <div>
-            <h3 className="font-semibold mb-4">Legal</h3>
+            <h3 className="font-semibold mb-4">Support</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><a href="/faq" className="hover:text-primary transition-colors">FAQ</a></li>
+              <li><a href="/support" className="hover:text-primary transition-colors">Contact Support</a></li>
               <li><a href="#" className="hover:text-primary transition-colors">Terms of Service</a></li>
               <li><a href="#" className="hover:text-primary transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Compliance</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Age Verification</a></li>
             </ul>
           </div>
         </div>

@@ -20,6 +20,8 @@ const Checkout = () => {
   const [address, setAddress] = useState("");
   const [borough, setBorough] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [promoCode, setPromoCode] = useState("");
+  const [promoDiscount, setPromoDiscount] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const { data: cartItems = [] } = useQuery({
@@ -51,7 +53,23 @@ const Checkout = () => {
   };
 
   const deliveryFee = calculateDeliveryFee();
-  const total = subtotal + deliveryFee;
+  const total = subtotal + deliveryFee - promoDiscount;
+
+  const handleApplyPromo = () => {
+    const validCodes: Record<string, number> = {
+      FIRST10: subtotal * 0.1,
+      SAVE5: 5,
+      WELCOME15: subtotal * 0.15,
+    };
+
+    const discount = validCodes[promoCode.toUpperCase()] || 0;
+    if (discount > 0) {
+      setPromoDiscount(discount);
+      toast.success(`Promo code applied! You saved $${discount.toFixed(2)}`);
+    } else {
+      toast.error("Invalid promo code");
+    }
+  };
 
   const handlePlaceOrder = async () => {
     if (!address || !borough) {
@@ -242,6 +260,34 @@ const Checkout = () => {
                       Includes $5 Manhattan surcharge
                     </div>
                   )}
+                  {promoDiscount > 0 && (
+                    <div className="flex justify-between text-sm text-primary">
+                      <span>Promo Discount</span>
+                      <span>-${promoDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
+                {/* Promo Code */}
+                <div className="space-y-2">
+                  <Label htmlFor="promo">Promo Code</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="promo"
+                      placeholder="Enter code"
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleApplyPromo}
+                    >
+                      Apply
+                    </Button>
+                  </div>
                 </div>
 
                 <Separator />

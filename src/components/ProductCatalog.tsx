@@ -1,30 +1,75 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 import ProductCard from "./ProductCard";
 import AuthModal from "./AuthModal";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 
 const ProductCatalog = () => {
   const [category, setCategory] = useState<string>("all");
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("name");
+  const [priceRange, setPriceRange] = useState([0, 100]);
 
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ["products", category],
+  const { data: allProducts = [], isLoading } = useQuery({
+    queryKey: ["products"],
     queryFn: async () => {
-      let query = supabase.from("products").select("*").eq("in_stock", true);
-      
-      if (category !== "all") {
-        query = query.eq("category", category);
-      }
-      
-      const { data, error } = await query;
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("in_stock", true);
       if (error) throw error;
       return data;
     },
   });
+
+  const products = useMemo(() => {
+    let filtered = [...allProducts];
+
+    // Filter by category
+    if (category !== "all") {
+      filtered = filtered.filter((p) => p.category === category);
+    }
+
+    // Filter by search
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (p) =>
+          p.name.toLowerCase().includes(query) ||
+          p.description?.toLowerCase().includes(query)
+      );
+    }
+
+    // Filter by price range
+    filtered = filtered.filter(
+      (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
+    );
+
+    // Sort
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "price-asc":
+          return a.price - b.price;
+        case "price-desc":
+          return b.price - a.price;
+        case "potency":
+          return b.thca_percentage - a.thca_percentage;
+        case "name":
+        default:
+          return a.name.localeCompare(b.name);
+      }
+    });
+
+    return filtered;
+  }, [allProducts, category, searchQuery, priceRange, sortBy]);
 
   const categories = [
     { value: "all", label: "All Products" },
@@ -44,8 +89,48 @@ const ProductCatalog = () => {
           </p>
         </div>
 
+        {/* Search and Filters */}
+        <div className="max-w-6xl mx-auto mb-8 space-y-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Name (A-Z)</SelectItem>
+                <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                <SelectItem value="potency">Potency (High to Low)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Price Range Filter */}
+          <div className="bg-muted/50 rounded-lg p-4">
+            <Label className="text-sm font-medium mb-2 block">
+              Price Range: ${priceRange[0]} - ${priceRange[1]}
+            </Label>
+            <Slider
+              value={priceRange}
+              onValueChange={setPriceRange}
+              max={100}
+              step={5}
+              className="w-full"
+            />
+          </div>
+        </div>
+
         <Tabs value={category} onValueChange={setCategory} className="w-full">
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-5 mb-12">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-5 mb-8">
             {categories.map((cat) => (
               <TabsTrigger key={cat.value} value={cat.value}>
                 {cat.label}
