@@ -138,6 +138,7 @@ export type Database = {
           id: string
           image_url: string | null
           in_stock: boolean | null
+          lab_results_url: string | null
           name: string
           price: number
           strain_info: string | null
@@ -150,6 +151,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           in_stock?: boolean | null
+          lab_results_url?: string | null
           name: string
           price: number
           strain_info?: string | null
@@ -162,6 +164,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           in_stock?: boolean | null
+          lab_results_url?: string | null
           name?: string
           price?: number
           strain_info?: string | null

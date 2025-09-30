@@ -71,6 +71,7 @@ const App = () => (
             <Route path="/become-courier" element={<BecomeCourier />} />
             <Route path="/partner-shops" element={<PartnerShops />} />
             <Route path="/track-order" element={<OrderLookup />} />
+            <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

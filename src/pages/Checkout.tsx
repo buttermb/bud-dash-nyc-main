@@ -197,29 +197,53 @@ const Checkout = () => {
                   Payment Method
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <div className="flex items-center space-x-2 p-4 border rounded-lg cursor-pointer hover:bg-muted/50">
+                  <div className="flex items-center space-x-2 p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
                     <RadioGroupItem value="cash" id="cash" />
-                    <Label htmlFor="cash" className="flex items-center gap-2 cursor-pointer flex-1">
-                      <DollarSign className="w-5 h-5 text-primary" />
-                      <div>
+                    <Label htmlFor="cash" className="flex items-center gap-3 cursor-pointer flex-1">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <DollarSign className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
                         <div className="font-medium">Cash on Delivery</div>
-                        <div className="text-sm text-muted-foreground">Pay when you receive your order</div>
+                        <div className="text-sm text-muted-foreground">Pay the courier when you receive your order</div>
                       </div>
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 p-4 border rounded-lg cursor-pointer hover:bg-muted/50">
+                  <div className="flex items-center space-x-2 p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
                     <RadioGroupItem value="bitcoin" id="bitcoin" />
-                    <Label htmlFor="bitcoin" className="flex items-center gap-2 cursor-pointer flex-1">
-                      <Bitcoin className="w-5 h-5 text-primary" />
-                      <div>
-                        <div className="font-medium">Bitcoin/USDC</div>
-                        <div className="text-sm text-muted-foreground">Cryptocurrency payment</div>
+                    <Label htmlFor="bitcoin" className="flex items-center gap-3 cursor-pointer flex-1">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Bitcoin className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">Bitcoin / USDC</div>
+                        <div className="text-sm text-muted-foreground">We'll send payment instructions after order</div>
                       </div>
                     </Label>
                   </div>
                 </RadioGroup>
+
+                {paymentMethod === "bitcoin" && (
+                  <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                    <p className="text-sm font-medium">Cryptocurrency Payment Instructions:</p>
+                    <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                      <li>After placing your order, you'll receive payment details</li>
+                      <li>We accept Bitcoin (BTC) and USDC</li>
+                      <li>Your order will be prepared once payment is confirmed</li>
+                      <li>Confirmation typically takes 10-30 minutes</li>
+                    </ul>
+                  </div>
+                )}
+
+                {paymentMethod === "cash" && (
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      💡 Please have exact change ready. Our couriers will verify your ID (must be 21+) before accepting payment.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -40,7 +40,7 @@ const OrderLookup = () => {
       if (error) throw error;
 
       if (data) {
-        navigate(`/orders/${data.id}`);
+        navigate(`/order-tracking/${data.id}`);
       } else {
         toast({
           title: "Order Not Found",
