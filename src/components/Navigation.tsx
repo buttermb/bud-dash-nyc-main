@@ -13,11 +13,13 @@ import { Leaf, Menu, ShoppingCart, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import AuthModal from "./AuthModal";
 import CartDrawer from "./CartDrawer";
 
 const Navigation = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [showCart, setShowCart] = useState(false);
@@ -109,7 +111,9 @@ const Navigation = () => {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>My Orders</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/orders")}>
+                      My Orders
+                    </DropdownMenuItem>
                     <DropdownMenuItem>Profile Settings</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut}>

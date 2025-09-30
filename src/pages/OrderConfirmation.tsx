@@ -174,7 +174,7 @@ const OrderConfirmation = () => {
             <Button
               variant="hero"
               className="flex-1"
-              onClick={() => navigate("/")}
+              onClick={() => navigate(`/orders/${orderId}`)}
             >
               Track Your Order
             </Button>

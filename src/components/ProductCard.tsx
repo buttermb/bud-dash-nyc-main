@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import { ProductDetailModal } from "./ProductDetailModal";
 
 interface ProductCardProps {
   product: any;
@@ -18,6 +19,7 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [added, setAdded] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const queryClient = useQueryClient();
 
   const handleAddToCart = async () => {
@@ -86,9 +88,13 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
   };
 
   return (
-    <Card className="hover:shadow-strong transition-all duration-300 hover:-translate-y-1">
-      <CardHeader className="pb-4">
-        <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center">
+    <>
+      <Card 
+        className="hover:shadow-strong transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+        onClick={() => setShowDetailModal(true)}
+      >
+        <CardHeader className="pb-4">
+          <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center">
           {product.image_url ? (
             <img src={product.image_url} alt={product.name} className="w-full h-full object-cover rounded-lg" />
           ) : (
@@ -124,7 +130,10 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            onClick={(e) => {
+              e.stopPropagation();
+              setQuantity(Math.max(1, quantity - 1));
+            }}
             disabled={quantity <= 1}
           >
             <Minus className="w-4 h-4" />
@@ -133,7 +142,10 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setQuantity(quantity + 1)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setQuantity(quantity + 1);
+            }}
           >
             <Plus className="w-4 h-4" />
           </Button>
@@ -144,7 +156,10 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
         <Button 
           variant="hero" 
           className="w-full"
-          onClick={handleAddToCart}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAddToCart();
+          }}
           disabled={loading || !product.in_stock || added}
         >
           {added ? (
@@ -161,6 +176,14 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
         </Button>
       </CardFooter>
     </Card>
+
+    <ProductDetailModal
+      product={product}
+      open={showDetailModal}
+      onOpenChange={setShowDetailModal}
+      onAuthRequired={onAuthRequired}
+    />
+    </>
   );
 };
 
