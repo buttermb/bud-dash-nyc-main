@@ -14,6 +14,129 @@ export type Database = {
   }
   public: {
     Tables: {
+      addresses: {
+        Row: {
+          apartment: string | null
+          borough: string
+          city: string
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          lat: number | null
+          lng: number | null
+          state: string
+          street: string
+          user_id: string
+          zip_code: string
+        }
+        Insert: {
+          apartment?: string | null
+          borough: string
+          city?: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          state?: string
+          street: string
+          user_id: string
+          zip_code: string
+        }
+        Update: {
+          apartment?: string | null
+          borough?: string
+          city?: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          state?: string
+          street?: string
+          user_id?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      age_verifications: {
+        Row: {
+          created_at: string | null
+          date_of_birth: string | null
+          id: string
+          id_back_url: string | null
+          id_front_url: string | null
+          id_number: string | null
+          id_type: string | null
+          selfie_url: string | null
+          user_id: string
+          verification_method: string
+          verification_type: string
+          verified: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_of_birth?: string | null
+          id?: string
+          id_back_url?: string | null
+          id_front_url?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          selfie_url?: string | null
+          user_id: string
+          verification_method: string
+          verification_type: string
+          verified?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          date_of_birth?: string | null
+          id?: string
+          id_back_url?: string | null
+          id_front_url?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          selfie_url?: string | null
+          user_id?: string
+          verification_method?: string
+          verification_type?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          entity_id: string
+          entity_type: string
+          id: string
+          ip_address: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author_id: string | null
@@ -85,6 +208,177 @@ export type Database = {
           },
         ]
       }
+      couriers: {
+        Row: {
+          age_verified: boolean | null
+          created_at: string | null
+          current_lat: number | null
+          current_lng: number | null
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean | null
+          is_online: boolean | null
+          license_number: string
+          phone: string
+          updated_at: string | null
+          user_id: string
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_plate: string | null
+          vehicle_type: string
+        }
+        Insert: {
+          age_verified?: boolean | null
+          created_at?: string | null
+          current_lat?: number | null
+          current_lng?: number | null
+          email: string
+          full_name: string
+          id?: string
+          is_active?: boolean | null
+          is_online?: boolean | null
+          license_number: string
+          phone: string
+          updated_at?: string | null
+          user_id: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_plate?: string | null
+          vehicle_type: string
+        }
+        Update: {
+          age_verified?: boolean | null
+          created_at?: string | null
+          current_lat?: number | null
+          current_lng?: number | null
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          is_online?: boolean | null
+          license_number?: string
+          phone?: string
+          updated_at?: string | null
+          user_id?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_plate?: string | null
+          vehicle_type?: string
+        }
+        Relationships: []
+      }
+      deliveries: {
+        Row: {
+          actual_dropoff_time: string | null
+          actual_pickup_time: string | null
+          courier_id: string
+          created_at: string | null
+          delivery_photo_url: string | null
+          dropoff_lat: number
+          dropoff_lng: number
+          estimated_dropoff_time: string | null
+          estimated_pickup_time: string | null
+          id: string
+          id_verification_url: string | null
+          manifest_url: string | null
+          order_id: string
+          pickup_lat: number
+          pickup_lng: number
+          signature_url: string | null
+        }
+        Insert: {
+          actual_dropoff_time?: string | null
+          actual_pickup_time?: string | null
+          courier_id: string
+          created_at?: string | null
+          delivery_photo_url?: string | null
+          dropoff_lat: number
+          dropoff_lng: number
+          estimated_dropoff_time?: string | null
+          estimated_pickup_time?: string | null
+          id?: string
+          id_verification_url?: string | null
+          manifest_url?: string | null
+          order_id: string
+          pickup_lat: number
+          pickup_lng: number
+          signature_url?: string | null
+        }
+        Update: {
+          actual_dropoff_time?: string | null
+          actual_pickup_time?: string | null
+          courier_id?: string
+          created_at?: string | null
+          delivery_photo_url?: string | null
+          dropoff_lat?: number
+          dropoff_lng?: number
+          estimated_dropoff_time?: string | null
+          estimated_pickup_time?: string | null
+          id?: string
+          id_verification_url?: string | null
+          manifest_url?: string | null
+          order_id?: string
+          pickup_lat?: number
+          pickup_lng?: number
+          signature_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliveries_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliveries_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory: {
+        Row: {
+          id: string
+          merchant_id: string
+          product_id: string
+          stock: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          merchant_id: string
+          product_id: string
+          stock?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          merchant_id?: string
+          product_id?: string
+          stock?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loyalty_points: {
         Row: {
           created_at: string | null
@@ -147,6 +441,51 @@ export type Database = {
           },
         ]
       }
+      merchants: {
+        Row: {
+          address: string
+          borough: string
+          business_name: string
+          created_at: string | null
+          email: string
+          id: string
+          is_active: boolean | null
+          license_number: string
+          license_verified: boolean | null
+          phone: string
+          service_radius: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          address: string
+          borough: string
+          business_name: string
+          created_at?: string | null
+          email: string
+          id?: string
+          is_active?: boolean | null
+          license_number: string
+          license_verified?: boolean | null
+          phone: string
+          service_radius?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string
+          borough?: string
+          business_name?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_active?: boolean | null
+          license_number?: string
+          license_verified?: boolean | null
+          phone?: string
+          service_radius?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string | null
@@ -192,8 +531,47 @@ export type Database = {
           },
         ]
       }
+      order_tracking: {
+        Row: {
+          created_at: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          message: string | null
+          order_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          message?: string | null
+          order_id: string
+          status: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          message?: string | null
+          order_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_tracking_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
+          address_id: string | null
           courier_id: string | null
           created_at: string | null
           delivery_address: string
@@ -202,7 +580,10 @@ export type Database = {
           delivery_notes: string | null
           estimated_delivery: string | null
           id: string
+          merchant_id: string | null
+          order_number: string | null
           payment_method: string
+          payment_status: string | null
           scheduled_delivery_time: string | null
           status: string
           subtotal: number
@@ -210,6 +591,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          address_id?: string | null
           courier_id?: string | null
           created_at?: string | null
           delivery_address: string
@@ -218,7 +600,10 @@ export type Database = {
           delivery_notes?: string | null
           estimated_delivery?: string | null
           id?: string
+          merchant_id?: string | null
+          order_number?: string | null
           payment_method: string
+          payment_status?: string | null
           scheduled_delivery_time?: string | null
           status?: string
           subtotal: number
@@ -226,6 +611,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          address_id?: string | null
           courier_id?: string | null
           created_at?: string | null
           delivery_address?: string
@@ -234,62 +620,106 @@ export type Database = {
           delivery_notes?: string | null
           estimated_delivery?: string | null
           id?: string
+          merchant_id?: string | null
+          order_number?: string | null
           payment_method?: string
+          payment_status?: string | null
           scheduled_delivery_time?: string | null
           status?: string
           subtotal?: number
           total_amount?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_address_id_fkey"
+            columns: ["address_id"]
+            isOneToOne: false
+            referencedRelation: "addresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
           average_rating: number | null
           category: string
+          cbd_content: number | null
+          coa_url: string | null
           created_at: string | null
           description: string | null
           id: string
           image_url: string | null
           in_stock: boolean | null
+          is_concentrate: boolean | null
           lab_results_url: string | null
+          merchant_id: string | null
           name: string
           price: number
           review_count: number | null
           strain_info: string | null
+          thc_content: number | null
           thca_percentage: number
+          weight_grams: number | null
         }
         Insert: {
           average_rating?: number | null
           category: string
+          cbd_content?: number | null
+          coa_url?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
           in_stock?: boolean | null
+          is_concentrate?: boolean | null
           lab_results_url?: string | null
+          merchant_id?: string | null
           name: string
           price: number
           review_count?: number | null
           strain_info?: string | null
+          thc_content?: number | null
           thca_percentage: number
+          weight_grams?: number | null
         }
         Update: {
           average_rating?: number | null
           category?: string
+          cbd_content?: number | null
+          coa_url?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
           in_stock?: boolean | null
+          is_concentrate?: boolean | null
           lab_results_url?: string | null
+          merchant_id?: string | null
           name?: string
           price?: number
           review_count?: number | null
           strain_info?: string | null
+          thc_content?: number | null
           thca_percentage?: number
+          weight_grams?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -314,6 +744,36 @@ export type Database = {
           id?: string
           id_document_url?: string | null
           phone?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      purchase_limits: {
+        Row: {
+          concentrate_grams: number | null
+          created_at: string | null
+          date: string
+          flower_grams: number | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          concentrate_grams?: number | null
+          created_at?: string | null
+          date: string
+          flower_grams?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          concentrate_grams?: number | null
+          created_at?: string | null
+          date?: string
+          flower_grams?: number | null
+          id?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -403,6 +863,24 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "courier" | "user"
+      order_status_type:
+        | "pending"
+        | "accepted"
+        | "preparing"
+        | "out_for_delivery"
+        | "delivered"
+        | "cancelled"
+      payment_method_type: "cash" | "crypto"
+      payment_status_type: "pending" | "completed" | "failed" | "refunded"
+      product_category_type:
+        | "flower"
+        | "edibles"
+        | "vapes"
+        | "concentrates"
+        | "pre-rolls"
+      vehicle_type: "car" | "bike" | "scooter" | "ebike"
+      verification_method_type: "jumio" | "manual_scan" | "automatic"
+      verification_type: "registration" | "delivery"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -531,6 +1009,26 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "courier", "user"],
+      order_status_type: [
+        "pending",
+        "accepted",
+        "preparing",
+        "out_for_delivery",
+        "delivered",
+        "cancelled",
+      ],
+      payment_method_type: ["cash", "crypto"],
+      payment_status_type: ["pending", "completed", "failed", "refunded"],
+      product_category_type: [
+        "flower",
+        "edibles",
+        "vapes",
+        "concentrates",
+        "pre-rolls",
+      ],
+      vehicle_type: ["car", "bike", "scooter", "ebike"],
+      verification_method_type: ["jumio", "manual_scan", "automatic"],
+      verification_type: ["registration", "delivery"],
     },
   },
 } as const

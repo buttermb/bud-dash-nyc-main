@@ -25,6 +25,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import CourierDashboard from "./pages/CourierDashboard";
+import MerchantDashboard from "./pages/MerchantDashboard";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Admin />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/merchant"
+                element={
+                  <ProtectedRoute>
+                    <MerchantDashboard />
                   </ProtectedRoute>
                 }
               />
