@@ -173,11 +173,18 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
                 {loading ? "Adding..." : "Add to Cart"}
               </Button>
 
-              <Button variant="outline" className="w-full" asChild>
-                <a href="#" target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  View Lab Results
-                </a>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => {
+                  toast({
+                    title: "Lab Results",
+                    description: "Lab results are available upon request. Please contact support for specific COA documents.",
+                  });
+                }}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Request Lab Results
               </Button>
             </div>
           </div>

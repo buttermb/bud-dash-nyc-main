@@ -15,7 +15,7 @@ const Hero = () => {
           backgroundPosition: 'center',
         }}
       >
-        <div className="absolute inset-0 bg-background/95" />
+        <div className="absolute inset-0 bg-background/98" />
       </div>
 
       {/* Gradient Overlay */}

@@ -13,6 +13,12 @@ import MyOrders from "./pages/MyOrders";
 import FAQ from "./pages/FAQ";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import About from "./pages/About";
+import BecomeCourier from "./pages/BecomeCourier";
+import PartnerShops from "./pages/PartnerShops";
+import OrderLookup from "./pages/OrderLookup";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +65,12 @@ const App = () => (
             />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/support" element={<Support />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/become-courier" element={<BecomeCourier />} />
+            <Route path="/partner-shops" element={<PartnerShops />} />
+            <Route path="/track-order" element={<OrderLookup />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
