@@ -76,7 +76,15 @@ const AdminLiveMap = () => {
   }, [session]);
 
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    if (!mapContainer.current) {
+      console.log("Map container not ready");
+      return;
+    }
+
+    if (map.current) {
+      console.log("Map already initialized");
+      return;
+    }
 
     console.log("Initializing Mapbox map...");
     
@@ -101,7 +109,10 @@ const AdminLiveMap = () => {
     } catch (error) {
       console.error("Failed to initialize map:", error);
     }
+  }, []);
 
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
       if (map.current) {
         console.log("Cleaning up map");
