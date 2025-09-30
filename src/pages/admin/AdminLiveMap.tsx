@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-mapboxgl.accessToken = "pk.eyJ1IjoiYnV1dGVybWIiLCJhIjoiY21nNzNrd3U3MGlyNjJqcTNlMnhsenFwbCJ9.Ss9KyWJkDeSvZilooUFZgA";
+mapboxgl.accessToken = "sk.eyJ1IjoiYnV1dGVybWIiLCJhIjoiY21nNzV1Zm02MG41djJsb2hsbTRtZ2JxMSJ9.hQ-LbaAT6STZj5C79sXzmA";
 
 interface RealtimeStats {
   ordersLastHour: number;
