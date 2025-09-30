@@ -167,6 +167,7 @@ serve(async (req) => {
 
     // ==================== ORDERS LIST ====================
     if (endpoint === "orders") {
+      console.log("Fetching orders list...");
       const status = url.searchParams.get("status");
       const merchantId = url.searchParams.get("merchantId");
       const courierId = url.searchParams.get("courierId");
@@ -174,42 +175,65 @@ serve(async (req) => {
       const page = parseInt(url.searchParams.get("page") || "1");
       const limit = parseInt(url.searchParams.get("limit") || "50");
 
-      let query = supabase
-        .from("orders")
-        .select(`
-          *,
-          user:profiles!orders_user_id_fkey (user_id, phone, age_verified),
-          merchant:merchants (id, business_name, license_number),
-          courier:couriers (id, full_name, phone),
-          address:addresses (*),
-          items:order_items (
+      try {
+        let query = supabase
+          .from("orders")
+          .select(`
             *,
-            product:products (*)
-          ),
-          delivery:deliveries (*)
-        `, { count: "exact" })
-        .order("created_at", { ascending: false })
-        .range((page - 1) * limit, page * limit - 1);
+            profiles!orders_user_id_fkey (user_id, phone, age_verified),
+            merchants (id, business_name, license_number),
+            couriers (id, full_name, phone),
+            addresses!orders_address_id_fkey (*),
+            order_items (
+              *,
+              products (*)
+            ),
+            deliveries (*)
+          `, { count: "exact" })
+          .order("created_at", { ascending: false })
+          .range((page - 1) * limit, page * limit - 1);
 
-      if (status) query = query.eq("status", status);
-      if (merchantId) query = query.eq("merchant_id", merchantId);
-      if (courierId) query = query.eq("courier_id", courierId);
-      if (flagged === "true") query = query.not("flagged_reason", "is", null);
+        if (status) query = query.eq("status", status);
+        if (merchantId) query = query.eq("merchant_id", merchantId);
+        if (courierId) query = query.eq("courier_id", courierId);
+        if (flagged === "true") query = query.not("flagged_reason", "is", null);
 
-      const { data: orders, count } = await query;
+        const { data: orders, count, error } = await query;
+        
+        if (error) {
+          console.error("Orders query error:", error);
+          return new Response(
+            JSON.stringify({ error: error.message, orders: [], pagination: { page, limit, total: 0, totalPages: 0 } }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
 
-      return new Response(
-        JSON.stringify({
-          orders: orders || [],
-          pagination: {
-            page,
-            limit,
-            total: count || 0,
-            totalPages: Math.ceil((count || 0) / limit),
-          },
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+        console.log(`Found ${orders?.length || 0} orders, total count: ${count}`);
+
+        return new Response(
+          JSON.stringify({
+            orders: orders || [],
+            pagination: {
+              page,
+              limit,
+              total: count || 0,
+              totalPages: Math.ceil((count || 0) / limit),
+            },
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (error) {
+        console.error("Orders endpoint error:", error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return new Response(
+          JSON.stringify({ 
+            error: errorMessage, 
+            orders: [], 
+            pagination: { page, limit, total: 0, totalPages: 0 } 
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // ==================== ORDER DETAILS ====================
