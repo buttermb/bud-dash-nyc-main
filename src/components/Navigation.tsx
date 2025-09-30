@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import AuthModal from "./AuthModal";
 import CartDrawer from "./CartDrawer";
+import ThemeToggle from "./ThemeToggle";
 
 const Navigation = () => {
   const { user, signOut } = useAuth();
@@ -129,6 +130,7 @@ const Navigation = () => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                <ThemeToggle />
               </div>
             ) : (
               <div className="hidden sm:flex items-center gap-2">
@@ -138,6 +140,7 @@ const Navigation = () => {
                 <Button variant="hero" size="sm" onClick={() => openAuth("signup")}>
                   Sign Up
                 </Button>
+                <ThemeToggle />
               </div>
             )}
 

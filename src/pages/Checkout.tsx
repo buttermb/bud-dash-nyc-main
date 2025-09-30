@@ -23,6 +23,8 @@ const Checkout = () => {
   const [promoCode, setPromoCode] = useState("");
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [scheduledTime, setScheduledTime] = useState("");
+  const [notes, setNotes] = useState("");
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ["cart", user?.id],
@@ -90,6 +92,8 @@ const Checkout = () => {
           delivery_fee: deliveryFee,
           subtotal: subtotal,
           total_amount: total,
+          scheduled_delivery_time: scheduledTime || null,
+          delivery_notes: notes || null,
         })
         .select()
         .single();
@@ -183,6 +187,30 @@ const Checkout = () => {
                       <Label htmlFor="manhattan" className="cursor-pointer">Manhattan (+$5 surcharge)</Label>
                     </div>
                   </RadioGroup>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="scheduledTime">Scheduled Delivery (Optional)</Label>
+                  <Input
+                    id="scheduledTime"
+                    type="datetime-local"
+                    value={scheduledTime}
+                    onChange={(e) => setScheduledTime(e.target.value)}
+                    min={new Date().toISOString().slice(0, 16)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Leave empty for immediate delivery (within 2 hours)
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Delivery Notes (Optional)</Label>
+                  <Input
+                    id="notes"
+                    placeholder="Apartment number, building instructions, etc."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
                 </div>
               </CardContent>
             </Card>

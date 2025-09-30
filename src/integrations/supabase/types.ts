@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          author_id: string | null
+          content: string
+          created_at: string | null
+          excerpt: string | null
+          featured_image_url: string | null
+          id: string
+          published: boolean | null
+          slug: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          created_at?: string | null
+          excerpt?: string | null
+          featured_image_url?: string | null
+          id?: string
+          published?: boolean | null
+          slug: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          created_at?: string | null
+          excerpt?: string | null
+          featured_image_url?: string | null
+          id?: string
+          published?: boolean | null
+          slug?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           created_at: string | null
@@ -42,6 +81,68 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_points: {
+        Row: {
+          created_at: string | null
+          id: string
+          lifetime_points: number
+          points: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lifetime_points?: number
+          points?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lifetime_points?: number
+          points?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      loyalty_transactions: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_id: string | null
+          points: number
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          points: number
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          points?: number
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -93,36 +194,48 @@ export type Database = {
       }
       orders: {
         Row: {
+          courier_id: string | null
           created_at: string | null
           delivery_address: string
           delivery_borough: string
           delivery_fee: number
+          delivery_notes: string | null
+          estimated_delivery: string | null
           id: string
           payment_method: string
+          scheduled_delivery_time: string | null
           status: string
           subtotal: number
           total_amount: number
           user_id: string
         }
         Insert: {
+          courier_id?: string | null
           created_at?: string | null
           delivery_address: string
           delivery_borough: string
           delivery_fee: number
+          delivery_notes?: string | null
+          estimated_delivery?: string | null
           id?: string
           payment_method: string
+          scheduled_delivery_time?: string | null
           status?: string
           subtotal: number
           total_amount: number
           user_id: string
         }
         Update: {
+          courier_id?: string | null
           created_at?: string | null
           delivery_address?: string
           delivery_borough?: string
           delivery_fee?: number
+          delivery_notes?: string | null
+          estimated_delivery?: string | null
           id?: string
           payment_method?: string
+          scheduled_delivery_time?: string | null
           status?: string
           subtotal?: number
           total_amount?: number
@@ -132,6 +245,7 @@ export type Database = {
       }
       products: {
         Row: {
+          average_rating: number | null
           category: string
           created_at: string | null
           description: string | null
@@ -141,10 +255,12 @@ export type Database = {
           lab_results_url: string | null
           name: string
           price: number
+          review_count: number | null
           strain_info: string | null
           thca_percentage: number
         }
         Insert: {
+          average_rating?: number | null
           category: string
           created_at?: string | null
           description?: string | null
@@ -154,10 +270,12 @@ export type Database = {
           lab_results_url?: string | null
           name: string
           price: number
+          review_count?: number | null
           strain_info?: string | null
           thca_percentage: number
         }
         Update: {
+          average_rating?: number | null
           category?: string
           created_at?: string | null
           description?: string | null
@@ -167,6 +285,7 @@ export type Database = {
           lab_results_url?: string | null
           name?: string
           price?: number
+          review_count?: number | null
           strain_info?: string | null
           thca_percentage?: number
         }
@@ -199,15 +318,87 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          order_id: string | null
+          product_id: string
+          rating: number
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          product_id: string
+          rating: number
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          product_id?: string
+          rating?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "courier" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -334,6 +525,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "courier", "user"],
+    },
   },
 } as const
