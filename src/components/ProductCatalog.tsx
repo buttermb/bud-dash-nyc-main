@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import ProductCard from "./ProductCard";
 import AuthModal from "./AuthModal";
 import { Loader2, Search } from "lucide-react";
@@ -18,7 +19,7 @@ const ProductCatalog = () => {
   const [sortBy, setSortBy] = useState("name");
   const [priceRange, setPriceRange] = useState([0, 100]);
 
-  const { data: allProducts = [], isLoading } = useQuery({
+  const { data: allProducts = [], isLoading, error } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -141,6 +142,37 @@ const ProductCatalog = () => {
           {isLoading ? (
             <div className="flex justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4 bg-muted/30 rounded-lg p-8">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                <Loader2 className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-2xl font-semibold text-center">Sign In Required</h3>
+              <p className="text-muted-foreground text-center max-w-md">
+                You must be signed in with an age-verified account to view our THCA product catalog.
+              </p>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    setAuthMode("signin");
+                    setShowAuthModal(true);
+                  }}
+                >
+                  Sign In
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => {
+                    setAuthMode("signup");
+                    setShowAuthModal(true);
+                  }}
+                >
+                  Sign Up
+                </Button>
+              </div>
             </div>
           ) : (
             <TabsContent value={category} className="mt-0">

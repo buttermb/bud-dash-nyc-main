@@ -396,6 +396,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_age_verified: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "courier" | "user"
