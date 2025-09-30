@@ -215,14 +215,10 @@ serve(async (req) => {
       const limit = parseInt(url.searchParams.get("limit") || "50");
 
       try {
+        // Fetch orders first WITHOUT joins
         let query = supabase
           .from("orders")
-          .select(`
-            *,
-            merchants (id, business_name, license_number),
-            couriers (id, full_name, phone),
-            addresses (*)
-          `, { count: "exact" })
+          .select("*", { count: "exact" })
           .order("created_at", { ascending: false })
           .range((page - 1) * limit, page * limit - 1);
 
@@ -241,38 +237,44 @@ serve(async (req) => {
           );
         }
 
-        // Fetch user profiles separately
-        const userIds = [...new Set(orders?.map(o => o.user_id).filter(Boolean) || [])];
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("*")
-          .in("user_id", userIds);
+        if (!orders || orders.length === 0) {
+          return new Response(
+            JSON.stringify({
+              orders: [],
+              pagination: { page, limit, total: 0, totalPages: 0 }
+            }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
 
-        // Fetch order items with products
-        const orderIds = orders?.map(o => o.id) || [];
-        const { data: orderItems } = await supabase
-          .from("order_items")
-          .select(`
-            *,
-            products (*)
-          `)
-          .in("order_id", orderIds);
+        // Fetch all related data separately
+        const userIds = [...new Set(orders.map(o => o.user_id).filter(Boolean))];
+        const merchantIds = [...new Set(orders.map(o => o.merchant_id).filter(Boolean))];
+        const courierIds = [...new Set(orders.map(o => o.courier_id).filter(Boolean))];
+        const addressIds = [...new Set(orders.map(o => o.address_id).filter(Boolean))];
+        const orderIds = orders.map(o => o.id);
 
-        // Fetch deliveries
-        const { data: deliveries } = await supabase
-          .from("deliveries")
-          .select("*")
-          .in("order_id", orderIds);
+        const [profilesRes, merchantsRes, couriersRes, addressesRes, itemsRes, deliveriesRes] = await Promise.all([
+          userIds.length > 0 ? supabase.from("profiles").select("*").in("user_id", userIds) : { data: [] },
+          merchantIds.length > 0 ? supabase.from("merchants").select("*").in("id", merchantIds) : { data: [] },
+          courierIds.length > 0 ? supabase.from("couriers").select("*").in("id", courierIds) : { data: [] },
+          addressIds.length > 0 ? supabase.from("addresses").select("*").in("id", addressIds) : { data: [] },
+          supabase.from("order_items").select("*, products(*)").in("order_id", orderIds),
+          supabase.from("deliveries").select("*").in("order_id", orderIds)
+        ]);
 
         // Combine data
-        const enrichedOrders = orders?.map(order => ({
+        const enrichedOrders = orders.map(order => ({
           ...order,
-          user: profiles?.find(p => p.user_id === order.user_id) || null,
-          items: orderItems?.filter(item => item.order_id === order.id) || [],
-          delivery: deliveries?.find(d => d.order_id === order.id) || null
-        })) || [];
+          user: profilesRes.data?.find(p => p.user_id === order.user_id) || null,
+          merchant: merchantsRes.data?.find(m => m.id === order.merchant_id) || null,
+          courier: couriersRes.data?.find(c => c.id === order.courier_id) || null,
+          address: addressesRes.data?.find(a => a.id === order.address_id) || null,
+          items: itemsRes.data?.filter(item => item.order_id === order.id) || [],
+          delivery: deliveriesRes.data?.find(d => d.order_id === order.id) || null
+        }));
 
-        console.log(`Found ${enrichedOrders.length} orders, total count: ${count}`);
+        console.log(`Successfully fetched ${enrichedOrders.length} orders`);
 
         return new Response(
           JSON.stringify({
