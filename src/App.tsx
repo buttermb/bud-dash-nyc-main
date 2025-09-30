@@ -4,8 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { AdminProvider } from "./contexts/AdminContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
 import Index from "./pages/Index";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
@@ -26,6 +28,9 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import CourierDashboard from "./pages/CourierDashboard";
 import MerchantDashboard from "./pages/MerchantDashboard";
+import AdminLogin from "./pages/AdminLogin";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -33,7 +38,8 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
-        <TooltipProvider>
+        <AdminProvider>
+          <TooltipProvider>
           <BrowserRouter>
             <Toaster />
             <Sonner />
@@ -50,14 +56,26 @@ const App = () => (
               <Route path="/become-courier" element={<BecomeCourier />} />
               <Route path="/partner-shops" element={<PartnerShops />} />
               <Route path="/track-order" element={<OrderLookup />} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
               <Route
                 path="/admin"
                 element={
-                  <ProtectedRoute>
-                    <Admin />
-                  </ProtectedRoute>
+                  <AdminProtectedRoute>
+                    <AdminLayout />
+                  </AdminProtectedRoute>
                 }
-              />
+              >
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="live-map" element={<div className="p-6">Live Map Coming Soon</div>} />
+                <Route path="orders" element={<div className="p-6">Orders Management Coming Soon</div>} />
+                <Route path="users" element={<div className="p-6">Users Management Coming Soon</div>} />
+                <Route path="compliance" element={<div className="p-6">Compliance Dashboard Coming Soon</div>} />
+                <Route path="analytics" element={<div className="p-6">Analytics Coming Soon</div>} />
+                <Route path="audit-logs" element={<div className="p-6">Audit Logs Coming Soon</div>} />
+              </Route>
+
               <Route
                 path="/merchant"
                 element={
@@ -110,7 +128,8 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </TooltipProvider>
+          </TooltipProvider>
+        </AdminProvider>
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>

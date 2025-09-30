@@ -59,6 +59,124 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string | null
+          created_at: string | null
+          details: Json | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_audit_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_sessions: {
+        Row: {
+          admin_id: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          ip_address: string | null
+          token_hash: string
+          user_agent: string | null
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: string | null
+          token_hash: string
+          user_agent?: string | null
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          token_hash?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_sessions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean | null
+          last_login_at: string | null
+          role: Database["public"]["Enums"]["admin_role"]
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name: string
+          id?: string
+          is_active?: boolean | null
+          last_login_at?: string | null
+          role?: Database["public"]["Enums"]["admin_role"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          last_login_at?: string | null
+          role?: Database["public"]["Enums"]["admin_role"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       age_verifications: {
         Row: {
           created_at: string | null
@@ -849,9 +967,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_is_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       decrement_inventory: {
         Args: { _product_id: string; _quantity: number }
         Returns: boolean
+      }
+      get_admin_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["admin_role"]
       }
       has_role: {
         Args: {
@@ -890,6 +1016,7 @@ export type Database = {
       }
     }
     Enums: {
+      admin_role: "super_admin" | "admin" | "compliance_officer" | "support"
       app_role: "admin" | "courier" | "user"
       order_status_type:
         | "pending"
@@ -1036,6 +1163,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      admin_role: ["super_admin", "admin", "compliance_officer", "support"],
       app_role: ["admin", "courier", "user"],
       order_status_type: [
         "pending",
