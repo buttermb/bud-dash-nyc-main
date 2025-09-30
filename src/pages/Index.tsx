@@ -14,8 +14,12 @@ const Index = () => {
       <AgeVerificationModal />
       <Navigation />
       <Hero />
-      <HowItWorks />
-      <ProductCatalog />
+      <div id="how-it-works">
+        <HowItWorks />
+      </div>
+      <div id="products">
+        <ProductCatalog />
+      </div>
       <Features />
       <CTA />
       <Footer />

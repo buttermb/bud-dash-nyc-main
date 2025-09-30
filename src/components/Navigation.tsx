@@ -47,22 +47,22 @@ const Navigation = () => {
   };
 
   const navLinks = [
-    { label: "Products", href: "#products" },
-    { label: "How It Works", href: "#how-it-works" },
-    { label: "Track Order", href: "/track-order" },
-    { label: "Support", href: "/support" },
+    { label: "Products", href: "/#products", scroll: true },
+    { label: "How It Works", href: "/#how-it-works", scroll: true },
+    { label: "Track Order", href: "/track-order", scroll: false },
+    { label: "Support", href: "/support", scroll: false },
   ];
 
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
+          <a href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center">
               <Leaf className="w-6 h-6 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold hidden sm:inline">THCA NYC</span>
-          </div>
+          </a>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
@@ -70,6 +70,14 @@ const Navigation = () => {
               <a
                 key={link.label}
                 href={link.href}
+                onClick={(e) => {
+                  if (link.scroll && link.href.includes('#')) {
+                    e.preventDefault();
+                    const id = link.href.split('#')[1];
+                    const element = document.getElementById(id);
+                    element?.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
                 className="text-sm font-medium transition-colors hover:text-primary"
               >
                 {link.label}
@@ -146,6 +154,14 @@ const Navigation = () => {
                     <a
                       key={link.label}
                       href={link.href}
+                      onClick={(e) => {
+                        if (link.scroll && link.href.includes('#')) {
+                          e.preventDefault();
+                          const id = link.href.split('#')[1];
+                          const element = document.getElementById(id);
+                          element?.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }}
                       className="text-lg font-medium transition-colors hover:text-primary"
                     >
                       {link.label}

@@ -1,24 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, Clock, Leaf } from "lucide-react";
-import heroImage from "@/assets/hero-bg.jpg";
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image with Overlay */}
-      <div 
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: `url(${heroImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="absolute inset-0 bg-background/98" />
-      </div>
-
-      {/* Gradient Overlay */}
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
+      {/* Solid gradient background - no image */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-muted/20 to-background z-0" />
+      
+      {/* Additional subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-hero z-0" />
 
       {/* Content */}
@@ -64,10 +54,26 @@ const Hero = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Button variant="hero" size="lg" className="text-lg">
+            <Button 
+              variant="hero" 
+              size="lg" 
+              className="text-lg"
+              onClick={() => {
+                const productsSection = document.getElementById('products');
+                productsSection?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
               Shop Now
             </Button>
-            <Button variant="outline" size="lg" className="text-lg">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="text-lg"
+              onClick={() => {
+                const howItWorksSection = document.getElementById('how-it-works');
+                howItWorksSection?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
               Learn More
             </Button>
           </div>

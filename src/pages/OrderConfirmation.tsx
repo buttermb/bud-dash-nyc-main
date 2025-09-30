@@ -78,8 +78,20 @@ const OrderConfirmation = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center pb-4 border-b">
-                <span className="text-muted-foreground">Order Number</span>
-                <span className="font-mono font-semibold">#{order.id.slice(0, 8).toUpperCase()}</span>
+                <span className="text-muted-foreground">Order ID</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-semibold text-lg">{order.id}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(order.id);
+                      alert("Order ID copied!");
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </div>
               </div>
               <div className="flex justify-between items-center pb-4 border-b">
                 <span className="text-muted-foreground">Status</span>
