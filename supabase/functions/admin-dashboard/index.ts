@@ -125,44 +125,83 @@ serve(async (req) => {
     if (endpoint === "live-deliveries") {
       console.log("Fetching live deliveries...");
       
-      const { data: deliveries, error } = await supabase
-        .from("deliveries")
-        .select(`
-          *,
-          order:orders (
+      try {
+        // Fetch deliveries
+        const { data: deliveries, error } = await supabase
+          .from("deliveries")
+          .select(`
             *,
-            user:profiles!orders_user_id_fkey (user_id, phone),
-            merchant:merchants (*),
-            address:addresses (*),
-            items:order_items (
-              *,
-              product:products (name, category)
-            )
-          ),
-          courier:couriers (*)
-        `)
-        .is("actual_dropoff_time", null)
-        .order("created_at", { ascending: false });
+            couriers (*)
+          `)
+          .is("actual_dropoff_time", null)
+          .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching deliveries:", error);
+        if (error) {
+          console.error("Error fetching deliveries:", error);
+          return new Response(
+            JSON.stringify({ error: error.message, deliveries: [], count: 0 }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Fetch related orders
+        const orderIds = deliveries?.map(d => d.order_id) || [];
+        const { data: orders } = await supabase
+          .from("orders")
+          .select(`
+            *,
+            merchants (*),
+            addresses (*)
+          `)
+          .in("id", orderIds);
+
+        // Fetch user profiles
+        const userIds = [...new Set(orders?.map(o => o.user_id).filter(Boolean) || [])];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("*")
+          .in("user_id", userIds);
+
+        // Fetch order items
+        const { data: orderItems } = await supabase
+          .from("order_items")
+          .select(`
+            *,
+            products (name, category)
+          `)
+          .in("order_id", orderIds);
+
+        // Enrich deliveries with order data
+        const enrichedDeliveries = deliveries?.map(delivery => {
+          const order = orders?.find(o => o.id === delivery.order_id);
+          return {
+            ...delivery,
+            order: order ? {
+              ...order,
+              user: profiles?.find(p => p.user_id === order.user_id) || null,
+              items: orderItems?.filter(item => item.order_id === order.id) || []
+            } : null
+          };
+        }) || [];
+
+        console.log(`Found ${enrichedDeliveries.length} deliveries`);
+        await logAdminAction(supabase, adminUser.id, "VIEW_LIVE_DELIVERIES", undefined, undefined, { count: enrichedDeliveries.length }, req);
+
         return new Response(
-          JSON.stringify({ error: error.message, deliveries: [], count: 0 }),
+          JSON.stringify({ 
+            deliveries: enrichedDeliveries, 
+            count: enrichedDeliveries.length,
+            success: true 
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (error) {
+        console.error("Live deliveries error:", error);
+        return new Response(
+          JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error', deliveries: [], count: 0 }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-
-      console.log(`Found ${deliveries?.length || 0} deliveries`);
-      await logAdminAction(supabase, adminUser.id, "VIEW_LIVE_DELIVERIES", undefined, undefined, { count: deliveries?.length || 0 }, req);
-
-      return new Response(
-        JSON.stringify({ 
-          deliveries: deliveries || [], 
-          count: deliveries?.length || 0,
-          success: true 
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
     }
 
     // ==================== ORDERS LIST ====================
@@ -180,15 +219,9 @@ serve(async (req) => {
           .from("orders")
           .select(`
             *,
-            profiles!orders_user_id_fkey (user_id, phone, age_verified),
             merchants (id, business_name, license_number),
             couriers (id, full_name, phone),
-            addresses!orders_address_id_fkey (*),
-            order_items (
-              *,
-              products (*)
-            ),
-            deliveries (*)
+            addresses (*)
           `, { count: "exact" })
           .order("created_at", { ascending: false })
           .range((page - 1) * limit, page * limit - 1);
@@ -208,11 +241,42 @@ serve(async (req) => {
           );
         }
 
-        console.log(`Found ${orders?.length || 0} orders, total count: ${count}`);
+        // Fetch user profiles separately
+        const userIds = [...new Set(orders?.map(o => o.user_id).filter(Boolean) || [])];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("*")
+          .in("user_id", userIds);
+
+        // Fetch order items with products
+        const orderIds = orders?.map(o => o.id) || [];
+        const { data: orderItems } = await supabase
+          .from("order_items")
+          .select(`
+            *,
+            products (*)
+          `)
+          .in("order_id", orderIds);
+
+        // Fetch deliveries
+        const { data: deliveries } = await supabase
+          .from("deliveries")
+          .select("*")
+          .in("order_id", orderIds);
+
+        // Combine data
+        const enrichedOrders = orders?.map(order => ({
+          ...order,
+          user: profiles?.find(p => p.user_id === order.user_id) || null,
+          items: orderItems?.filter(item => item.order_id === order.id) || [],
+          delivery: deliveries?.find(d => d.order_id === order.id) || null
+        })) || [];
+
+        console.log(`Found ${enrichedOrders.length} orders, total count: ${count}`);
 
         return new Response(
           JSON.stringify({
-            orders: orders || [],
+            orders: enrichedOrders,
             pagination: {
               page,
               limit,
