@@ -33,66 +33,105 @@ const AdminLiveMap = () => {
   const heatmapSourceAdded = useRef(false);
 
   useEffect(() => {
-    if (session) {
+    if (!session) {
+      console.log("No session available, skipping data fetch");
+      setLoading(false);
+      return;
+    }
+
+    console.log("Session available, fetching data...");
+    fetchLiveDeliveries();
+    fetchRealtimeStats();
+    
+    // Refresh data every 10 seconds
+    const interval = setInterval(() => {
+      console.log("Refreshing data...");
       fetchLiveDeliveries();
       fetchRealtimeStats();
-      
-      // Refresh data every 10 seconds
-      const interval = setInterval(() => {
-        fetchLiveDeliveries();
-        fetchRealtimeStats();
-      }, 10000);
-      
-      // Set up real-time subscription
-      const channel = supabase
-        .channel("live-deliveries")
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "deliveries",
-          },
-          () => {
-            fetchLiveDeliveries();
-          }
-        )
-        .subscribe();
+    }, 10000);
+    
+    // Set up real-time subscription
+    const channel = supabase
+      .channel("live-deliveries")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "deliveries",
+        },
+        (payload) => {
+          console.log("Real-time update received:", payload);
+          fetchLiveDeliveries();
+        }
+      )
+      .subscribe((status) => {
+        console.log("Subscription status:", status);
+      });
 
-      return () => {
-        clearInterval(interval);
-        supabase.removeChannel(channel);
-      };
-    }
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [session]);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    // Initialize map centered on New York
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: [-73.935242, 40.730610], // NYC coordinates
-      zoom: 11,
-    });
+    console.log("Initializing Mapbox map...");
+    
+    try {
+      // Initialize map centered on New York
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/dark-v11",
+        center: [-73.935242, 40.730610], // NYC coordinates
+        zoom: 11,
+      });
 
-    map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+      map.current.on('load', () => {
+        console.log("Mapbox map loaded successfully");
+      });
+
+      map.current.on('error', (e) => {
+        console.error("Mapbox error:", e);
+      });
+
+      map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+    } catch (error) {
+      console.error("Failed to initialize map:", error);
+    }
 
     return () => {
-      map.current?.remove();
+      if (map.current) {
+        console.log("Cleaning up map");
+        map.current.remove();
+        map.current = null;
+      }
     };
   }, []);
 
   useEffect(() => {
-    if (!map.current || !deliveries.length) return;
+    if (!map.current) {
+      console.log("Map not initialized yet");
+      return;
+    }
+
+    console.log("Updating markers. Deliveries count:", deliveries.length);
 
     // Clear existing markers
     markers.current.forEach(marker => marker.remove());
     markers.current = [];
 
+    if (deliveries.length === 0) {
+      console.log("No deliveries to display");
+      return;
+    }
+
     // Add new markers for each delivery
     deliveries.forEach((delivery) => {
+      console.log("Processing delivery:", delivery);
+      
       if (delivery.courier?.current_lat && delivery.courier?.current_lng) {
         const marker = new mapboxgl.Marker({ color: "#22c55e" })
           .setLngLat([
@@ -101,16 +140,21 @@ const AdminLiveMap = () => {
           ])
           .setPopup(
             new mapboxgl.Popup().setHTML(
-              `<strong>${delivery.order.order_number}</strong><br/>
+              `<strong>${delivery.order?.order_number || 'Unknown'}</strong><br/>
                Courier: ${delivery.courier?.full_name || "Unassigned"}<br/>
-               Status: ${delivery.order.status.replace("_", " ")}`
+               Status: ${delivery.order?.status?.replace("_", " ") || 'Unknown'}`
             )
           )
           .addTo(map.current!);
 
         markers.current.push(marker);
+        console.log("Added marker for courier:", delivery.courier.full_name);
+      } else {
+        console.log("Delivery missing courier location:", delivery.id);
       }
     });
+
+    console.log("Total markers added:", markers.current.length);
 
     // Fit map to markers if there are any
     if (markers.current.length > 0) {
@@ -288,6 +332,30 @@ const AdminLiveMap = () => {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Debug Info */}
+      <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
+        <CardContent className="pt-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <p className="text-muted-foreground">Session Status</p>
+              <p className="font-semibold">{session ? "✅ Connected" : "❌ Not Connected"}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Admin User</p>
+              <p className="font-semibold truncate">{session?.user?.email || "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Deliveries Loaded</p>
+              <p className="font-semibold">{deliveries.length}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Map Status</p>
+              <p className="font-semibold">{map.current ? "✅ Initialized" : "⚠️ Not Initialized"}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Live Delivery Map</h1>
@@ -464,9 +532,18 @@ const AdminLiveMap = () => {
       <Card>
         <CardHeader>
           <CardTitle>Live Delivery Map</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            {deliveries.length > 0 
+              ? `Tracking ${deliveries.length} active ${deliveries.length === 1 ? 'delivery' : 'deliveries'}`
+              : 'No active deliveries to display'}
+          </p>
         </CardHeader>
         <CardContent>
-          <div ref={mapContainer} className="w-full h-[600px] rounded-lg" />
+          <div 
+            ref={mapContainer} 
+            className="w-full h-[600px] rounded-lg border border-border bg-muted/50" 
+            style={{ minHeight: '600px' }}
+          />
         </CardContent>
       </Card>
     </div>

@@ -123,7 +123,9 @@ serve(async (req) => {
 
     // ==================== LIVE DELIVERIES ====================
     if (endpoint === "live-deliveries") {
-      const { data: deliveries } = await supabase
+      console.log("Fetching live deliveries...");
+      
+      const { data: deliveries, error } = await supabase
         .from("deliveries")
         .select(`
           *,
@@ -142,10 +144,23 @@ serve(async (req) => {
         .is("actual_dropoff_time", null)
         .order("created_at", { ascending: false });
 
+      if (error) {
+        console.error("Error fetching deliveries:", error);
+        return new Response(
+          JSON.stringify({ error: error.message, deliveries: [], count: 0 }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      console.log(`Found ${deliveries?.length || 0} deliveries`);
       await logAdminAction(supabase, adminUser.id, "VIEW_LIVE_DELIVERIES", undefined, undefined, { count: deliveries?.length || 0 }, req);
 
       return new Response(
-        JSON.stringify({ deliveries: deliveries || [], count: deliveries?.length || 0 }),
+        JSON.stringify({ 
+          deliveries: deliveries || [], 
+          count: deliveries?.length || 0,
+          success: true 
+        }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -340,16 +355,20 @@ serve(async (req) => {
           .from("orders")
           .select(`
             total_amount,
-            address:addresses (lat, lng)
+            address:addresses!orders_address_id_fkey (lat, lng)
           `)
           .gte("created_at", startDate.toISOString())
-          .eq("status", "delivered");
+          .eq("status", "delivered")
+          .not("address_id", "is", null);
 
-        heatmapData = orders?.filter(o => o.address).map(order => ({
-          lat: parseFloat(order.address.lat),
-          lng: parseFloat(order.address.lng),
-          intensity: parseFloat(order.total_amount),
-        })) || [];
+        heatmapData = orders?.filter(o => o.address && Array.isArray(o.address) && o.address.length > 0).map(order => {
+          const addr = Array.isArray(order.address) ? order.address[0] : order.address;
+          return {
+            lat: parseFloat(addr.lat),
+            lng: parseFloat(addr.lng),
+            intensity: parseFloat(order.total_amount),
+          };
+        }) || [];
       } else if (type === "users") {
         const { data: addresses } = await supabase
           .from("addresses")
@@ -367,6 +386,34 @@ serve(async (req) => {
         JSON.stringify({
           heatmapData,
           count: heatmapData.length,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ==================== TEST/DEBUG ENDPOINT ====================
+    if (endpoint === "test") {
+      const { count: ordersCount } = await supabase
+        .from("orders")
+        .select("*", { count: "exact", head: true });
+        
+      const { count: deliveriesCount } = await supabase
+        .from("deliveries")
+        .select("*", { count: "exact", head: true });
+        
+      const { count: couriersCount } = await supabase
+        .from("couriers")
+        .select("*", { count: "exact", head: true });
+
+      return new Response(
+        JSON.stringify({
+          message: "Admin dashboard is working",
+          adminUser: { email: adminUser.email, role: adminUser.role },
+          databaseCounts: {
+            orders: ordersCount,
+            deliveries: deliveriesCount,
+            couriers: couriersCount
+          }
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
