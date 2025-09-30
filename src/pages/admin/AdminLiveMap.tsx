@@ -1,15 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/contexts/AdminContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Truck, Package, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+
+mapboxgl.accessToken = "pk.eyJ1IjoiYnV1dGVybWIiLCJhIjoiY21nNzNrd3U3MGlyNjJqcTNlMnhsenFwbCJ9.Ss9KyWJkDeSvZilooUFZgA";
 
 const AdminLiveMap = () => {
   const { session } = useAdmin();
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const markers = useRef<mapboxgl.Marker[]>([]);
 
   useEffect(() => {
     if (session) {
@@ -36,6 +43,63 @@ const AdminLiveMap = () => {
       };
     }
   }, [session]);
+
+  useEffect(() => {
+    if (!mapContainer.current || map.current) return;
+
+    // Initialize map centered on New York
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/streets-v12",
+      center: [-73.935242, 40.730610], // NYC coordinates
+      zoom: 11,
+    });
+
+    map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+
+    return () => {
+      map.current?.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!map.current || !deliveries.length) return;
+
+    // Clear existing markers
+    markers.current.forEach(marker => marker.remove());
+    markers.current = [];
+
+    // Add new markers for each delivery
+    deliveries.forEach((delivery) => {
+      if (delivery.courier?.current_lat && delivery.courier?.current_lng) {
+        const marker = new mapboxgl.Marker({ color: "#22c55e" })
+          .setLngLat([
+            parseFloat(delivery.courier.current_lng),
+            parseFloat(delivery.courier.current_lat),
+          ])
+          .setPopup(
+            new mapboxgl.Popup().setHTML(
+              `<strong>${delivery.order.order_number}</strong><br/>
+               Courier: ${delivery.courier?.full_name || "Unassigned"}<br/>
+               Status: ${delivery.order.status.replace("_", " ")}`
+            )
+          )
+          .addTo(map.current!);
+
+        markers.current.push(marker);
+      }
+    });
+
+    // Fit map to markers if there are any
+    if (markers.current.length > 0) {
+      const bounds = new mapboxgl.LngLatBounds();
+      markers.current.forEach(marker => {
+        const lngLat = marker.getLngLat();
+        bounds.extend(lngLat);
+      });
+      map.current.fitBounds(bounds, { padding: 50 });
+    }
+  }, [deliveries]);
 
   const fetchLiveDeliveries = async () => {
     try {
@@ -171,17 +235,10 @@ const AdminLiveMap = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Map Integration</CardTitle>
+          <CardTitle>Live Delivery Map</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="bg-muted rounded-lg p-12 text-center">
-            <MapPin className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <p className="text-lg font-semibold mb-2">Map View Coming Soon</p>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Integrate with Google Maps or Mapbox to display real-time courier locations
-              and delivery routes on an interactive map.
-            </p>
-          </div>
+          <div ref={mapContainer} className="w-full h-[600px] rounded-lg" />
         </CardContent>
       </Card>
     </div>
