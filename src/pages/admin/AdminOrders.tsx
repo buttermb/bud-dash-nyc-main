@@ -46,12 +46,27 @@ const AdminOrders = () => {
 
   const fetchOrders = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke("admin-dashboard", {
-        body: { endpoint: "orders", page: 1, limit: 50 },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
+      console.log("Fetching orders with session:", session?.access_token);
+      
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/admin-dashboard?endpoint=orders&page=1&limit=50`,
+        {
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Orders fetch error:", errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Orders data received:", data);
       setOrders(data.orders || []);
     } catch (error) {
       console.error("Failed to fetch orders:", error);
@@ -60,6 +75,7 @@ const AdminOrders = () => {
         title: "Error",
         description: "Failed to load orders",
       });
+      setOrders([]);
     } finally {
       setLoading(false);
     }
