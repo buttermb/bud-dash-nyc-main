@@ -10,7 +10,43 @@ import { Skeleton } from "@/components/ui/skeleton";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-mapboxgl.accessToken = "sk.eyJ1IjoiYnV1dGVybWIiLCJhIjoiY21nNzV1Zm02MG41djJsb2hsbTRtZ2JxMSJ9.hQ-LbaAT6STZj5C79sXzmA";
+// Use public token - get yours from https://mapbox.com/
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN || "pk.eyJ1IjoiYnV1dGVybWIiLCJhIjoiY20yajhqNGt2MDQ4ODJscXNocG8zNDV0NyJ9.example";
+mapboxgl.accessToken = MAPBOX_TOKEN;
+
+// Geocoding helper function
+const geocodeAddress = async (address: string): Promise<[number, number] | null> => {
+  try {
+    const response = await fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${MAPBOX_TOKEN}&limit=1`
+    );
+    const data = await response.json();
+    if (data.features && data.features.length > 0) {
+      return data.features[0].geometry.coordinates; // [lng, lat]
+    }
+    return null;
+  } catch (error) {
+    console.error("Geocoding error:", error);
+    return null;
+  }
+};
+
+// Reverse geocoding helper function
+const reverseGeocode = async (lng: number, lat: number): Promise<string | null> => {
+  try {
+    const response = await fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&limit=1`
+    );
+    const data = await response.json();
+    if (data.features && data.features.length > 0) {
+      return data.features[0].place_name;
+    }
+    return null;
+  } catch (error) {
+    console.error("Reverse geocoding error:", error);
+    return null;
+  }
+};
 
 interface RealtimeStats {
   ordersLastHour: number;
@@ -112,9 +148,9 @@ const AdminLiveMap = () => {
       try {
         map.current = new mapboxgl.Map({
           container: mapContainer.current!,
-          style: "mapbox://styles/mapbox/dark-v11",
-          center: [-73.935242, 40.73061], // NYC coordinates
-          zoom: 11,
+          style: "mapbox://styles/mapbox/streets-v11",
+          center: [-73.98, 40.75], // Manhattan center
+          zoom: 12,
         });
 
         map.current.on('load', () => {
