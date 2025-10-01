@@ -492,6 +492,7 @@ const AdminLiveMap = () => {
 
   const fetchLiveDeliveries = async () => {
     try {
+      setLoading(true);
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       console.log("Fetching live deliveries from:", `${supabaseUrl}/functions/v1/admin-dashboard?endpoint=live-deliveries`);
       

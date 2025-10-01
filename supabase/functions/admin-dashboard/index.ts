@@ -445,23 +445,32 @@ serve(async (req) => {
 
       const revenueLastHour = revenueData?.reduce((sum, order) => sum + parseFloat(order.total_amount), 0) || 0;
 
-      // Calculate average delivery time
+      // Calculate average delivery time (using actual pickup to actual dropoff)
       const { data: recentDeliveries } = await supabase
         .from("deliveries")
-        .select("estimated_pickup_time, actual_dropoff_time")
+        .select("estimated_pickup_time, actual_pickup_time, actual_dropoff_time, created_at")
         .not("actual_dropoff_time", "is", null)
         .gte("actual_dropoff_time", hourAgo.toISOString());
 
       let avgDeliveryTime = 0;
       if (recentDeliveries && recentDeliveries.length > 0) {
-        const totalMinutes = recentDeliveries.reduce((sum, del) => {
-          if (del.estimated_pickup_time && del.actual_dropoff_time) {
-            const diff = new Date(del.actual_dropoff_time).getTime() - new Date(del.estimated_pickup_time).getTime();
+        const validDeliveries = recentDeliveries.filter(del => {
+          if (!del.actual_dropoff_time) return false;
+          // Use actual_pickup_time if available, otherwise use created_at as fallback
+          const startTime = del.actual_pickup_time || del.created_at;
+          if (!startTime) return false;
+          const diff = new Date(del.actual_dropoff_time).getTime() - new Date(startTime).getTime();
+          return diff > 0; // Only count positive delivery times
+        });
+        
+        if (validDeliveries.length > 0) {
+          const totalMinutes = validDeliveries.reduce((sum, del) => {
+            const startTime = del.actual_pickup_time || del.created_at;
+            const diff = new Date(del.actual_dropoff_time).getTime() - new Date(startTime).getTime();
             return sum + (diff / 1000 / 60);
-          }
-          return sum;
-        }, 0);
-        avgDeliveryTime = Math.round(totalMinutes / recentDeliveries.length);
+          }, 0);
+          avgDeliveryTime = Math.round(totalMinutes / validDeliveries.length);
+        }
       }
 
       return new Response(
