@@ -177,7 +177,10 @@ serve(async (req) => {
         .eq("courier_id", courier.id)
         .order("created_at", { ascending: false });
 
-      if (status !== "all") {
+      if (status === "active") {
+        // Active orders are preparing or out for delivery
+        query = query.in("status", ["preparing", "out_for_delivery"]);
+      } else if (status !== "all") {
         query = query.eq("status", status);
       }
 
@@ -191,18 +194,40 @@ serve(async (req) => {
         );
       }
 
-      const ordersWithEarnings = orders?.map(order => {
-        const commission = (parseFloat(order.total_amount) * courier.commission_rate) / 100;
-        return {
-          ...order,
-          courier_commission: commission.toFixed(2)
-        };
-      }) || [];
+      // Fetch customer info from profiles table
+      const ordersWithCustomerInfo = await Promise.all(
+        (orders || []).map(async (order) => {
+          let customerName = order.customer_name;
+          let customerPhone = order.customer_phone;
+          
+          // If customer info is missing, fetch from profiles
+          if (!customerName || !customerPhone) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("full_name, phone")
+              .eq("user_id", order.user_id)
+              .maybeSingle();
+            
+            if (profile) {
+              customerName = profile.full_name || customerName;
+              customerPhone = profile.phone || customerPhone;
+            }
+          }
+          
+          const commission = (parseFloat(order.subtotal || order.total_amount) * courier.commission_rate) / 100;
+          return {
+            ...order,
+            customer_name: customerName,
+            customer_phone: customerPhone,
+            courier_commission: commission.toFixed(2)
+          };
+        })
+      );
 
       return new Response(
         JSON.stringify({ 
-          orders: ordersWithEarnings,
-          count: ordersWithEarnings.length
+          orders: ordersWithCustomerInfo,
+          count: ordersWithCustomerInfo.length
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -221,8 +246,36 @@ serve(async (req) => {
         .order("created_at", { ascending: true })
         .limit(20);
 
+      // Fetch customer info from profiles table
+      const ordersWithCustomerInfo = await Promise.all(
+        (orders || []).map(async (order) => {
+          let customerName = order.customer_name;
+          let customerPhone = order.customer_phone;
+          
+          // If customer info is missing, fetch from profiles
+          if (!customerName || !customerPhone) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("full_name, phone")
+              .eq("user_id", order.user_id)
+              .maybeSingle();
+            
+            if (profile) {
+              customerName = profile.full_name || customerName;
+              customerPhone = profile.phone || customerPhone;
+            }
+          }
+          
+          return {
+            ...order,
+            customer_name: customerName,
+            customer_phone: customerPhone
+          };
+        })
+      );
+
       return new Response(
-        JSON.stringify({ orders: orders || [] }),
+        JSON.stringify({ orders: ordersWithCustomerInfo }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

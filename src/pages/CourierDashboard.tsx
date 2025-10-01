@@ -394,8 +394,17 @@ export default function CourierDashboard() {
       
       toast.success(statusMessages[variables.newStatus] || "Status updated successfully");
       
-      queryClient.invalidateQueries({ queryKey: ['courier-my-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['courier-today-stats'] });
+      // Delay the refresh slightly for delivered orders to let user see the success message
+      if (variables.newStatus === 'delivered') {
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['courier-my-orders'] });
+          queryClient.invalidateQueries({ queryKey: ['courier-today-stats'] });
+          queryClient.invalidateQueries({ queryKey: ['courier-available-orders'] });
+        }, 1500);
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['courier-my-orders'] });
+        queryClient.invalidateQueries({ queryKey: ['courier-today-stats'] });
+      }
     },
     onError: (error: Error) => {
       console.error('❌ updateStatusMutation error:', error);
