@@ -216,7 +216,7 @@ serve(async (req) => {
           merchants (*),
           addresses (*)
         `)
-        .eq("status", "confirmed")
+        .eq("status", "pending")
         .is("courier_id", null)
         .order("created_at", { ascending: true })
         .limit(20);
