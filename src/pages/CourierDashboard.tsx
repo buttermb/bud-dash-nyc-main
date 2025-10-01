@@ -25,6 +25,7 @@ interface Order {
   tracking_code?: string;
   status: string;
   total_amount: number;
+  subtotal?: number;
   delivery_address: string;
   delivery_borough: string;
   tip_amount?: number;
@@ -343,7 +344,8 @@ export default function CourierDashboard() {
 
             <div className="space-y-4">
               {activeOrders.map(order => {
-                const earnings = (parseFloat(order.total_amount.toString()) * (courierCommissionRate / 100)).toFixed(2);
+                // Calculate commission on subtotal only (excludes delivery fee)
+                const earnings = (parseFloat(order.subtotal?.toString() || '0') * (courierCommissionRate / 100)).toFixed(2);
                 
                 return (
                   <div key={order.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-orange-200">
@@ -511,7 +513,8 @@ export default function CourierDashboard() {
 
             <div className="space-y-3">
               {availableOrders.map(order => {
-                const earnings = (parseFloat(order.total_amount.toString()) * (courierCommissionRate / 100)).toFixed(2);
+                // Calculate commission on subtotal only (excludes delivery fee)
+                const earnings = (parseFloat(order.subtotal?.toString() || '0') * (courierCommissionRate / 100)).toFixed(2);
                 const distance = (order as any).distance || '?';
                 const estimatedTime = distance !== '?' ? Math.ceil(parseFloat(distance) * 3) : '?';
                 
