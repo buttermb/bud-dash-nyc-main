@@ -47,9 +47,31 @@ const Navigation = () => {
     setShowAuthModal(true);
   };
 
+  const handleNavClick = (href: string, scroll: boolean, closeSheet?: () => void) => {
+    return (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (scroll && href.includes('#')) {
+        e.preventDefault();
+        const id = href.split('#')[1];
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          closeSheet?.();
+        } else {
+          // If element not found, navigate to home page first
+          navigate('/');
+          setTimeout(() => {
+            document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+        }
+      } else {
+        closeSheet?.();
+      }
+    };
+  };
+
   const navLinks = [
-    { label: "Products", href: "/#products", scroll: true },
-    { label: "How It Works", href: "/#how-it-works", scroll: true },
+    { label: "Products", href: "#products", scroll: true },
+    { label: "How It Works", href: "#how-it-works", scroll: true },
     { label: "Track Order", href: "/track-order", scroll: false },
     { label: "Support", href: "/support", scroll: false },
   ];
@@ -71,15 +93,8 @@ const Navigation = () => {
               <a
                 key={link.label}
                 href={link.href}
-                onClick={(e) => {
-                  if (link.scroll && link.href.includes('#')) {
-                    e.preventDefault();
-                    const id = link.href.split('#')[1];
-                    const element = document.getElementById(id);
-                    element?.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className="text-sm font-medium transition-colors hover:text-primary"
+                onClick={handleNavClick(link.href, link.scroll)}
+                className="text-sm font-medium transition-colors hover:text-primary cursor-pointer"
               >
                 {link.label}
               </a>
@@ -160,15 +175,11 @@ const Navigation = () => {
                     <a
                       key={link.label}
                       href={link.href}
-                      onClick={(e) => {
-                        if (link.scroll && link.href.includes('#')) {
-                          e.preventDefault();
-                          const id = link.href.split('#')[1];
-                          const element = document.getElementById(id);
-                          element?.scrollIntoView({ behavior: 'smooth' });
-                        }
-                      }}
-                      className="text-lg font-medium transition-colors hover:text-primary"
+                      onClick={handleNavClick(link.href, link.scroll, () => {
+                        const closeButton = document.querySelector('[aria-label="Close"]') as HTMLButtonElement;
+                        closeButton?.click();
+                      })}
+                      className="text-lg font-medium transition-colors hover:text-primary cursor-pointer"
                     >
                       {link.label}
                     </a>
