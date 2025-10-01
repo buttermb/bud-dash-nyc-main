@@ -140,13 +140,36 @@ const AdminLiveMap = () => {
         },
         (payload) => {
           console.log("Order update received:", payload);
-          // Only refresh for accepted/active orders (not delivered or cancelled)
           const newRecord = payload.new as any;
-          if (newRecord && ['accepted', 'confirmed', 'preparing', 'out_for_delivery'].includes(newRecord.status)) {
-            fetchLiveDeliveries();
-          } else if (newRecord && newRecord.status === 'delivered') {
-            // Remove delivered order from live map immediately
+          const oldRecord = payload.old as any;
+          
+          // When order status changes to delivered
+          if (newRecord && newRecord.status === 'delivered' && oldRecord?.status !== 'delivered') {
+            console.log("Order delivered! Refreshing map to show courier's next delivery...");
+            // Remove delivered order and fetch updated deliveries to show courier's next order
             setDeliveries(prev => prev.filter(d => d.order_id !== newRecord.id));
+            // Refresh to get courier's next active order
+            setTimeout(() => fetchLiveDeliveries(), 500);
+          } 
+          // Refresh for active orders
+          else if (newRecord && ['confirmed', 'preparing', 'out_for_delivery'].includes(newRecord.status)) {
+            fetchLiveDeliveries();
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "couriers",
+        },
+        (payload) => {
+          console.log("Courier location updated:", payload);
+          // Update courier locations in real-time
+          const updatedCourier = payload.new as any;
+          if (updatedCourier.current_lat && updatedCourier.current_lng) {
+            fetchLiveDeliveries();
           }
         }
       )
@@ -522,6 +545,10 @@ const AdminLiveMap = () => {
         throw new Error("Not authenticated");
       }
 
+      // Get the courier_id from the current delivery before marking as delivered
+      const delivery = deliveries.find(d => d.order_id === orderId);
+      const courierId = delivery?.courier?.id;
+
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const response = await fetch(`${supabaseUrl}/functions/v1/update-order-status`, {
         method: "POST",
@@ -541,11 +568,20 @@ const AdminLiveMap = () => {
       }
 
       toast({
-        title: "Success",
-        description: "Order marked as delivered",
+        title: "✅ Delivery Complete",
+        description: courierId 
+          ? "Map updating to show courier's next delivery..." 
+          : "Order marked as delivered",
       });
 
-      fetchLiveDeliveries();
+      // Remove the delivered order immediately
+      setDeliveries(prev => prev.filter(d => d.order_id !== orderId));
+      
+      // Refresh after a short delay to show courier's next order
+      setTimeout(() => {
+        fetchLiveDeliveries();
+        fetchRealtimeStats();
+      }, 1000);
     } catch (error: any) {
       console.error("Failed to mark order as delivered:", error);
       toast({
