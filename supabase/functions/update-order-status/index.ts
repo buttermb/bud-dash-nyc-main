@@ -67,6 +67,8 @@ serve(async (req) => {
       updateData.courier_id = courierRecordId;
     }
 
+    console.log("Updating order with data:", updateData);
+    
     // Update order status
     const { error: updateError } = await supabase
       .from("orders")
@@ -74,12 +76,14 @@ serve(async (req) => {
       .eq("id", orderId);
 
     if (updateError) {
-      console.error("Update error:", updateError);
+      console.error("Update error details:", JSON.stringify(updateError));
       return new Response(
-        JSON.stringify({ error: "Failed to update order" }),
+        JSON.stringify({ error: "Failed to update order", details: updateError }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    
+    console.log("Order updated successfully");
 
     // Add tracking entry
     await supabase.from("order_tracking").insert({
