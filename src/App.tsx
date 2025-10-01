@@ -5,12 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AdminProvider } from "./contexts/AdminContext";
-import { CourierProvider } from "./contexts/CourierContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
-import CourierProtectedRoute from "./components/courier/CourierProtectedRoute";
-import CourierLogin from "./pages/CourierLogin";
 import Index from "./pages/Index";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
@@ -52,8 +49,7 @@ const App = () => (
     <ThemeProvider>
       <AuthProvider>
         <AdminProvider>
-          <CourierProvider>
-            <TooltipProvider>
+          <TooltipProvider>
           <BrowserRouter>
             <Toaster />
             <Sonner />
@@ -95,22 +91,19 @@ const App = () => (
                 <Route path="audit-logs" element={<AdminAuditLogs />} />
               </Route>
 
-              {/* Courier Routes */}
-              <Route path="/courier/login" element={<CourierLogin />} />
-              <Route
-                path="/courier/dashboard"
-                element={
-                  <CourierProtectedRoute>
-                    <CourierDashboard />
-                  </CourierProtectedRoute>
-                }
-              />
-
               <Route
                 path="/merchant"
                 element={
                   <ProtectedRoute>
                     <MerchantDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/courier"
+                element={
+                  <ProtectedRoute>
+                    <CourierDashboard />
                   </ProtectedRoute>
                 }
               />
@@ -151,7 +144,6 @@ const App = () => (
             </Routes>
           </BrowserRouter>
           </TooltipProvider>
-          </CourierProvider>
         </AdminProvider>
       </AuthProvider>
     </ThemeProvider>

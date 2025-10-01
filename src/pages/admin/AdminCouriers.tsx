@@ -17,18 +17,6 @@ import {
 import { Search, Truck, Phone, Mail, MapPin, CheckCircle, XCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AddCourierDialog } from "@/components/admin/AddCourierDialog";
-import { EditCourierDialog } from "@/components/admin/EditCourierDialog";
-import { SystemResetDialog } from "@/components/admin/SystemResetDialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 const AdminCouriers = () => {
   const { session } = useAdmin();
@@ -36,7 +24,6 @@ const AdminCouriers = () => {
   const [couriers, setCouriers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [deletingCourierId, setDeletingCourierId] = useState<string | null>(null);
 
   useEffect(() => {
     if (session) {
@@ -106,55 +93,6 @@ const AdminCouriers = () => {
         variant: "destructive",
         title: "Error",
         description: "Failed to update courier status",
-      });
-    }
-  };
-
-  const deleteCourier = async (courierId: string) => {
-    try {
-      // First, set courier offline and inactive
-      await supabase
-        .from("couriers")
-        .update({ is_active: false, is_online: false })
-        .eq("id", courierId);
-
-      // Get the user_id
-      const { data: courier } = await supabase
-        .from("couriers")
-        .select("user_id")
-        .eq("id", courierId)
-        .single();
-
-      if (courier?.user_id) {
-        // Delete user roles
-        await supabase
-          .from("user_roles")
-          .delete()
-          .eq("user_id", courier.user_id)
-          .eq("role", "courier");
-      }
-
-      // Finally delete courier record
-      const { error } = await supabase
-        .from("couriers")
-        .delete()
-        .eq("id", courierId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Courier deleted successfully",
-      });
-
-      fetchCouriers();
-      setDeletingCourierId(null);
-    } catch (error) {
-      console.error("Failed to delete courier:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete courier",
       });
     }
   };
@@ -235,7 +173,7 @@ const AdminCouriers = () => {
       </div>
 
       {/* Search and Actions */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -245,10 +183,7 @@ const AdminCouriers = () => {
             className="pl-10"
           />
         </div>
-        <div className="flex gap-2">
-          <SystemResetDialog onSuccess={fetchCouriers} />
-          <AddCourierDialog onSuccess={fetchCouriers} />
-        </div>
+        <AddCourierDialog onSuccess={fetchCouriers} />
       </div>
 
       {/* Couriers Table */}
@@ -341,33 +276,23 @@ const AdminCouriers = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
-                        <EditCourierDialog courier={courier} onSuccess={fetchCouriers} />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => toggleCourierStatus(courier.id, courier.is_active)}
-                        >
-                          {courier.is_active ? (
-                            <>
-                              <XCircle className="h-4 w-4 mr-1" />
-                              Deactivate
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Activate
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => setDeletingCourierId(courier.id)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleCourierStatus(courier.id, courier.is_active)}
+                      >
+                        {courier.is_active ? (
+                          <>
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Deactivate
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Activate
+                          </>
+                        )}
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -376,27 +301,6 @@ const AdminCouriers = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletingCourierId} onOpenChange={(open) => !open && setDeletingCourierId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Courier</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this courier? This will remove their account and they will no longer be able to access the driver portal. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deletingCourierId && deleteCourier(deletingCourierId)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };

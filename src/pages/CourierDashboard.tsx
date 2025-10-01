@@ -1,59 +1,54 @@
 import { useState, useEffect } from "react";
-import { useCourier } from "@/contexts/CourierContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Package, MapPin, Clock, Navigation, Power, LogOut } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { Loader2, Package, MapPin, Phone, Clock } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const CourierDashboard = () => {
-  const { courier, signOut, toggleOnlineStatus, updateLocation } = useCourier();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [trackingLocation, setTrackingLocation] = useState(false);
+  const [isCourier, setIsCourier] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let watchId: number;
-
-    if (trackingLocation && courier) {
-      watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          updateLocation(position.coords.latitude, position.coords.longitude);
-        },
-        (error) => {
-          console.error("Location error:", error);
-          toast({ title: "Location Error", description: "Failed to get location", variant: "destructive" });
-        },
-        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
-      );
-    }
-
-    return () => {
-      if (watchId) {
-        navigator.geolocation.clearWatch(watchId);
+    const checkCourier = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
       }
+
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .in("role", ["courier", "admin"])
+        .maybeSingle();
+
+      setIsCourier(!!data && !error);
+      setLoading(false);
     };
-  }, [trackingLocation, courier, updateLocation]);
+
+    checkCourier();
+  }, [user]);
 
   const { data: orders, isLoading: ordersLoading } = useQuery({
-    queryKey: ["courier-orders", courier?.id],
+    queryKey: ["courier-orders"],
     queryFn: async () => {
-      if (!courier) return [];
-
       const { data, error } = await supabase
         .from("orders")
         .select("*, order_items(*)")
-        .or(`courier_id.eq.${courier.id},status.in.(pending)`)
         .in("status", ["pending", "confirmed", "out_for_delivery"])
         .order("created_at", { ascending: true });
 
       if (error) throw error;
       return data;
     },
-    enabled: !!courier,
+    enabled: isCourier,
   });
 
   const updateOrderStatus = useMutation({
@@ -65,13 +60,6 @@ const CourierDashboard = () => {
 
       const { error } = await supabase.from("orders").update(updates).eq("id", orderId);
       if (error) throw error;
-
-      // Log tracking update
-      await supabase.from("order_tracking").insert({
-        order_id: orderId,
-        status,
-        message: `Order ${status.replace("_", " ")}`,
-      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["courier-orders"] });
@@ -112,70 +100,32 @@ const CourierDashboard = () => {
     }
   };
 
-  if (!courier) {
-    return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user || !isCourier) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Access Denied</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">You need courier privileges to access this page.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-4xl font-bold">Driver Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, {courier.full_name}</p>
-        </div>
-        <Button variant="outline" onClick={signOut}>
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
-        </Button>
-      </div>
-
-      {/* Status Controls */}
-      <div className="grid md:grid-cols-3 gap-4 mb-8">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label htmlFor="online-status">Online Status</Label>
-                <p className="text-sm text-muted-foreground">
-                  {courier.is_online ? "Available for orders" : "Offline"}
-                </p>
-              </div>
-              <Switch
-                id="online-status"
-                checked={courier.is_online}
-                onCheckedChange={toggleOnlineStatus}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label htmlFor="location-tracking">Location Tracking</Label>
-                <p className="text-sm text-muted-foreground">
-                  {trackingLocation ? "Sharing location" : "Not sharing"}
-                </p>
-              </div>
-              <Switch
-                id="location-tracking"
-                checked={trackingLocation}
-                onCheckedChange={setTrackingLocation}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-1">
-              <Label>Active Orders</Label>
-              <p className="text-2xl font-bold">{orders?.length || 0}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <h1 className="text-4xl font-bold mb-8">Courier Dashboard</h1>
 
       {ordersLoading ? (
         <div className="flex justify-center py-8">
@@ -252,18 +202,20 @@ const CourierDashboard = () => {
 
                   <div className="pt-4 border-t flex gap-2">
                     {order.status === "pending" && (
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          updateOrderStatus.mutate({
-                            orderId: order.id,
-                            status: "confirmed",
-                            courierId: courier.id,
-                          })
-                        }
-                      >
-                        Accept Delivery
-                      </Button>
+                      <>
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            updateOrderStatus.mutate({
+                              orderId: order.id,
+                              status: "confirmed",
+                              courierId: user.id,
+                            })
+                          }
+                        >
+                          Accept Delivery
+                        </Button>
+                      </>
                     )}
 
                     {order.status === "confirmed" && (
