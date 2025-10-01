@@ -107,13 +107,13 @@ const AdminLiveMap = () => {
     }
 
     console.log("Session available, fetching data...");
-    fetchLiveDeliveries();
+    fetchLiveDeliveries(true); // Show loading on initial load
     fetchRealtimeStats();
     
     // Refresh data every 10 seconds
     const interval = setInterval(() => {
       console.log("Refreshing data...");
-      fetchLiveDeliveries();
+      fetchLiveDeliveries(); // Don't show loading on auto-refresh
       fetchRealtimeStats();
     }, 10000);
     
@@ -490,9 +490,11 @@ const AdminLiveMap = () => {
     }
   }, [showHeatmap, heatmapData]);
 
-  const fetchLiveDeliveries = async () => {
+  const fetchLiveDeliveries = async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       console.log("Fetching live deliveries from:", `${supabaseUrl}/functions/v1/admin-dashboard?endpoint=live-deliveries`);
       
@@ -525,7 +527,9 @@ const AdminLiveMap = () => {
       console.error("Failed to fetch live deliveries:", error);
       setDeliveries([]); // Set empty array on error
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   };
 
