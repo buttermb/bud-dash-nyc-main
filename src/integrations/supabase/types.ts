@@ -1112,6 +1112,54 @@ export type Database = {
           },
         ]
       }
+      order_status_history: {
+        Row: {
+          changed_by: string | null
+          changed_by_id: string | null
+          created_at: string | null
+          id: string
+          new_status: string
+          notes: string | null
+          old_status: string | null
+          order_id: string | null
+        }
+        Insert: {
+          changed_by?: string | null
+          changed_by_id?: string | null
+          created_at?: string | null
+          id?: string
+          new_status: string
+          notes?: string | null
+          old_status?: string | null
+          order_id?: string | null
+        }
+        Update: {
+          changed_by?: string | null
+          changed_by_id?: string | null
+          created_at?: string | null
+          id?: string
+          new_status?: string
+          notes?: string | null
+          old_status?: string | null
+          order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_order_tracking"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_tracking: {
         Row: {
           created_at: string | null

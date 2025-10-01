@@ -251,20 +251,36 @@ export default function CourierDashboard() {
 
   // Update status mutation
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ orderId, status }: { orderId: string; status: string }) => {
-      const { data, error } = await supabase.functions.invoke('courier-app', {
-        body: { endpoint: 'update-order-status', order_id: orderId, status }
-      });
+    mutationFn: async ({ orderId, newStatus }: { orderId: string; newStatus: string }) => {
+      console.log('🔄 updateStatusMutation called with:', { orderId, newStatus });
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          status: newStatus,
+          ...(newStatus === 'delivered' && { delivered_at: new Date().toISOString() })
+        })
+        .eq('id', orderId);
+
       if (error) throw error;
-      return data;
+      return { success: true };
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      console.log('✅ Order status updated successfully');
+      const statusMessages: Record<string, string> = {
+        'out_for_delivery': '🚗 Order marked as picked up - en route to customer!',
+        'delivered': '🎉 Delivery completed! Earnings added to your account.',
+        'preparing': '👨‍🍳 Order moved back to preparing status'
+      };
+      
+      toast.success(statusMessages[variables.newStatus] || "Status updated successfully");
+      
       queryClient.invalidateQueries({ queryKey: ['courier-my-orders'] });
       queryClient.invalidateQueries({ queryKey: ['courier-today-stats'] });
-      toast.success("Status updated!");
     },
-    onError: () => {
-      toast.error("Failed to update status");
+    onError: (error: Error) => {
+      console.error('❌ updateStatusMutation error:', error);
+      toast.error("Error updating status: " + error.message);
     }
   });
 
@@ -303,11 +319,11 @@ export default function CourierDashboard() {
   const courierCommissionRate = courier?.commission_rate || 30;
 
   const markPickedUp = (orderId: string) => {
-    updateStatusMutation.mutate({ orderId, status: 'out_for_delivery' });
+    updateStatusMutation.mutate({ orderId, newStatus: 'out_for_delivery' });
   };
 
   const markDelivered = (orderId: string) => {
-    updateStatusMutation.mutate({ orderId, status: 'delivered' });
+    updateStatusMutation.mutate({ orderId, newStatus: 'delivered' });
   };
 
   return (
@@ -525,21 +541,38 @@ export default function CourierDashboard() {
                       {/* Action Buttons */}
                       <div className="space-y-2">
                         {order.status === 'preparing' && (
-                          <Button
-                            onClick={() => markPickedUp(order.id)}
-                            className="w-full bg-blue-600 hover:bg-blue-700 py-5 text-lg font-bold shadow-lg"
-                          >
-                            ✅ I've Picked Up The Order
-                          </Button>
+                          <>
+                            <Button
+                              onClick={() => markPickedUp(order.id)}
+                              disabled={updateStatusMutation.isPending}
+                              className="w-full bg-blue-600 hover:bg-blue-700 py-5 text-lg font-bold shadow-lg"
+                            >
+                              ✅ Mark as Picked Up - En Route
+                            </Button>
+                            <p className="text-xs text-center text-gray-500">
+                              Click after picking up from restaurant
+                            </p>
+                          </>
                         )}
                         
                         {order.status === 'out_for_delivery' && (
-                          <Button
-                            onClick={() => markDelivered(order.id)}
-                            className="w-full bg-green-600 hover:bg-green-700 py-5 text-lg font-bold shadow-lg"
-                          >
-                            🎉 Delivered to Customer
-                          </Button>
+                          <>
+                            <Button
+                              onClick={() => markDelivered(order.id)}
+                              disabled={updateStatusMutation.isPending}
+                              className="w-full bg-green-600 hover:bg-green-700 py-5 text-lg font-bold shadow-lg"
+                            >
+                              🎉 Confirm Delivery Complete
+                            </Button>
+                            <Button
+                              onClick={() => updateStatusMutation.mutate({ orderId: order.id, newStatus: 'preparing' })}
+                              disabled={updateStatusMutation.isPending}
+                              variant="outline"
+                              className="w-full py-3 font-semibold text-gray-600"
+                            >
+                              ← Back to Preparing (if mistake)
+                            </Button>
+                          </>
                         )}
                       </div>
                     </div>
