@@ -73,6 +73,12 @@ const AdminAgeVerification = () => {
 
   const handleApprove = async (verificationId: string, userId: string) => {
     try {
+      // Log document access
+      await supabase.rpc('log_document_access', {
+        _verification_id: verificationId,
+        _access_type: 'approve'
+      });
+
       // Update age_verifications
       const { error: verificationError } = await supabase
         .from("age_verifications")
@@ -115,6 +121,12 @@ const AdminAgeVerification = () => {
     }
 
     try {
+      // Log document access
+      await supabase.rpc('log_document_access', {
+        _verification_id: verificationId,
+        _access_type: 'reject'
+      });
+
       // Update profile with rejection
       const { error: profileError } = await supabase
         .from("profiles")

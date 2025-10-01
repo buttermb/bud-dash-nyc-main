@@ -1043,6 +1043,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      log_document_access: {
+        Args: { _access_type: string; _verification_id: string }
+        Returns: undefined
+      }
       log_security_event: {
         Args: {
           _action: string
