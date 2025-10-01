@@ -55,29 +55,51 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // Check existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        verifyAdmin(session);
-      } else {
-        setLoading(false);
+    let mounted = true;
+
+    const initAuth = async () => {
+      try {
+        // Check existing session
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Admin session check:", session ? "Found" : "None");
+        
+        if (mounted) {
+          if (session) {
+            await verifyAdmin(session);
+          } else {
+            setLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error("Session init error:", error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
-    });
+    };
+
+    initAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session) {
-          verifyAdmin(session);
-        } else {
-          setAdmin(null);
-          setSession(null);
-          setLoading(false);
+      async (_event, session) => {
+        console.log("Admin auth change:", _event, session ? "Has session" : "No session");
+        if (mounted) {
+          if (session) {
+            await verifyAdmin(session);
+          } else {
+            setAdmin(null);
+            setSession(null);
+            setLoading(false);
+          }
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {

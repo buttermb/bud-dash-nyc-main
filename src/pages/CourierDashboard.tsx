@@ -3,7 +3,7 @@ import { useCourier } from "@/contexts/CourierContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { 
   Loader2, 
@@ -23,9 +23,11 @@ import { StatsCard } from "@/components/courier/StatsCard";
 import { StatusToggle } from "@/components/courier/StatusToggle";
 
 const CourierDashboard = () => {
-  const { courier, signOut, toggleOnlineStatus, updateLocation } = useCourier();
+  const { courier, signOut, toggleOnlineStatus, updateLocation, loading: authLoading } = useCourier();
   const queryClient = useQueryClient();
   const [trackingLocation, setTrackingLocation] = useState(false);
+
+  console.log("CourierDashboard render:", { courier: !!courier, authLoading });
 
   useEffect(() => {
     let watchId: number;
@@ -160,8 +162,36 @@ const CourierDashboard = () => {
     },
   });
 
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="space-y-4">
+          <Skeleton className="h-12 w-64" />
+          <div className="grid md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-32" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!courier) {
-    return null;
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="py-16 text-center">
+            <h2 className="text-2xl font-bold mb-4">No Courier Access</h2>
+            <p className="text-muted-foreground mb-4">
+              Unable to load courier profile. Please contact support.
+            </p>
+            <Button onClick={signOut}>Sign Out</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const pendingOrders = orders.filter(o => o.status === "pending");

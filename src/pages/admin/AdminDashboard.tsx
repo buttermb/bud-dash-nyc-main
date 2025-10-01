@@ -27,17 +27,21 @@ interface DashboardMetrics {
 }
 
 const AdminDashboard = () => {
-  const { session } = useAdmin();
+  const { session, admin, loading: authLoading } = useAdmin();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (session) {
-      fetchDashboardMetrics();
-    } else {
-      setLoading(false);
+    console.log("AdminDashboard mount:", { session: !!session, admin: !!admin, authLoading });
+    
+    if (!authLoading) {
+      if (session && admin) {
+        fetchDashboardMetrics();
+      } else {
+        setLoading(false);
+      }
     }
-  }, [session]);
+  }, [session, admin, authLoading]);
 
   const fetchDashboardMetrics = async () => {
     try {

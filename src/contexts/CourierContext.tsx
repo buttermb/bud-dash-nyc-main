@@ -30,31 +30,45 @@ export const CourierProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkCourierSession();
+    let mounted = true;
+
+    const initCourier = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Courier session check:", session ? "Found" : "None");
+        
+        if (mounted) {
+          if (session?.user) {
+            await loadCourierData(session.user.id);
+          }
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Courier session check error:", error);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initCourier();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        await loadCourierData(session.user.id);
-      } else if (event === "SIGNED_OUT") {
-        setCourier(null);
+      console.log("Courier auth change:", event, session ? "Has session" : "No session");
+      if (mounted) {
+        if (event === "SIGNED_IN" && session) {
+          await loadCourierData(session.user.id);
+        } else if (event === "SIGNED_OUT") {
+          setCourier(null);
+        }
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
-
-  const checkCourierSession = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await loadCourierData(session.user.id);
-      }
-    } catch (error) {
-      console.error("Session check error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const loadCourierData = async (userId: string) => {
     try {
