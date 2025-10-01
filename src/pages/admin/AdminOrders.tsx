@@ -25,8 +25,18 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Ban, Flag, Eye, CheckCircle, XCircle } from "lucide-react";
+import { Search, Ban, Flag, Eye, CheckCircle, XCircle, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const AdminOrders = () => {
   const { session } = useAdmin();
@@ -39,6 +49,8 @@ const AdminOrders = () => {
   const [actionDialog, setActionDialog] = useState<"cancel" | "flag" | "accept" | "decline" | null>(null);
   const [reason, setReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [showClearAllDialog, setShowClearAllDialog] = useState(false);
+  const [clearAllLoading, setClearAllLoading] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -151,6 +163,36 @@ const AdminOrders = () => {
     }
   };
 
+  const handleClearAllOrders = async () => {
+    setClearAllLoading(true);
+    try {
+      // Delete all orders from the database
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "All orders have been cleared",
+      });
+
+      setShowClearAllDialog(false);
+      fetchOrders();
+    } catch (error) {
+      console.error("Failed to clear orders:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to clear orders",
+      });
+    } finally {
+      setClearAllLoading(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
       pending: "outline",
@@ -187,7 +229,18 @@ const AdminOrders = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>All Orders</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>All Orders</CardTitle>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowClearAllDialog(true)}
+              disabled={orders.length === 0}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear All Orders
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center space-x-2">
@@ -358,6 +411,29 @@ const AdminOrders = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Clear All Orders Confirmation Dialog */}
+      <AlertDialog open={showClearAllDialog} onOpenChange={setShowClearAllDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all orders from the database. This action cannot be undone.
+              All order history, customer records, and transaction data will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={clearAllLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClearAllOrders}
+              disabled={clearAllLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {clearAllLoading ? "Clearing..." : "Clear All Orders"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
