@@ -459,7 +459,7 @@ const Checkout = () => {
                           <Clock className="w-5 h-5 text-primary" />
                         </div>
                         <div className="text-left">
-                          <h4 className="font-semibold">Standard - Within 3 hours</h4>
+                          <h4 className="font-semibold">Standard - Within 1.5 hours</h4>
                           <p className="text-xs text-muted-foreground">Normal delivery fee</p>
                         </div>
                       </div>

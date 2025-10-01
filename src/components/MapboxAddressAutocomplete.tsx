@@ -99,14 +99,39 @@ export default function MapboxAddressAutocomplete({
     
     // Extract borough from context (only Brooklyn, Queens, Manhattan)
     let borough = "";
+    
+    // Check context array for borough info
     if (suggestion.context) {
+      // Try place context first
       const placeContext = suggestion.context.find(c => c.id.startsWith("place"));
       if (placeContext) {
         const boroughName = placeContext.text.toLowerCase();
         if (boroughName.includes("brooklyn")) borough = "brooklyn";
         else if (boroughName.includes("queens")) borough = "queens";
         else if (boroughName.includes("manhattan")) borough = "manhattan";
-        // Bronx and Staten Island are not supported
+      }
+      
+      // If not found, try locality context
+      if (!borough) {
+        const localityContext = suggestion.context.find(c => c.id.startsWith("locality"));
+        if (localityContext) {
+          const localityName = localityContext.text.toLowerCase();
+          if (localityName.includes("brooklyn")) borough = "brooklyn";
+          else if (localityName.includes("queens")) borough = "queens";
+          else if (localityName.includes("manhattan")) borough = "manhattan";
+        }
+      }
+    }
+    
+    // Fallback: check the full place_name
+    if (!borough) {
+      const placeName = suggestion.place_name.toLowerCase();
+      if (placeName.includes("brooklyn")) borough = "brooklyn";
+      else if (placeName.includes("queens")) borough = "queens";
+      else if (placeName.includes("manhattan")) borough = "manhattan";
+      // If it says "New York, New York" it's likely Manhattan
+      else if (placeName.includes("new york, new york") && !placeName.includes("brooklyn") && !placeName.includes("queens")) {
+        borough = "manhattan";
       }
     }
 
