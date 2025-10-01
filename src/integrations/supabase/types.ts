@@ -596,6 +596,7 @@ export type Database = {
       couriers: {
         Row: {
           age_verified: boolean | null
+          commission_rate: number | null
           created_at: string | null
           current_lat: number | null
           current_lng: number | null
@@ -615,6 +616,7 @@ export type Database = {
         }
         Insert: {
           age_verified?: boolean | null
+          commission_rate?: number | null
           created_at?: string | null
           current_lat?: number | null
           current_lng?: number | null
@@ -634,6 +636,7 @@ export type Database = {
         }
         Update: {
           age_verified?: boolean | null
+          commission_rate?: number | null
           created_at?: string | null
           current_lat?: number | null
           current_lng?: number | null
