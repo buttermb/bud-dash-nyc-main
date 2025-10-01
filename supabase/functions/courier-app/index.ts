@@ -280,8 +280,6 @@ serve(async (req) => {
             id,
             quantity,
             price,
-            subtotal,
-            special_instructions,
             product_name,
             products (
               id,
