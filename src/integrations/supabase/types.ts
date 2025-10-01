@@ -780,6 +780,7 @@ export type Database = {
           coa_url: string | null
           created_at: string | null
           description: string | null
+          effects: string[] | null
           id: string
           image_url: string | null
           in_stock: boolean | null
@@ -790,8 +791,13 @@ export type Database = {
           price: number
           review_count: number | null
           strain_info: string | null
+          strain_lineage: string | null
+          strain_type: string | null
+          terpenes: Json | null
           thc_content: number | null
           thca_percentage: number
+          usage_tips: string | null
+          vendor_name: string | null
           weight_grams: number | null
         }
         Insert: {
@@ -801,6 +807,7 @@ export type Database = {
           coa_url?: string | null
           created_at?: string | null
           description?: string | null
+          effects?: string[] | null
           id?: string
           image_url?: string | null
           in_stock?: boolean | null
@@ -811,8 +818,13 @@ export type Database = {
           price: number
           review_count?: number | null
           strain_info?: string | null
+          strain_lineage?: string | null
+          strain_type?: string | null
+          terpenes?: Json | null
           thc_content?: number | null
           thca_percentage: number
+          usage_tips?: string | null
+          vendor_name?: string | null
           weight_grams?: number | null
         }
         Update: {
@@ -822,6 +834,7 @@ export type Database = {
           coa_url?: string | null
           created_at?: string | null
           description?: string | null
+          effects?: string[] | null
           id?: string
           image_url?: string | null
           in_stock?: boolean | null
@@ -832,8 +845,13 @@ export type Database = {
           price?: number
           review_count?: number | null
           strain_info?: string | null
+          strain_lineage?: string | null
+          strain_type?: string | null
+          terpenes?: Json | null
           thc_content?: number | null
           thca_percentage?: number
+          usage_tips?: string | null
+          vendor_name?: string | null
           weight_grams?: number | null
         }
         Relationships: [

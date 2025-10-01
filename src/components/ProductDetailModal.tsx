@@ -109,26 +109,89 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
               alt={product.name}
               className="w-full h-64 object-cover rounded-lg cursor-zoom-in hover:opacity-90 transition-opacity"
             />
-            <Badge variant={stockStatus.color as any}>{stockStatus.text}</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant={stockStatus.color as any}>{stockStatus.text}</Badge>
+              {product.strain_type && (
+                <Badge variant="outline" className="capitalize">{product.strain_type}</Badge>
+              )}
+            </div>
+
+            {/* Lab Results & COA */}
+            <div className="space-y-2">
+              {product.coa_url && (
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => window.open(product.coa_url, '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View Certificate of Analysis
+                </Button>
+              )}
+              {product.lab_results_url && (
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => window.open(product.lab_results_url, '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View Lab Results
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="space-y-4">
             <div>
               <Badge className="mb-2">{product.category}</Badge>
               <p className="text-3xl font-bold">${Number(product.price).toFixed(2)}</p>
+              {product.vendor_name && (
+                <p className="text-sm text-muted-foreground mt-1">By {product.vendor_name}</p>
+              )}
             </div>
 
+            {/* Potency */}
             <div className="space-y-2">
               <h4 className="font-semibold">THCA Content</h4>
               <div className="w-full bg-secondary h-4 rounded-full overflow-hidden">
                 <div 
                   className="bg-primary h-full transition-all"
-                  style={{ width: `${(product.thca_percentage / 30) * 100}%` }}
+                  style={{ width: `${Math.min((product.thca_percentage / 30) * 100, 100)}%` }}
                 />
               </div>
               <p className="text-sm text-muted-foreground">{product.thca_percentage}% THCA</p>
             </div>
 
+            {/* Effects */}
+            {product.effects && product.effects.length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-2">Effects</h4>
+                <div className="flex flex-wrap gap-2">
+                  {product.effects.map((effect: string) => (
+                    <Badge key={effect} variant="secondary" className="capitalize">
+                      {effect}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Terpenes */}
+            {product.terpenes && Object.keys(product.terpenes).length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-2">Terpene Profile</h4>
+                <div className="space-y-1">
+                  {Object.entries(product.terpenes).map(([name, value]: [string, any]) => (
+                    <div key={name} className="flex justify-between text-sm">
+                      <span className="capitalize">{name}</span>
+                      <span className="text-muted-foreground">{value}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Description */}
             {product.description && (
               <div>
                 <h4 className="font-semibold mb-2">Description</h4>
@@ -136,6 +199,23 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
               </div>
             )}
 
+            {/* Strain Lineage */}
+            {product.strain_lineage && (
+              <div>
+                <h4 className="font-semibold mb-2">Strain Lineage</h4>
+                <p className="text-sm text-muted-foreground">{product.strain_lineage}</p>
+              </div>
+            )}
+
+            {/* Usage Tips */}
+            {product.usage_tips && (
+              <div>
+                <h4 className="font-semibold mb-2">Usage Tips</h4>
+                <p className="text-sm text-muted-foreground">{product.usage_tips}</p>
+              </div>
+            )}
+
+            {/* Strain Info */}
             {product.strain_info && (
               <div>
                 <h4 className="font-semibold mb-2">Strain Information</h4>
@@ -143,7 +223,8 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
               </div>
             )}
 
-            <div className="space-y-3">
+            {/* Add to Cart */}
+            <div className="space-y-3 pt-4 border-t">
               <div className="flex items-center gap-3">
                 <Button
                   variant="outline"
@@ -172,31 +253,6 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
               >
                 {loading ? "Adding..." : "Add to Cart"}
               </Button>
-
-              {product.lab_results_url ? (
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => window.open(product.lab_results_url, '_blank')}
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  View Lab Results (PDF)
-                </Button>
-              ) : (
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => {
-                    toast({
-                      title: "Lab Results",
-                      description: "Lab results are available upon request. Please contact support for specific COA documents.",
-                    });
-                  }}
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Request Lab Results
-                </Button>
-              )}
             </div>
           </div>
         </div>

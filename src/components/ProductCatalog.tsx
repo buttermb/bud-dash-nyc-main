@@ -18,6 +18,9 @@ const ProductCatalog = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("name");
   const [priceRange, setPriceRange] = useState([0, 100]);
+  const [strainType, setStrainType] = useState<string>("all");
+  const [potencyRange, setPotencyRange] = useState([0, 100]);
+  const [selectedEffects, setSelectedEffects] = useState<string[]>([]);
 
   const { data: allProducts = [], isLoading, error } = useQuery({
     queryKey: ["products"],
@@ -39,13 +42,19 @@ const ProductCatalog = () => {
       filtered = filtered.filter((p) => p.category === category);
     }
 
+    // Filter by strain type
+    if (strainType !== "all") {
+      filtered = filtered.filter((p) => p.strain_type === strainType);
+    }
+
     // Filter by search
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (p) =>
           p.name.toLowerCase().includes(query) ||
-          p.description?.toLowerCase().includes(query)
+          p.description?.toLowerCase().includes(query) ||
+          p.vendor_name?.toLowerCase().includes(query)
       );
     }
 
@@ -53,6 +62,18 @@ const ProductCatalog = () => {
     filtered = filtered.filter(
       (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
     );
+
+    // Filter by potency range
+    filtered = filtered.filter(
+      (p) => p.thca_percentage >= potencyRange[0] && p.thca_percentage <= potencyRange[1]
+    );
+
+    // Filter by effects
+    if (selectedEffects.length > 0) {
+      filtered = filtered.filter((p) =>
+        p.effects?.some((effect: string) => selectedEffects.includes(effect))
+      );
+    }
 
     // Sort
     filtered.sort((a, b) => {
@@ -63,6 +84,8 @@ const ProductCatalog = () => {
           return b.price - a.price;
         case "potency":
           return b.thca_percentage - a.thca_percentage;
+        case "rating":
+          return b.average_rating - a.average_rating;
         case "name":
         default:
           return a.name.localeCompare(b.name);
@@ -70,7 +93,7 @@ const ProductCatalog = () => {
     });
 
     return filtered;
-  }, [allProducts, category, searchQuery, priceRange, sortBy]);
+  }, [allProducts, category, searchQuery, priceRange, sortBy, strainType, potencyRange, selectedEffects]);
 
   const categories = [
     { value: "all", label: "All Products" },
@@ -96,7 +119,7 @@ const ProductCatalog = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search products..."
+                placeholder="Search products, vendors..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -111,22 +134,91 @@ const ProductCatalog = () => {
                 <SelectItem value="price-asc">Price: Low to High</SelectItem>
                 <SelectItem value="price-desc">Price: High to Low</SelectItem>
                 <SelectItem value="potency">Potency (High to Low)</SelectItem>
+                <SelectItem value="rating">Rating (High to Low)</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Price Range Filter */}
+          {/* Advanced Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Strain Type Filter */}
+            <div className="bg-muted/50 rounded-lg p-4">
+              <Label className="text-sm font-medium mb-2 block">Strain Type</Label>
+              <Select value={strainType} onValueChange={setStrainType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="indica">Indica</SelectItem>
+                  <SelectItem value="sativa">Sativa</SelectItem>
+                  <SelectItem value="hybrid">Hybrid</SelectItem>
+                  <SelectItem value="cbd">CBD</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Price Range Filter */}
+            <div className="bg-muted/50 rounded-lg p-4">
+              <Label className="text-sm font-medium mb-2 block">
+                Price: ${priceRange[0]} - ${priceRange[1]}
+              </Label>
+              <Slider
+                value={priceRange}
+                onValueChange={setPriceRange}
+                max={100}
+                step={5}
+                className="w-full"
+              />
+            </div>
+
+            {/* Potency Range Filter */}
+            <div className="bg-muted/50 rounded-lg p-4">
+              <Label className="text-sm font-medium mb-2 block">
+                THCA Potency: {potencyRange[0]}% - {potencyRange[1]}%
+              </Label>
+              <Slider
+                value={potencyRange}
+                onValueChange={setPotencyRange}
+                max={100}
+                step={1}
+                className="w-full"
+              />
+            </div>
+          </div>
+
+          {/* Effects Filter */}
           <div className="bg-muted/50 rounded-lg p-4">
-            <Label className="text-sm font-medium mb-2 block">
-              Price Range: ${priceRange[0]} - ${priceRange[1]}
-            </Label>
-            <Slider
-              value={priceRange}
-              onValueChange={setPriceRange}
-              max={100}
-              step={5}
-              className="w-full"
-            />
+            <Label className="text-sm font-medium mb-3 block">Effects</Label>
+            <div className="flex flex-wrap gap-2">
+              {['relaxing', 'uplifting', 'creative', 'focused', 'energizing', 'sleepy', 'happy', 'euphoric'].map((effect) => (
+                <Button
+                  key={effect}
+                  variant={selectedEffects.includes(effect) ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setSelectedEffects(prev =>
+                      prev.includes(effect)
+                        ? prev.filter(e => e !== effect)
+                        : [...prev, effect]
+                    );
+                  }}
+                  className="capitalize"
+                >
+                  {effect}
+                </Button>
+              ))}
+            </div>
+            {selectedEffects.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedEffects([])}
+                className="mt-2"
+              >
+                Clear Effects
+              </Button>
+            )}
           </div>
         </div>
 
