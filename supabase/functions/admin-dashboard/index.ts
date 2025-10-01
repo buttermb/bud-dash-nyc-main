@@ -207,8 +207,8 @@ serve(async (req) => {
             courier_id: order.courier_id,
             pickup_lat: delivery?.pickup_lat || 40.7589, // NYC default
             pickup_lng: delivery?.pickup_lng || -73.9851,
-            dropoff_lat: (address?.lat as any) || delivery?.dropoff_lat || 40.7589,
-            dropoff_lng: (address?.lng as any) || delivery?.dropoff_lng || -73.9851,
+            dropoff_lat: (address?.latitude as any) || delivery?.dropoff_lat || order.dropoff_lat || 40.7589,
+            dropoff_lng: (address?.longitude as any) || delivery?.dropoff_lng || order.dropoff_lng || -73.9851,
             estimated_pickup_time: delivery?.estimated_pickup_time,
             estimated_dropoff_time: delivery?.estimated_dropoff_time || order.estimated_delivery,
             actual_pickup_time: delivery?.actual_pickup_time,
