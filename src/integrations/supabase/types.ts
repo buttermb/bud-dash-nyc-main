@@ -757,6 +757,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "orders_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "orders_merchant_id_fkey"
             columns: ["merchant_id"]
             isOneToOne: false
