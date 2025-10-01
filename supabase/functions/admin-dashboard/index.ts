@@ -63,7 +63,22 @@ serve(async (req) => {
     }
 
     const url = new URL(req.url);
-    const endpoint = url.searchParams.get("endpoint");
+    
+    // Get endpoint from either query params or request body
+    let endpoint = url.searchParams.get("endpoint");
+    if (!endpoint && req.method === "POST") {
+      try {
+        const body = await req.json();
+        endpoint = body.endpoint || null;
+      } catch (e) {
+        // If body parsing fails, endpoint remains null
+      }
+    }
+    
+    // Default to "overview" if no endpoint specified
+    if (!endpoint) {
+      endpoint = "overview";
+    }
     
     console.log("Admin dashboard request:", { endpoint, adminUser: adminUser.email });
 
