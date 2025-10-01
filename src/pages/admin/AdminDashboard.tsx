@@ -34,11 +34,15 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (session) {
       fetchDashboardMetrics();
+    } else {
+      setLoading(false);
     }
   }, [session]);
 
   const fetchDashboardMetrics = async () => {
     try {
+      console.log("Fetching dashboard metrics...", session);
+      
       const { data, error } = await supabase.functions.invoke("admin-dashboard", {
         body: { endpoint: "overview" },
         headers: {
@@ -46,10 +50,44 @@ const AdminDashboard = () => {
         },
       });
 
-      if (error) throw error;
-      setMetrics(data.metrics);
+      console.log("Dashboard response:", { data, error });
+
+      if (error) {
+        console.error("Dashboard API error:", error);
+        throw error;
+      }
+      
+      if (data?.metrics) {
+        setMetrics(data.metrics);
+      } else {
+        console.warn("No metrics in response");
+        // Set default metrics if none returned
+        setMetrics({
+          totalOrders: 0,
+          todayOrders: 0,
+          activeOrders: 0,
+          totalUsers: 0,
+          totalMerchants: 0,
+          activeCouriers: 0,
+          pendingVerifications: 0,
+          flaggedOrders: 0,
+          todayRevenue: 0,
+        });
+      }
     } catch (error) {
       console.error("Failed to fetch dashboard metrics:", error);
+      // Set default metrics on error
+      setMetrics({
+        totalOrders: 0,
+        todayOrders: 0,
+        activeOrders: 0,
+        totalUsers: 0,
+        totalMerchants: 0,
+        activeCouriers: 0,
+        pendingVerifications: 0,
+        flaggedOrders: 0,
+        todayRevenue: 0,
+      });
     } finally {
       setLoading(false);
     }

@@ -54,8 +54,13 @@ const CourierDashboard = () => {
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ["courier-orders", courier?.id],
     queryFn: async () => {
-      if (!courier) return [];
+      if (!courier) {
+        console.log("No courier found, skipping order fetch");
+        return [];
+      }
 
+      console.log("Fetching orders for courier:", courier.id);
+      
       const { data, error } = await supabase
         .from("orders")
         .select("*, order_items(*)")
@@ -63,18 +68,29 @@ const CourierDashboard = () => {
         .in("status", ["pending", "confirmed", "out_for_delivery"])
         .order("created_at", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Order fetch error:", error);
+        throw error;
+      }
+      
+      console.log("Orders fetched:", data?.length || 0);
       return data || [];
     },
     enabled: !!courier,
     refetchInterval: 30000, // Auto-refresh every 30 seconds
+    retry: 2,
   });
 
   // Fetch today's stats
   const { data: todayStats } = useQuery({
     queryKey: ["courier-stats", courier?.id],
     queryFn: async () => {
-      if (!courier) return null;
+      if (!courier) {
+        console.log("No courier found, skipping stats fetch");
+        return null;
+      }
+
+      console.log("Fetching stats for courier:", courier.id);
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -85,17 +101,22 @@ const CourierDashboard = () => {
         .eq("courier_id", courier.id)
         .gte("created_at", today.toISOString());
 
-      if (error) throw error;
+      if (error) {
+        console.error("Stats fetch error:", error);
+        throw error;
+      }
 
       const completed = data?.filter(o => o.status === "delivered").length || 0;
       const earnings = data
         ?.filter(o => o.status === "delivered")
         .reduce((sum, o) => sum + Number(o.total_amount), 0) || 0;
 
+      console.log("Stats fetched:", { completed, earnings, total: data?.length });
       return { completed, earnings, total: data?.length || 0 };
     },
     enabled: !!courier,
     refetchInterval: 60000, // Refresh every minute
+    retry: 2,
   });
 
   const updateOrderStatus = useMutation({
