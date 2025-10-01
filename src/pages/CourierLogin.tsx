@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Package } from 'lucide-react';
+import { useCourier } from '@/contexts/CourierContext';
 
 export default function CourierLogin() {
   const [email, setEmail] = useState('');
@@ -14,6 +15,14 @@ export default function CourierLogin() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { courier, refreshCourier } = useCourier();
+
+  // Redirect if already logged in as courier
+  useEffect(() => {
+    if (courier) {
+      navigate('/courier/dashboard', { replace: true });
+    }
+  }, [courier, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,12 +53,18 @@ export default function CourierLogin() {
         throw new Error('Your courier account is inactive. Please contact support.');
       }
 
+      // Refresh courier context to load data
+      await refreshCourier();
+      
       toast({
         title: "Welcome back!",
-        description: "Logging you in..."
+        description: "Redirecting to dashboard..."
       });
 
-      navigate('/courier/dashboard');
+      // Small delay to ensure context is updated
+      setTimeout(() => {
+        navigate('/courier/dashboard', { replace: true });
+      }, 100);
     } catch (error: any) {
       toast({
         title: "Login failed",
