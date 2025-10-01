@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import ProductCard from "./ProductCard";
 import AuthModal from "./AuthModal";
 import { Loader2, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const ProductCatalog = () => {
   const [category, setCategory] = useState<string>("all");
@@ -96,11 +97,11 @@ const ProductCatalog = () => {
   }, [allProducts, category, searchQuery, priceRange, sortBy, strainType, potencyRange, selectedEffects]);
 
   const categories = [
-    { value: "all", label: "All Products" },
-    { value: "flower", label: "Flower" },
-    { value: "edibles", label: "Edibles" },
-    { value: "vapes", label: "Vapes" },
-    { value: "concentrates", label: "Concentrates" },
+    { value: "all", label: "All Products", icon: "🌿", desc: "Browse everything" },
+    { value: "flower", label: "Flower", icon: "🌸", desc: "Premium THCA flower" },
+    { value: "edibles", label: "Edibles", icon: "🍬", desc: "Tasty treats" },
+    { value: "vapes", label: "Vapes", icon: "💨", desc: "Convenient vaping" },
+    { value: "concentrates", label: "Concentrates", icon: "💧", desc: "High potency oils" },
   ];
 
   return (
@@ -223,13 +224,41 @@ const ProductCatalog = () => {
         </div>
 
         <Tabs value={category} onValueChange={setCategory} className="w-full">
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-5 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8 max-w-6xl mx-auto">
             {categories.map((cat) => (
-              <TabsTrigger key={cat.value} value={cat.value}>
-                {cat.label}
-              </TabsTrigger>
+              <button
+                key={cat.value}
+                onClick={() => setCategory(cat.value)}
+                className={cn(
+                  "group relative p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105",
+                  "flex flex-col items-center gap-3 text-center",
+                  category === cat.value
+                    ? "border-primary bg-primary/10 shadow-lg shadow-primary/20"
+                    : "border-border hover:border-primary/50 bg-card"
+                )}
+              >
+                <span className="text-4xl group-hover:scale-110 transition-transform">
+                  {cat.icon}
+                </span>
+                <div>
+                  <h3 className={cn(
+                    "font-semibold text-base mb-1",
+                    category === cat.value ? "text-primary" : ""
+                  )}>
+                    {cat.label}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {cat.desc}
+                  </p>
+                </div>
+                {category === cat.value && (
+                  <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                    <span className="text-xs text-primary-foreground">✓</span>
+                  </div>
+                )}
+              </button>
             ))}
-          </TabsList>
+          </div>
 
           {isLoading ? (
             <div className="flex justify-center py-20">

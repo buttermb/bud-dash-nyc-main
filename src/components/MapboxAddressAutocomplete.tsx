@@ -97,7 +97,7 @@ export default function MapboxAddressAutocomplete({
   const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
     const [lng, lat] = suggestion.center;
     
-    // Extract borough from context
+    // Extract borough from context (only Brooklyn, Queens, Manhattan)
     let borough = "";
     if (suggestion.context) {
       const placeContext = suggestion.context.find(c => c.id.startsWith("place"));
@@ -106,8 +106,7 @@ export default function MapboxAddressAutocomplete({
         if (boroughName.includes("brooklyn")) borough = "brooklyn";
         else if (boroughName.includes("queens")) borough = "queens";
         else if (boroughName.includes("manhattan")) borough = "manhattan";
-        else if (boroughName.includes("bronx")) borough = "bronx";
-        else if (boroughName.includes("staten island")) borough = "staten_island";
+        // Bronx and Staten Island are not supported
       }
     }
 

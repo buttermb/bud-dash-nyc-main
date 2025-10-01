@@ -72,13 +72,45 @@ const Checkout = () => {
     0
   );
 
+  // Fetch courier availability for dynamic pricing
+  const { data: courierAvailability } = useQuery({
+    queryKey: ["courier-availability"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("couriers")
+        .select("id")
+        .eq("is_online", true)
+        .eq("is_active", true);
+      
+      if (error) throw error;
+      return data?.length || 0;
+    },
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
   const calculateDeliveryFee = () => {
     if (!borough) return 0;
-    let fee = 5; // Base fee
-    if (borough === "manhattan") {
-      fee += 5; // Manhattan surcharge
+    
+    let baseFee = 5;
+    
+    // Dynamic pricing based on courier availability
+    const totalCouriers = courierAvailability || 0;
+    let demandMultiplier = 1;
+    
+    if (totalCouriers < 3) {
+      demandMultiplier = 2; // High demand - double the fee
+    } else if (totalCouriers < 5) {
+      demandMultiplier = 1.5; // Medium demand - 50% increase
     }
-    return fee;
+    
+    // Borough-specific pricing
+    if (borough === "manhattan") {
+      baseFee += 5; // Manhattan surcharge
+    } else if (borough === "queens") {
+      baseFee += 2; // Queens slight surcharge
+    }
+    
+    return Math.round(baseFee * demandMultiplier);
   };
 
   const deliveryFee = calculateDeliveryFee();
@@ -263,35 +295,81 @@ const Checkout = () => {
                   className="mb-4"
                 />
                 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label htmlFor="borough">
-                    Borough {borough && <span className="text-primary">({borough})</span>}
+                    Select Borough {borough && <span className="text-primary font-semibold">• {borough.charAt(0).toUpperCase() + borough.slice(1)}</span>}
                   </Label>
-                  <RadioGroup value={borough} onValueChange={setBorough}>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="brooklyn" id="brooklyn" />
-                      <Label htmlFor="brooklyn" className="cursor-pointer">Brooklyn</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="queens" id="queens" />
-                      <Label htmlFor="queens" className="cursor-pointer">Queens</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="manhattan" id="manhattan" />
-                      <Label htmlFor="manhattan" className="cursor-pointer">Manhattan (+$5 surcharge)</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="bronx" id="bronx" />
-                      <Label htmlFor="bronx" className="cursor-pointer">Bronx</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="staten_island" id="staten_island" />
-                      <Label htmlFor="staten_island" className="cursor-pointer">Staten Island</Label>
-                    </div>
-                  </RadioGroup>
-                  <p className="text-xs text-muted-foreground">
-                    💡 Select your address above to auto-detect borough
-                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setBorough("brooklyn")}
+                      className={cn(
+                        "p-4 rounded-lg border-2 text-left transition-all hover:scale-[1.02]",
+                        borough === "brooklyn"
+                          ? "border-primary bg-primary/10 shadow-lg"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-2xl">🌉</span>
+                        {borough === "brooklyn" && (
+                          <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs">✓</span>
+                        )}
+                      </div>
+                      <h4 className="font-semibold mb-1">Brooklyn</h4>
+                      <p className="text-xs text-muted-foreground">Base delivery fee</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setBorough("queens")}
+                      className={cn(
+                        "p-4 rounded-lg border-2 text-left transition-all hover:scale-[1.02]",
+                        borough === "queens"
+                          ? "border-primary bg-primary/10 shadow-lg"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-2xl">👑</span>
+                        {borough === "queens" && (
+                          <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs">✓</span>
+                        )}
+                      </div>
+                      <h4 className="font-semibold mb-1">Queens</h4>
+                      <p className="text-xs text-muted-foreground">+$2 delivery fee</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setBorough("manhattan")}
+                      className={cn(
+                        "p-4 rounded-lg border-2 text-left transition-all hover:scale-[1.02]",
+                        borough === "manhattan"
+                          ? "border-primary bg-primary/10 shadow-lg"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-2xl">🏙️</span>
+                        {borough === "manhattan" && (
+                          <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs">✓</span>
+                        )}
+                      </div>
+                      <h4 className="font-semibold mb-1">Manhattan</h4>
+                      <p className="text-xs text-muted-foreground">+$5 delivery fee</p>
+                    </button>
+                  </div>
+                  <div className="p-3 bg-muted/50 rounded-lg space-y-1">
+                    <p className="text-xs text-muted-foreground flex items-center gap-2">
+                      💡 Address auto-detection available above
+                    </p>
+                    {courierAvailability !== undefined && courierAvailability < 5 && (
+                      <p className="text-xs font-medium text-orange-600 dark:text-orange-400 flex items-center gap-2">
+                        ⚡ High demand: {courierAvailability} courier{courierAvailability !== 1 ? 's' : ''} available • Delivery fees adjusted
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Delivery Timing */}
