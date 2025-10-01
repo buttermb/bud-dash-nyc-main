@@ -48,6 +48,31 @@ const reverseGeocode = async (lng: number, lat: number): Promise<string | null> 
   }
 };
 
+// Get optimized route using Mapbox Directions API
+const getOptimizedRoute = async (
+  start: [number, number], 
+  end: [number, number]
+): Promise<{ route: any; duration: number; distance: number } | null> => {
+  try {
+    const response = await fetch(
+      `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${start[0]},${start[1]};${end[0]},${end[1]}?geometries=geojson&overview=full&steps=true&access_token=${MAPBOX_TOKEN}`
+    );
+    const data = await response.json();
+    if (data.routes && data.routes.length > 0) {
+      const route = data.routes[0];
+      return {
+        route: route.geometry,
+        duration: route.duration, // in seconds
+        distance: route.distance, // in meters
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("Route optimization error:", error);
+    return null;
+  }
+};
+
 interface RealtimeStats {
   ordersLastHour: number;
   revenueLastHour: number;
@@ -67,6 +92,7 @@ const AdminLiveMap = () => {
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
   const heatmapSourceAdded = useRef(false);
+  const routeLayersAdded = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!session) {
@@ -206,14 +232,74 @@ const AdminLiveMap = () => {
     markers.current.forEach(marker => marker.remove());
     markers.current = [];
 
+    // Clear existing route layers
+    routeLayersAdded.current.forEach(layerId => {
+      if (map.current!.getLayer(layerId)) {
+        map.current!.removeLayer(layerId);
+      }
+      if (map.current!.getSource(layerId)) {
+        map.current!.removeSource(layerId);
+      }
+    });
+    routeLayersAdded.current.clear();
+
     if (deliveries.length === 0) {
       console.log("No deliveries to display");
       return;
     }
 
-    // Add markers for each order destination (dropoff point)
-    deliveries.forEach((delivery) => {
+    // Add markers and routes for each delivery
+    deliveries.forEach(async (delivery) => {
       console.log("Processing delivery:", delivery);
+      
+      // Calculate route if courier is assigned
+      let routeData = null;
+      if (delivery.courier?.current_lat && delivery.courier?.current_lng && delivery.dropoff_lat && delivery.dropoff_lng) {
+        const courierLng = parseFloat(delivery.courier.current_lng);
+        const courierLat = parseFloat(delivery.courier.current_lat);
+        const dropoffLng = parseFloat(delivery.dropoff_lng);
+        const dropoffLat = parseFloat(delivery.dropoff_lat);
+        
+        routeData = await getOptimizedRoute(
+          [courierLng, courierLat],
+          [dropoffLng, dropoffLat]
+        );
+
+        // Add route line to map
+        if (routeData && map.current) {
+          const routeId = `route-${delivery.id}`;
+          if (!routeLayersAdded.current.has(routeId)) {
+            map.current.addSource(routeId, {
+              type: 'geojson',
+              data: {
+                type: 'Feature',
+                properties: {},
+                geometry: routeData.route
+              }
+            });
+
+            map.current.addLayer({
+              id: routeId,
+              type: 'line',
+              source: routeId,
+              layout: {
+                'line-join': 'round',
+                'line-cap': 'round'
+              },
+              paint: {
+                'line-color': '#3b82f6', // Blue route line
+                'line-width': 4,
+                'line-opacity': 0.75
+              }
+            });
+
+            routeLayersAdded.current.add(routeId);
+            console.log("Added optimized route line for delivery:", delivery.id);
+          }
+        }
+      }
+
+      const etaText = routeData ? `⏱️ <strong>ETA:</strong> ${Math.round(routeData.duration / 60)} min | ${(routeData.distance / 1000).toFixed(1)} km` : '';
       
       // Show destination marker (dropoff)
       if (delivery.dropoff_lat && delivery.dropoff_lng) {
@@ -234,6 +320,7 @@ const AdminLiveMap = () => {
             new mapboxgl.Popup({ maxWidth: '300px' }).setHTML(
               `<div style="padding: 12px; font-family: system-ui;">
                 <strong style="font-size: 16px;">${orderNumber}</strong><br/>
+                ${etaText ? `<div style="margin-top: 8px; padding: 8px; background: #dbeafe; border-radius: 6px; color: #1e40af; font-size: 14px; font-weight: 500;">${etaText}</div>` : ''}
                 <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
                   <div style="color: #059669; font-weight: 600; margin-bottom: 4px;">Status: ${delivery.order?.status?.replace(/_/g, " ").toUpperCase() || 'PENDING'}</div>
                   <div style="color: #374151; margin: 4px 0;"><strong>Delivery Address:</strong><br/>${delivery.order?.delivery_address || 'Unknown'}</div>
@@ -262,21 +349,22 @@ const AdminLiveMap = () => {
         console.log("Added destination marker for order:", orderNumber);
       }
       
-      // Show courier location if available (green marker)
+      // Show courier location marker if available (green marker)
       if (delivery.courier?.current_lat && delivery.courier?.current_lng) {
+        const courierLng = parseFloat(delivery.courier.current_lng);
+        const courierLat = parseFloat(delivery.courier.current_lat);
+
         const courierMarker = new mapboxgl.Marker({ 
           color: "#22c55e" // Green for courier
         })
-          .setLngLat([
-            parseFloat(delivery.courier.current_lng),
-            parseFloat(delivery.courier.current_lat),
-          ])
+          .setLngLat([courierLng, courierLat])
           .setPopup(
             new mapboxgl.Popup().setHTML(
               `<div style="padding: 12px; font-family: system-ui;">
                 <strong style="font-size: 16px;">🚗 ${delivery.courier.full_name}</strong><br/>
                 <div style="margin-top: 8px; color: #374151;">
                   <strong>Delivering:</strong> ${delivery.order?.order_number || 'Order'}<br/>
+                  ${etaText ? `<div style="margin: 8px 0; padding: 8px; background: #dbeafe; border-radius: 6px; color: #1e40af; font-size: 14px;">${etaText}</div>` : ''}
                   <strong>Vehicle:</strong> ${delivery.courier.vehicle_type}<br/>
                   <strong>Plate:</strong> ${delivery.courier.vehicle_plate}
                 </div>
@@ -286,7 +374,7 @@ const AdminLiveMap = () => {
           .addTo(map.current!);
 
         markers.current.push(courierMarker);
-        console.log("Added courier marker:", delivery.courier.full_name);
+        console.log("Added courier marker with optimized route:", delivery.courier.full_name);
       }
     });
 
@@ -675,11 +763,38 @@ const AdminLiveMap = () => {
           </p>
         </CardHeader>
         <CardContent>
-          <div 
-            ref={mapContainer} 
-            className="w-full h-[600px] rounded-lg border border-border bg-muted/50" 
-            style={{ minHeight: '600px' }}
-          />
+          <div className="relative">
+            <div 
+              ref={mapContainer} 
+              className="w-full h-[600px] rounded-lg border border-border bg-muted/50" 
+              style={{ minHeight: '600px' }}
+            />
+            
+            {/* Map Legend */}
+            <div className="absolute top-4 left-4 bg-background/95 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-border z-10 max-w-xs">
+              <h3 className="font-semibold text-sm mb-3">Map Legend</h3>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <span>Delivery Destination</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span>Active Courier</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-1 bg-blue-500 rounded"></div>
+                  <span>Optimized Route</span>
+                </div>
+                <div className="mt-2 pt-2 border-t border-border text-muted-foreground">
+                  <p className="flex items-center gap-1">
+                    <Navigation className="h-3 w-3" />
+                    Routes use real-time traffic data
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
