@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/contexts/AdminContext";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const AdminOrders = () => {
   const { session } = useAdmin();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -130,6 +132,13 @@ const AdminOrders = () => {
       setReason("");
       setSelectedOrder(null);
       fetchOrders();
+
+      // Navigate to Live Orders page after accepting an order
+      if (actionDialog === "accept") {
+        setTimeout(() => {
+          navigate("/admin/live-orders");
+        }, 500);
+      }
     } catch (error) {
       console.error("Action failed:", error);
       toast({

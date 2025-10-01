@@ -246,7 +246,15 @@ serve(async (req) => {
           .order("created_at", { ascending: false })
           .range((page - 1) * limit, page * limit - 1);
 
-        if (status) query = query.eq("status", status);
+        if (status) {
+          // Support comma-separated statuses
+          const statuses = status.split(',').map(s => s.trim());
+          if (statuses.length > 1) {
+            query = query.in("status", statuses);
+          } else {
+            query = query.eq("status", status);
+          }
+        }
         if (merchantId) query = query.eq("merchant_id", merchantId);
         if (courierId) query = query.eq("courier_id", courierId);
         if (flagged === "true") query = query.not("flagged_reason", "is", null);

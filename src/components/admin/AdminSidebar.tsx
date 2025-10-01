@@ -7,7 +7,9 @@ import {
   TrendingUp,
   MapPin,
   FileText,
-  LogOut
+  LogOut,
+  Clock,
+  Truck
 } from "lucide-react";
 import {
   Sidebar,
@@ -28,7 +30,9 @@ import { Button } from "@/components/ui/button";
 const menuItems = [
   { title: "Overview", url: "/admin/dashboard", icon: LayoutDashboard },
   { title: "Live Map", url: "/admin/live-map", icon: MapPin },
+  { title: "Live Orders", url: "/admin/live-orders", icon: Clock },
   { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
+  { title: "Couriers", url: "/admin/couriers", icon: Truck },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Compliance", url: "/admin/compliance", icon: Shield },
   { title: "Analytics", url: "/admin/analytics", icon: TrendingUp },
