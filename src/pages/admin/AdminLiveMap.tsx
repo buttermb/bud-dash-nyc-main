@@ -537,6 +537,32 @@ const AdminLiveMap = () => {
     }
   };
 
+  const centerMapOnDelivery = (delivery: any) => {
+    if (!map.current || !delivery.dropoff_lat || !delivery.dropoff_lng) return;
+
+    const dropoffLng = parseFloat(delivery.dropoff_lng);
+    const dropoffLat = parseFloat(delivery.dropoff_lat);
+
+    // Center and zoom to the delivery location
+    map.current.flyTo({
+      center: [dropoffLng, dropoffLat],
+      zoom: 15,
+      duration: 1500,
+      essential: true
+    });
+
+    // Find and open the popup for this delivery
+    const marker = markers.current.find(m => {
+      const lngLat = m.getLngLat();
+      return Math.abs(lngLat.lng - dropoffLng) < 0.0001 && 
+             Math.abs(lngLat.lat - dropoffLat) < 0.0001;
+    });
+
+    if (marker && marker.getPopup()) {
+      marker.togglePopup();
+    }
+  };
+
   const handleMarkDelivered = async (orderId: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -827,7 +853,11 @@ const AdminLiveMap = () => {
           </Card>
         ) : (
           deliveries.map((delivery) => (
-            <Card key={delivery.id}>
+            <Card 
+              key={delivery.id}
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => centerMapOnDelivery(delivery)}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">
@@ -900,7 +930,10 @@ const AdminLiveMap = () => {
                   {delivery.courier ? (
                     <Button
                       size="sm"
-                      onClick={() => handleMarkDelivered(delivery.order_id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMarkDelivered(delivery.order_id);
+                      }}
                       className="w-full flex items-center gap-2"
                     >
                       <CheckCircle2 className="h-4 w-4" />
@@ -910,7 +943,8 @@ const AdminLiveMap = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setSelectedOrder({
                           id: delivery.order_id,
                           address: delivery.order?.delivery_address
