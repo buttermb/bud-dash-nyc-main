@@ -1,1 +1,4 @@
 project_id = "vltveasdxtfvvqbzxzuf"
+
+[functions.add-courier]
+verify_jwt = true

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Search, Truck, Phone, Mail, MapPin, CheckCircle, XCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AddCourierDialog } from "@/components/admin/AddCourierDialog";
 
 const AdminCouriers = () => {
   const { session } = useAdmin();
@@ -171,7 +172,7 @@ const AdminCouriers = () => {
         </Card>
       </div>
 
-      {/* Search */}
+      {/* Search and Actions */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -182,6 +183,7 @@ const AdminCouriers = () => {
             className="pl-10"
           />
         </div>
+        <AddCourierDialog onSuccess={fetchCouriers} />
       </div>
 
       {/* Couriers Table */}

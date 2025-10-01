@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { MapPin, Truck, Package, Clock, DollarSign, Users, Navigation } from "lucide-react";
+import { MapPin, Truck, Package, Clock, DollarSign, Users, Navigation, UserPlus, CheckCircle2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AssignCourierDialog } from "@/components/admin/AssignCourierDialog";
+import { useToast } from "@/hooks/use-toast";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -83,11 +85,14 @@ interface RealtimeStats {
 
 const AdminLiveMap = () => {
   const { session } = useAdmin();
+  const { toast } = useToast();
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [stats, setStats] = useState<RealtimeStats | null>(null);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [heatmapData, setHeatmapData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
@@ -309,41 +314,85 @@ const AdminLiveMap = () => {
           ? items.map((item: any) => `${item.product_name || 'Product'} x${item.quantity || 1}`).join('<br/>')
           : 'No items';
         
-        const destinationMarker = new mapboxgl.Marker({ 
-          color: "#ef4444" // Red for destination
-        })
+        // Create custom marker element with action buttons
+        const markerElement = document.createElement('div');
+        markerElement.className = 'custom-marker';
+        markerElement.innerHTML = `
+          <div style="background: #ef4444; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            📦
+          </div>
+        `;
+        
+        const popup = new mapboxgl.Popup({ 
+          maxWidth: '350px',
+          closeButton: true,
+          closeOnClick: false
+        }).setHTML(
+          `<div style="padding: 12px; font-family: system-ui;" id="popup-${delivery.id}">
+            <strong style="font-size: 16px;">${orderNumber}</strong><br/>
+            ${etaText ? `<div style="margin-top: 8px; padding: 8px; background: #dbeafe; border-radius: 6px; color: #1e40af; font-size: 14px; font-weight: 500;">${etaText}</div>` : ''}
+            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+              <div style="color: #059669; font-weight: 600; margin-bottom: 4px;">Status: ${delivery.order?.status?.replace(/_/g, " ").toUpperCase() || 'PENDING'}</div>
+              <div style="color: #374151; margin: 4px 0;"><strong>Delivery Address:</strong><br/>${delivery.order?.delivery_address || 'Unknown'}</div>
+              <div style="color: #374151; margin: 4px 0;"><strong>Borough:</strong> ${delivery.order?.delivery_borough || 'N/A'}</div>
+            </div>
+            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+              <strong>Items (${items.length}):</strong><br/>
+              <div style="font-size: 14px; color: #4b5563; margin-top: 4px;">${itemsList}</div>
+            </div>
+            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+              <strong>Total:</strong> <span style="color: #059669; font-weight: 600;">$${parseFloat(delivery.order?.total_amount || 0).toFixed(2)}</span>
+            </div>
+            ${delivery.courier 
+              ? `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; color: #059669;">
+                   <strong>🚗 Courier:</strong> ${delivery.courier.full_name}<br/>
+                   <span style="font-size: 14px;">${delivery.courier.vehicle_type} - ${delivery.courier.vehicle_plate}</span>
+                 </div>
+                 <button 
+                   id="complete-${delivery.id}" 
+                   style="width: 100%; margin-top: 8px; padding: 8px; background: #22c55e; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;"
+                 >
+                   ✓ Mark as Delivered
+                 </button>` 
+              : `<button 
+                   id="assign-${delivery.id}" 
+                   style="width: 100%; margin-top: 8px; padding: 8px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;"
+                 >
+                   👤 Assign Courier
+                 </button>`
+            }
+          </div>`
+        );
+
+        const destinationMarker = new mapboxgl.Marker({ element: markerElement })
           .setLngLat([
             parseFloat(delivery.dropoff_lng),
             parseFloat(delivery.dropoff_lat),
           ])
-          .setPopup(
-            new mapboxgl.Popup({ maxWidth: '300px' }).setHTML(
-              `<div style="padding: 12px; font-family: system-ui;">
-                <strong style="font-size: 16px;">${orderNumber}</strong><br/>
-                ${etaText ? `<div style="margin-top: 8px; padding: 8px; background: #dbeafe; border-radius: 6px; color: #1e40af; font-size: 14px; font-weight: 500;">${etaText}</div>` : ''}
-                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
-                  <div style="color: #059669; font-weight: 600; margin-bottom: 4px;">Status: ${delivery.order?.status?.replace(/_/g, " ").toUpperCase() || 'PENDING'}</div>
-                  <div style="color: #374151; margin: 4px 0;"><strong>Delivery Address:</strong><br/>${delivery.order?.delivery_address || 'Unknown'}</div>
-                  <div style="color: #374151; margin: 4px 0;"><strong>Borough:</strong> ${delivery.order?.delivery_borough || 'N/A'}</div>
-                </div>
-                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
-                  <strong>Items (${items.length}):</strong><br/>
-                  <div style="font-size: 14px; color: #4b5563; margin-top: 4px;">${itemsList}</div>
-                </div>
-                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
-                  <strong>Total:</strong> <span style="color: #059669; font-weight: 600;">$${parseFloat(delivery.order?.total_amount || 0).toFixed(2)}</span>
-                </div>
-                ${delivery.courier 
-                  ? `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; color: #059669;">
-                       <strong>🚗 Courier:</strong> ${delivery.courier.full_name}<br/>
-                       <span style="font-size: 14px;">${delivery.courier.vehicle_type} - ${delivery.courier.vehicle_plate}</span>
-                     </div>` 
-                  : '<div style="margin-top: 8px; color: #dc2626;">⚠️ No courier assigned yet</div>'
-                }
-              </div>`
-            )
-          )
+          .setPopup(popup)
           .addTo(map.current!);
+
+        // Add event listeners after popup opens
+        popup.on('open', () => {
+          const assignBtn = document.getElementById(`assign-${delivery.id}`);
+          const completeBtn = document.getElementById(`complete-${delivery.id}`);
+          
+          if (assignBtn) {
+            assignBtn.addEventListener('click', () => {
+              setSelectedOrder({
+                id: delivery.order_id,
+                address: delivery.order?.delivery_address
+              });
+              setAssignDialogOpen(true);
+            });
+          }
+          
+          if (completeBtn) {
+            completeBtn.addEventListener('click', async () => {
+              await handleMarkDelivered(delivery.order_id);
+            });
+          }
+        });
 
         markers.current.push(destinationMarker);
         console.log("Added destination marker for order:", orderNumber);
@@ -467,6 +516,48 @@ const AdminLiveMap = () => {
       setDeliveries([]); // Set empty array on error
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMarkDelivered = async (orderId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/update-order-status`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          orderId,
+          status: "delivered",
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update order status");
+      }
+
+      toast({
+        title: "Success",
+        description: "Order marked as delivered",
+      });
+
+      fetchLiveDeliveries();
+    } catch (error: any) {
+      console.error("Failed to mark order as delivered:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update order status",
+      });
     }
   };
 
@@ -797,6 +888,17 @@ const AdminLiveMap = () => {
           </div>
         </CardContent>
       </Card>
+
+      <AssignCourierDialog
+        orderId={selectedOrder?.id || ''}
+        orderAddress={selectedOrder?.address || ''}
+        open={assignDialogOpen}
+        onOpenChange={setAssignDialogOpen}
+        onSuccess={() => {
+          fetchLiveDeliveries();
+          setSelectedOrder(null);
+        }}
+      />
     </div>
   );
 };
