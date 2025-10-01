@@ -1,16 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Bitcoin, DollarSign } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ArrowLeft, Bitcoin, DollarSign, Calendar as CalendarIcon, Clock, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
 import Navigation from "@/components/Navigation";
 import MapboxAddressAutocomplete from "@/components/MapboxAddressAutocomplete";
 
@@ -26,8 +30,28 @@ const Checkout = () => {
   const [promoCode, setPromoCode] = useState("");
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [scheduledTime, setScheduledTime] = useState("");
+  const [deliveryType, setDeliveryType] = useState<"asap" | "scheduled">("asap");
+  const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
   const [notes, setNotes] = useState("");
+
+  const timeSlots = [
+    { value: "09:00-12:00", label: "Morning", time: "9:00 AM - 12:00 PM", icon: "🌅" },
+    { value: "12:00-15:00", label: "Lunch", time: "12:00 PM - 3:00 PM", icon: "☀️" },
+    { value: "15:00-18:00", label: "Afternoon", time: "3:00 PM - 6:00 PM", icon: "🌤️" },
+    { value: "18:00-21:00", label: "Evening", time: "6:00 PM - 9:00 PM", icon: "🌆" },
+  ];
+
+  const getScheduledDateTime = () => {
+    if (deliveryType === "asap" || !selectedDate || !selectedTimeSlot) {
+      return null;
+    }
+    const [startTime] = selectedTimeSlot.split("-");
+    const [hours, minutes] = startTime.split(":");
+    const dateTime = new Date(selectedDate);
+    dateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    return dateTime.toISOString();
+  };
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ["cart", user?.id],
@@ -129,7 +153,7 @@ const Checkout = () => {
           delivery_fee: deliveryFee,
           subtotal: subtotal,
           total_amount: total,
-          scheduled_delivery_time: scheduledTime || null,
+          scheduled_delivery_time: getScheduledDateTime(),
           delivery_notes: notes || null,
         })
         .select()
@@ -237,18 +261,130 @@ const Checkout = () => {
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="scheduledTime">Scheduled Delivery (Optional)</Label>
-                  <Input
-                    id="scheduledTime"
-                    type="datetime-local"
-                    value={scheduledTime}
-                    onChange={(e) => setScheduledTime(e.target.value)}
-                    min={new Date().toISOString().slice(0, 16)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Leave empty for immediate delivery (within 2 hours)
-                  </p>
+                {/* Delivery Timing */}
+                <div className="space-y-4">
+                  <Label>Delivery Time</Label>
+                  <RadioGroup value={deliveryType} onValueChange={(v: any) => setDeliveryType(v)}>
+                    <div 
+                      className={cn(
+                        "flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all",
+                        deliveryType === "asap" 
+                          ? "border-primary bg-primary/5" 
+                          : "border-border hover:border-primary/50"
+                      )}
+                      onClick={() => setDeliveryType("asap")}
+                    >
+                      <RadioGroupItem value="asap" id="asap" />
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Zap className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <Label htmlFor="asap" className="font-semibold cursor-pointer">
+                            ASAP Delivery
+                          </Label>
+                          <p className="text-sm text-muted-foreground">
+                            We'll deliver within 2 hours
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div 
+                      className={cn(
+                        "flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all",
+                        deliveryType === "scheduled" 
+                          ? "border-primary bg-primary/5" 
+                          : "border-border hover:border-primary/50"
+                      )}
+                      onClick={() => setDeliveryType("scheduled")}
+                    >
+                      <RadioGroupItem value="scheduled" id="scheduled" />
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Clock className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <Label htmlFor="scheduled" className="font-semibold cursor-pointer">
+                            Schedule for Later
+                          </Label>
+                          <p className="text-sm text-muted-foreground">
+                            Choose your preferred date and time
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </RadioGroup>
+
+                  {deliveryType === "scheduled" && (
+                    <div className="space-y-4 pt-2 animate-in fade-in-50 duration-300">
+                      {/* Date Selection */}
+                      <div className="space-y-2">
+                        <Label>Select Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !selectedDate && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={selectedDate}
+                              onSelect={setSelectedDate}
+                              disabled={(date) => date < new Date() || date > new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)}
+                              initialFocus
+                              className={cn("p-3 pointer-events-auto")}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <p className="text-xs text-muted-foreground">
+                          Available up to 7 days in advance
+                        </p>
+                      </div>
+
+                      {/* Time Slot Selection */}
+                      {selectedDate && (
+                        <div className="space-y-2 animate-in fade-in-50 duration-300">
+                          <Label>Select Time Slot</Label>
+                          <div className="grid grid-cols-2 gap-3">
+                            {timeSlots.map((slot) => (
+                              <Button
+                                key={slot.value}
+                                type="button"
+                                variant={selectedTimeSlot === slot.value ? "default" : "outline"}
+                                className={cn(
+                                  "h-auto py-3 flex-col items-start gap-1 transition-all",
+                                  selectedTimeSlot === slot.value && "ring-2 ring-primary ring-offset-2"
+                                )}
+                                onClick={() => setSelectedTimeSlot(slot.value)}
+                              >
+                                <div className="flex items-center gap-2 w-full">
+                                  <span className="text-lg">{slot.icon}</span>
+                                  <span className="font-semibold">{slot.label}</span>
+                                </div>
+                                <span className="text-xs opacity-80">{slot.time}</span>
+                              </Button>
+                            ))}
+                          </div>
+                          {selectedTimeSlot && (
+                            <div className="p-3 bg-primary/10 rounded-lg">
+                              <p className="text-sm font-medium text-primary">
+                                📅 Scheduled for {format(selectedDate, "EEEE, MMMM d")} • {timeSlots.find(s => s.value === selectedTimeSlot)?.time}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
