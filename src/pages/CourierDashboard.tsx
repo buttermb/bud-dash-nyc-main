@@ -78,6 +78,10 @@ export default function CourierDashboard() {
   const [showMap, setShowMap] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<CourierLocation | null>(null);
   const locationWatchId = useRef<number | null>(null);
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [showAcceptedModal, setShowAcceptedModal] = useState(false);
+  const [acceptedOrder, setAcceptedOrder] = useState<Order | null>(null);
+  const [autoOpenMaps, setAutoOpenMaps] = useState(true);
 
   // Start location tracking
   useEffect(() => {
@@ -203,15 +207,34 @@ export default function CourierDashboard() {
         body: { endpoint: 'accept-order', order_id: orderId }
       });
       if (error) throw error;
-      return data;
+      return { orderId };
     },
-    onSuccess: () => {
+    onSuccess: async ({ orderId }) => {
+      // Fetch full order details
+      const { data } = await supabase.functions.invoke('courier-app', {
+        body: { endpoint: 'my-orders', status: 'active' }
+      });
+      
+      const fullOrder = data?.orders?.find((o: Order) => o.id === orderId);
+      
+      if (fullOrder) {
+        setAcceptedOrder(fullOrder);
+        setShowAcceptedModal(true);
+        setExpandedOrderId(orderId);
+        
+        // Auto-open maps if enabled
+        if (autoOpenMaps && fullOrder.pickup_lat && fullOrder.pickup_lng) {
+          setTimeout(() => {
+            openNavigation(fullOrder, 'pickup');
+          }, 1500);
+        }
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['courier-my-orders'] });
       queryClient.invalidateQueries({ queryKey: ['courier-available-orders'] });
-      toast.success("Order accepted!");
     },
     onError: () => {
-      toast.error("Failed to accept order");
+      toast.error("Order no longer available - someone else accepted it!");
     }
   });
 
@@ -346,11 +369,15 @@ export default function CourierDashboard() {
               {activeOrders.map(order => {
                 // Calculate commission on subtotal only (excludes delivery fee)
                 const earnings = (parseFloat(order.subtotal?.toString() || '0') * (courierCommissionRate / 100)).toFixed(2);
+                const isExpanded = expandedOrderId === order.id;
                 
                 return (
                   <div key={order.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-orange-200">
-                    {/* Order Header */}
-                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4">
+                    {/* Order Header - Clickable */}
+                    <div 
+                      className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 cursor-pointer"
+                      onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
+                    >
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <p className="text-sm opacity-90">Order #{order.order_number}</p>
@@ -366,21 +393,35 @@ export default function CourierDashboard() {
                         </div>
                       </div>
                       
-                      <span className={`
-                        inline-block px-3 py-1 rounded-full text-sm font-bold
-                        ${order.status === 'preparing' ? 'bg-yellow-400 text-yellow-900' : 'bg-blue-400 text-blue-900'}
-                      `}>
-                        {order.status === 'preparing' ? '👨‍🍳 Being Prepared' : '🚗 Out for Delivery'}
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className={`
+                          inline-block px-3 py-1 rounded-full text-sm font-bold
+                          ${order.status === 'preparing' ? 'bg-yellow-400 text-yellow-900' : 'bg-blue-400 text-blue-900'}
+                        `}>
+                          {order.status === 'preparing' ? '👨‍🍳 Being Prepared' : '🚗 Out for Delivery'}
+                        </span>
+                        
+                        <div className="text-white text-sm font-medium">
+                          {isExpanded ? '▼ Collapse' : '▶ Expand'}
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Locations */}
+                    {/* Locations - Expandable */}
+                    {isExpanded && (
                     <div className="p-4 space-y-4">
                       {/* Pickup */}
-                      <div className="bg-orange-50 rounded-xl p-3">
+                      <div className="bg-orange-50 rounded-xl p-3 border-2 border-orange-200">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
-                            <p className="text-xs font-bold text-orange-600 mb-1">📦 PICKUP FROM</p>
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-xs font-bold text-orange-600">📦 PICKUP FROM</p>
+                              {order.status === 'preparing' && (
+                                <span className="bg-orange-200 text-orange-800 px-2 py-1 rounded text-xs font-bold animate-pulse">
+                                  GO HERE FIRST
+                                </span>
+                              )}
+                            </div>
                             <p className="font-bold text-gray-900">{order.merchants?.business_name}</p>
                             <p className="text-sm text-gray-600">{order.merchants?.address}</p>
                             {order.special_instructions && (
@@ -408,16 +449,23 @@ export default function CourierDashboard() {
 
                       {/* Arrow Down */}
                       <div className="flex justify-center">
-                        <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-8 h-8 text-gray-400 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                         </svg>
                       </div>
 
                       {/* Delivery */}
-                      <div className="bg-green-50 rounded-xl p-3">
+                      <div className="bg-green-50 rounded-xl p-3 border-2 border-green-200">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
-                            <p className="text-xs font-bold text-green-600 mb-1">📍 DELIVER TO</p>
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-xs font-bold text-green-600">📍 DELIVER TO</p>
+                              {order.status === 'out_for_delivery' && (
+                                <span className="bg-green-200 text-green-800 px-2 py-1 rounded text-xs font-bold animate-pulse">
+                                  DELIVER HERE
+                                </span>
+                              )}
+                            </div>
                             <p className="font-bold text-gray-900">{order.customer_name || 'Customer'}</p>
                             <p className="text-sm text-gray-600">{order.addresses?.street}</p>
                             <p className="text-sm text-gray-600">
@@ -462,38 +510,29 @@ export default function CourierDashboard() {
                           </div>
                         </div>
                       )}
-                    </div>
 
-                    {/* Action Buttons */}
-                    <div className="p-4 bg-gray-50 border-t space-y-2">
-                      {order.status === 'preparing' && (
-                        <button
-                          onClick={() => markPickedUp(order.id)}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition transform active:scale-95 text-lg"
-                        >
-                          ✅ Confirm Pickup
-                        </button>
-                      )}
-                      
-                      {order.status === 'out_for_delivery' && (
-                        <button
-                          onClick={() => markDelivered(order.id)}
-                          className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl transition transform active:scale-95 text-lg"
-                        >
-                          🎉 Complete Delivery
-                        </button>
-                      )}
-                      
-                      <button
-                        onClick={() => {
-                          setSelectedOrder(order);
-                          setShowMap(true);
-                        }}
-                        className="w-full bg-white border-2 border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50 transition"
-                      >
-                        🗺️ View Map
-                      </button>
+                      {/* Action Buttons */}
+                      <div className="space-y-2">
+                        {order.status === 'preparing' && (
+                          <Button
+                            onClick={() => markPickedUp(order.id)}
+                            className="w-full bg-blue-600 hover:bg-blue-700 py-5 text-lg font-bold shadow-lg"
+                          >
+                            ✅ I've Picked Up The Order
+                          </Button>
+                        )}
+                        
+                        {order.status === 'out_for_delivery' && (
+                          <Button
+                            onClick={() => markDelivered(order.id)}
+                            className="w-full bg-green-600 hover:bg-green-700 py-5 text-lg font-bold shadow-lg"
+                          >
+                            🎉 Delivered to Customer
+                          </Button>
+                        )}
+                      </div>
                     </div>
+                    )}
                   </div>
                 );
               })}
@@ -649,6 +688,109 @@ export default function CourierDashboard() {
               >
                 Open in Maps App
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Order Accepted Modal */}
+      {showAcceptedModal && acceptedOrder && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+            {/* Success Header */}
+            <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 text-center">
+              <div className="text-6xl mb-3 animate-bounce">🎉</div>
+              <h2 className="text-2xl font-bold mb-2">Order Accepted!</h2>
+              <p className="text-green-100">Great job! Here's where to go:</p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Earnings Highlight */}
+              <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 text-center">
+                <p className="text-sm text-green-700 mb-1">You'll earn</p>
+                <p className="text-4xl font-bold text-green-600 mb-1">
+                  ${(parseFloat(acceptedOrder.subtotal?.toString() || '0') * (courierCommissionRate / 100)).toFixed(2)}
+                </p>
+                <p className="text-xs text-green-600">
+                  (${acceptedOrder.subtotal} × {courierCommissionRate}%)
+                </p>
+              </div>
+
+              {/* Step 1: Pickup */}
+              <div className="bg-orange-50 rounded-xl p-4 border-2 border-orange-300">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="bg-orange-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">1</span>
+                  <p className="font-bold text-orange-900">PICKUP FROM</p>
+                </div>
+                <p className="font-bold text-lg mb-1">{acceptedOrder.merchants?.business_name}</p>
+                <p className="text-sm text-gray-600 mb-3">{acceptedOrder.merchants?.address}</p>
+                
+                <Button
+                  onClick={() => {
+                    openNavigation(acceptedOrder, 'pickup');
+                    setShowAcceptedModal(false);
+                  }}
+                  className="w-full bg-orange-600 hover:bg-orange-700 py-4 text-lg font-bold shadow-lg"
+                >
+                  <span className="text-2xl mr-2">🧭</span>
+                  Open Maps - Go to Pickup
+                </Button>
+              </div>
+
+              {/* Step 2: Deliver */}
+              <div className="bg-green-50 rounded-xl p-4 border-2 border-green-300">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="bg-green-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">2</span>
+                  <p className="font-bold text-green-900">THEN DELIVER TO</p>
+                </div>
+                <p className="font-bold text-lg mb-1">{acceptedOrder.addresses?.street}</p>
+                <p className="text-sm text-gray-600">
+                  {acceptedOrder.addresses?.city}, {acceptedOrder.addresses?.state} {acceptedOrder.addresses?.zip_code}
+                </p>
+              </div>
+
+              {/* Order Items Summary */}
+              {acceptedOrder.order_items && acceptedOrder.order_items.length > 0 && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-sm font-bold text-gray-700 mb-2">
+                    📋 {acceptedOrder.order_items.length} item{acceptedOrder.order_items.length !== 1 ? 's' : ''} to deliver:
+                  </p>
+                  <div className="space-y-1">
+                    {acceptedOrder.order_items.slice(0, 3).map((item, idx) => (
+                      <p key={idx} className="text-sm text-gray-600">
+                        • {item.quantity}x {item.products?.name}
+                      </p>
+                    ))}
+                    {acceptedOrder.order_items.length > 3 && (
+                      <p className="text-xs text-gray-500">
+                        + {acceptedOrder.order_items.length - 3} more items
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Auto-open Maps Setting */}
+              <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
+                <label className="text-sm text-gray-700">
+                  Auto-open Maps when accepting orders
+                </label>
+                <input
+                  type="checkbox"
+                  checked={autoOpenMaps}
+                  onChange={(e) => setAutoOpenMaps(e.target.checked)}
+                  className="w-5 h-5 text-blue-600 rounded"
+                />
+              </div>
+
+              {/* Close Button */}
+              <Button
+                onClick={() => setShowAcceptedModal(false)}
+                variant="secondary"
+                className="w-full py-4 font-bold"
+              >
+                Got It! Close
+              </Button>
             </div>
           </div>
         </div>
