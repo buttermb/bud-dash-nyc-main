@@ -8,37 +8,27 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import AuthModal from "./AuthModal";
+
+const AGE_VERIFIED_KEY = "age_verified";
 
 const AgeVerificationModal = () => {
   const [open, setOpen] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState<"signin" | "signup">("signup");
-  const { user } = useAuth();
 
   useEffect(() => {
-    // Only show to non-authenticated users who haven't been age-verified
-    if (!user) {
-      // Remove localStorage check - age verification now requires real ID verification
+    // Check if user has already verified their age
+    const isVerified = localStorage.getItem(AGE_VERIFIED_KEY);
+    if (!isVerified) {
       setOpen(true);
-    } else {
-      // Close auth modal if user just logged in
-      setShowAuthModal(false);
     }
-  }, [user]);
+  }, []);
 
   const handleVerify = (isOver21: boolean) => {
     if (isOver21) {
-      // Remove localStorage - age verification now requires account creation and real ID verification
+      // Store age verification in localStorage
+      localStorage.setItem(AGE_VERIFIED_KEY, "true");
       setOpen(false);
-      // Only prompt to sign up if user is not already authenticated
-      if (!user) {
-        setTimeout(() => {
-          setShowAuthModal(true);
-        }, 500);
-      }
     } else {
+      // Redirect under-age users away
       window.location.href = "https://google.com";
     }
   };
@@ -75,17 +65,10 @@ const AgeVerificationModal = () => {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground text-center pt-4">
-            You'll need to create an account and verify your ID with a government-issued document. By entering, you agree to our Terms of Service and Privacy Policy.
+            By entering, you confirm you are 21 years or older and agree to our Terms of Service and Privacy Policy.
           </p>
         </DialogContent>
       </Dialog>
-
-      <AuthModal
-        open={showAuthModal}
-        onOpenChange={setShowAuthModal}
-        mode={authMode}
-        onModeChange={setAuthMode}
-      />
     </>
   );
 };
