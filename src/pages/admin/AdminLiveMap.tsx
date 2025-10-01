@@ -145,29 +145,59 @@ const AdminLiveMap = () => {
       return;
     }
 
-    // Add new markers for each delivery
+    // Add markers for each order destination (dropoff point)
     deliveries.forEach((delivery) => {
       console.log("Processing delivery:", delivery);
       
+      // Show destination marker (dropoff)
+      if (delivery.dropoff_lat && delivery.dropoff_lng) {
+        const destinationMarker = new mapboxgl.Marker({ 
+          color: "#ef4444" // Red for destination
+        })
+          .setLngLat([
+            parseFloat(delivery.dropoff_lng),
+            parseFloat(delivery.dropoff_lat),
+          ])
+          .setPopup(
+            new mapboxgl.Popup().setHTML(
+              `<div style="padding: 8px;">
+                <strong>${delivery.order?.order_number || 'Order'}</strong><br/>
+                <span style="color: #666;">Status: ${delivery.order?.status?.replace("_", " ") || 'Unknown'}</span><br/>
+                <span style="color: #666;">Address: ${delivery.order?.delivery_address || 'Unknown'}</span><br/>
+                <span style="color: #666;">Items: ${delivery.order?.items?.length || 0}</span><br/>
+                <span style="color: #666;">Total: $${parseFloat(delivery.order?.total_amount || 0).toFixed(2)}</span><br/>
+                ${delivery.courier ? `<span style="color: #16a34a;">Courier: ${delivery.courier.full_name}</span>` : '<span style="color: #dc2626;">No courier assigned</span>'}
+              </div>`
+            )
+          )
+          .addTo(map.current!);
+
+        markers.current.push(destinationMarker);
+        console.log("Added destination marker for order:", delivery.order?.order_number);
+      }
+      
+      // Show courier location if available (green marker)
       if (delivery.courier?.current_lat && delivery.courier?.current_lng) {
-        const marker = new mapboxgl.Marker({ color: "#22c55e" })
+        const courierMarker = new mapboxgl.Marker({ 
+          color: "#22c55e" // Green for courier
+        })
           .setLngLat([
             parseFloat(delivery.courier.current_lng),
             parseFloat(delivery.courier.current_lat),
           ])
           .setPopup(
             new mapboxgl.Popup().setHTML(
-              `<strong>${delivery.order?.order_number || 'Unknown'}</strong><br/>
-               Courier: ${delivery.courier?.full_name || "Unassigned"}<br/>
-               Status: ${delivery.order?.status?.replace("_", " ") || 'Unknown'}`
+              `<div style="padding: 8px;">
+                <strong>Courier: ${delivery.courier.full_name}</strong><br/>
+                <span style="color: #666;">Delivering: ${delivery.order?.order_number || 'Order'}</span><br/>
+                <span style="color: #666;">${delivery.courier.vehicle_type} - ${delivery.courier.vehicle_plate}</span>
+              </div>`
             )
           )
           .addTo(map.current!);
 
-        markers.current.push(marker);
-        console.log("Added marker for courier:", delivery.courier.full_name);
-      } else {
-        console.log("Delivery missing courier location:", delivery.id);
+        markers.current.push(courierMarker);
+        console.log("Added courier marker:", delivery.courier.full_name);
       }
     });
 
@@ -180,7 +210,7 @@ const AdminLiveMap = () => {
         const lngLat = marker.getLngLat();
         bounds.extend(lngLat);
       });
-      map.current.fitBounds(bounds, { padding: 50 });
+      map.current.fitBounds(bounds, { padding: 100, maxZoom: 14 });
     }
   }, [deliveries]);
 

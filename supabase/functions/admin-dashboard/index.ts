@@ -126,65 +126,79 @@ serve(async (req) => {
       console.log("Fetching live deliveries...");
       
       try {
-        // Fetch deliveries
-        const { data: deliveries, error } = await supabase
-          .from("deliveries")
+        // Fetch all active orders (accepted, confirmed, preparing, out_for_delivery)
+        const { data: orders, error: ordersError } = await supabase
+          .from("orders")
           .select(`
             *,
+            addresses (*),
             couriers (*)
           `)
-          .is("actual_dropoff_time", null)
+          .in("status", ["accepted", "confirmed", "preparing", "out_for_delivery"])
           .order("created_at", { ascending: false });
 
-        if (error) {
-          console.error("Error fetching deliveries:", error);
+        if (ordersError) {
+          console.error("Error fetching orders:", ordersError);
           return new Response(
-            JSON.stringify({ error: error.message, deliveries: [], count: 0 }),
+            JSON.stringify({ error: ordersError.message, deliveries: [], count: 0 }),
             { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        // Fetch related orders
-        const orderIds = deliveries?.map(d => d.order_id) || [];
-        const { data: orders } = await supabase
-          .from("orders")
-          .select(`
-            *,
-            merchants (*),
-            addresses (*)
-          `)
-          .in("id", orderIds);
+        console.log(`Found ${orders?.length || 0} active orders`);
+
+        // Fetch related deliveries
+        const orderIds = orders?.map(o => o.id) || [];
+        const { data: deliveries } = orderIds.length > 0 
+          ? await supabase
+              .from("deliveries")
+              .select("*")
+              .in("order_id", orderIds)
+          : { data: [] };
 
         // Fetch user profiles
         const userIds = [...new Set(orders?.map(o => o.user_id).filter(Boolean) || [])];
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("*")
-          .in("user_id", userIds);
+        const { data: profiles } = userIds.length > 0
+          ? await supabase.from("profiles").select("*").in("user_id", userIds)
+          : { data: [] };
 
         // Fetch order items
-        const { data: orderItems } = await supabase
-          .from("order_items")
-          .select(`
-            *,
-            products (name, category)
-          `)
-          .in("order_id", orderIds);
+        const { data: orderItems } = orderIds.length > 0
+          ? await supabase
+              .from("order_items")
+              .select(`
+                *,
+                products (name, category, price)
+              `)
+              .in("order_id", orderIds)
+          : { data: [] };
 
-        // Enrich deliveries with order data
-        const enrichedDeliveries = deliveries?.map(delivery => {
-          const order = orders?.find(o => o.id === delivery.order_id);
+        // Transform orders into delivery format for the map
+        const enrichedDeliveries = orders?.map(order => {
+          const delivery = deliveries?.find(d => d.order_id === order.id);
           return {
-            ...delivery,
-            order: order ? {
+            id: delivery?.id || order.id,
+            order_id: order.id,
+            courier_id: order.courier_id,
+            pickup_lat: delivery?.pickup_lat || 40.7589, // NYC default
+            pickup_lng: delivery?.pickup_lng || -73.9851,
+            dropoff_lat: order.addresses?.lat || delivery?.dropoff_lat || 40.7589,
+            dropoff_lng: order.addresses?.lng || delivery?.dropoff_lng || -73.9851,
+            estimated_pickup_time: delivery?.estimated_pickup_time,
+            estimated_dropoff_time: delivery?.estimated_dropoff_time || order.estimated_delivery,
+            actual_pickup_time: delivery?.actual_pickup_time,
+            created_at: delivery?.created_at || order.created_at,
+            courier: order.couriers || null,
+            order: {
               ...order,
               user: profiles?.find(p => p.user_id === order.user_id) || null,
-              items: orderItems?.filter(item => item.order_id === order.id) || []
-            } : null
+              items: orderItems?.filter(item => item.order_id === order.id) || [],
+              order_number: order.order_number || `ORD-${order.id.substring(0, 8).toUpperCase()}`,
+            }
           };
         }) || [];
 
-        console.log(`Found ${enrichedDeliveries.length} deliveries`);
+        console.log(`Returning ${enrichedDeliveries.length} deliveries for map`);
         await logAdminAction(supabase, adminUser.id, "VIEW_LIVE_DELIVERIES", undefined, undefined, { count: enrichedDeliveries.length }, req);
 
         return new Response(
