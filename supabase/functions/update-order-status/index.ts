@@ -59,8 +59,7 @@ serve(async (req) => {
 
     // Build update object
     const updateData: any = { 
-      status, 
-      updated_at: new Date().toISOString() 
+      status
     };
 
     // If confirming order and courier is accepting, assign them
@@ -106,8 +105,7 @@ serve(async (req) => {
       await supabase
         .from("orders")
         .update({ 
-          payment_status: "completed",
-          delivered_at: new Date().toISOString()
+          payment_status: "completed"
         })
         .eq("id", orderId);
     }
