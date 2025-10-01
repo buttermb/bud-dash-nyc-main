@@ -1,71 +1,90 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAdmin } from "@/contexts/AdminContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Search, Truck, Phone, Mail, MapPin, CheckCircle, XCircle } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AddCourierDialog } from "@/components/admin/AddCourierDialog";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Search, UserPlus, Users, Activity, DollarSign, TrendingUp } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
+import { AddCourierDialog } from '@/components/admin/AddCourierDialog';
 
-const AdminCouriers = () => {
-  const { session } = useAdmin();
-  const { toast } = useToast();
-  const [couriers, setCouriers] = useState<any[]>([]);
+interface Courier {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  vehicle_type: string;
+  vehicle_plate: string | null;
+  is_active: boolean;
+  is_online: boolean;
+  commission_rate: number | null;
+  created_at: string;
+  today_earnings?: number;
+  age_verified?: boolean;
+  vehicle_make?: string | null;
+  vehicle_model?: string | null;
+  current_lat?: number | null;
+  current_lng?: number | null;
+}
+
+export default function AdminCouriers() {
+  const [couriers, setCouriers] = useState<Courier[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [search, setSearch] = useState('');
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (session) {
-      fetchCouriers();
-      
-      // Set up real-time subscription
-      const channel = supabase
-        .channel("couriers-updates")
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "couriers",
-          },
-          () => {
-            fetchCouriers();
-          }
-        )
-        .subscribe();
-      
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [session]);
+    fetchCouriers();
+    
+    // Set up realtime subscription
+    const channel = supabase
+      .channel('couriers-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'couriers' }, () => {
+        fetchCouriers();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const fetchCouriers = async () => {
     try {
       const { data, error } = await supabase
-        .from("couriers")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .from('couriers')
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCouriers(data || []);
+
+      // Fetch today's earnings for each courier
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const { data: earningsData } = await supabase
+        .from('courier_earnings')
+        .select('courier_id, total_earned')
+        .gte('created_at', today.toISOString());
+
+      const couriersWithEarnings = data?.map(courier => ({
+        ...courier,
+        today_earnings: earningsData
+          ?.filter(e => e.courier_id === courier.id)
+          .reduce((sum, e) => sum + parseFloat(e.total_earned.toString()), 0) || 0
+      })) as unknown as Courier[];
+
+      setCouriers(couriersWithEarnings || []);
     } catch (error) {
-      console.error("Failed to fetch couriers:", error);
+      console.error('Error fetching couriers:', error);
       toast({
-        variant: "destructive",
         title: "Error",
         description: "Failed to load couriers",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
@@ -75,234 +94,186 @@ const AdminCouriers = () => {
   const toggleCourierStatus = async (courierId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from("couriers")
+        .from('couriers')
         .update({ is_active: !currentStatus })
-        .eq("id", courierId);
+        .eq('id', courierId);
 
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: `Courier ${!currentStatus ? "activated" : "deactivated"} successfully`,
+        title: "Status updated",
+        description: `Courier ${!currentStatus ? 'activated' : 'deactivated'}`
       });
 
       fetchCouriers();
     } catch (error) {
-      console.error("Failed to update courier:", error);
       toast({
-        variant: "destructive",
         title: "Error",
         description: "Failed to update courier status",
+        variant: "destructive"
       });
     }
   };
 
-  const filteredCouriers = couriers.filter((courier) =>
-    courier.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    courier.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    courier.phone.includes(searchTerm) ||
-    courier.vehicle_plate.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCouriers = couriers.filter(courier =>
+    courier.full_name.toLowerCase().includes(search.toLowerCase()) ||
+    courier.email.toLowerCase().includes(search.toLowerCase()) ||
+    courier.phone.includes(search)
   );
+
+  const stats = {
+    total: couriers.length,
+    online: couriers.filter(c => c.is_online).length,
+    active: couriers.filter(c => c.is_active).length,
+    todayEarnings: couriers.reduce((sum, c) => sum + (c.today_earnings || 0), 0)
+  };
 
   if (loading) {
     return (
-      <div className="p-6 space-y-4">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-96 w-full" />
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Courier Management</h1>
-        <p className="text-muted-foreground">
-          Manage delivery couriers and their status
-        </p>
+        <h1 className="text-3xl font-bold">Courier Management</h1>
+        <p className="text-muted-foreground">Manage delivery drivers and track performance</p>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
               Total Couriers
-            </CardTitle>
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{couriers.length}</div>
+            <div className="text-2xl font-bold">{stats.total}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Active Couriers
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {couriers.filter((c) => c.is_active).length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
               Online Now
-            </CardTitle>
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {couriers.filter((c) => c.is_online).length}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{stats.online}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Verified
-            </CardTitle>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Active
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {couriers.filter((c) => c.age_verified).length}
-            </div>
+            <div className="text-2xl font-bold">{stats.active}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Today's Earnings
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${stats.todayEarnings.toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Search and Actions */}
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by name, email, phone, or plate..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <AddCourierDialog onSuccess={fetchCouriers} />
-      </div>
-
-      {/* Couriers Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Couriers</CardTitle>
+          <div className="flex flex-col sm:flex-row justify-between gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search couriers..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <AddCourierDialog onSuccess={fetchCouriers} />
+          </div>
         </CardHeader>
         <CardContent>
-          {filteredCouriers.length === 0 ? (
-            <div className="text-center py-12">
-              <Truck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-lg font-semibold">No couriers found</p>
-              <p className="text-sm text-muted-foreground">
-                {searchTerm ? "Try adjusting your search" : "No couriers registered yet"}
-              </p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Courier</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Vehicle</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Actions</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Vehicle</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Commission</TableHead>
+                <TableHead>Today's Earnings</TableHead>
+                <TableHead>Active</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredCouriers.map((courier) => (
+                <TableRow key={courier.id}>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{courier.full_name}</p>
+                      <p className="text-sm text-muted-foreground">{courier.email}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <p className="text-sm">{courier.phone}</p>
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium capitalize">{courier.vehicle_type}</p>
+                      <p className="text-sm text-muted-foreground">{courier.vehicle_plate}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={courier.is_online ? "default" : "secondary"}>
+                      {courier.is_online ? 'Online' : 'Offline'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{courier.commission_rate}%</TableCell>
+                  <TableCell className="font-medium text-green-600">
+                    ${(courier.today_earnings || 0).toFixed(2)}
+                  </TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={courier.is_active}
+                      onCheckedChange={() => toggleCourierStatus(courier.id, courier.is_active)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/admin/couriers/${courier.id}`)}
+                    >
+                      View Details
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCouriers.map((courier) => (
-                  <TableRow key={courier.id}>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="font-medium">{courier.full_name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          ID: {courier.id.substring(0, 8)}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-3 w-3" />
-                          {courier.email}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-3 w-3" />
-                          {courier.phone}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="font-medium">{courier.vehicle_type}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {courier.vehicle_make} {courier.vehicle_model}
-                        </div>
-                        <Badge variant="outline" className="text-xs">
-                          {courier.vehicle_plate}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <Badge variant={courier.is_active ? "default" : "secondary"}>
-                          {courier.is_active ? "Active" : "Inactive"}
-                        </Badge>
-                        {courier.is_online && (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
-                            Online
-                          </Badge>
-                        )}
-                        {courier.age_verified && (
-                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
-                            Verified
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {courier.current_lat && courier.current_lng ? (
-                        <div className="flex items-center gap-1 text-sm">
-                          <MapPin className="h-3 w-3" />
-                          <span className="text-xs text-muted-foreground">
-                            {courier.current_lat.toFixed(4)}, {courier.current_lng.toFixed(4)}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">No location</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => toggleCourierStatus(courier.id, courier.is_active)}
-                      >
-                        {courier.is_active ? (
-                          <>
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Deactivate
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Activate
-                          </>
-                        )}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+              ))}
+            </TableBody>
+          </Table>
+          {filteredCouriers.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              No couriers found
+            </div>
           )}
         </CardContent>
       </Card>
     </div>
   );
-};
-
-export default AdminCouriers;
+}

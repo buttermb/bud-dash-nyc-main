@@ -5,8 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AdminProvider } from "./contexts/AdminContext";
+import { CourierProvider } from "./contexts/CourierContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedCourierRoute from "./components/ProtectedCourierRoute";
 import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
 import Index from "./pages/Index";
 import Checkout from "./pages/Checkout";
@@ -26,6 +28,7 @@ import Admin from "./pages/Admin";
 import ProductDetail from "./pages/ProductDetail";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import CourierLogin from "./pages/CourierLogin";
 import CourierDashboard from "./pages/CourierDashboard";
 import MerchantDashboard from "./pages/MerchantDashboard";
 import AdminLogin from "./pages/AdminLogin";
@@ -49,26 +52,38 @@ const App = () => (
     <ThemeProvider>
       <AuthProvider>
         <AdminProvider>
-          <TooltipProvider>
-          <BrowserRouter>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogPost />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/support" element={<Support />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/become-courier" element={<BecomeCourier />} />
-              <Route path="/partner-shops" element={<PartnerShops />} />
-              <Route path="/track-order" element={<OrderLookup />} />
-              
-              {/* Admin Routes */}
-              <Route path="/admin/login" element={<AdminLogin />} />
+          <CourierProvider>
+            <TooltipProvider>
+            <BrowserRouter>
+              <Toaster />
+              <Sonner />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/product/:id" element={<ProductDetail />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogPost />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/support" element={<Support />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/become-courier" element={<BecomeCourier />} />
+                <Route path="/partner-shops" element={<PartnerShops />} />
+                <Route path="/track-order" element={<OrderLookup />} />
+                
+                {/* Courier Routes */}
+                <Route path="/courier/login" element={<CourierLogin />} />
+                <Route
+                  path="/courier/dashboard"
+                  element={
+                    <ProtectedCourierRoute>
+                      <CourierDashboard />
+                    </ProtectedCourierRoute>
+                  }
+                />
+                
+                {/* Admin Routes */}
+                <Route path="/admin/login" element={<AdminLogin />} />
               <Route
                 path="/admin"
                 element={
@@ -144,6 +159,7 @@ const App = () => (
             </Routes>
           </BrowserRouter>
           </TooltipProvider>
+          </CourierProvider>
         </AdminProvider>
       </AuthProvider>
     </ThemeProvider>
