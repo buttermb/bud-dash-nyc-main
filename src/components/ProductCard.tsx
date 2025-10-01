@@ -91,6 +91,7 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);
       queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
       setQuantity(1);
     } catch (error: any) {
       toast.error(error.message || "Failed to add to cart");

@@ -30,7 +30,7 @@ const Checkout = () => {
   const [promoCode, setPromoCode] = useState("");
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [deliveryType, setDeliveryType] = useState<"asap" | "scheduled">("asap");
+  const [deliveryType, setDeliveryType] = useState<"express" | "standard" | "economy">("standard");
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
   const [notes, setNotes] = useState("");
@@ -43,7 +43,7 @@ const Checkout = () => {
   ];
 
   const getScheduledDateTime = () => {
-    if (deliveryType === "asap" || !selectedDate || !selectedTimeSlot) {
+    if (deliveryType !== "economy" || !selectedDate || !selectedTimeSlot) {
       return null;
     }
     const [startTime] = selectedTimeSlot.split("-");
@@ -91,6 +91,9 @@ const Checkout = () => {
   const calculateDeliveryFee = () => {
     if (!borough) return 0;
     
+    // Free delivery for orders over $100
+    if (subtotal >= 100) return 0;
+    
     let baseFee = 5;
     
     // Dynamic pricing based on courier availability
@@ -109,6 +112,12 @@ const Checkout = () => {
     } else if (borough === "queens") {
       baseFee += 2; // Queens slight surcharge
     }
+    
+    // Delivery speed multiplier
+    if (deliveryType === "express") {
+      baseFee = baseFee * 1.3; // +30% for express (45 min or under)
+    }
+    // standard and economy use base fee
     
     return Math.round(baseFee * demandMultiplier);
   };
@@ -159,7 +168,7 @@ const Checkout = () => {
       return;
     }
 
-    if (deliveryType === "scheduled" && (!selectedDate || !selectedTimeSlot)) {
+    if (deliveryType === "economy" && (!selectedDate || !selectedTimeSlot)) {
       toast.error("Please select a delivery date and time slot");
       return;
     }
@@ -380,62 +389,111 @@ const Checkout = () => {
                   </div>
                 </div>
 
+                {/* Free Delivery Progress */}
+                {subtotal < 100 && (
+                  <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-primary">🎉 Free Delivery Progress</span>
+                      <span className="font-semibold text-primary">${(100 - subtotal).toFixed(2)} away!</span>
+                    </div>
+                    <div className="relative w-full h-3 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min((subtotal / 100) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Add ${(100 - subtotal).toFixed(2)} more to qualify for free delivery!
+                    </p>
+                  </div>
+                )}
+
+                {subtotal >= 100 && (
+                  <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
+                    <p className="text-sm font-semibold text-primary flex items-center gap-2">
+                      ✓ You qualify for FREE delivery! 🎉
+                    </p>
+                  </div>
+                )}
+
                 {/* Delivery Timing */}
                 <div className="space-y-4">
-                  <Label>Delivery Time</Label>
-                  <RadioGroup value={deliveryType} onValueChange={(v: any) => setDeliveryType(v)}>
-                    <div 
+                  <Label>Delivery Speed</Label>
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryType("express")}
                       className={cn(
-                        "flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all",
-                        deliveryType === "asap" 
+                        "w-full flex items-center justify-between p-4 border-2 rounded-lg cursor-pointer transition-all",
+                        deliveryType === "express" 
                           ? "border-primary bg-primary/5" 
                           : "border-border hover:border-primary/50"
                       )}
-                      onClick={() => setDeliveryType("asap")}
                     >
-                      <RadioGroupItem value="asap" id="asap" />
-                      <div className="flex items-center gap-3 flex-1">
+                      <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                           <Zap className="w-5 h-5 text-primary" />
                         </div>
-                        <div>
-                          <Label htmlFor="asap" className="font-semibold cursor-pointer">
-                            ASAP Delivery
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            We'll deliver within 2 hours
-                          </p>
+                        <div className="text-left">
+                          <h4 className="font-semibold">Express - 45 min or less</h4>
+                          <p className="text-xs text-muted-foreground">+30% delivery fee</p>
                         </div>
                       </div>
-                    </div>
+                      {deliveryType === "express" && (
+                        <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs">✓</span>
+                      )}
+                    </button>
 
-                    <div 
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryType("standard")}
                       className={cn(
-                        "flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all",
-                        deliveryType === "scheduled" 
+                        "w-full flex items-center justify-between p-4 border-2 rounded-lg cursor-pointer transition-all",
+                        deliveryType === "standard" 
                           ? "border-primary bg-primary/5" 
                           : "border-border hover:border-primary/50"
                       )}
-                      onClick={() => setDeliveryType("scheduled")}
                     >
-                      <RadioGroupItem value="scheduled" id="scheduled" />
-                      <div className="flex items-center gap-3 flex-1">
+                      <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                           <Clock className="w-5 h-5 text-primary" />
                         </div>
-                        <div>
-                          <Label htmlFor="scheduled" className="font-semibold cursor-pointer">
-                            Schedule for Later
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            Choose your preferred date and time
-                          </p>
+                        <div className="text-left">
+                          <h4 className="font-semibold">Standard - Within 3 hours</h4>
+                          <p className="text-xs text-muted-foreground">Normal delivery fee</p>
                         </div>
                       </div>
-                    </div>
-                  </RadioGroup>
+                      {deliveryType === "standard" && (
+                        <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs">✓</span>
+                      )}
+                    </button>
 
-                  {deliveryType === "scheduled" && (
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryType("economy")}
+                      className={cn(
+                        "w-full flex items-center justify-between p-4 border-2 rounded-lg cursor-pointer transition-all",
+                        deliveryType === "economy" 
+                          ? "border-primary bg-primary/5" 
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <CalendarIcon className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="text-left">
+                          <h4 className="font-semibold">Schedule for Later</h4>
+                          <p className="text-xs text-muted-foreground">Choose date & time</p>
+                        </div>
+                      </div>
+                      {deliveryType === "economy" && (
+                        <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs">✓</span>
+                      )}
+                    </button>
+                  </div>
+
+                  {deliveryType === "economy" && (
                     <div className="space-y-4 pt-2 animate-in fade-in-50 duration-300">
                       {/* Date Selection */}
                       <div className="space-y-2">
@@ -609,16 +667,28 @@ const Checkout = () => {
                   <div className="flex justify-between text-sm">
                     <span className="flex items-center gap-2">
                       Delivery Fee
-                      {courierAvailability !== undefined && courierAvailability < 5 && (
+                      {subtotal >= 100 ? (
+                        <span className="text-xs px-1.5 py-0.5 bg-primary/20 text-primary rounded font-semibold">
+                          FREE
+                        </span>
+                      ) : courierAvailability !== undefined && courierAvailability < 5 ? (
                         <span className="text-xs px-1.5 py-0.5 bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded">
                           High Demand
                         </span>
-                      )}
+                      ) : null}
                     </span>
-                    <span className="font-semibold">${deliveryFee.toFixed(2)}</span>
+                    <span className={cn(
+                      "font-semibold",
+                      subtotal >= 100 && "text-primary line-through"
+                    )}>
+                      ${deliveryFee.toFixed(2)}
+                    </span>
                   </div>
-                  {borough && (
+                  {borough && subtotal < 100 && (
                     <div className="text-xs text-muted-foreground space-y-0.5">
+                      {deliveryType === "express" && (
+                        <p className="text-primary">• Express delivery: +30% fee</p>
+                      )}
                       {borough === "manhattan" && (
                         <p>• Manhattan: +$5 base surcharge</p>
                       )}

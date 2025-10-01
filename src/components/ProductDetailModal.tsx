@@ -66,7 +66,8 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
         if (error) throw error;
       }
 
-      queryClient.invalidateQueries({ queryKey: ["cart-items"] });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
       
       toast({
         title: "Added to cart!",
