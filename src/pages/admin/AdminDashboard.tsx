@@ -27,26 +27,18 @@ interface DashboardMetrics {
 }
 
 const AdminDashboard = () => {
-  const { session, admin, loading: authLoading } = useAdmin();
+  const { session } = useAdmin();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("AdminDashboard mount:", { session: !!session, admin: !!admin, authLoading });
-    
-    if (!authLoading) {
-      if (session && admin) {
-        fetchDashboardMetrics();
-      } else {
-        setLoading(false);
-      }
+    if (session) {
+      fetchDashboardMetrics();
     }
-  }, [session, admin, authLoading]);
+  }, [session]);
 
   const fetchDashboardMetrics = async () => {
     try {
-      console.log("Fetching dashboard metrics...", session);
-      
       const { data, error } = await supabase.functions.invoke("admin-dashboard", {
         body: { endpoint: "overview" },
         headers: {
@@ -54,44 +46,10 @@ const AdminDashboard = () => {
         },
       });
 
-      console.log("Dashboard response:", { data, error });
-
-      if (error) {
-        console.error("Dashboard API error:", error);
-        throw error;
-      }
-      
-      if (data?.metrics) {
-        setMetrics(data.metrics);
-      } else {
-        console.warn("No metrics in response");
-        // Set default metrics if none returned
-        setMetrics({
-          totalOrders: 0,
-          todayOrders: 0,
-          activeOrders: 0,
-          totalUsers: 0,
-          totalMerchants: 0,
-          activeCouriers: 0,
-          pendingVerifications: 0,
-          flaggedOrders: 0,
-          todayRevenue: 0,
-        });
-      }
+      if (error) throw error;
+      setMetrics(data.metrics);
     } catch (error) {
       console.error("Failed to fetch dashboard metrics:", error);
-      // Set default metrics on error
-      setMetrics({
-        totalOrders: 0,
-        todayOrders: 0,
-        activeOrders: 0,
-        totalUsers: 0,
-        totalMerchants: 0,
-        activeCouriers: 0,
-        pendingVerifications: 0,
-        flaggedOrders: 0,
-        todayRevenue: 0,
-      });
     } finally {
       setLoading(false);
     }

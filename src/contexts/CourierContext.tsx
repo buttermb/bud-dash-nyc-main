@@ -30,69 +30,42 @@ export const CourierProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
-    const initCourier = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log("Courier session check:", session ? "Found" : "None");
-        
-        if (mounted) {
-          if (session?.user) {
-            await loadCourierData(session.user.id);
-          }
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("Courier session check error:", error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    initCourier();
+    checkCourierSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Courier auth change:", event, session ? "Has session" : "No session");
-      if (mounted) {
-        if (event === "SIGNED_IN" && session) {
-          await loadCourierData(session.user.id);
-        } else if (event === "SIGNED_OUT") {
-          setCourier(null);
-        }
+      if (event === "SIGNED_IN" && session) {
+        await loadCourierData(session.user.id);
+      } else if (event === "SIGNED_OUT") {
+        setCourier(null);
       }
     });
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
+
+  const checkCourierSession = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await loadCourierData(session.user.id);
+      }
+    } catch (error) {
+      console.error("Session check error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadCourierData = async (userId: string) => {
     try {
-      console.log("Loading courier data for user:", userId);
       const { data, error } = await supabase
         .from("couriers")
         .select("*")
         .eq("user_id", userId)
         .single();
 
-      console.log("Courier data response:", { data, error });
-
-      if (error) {
-        console.error("Courier data error:", error);
-        throw error;
-      }
-      
-      if (data) {
-        console.log("Courier loaded:", data.full_name);
-        setCourier(data);
-      } else {
-        console.warn("No courier found for user");
-        setCourier(null);
-      }
+      if (error) throw error;
+      setCourier(data);
     } catch (error) {
       console.error("Failed to load courier data:", error);
       setCourier(null);

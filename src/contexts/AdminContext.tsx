@@ -28,7 +28,6 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
   const verifyAdmin = async (currentSession: Session) => {
     try {
-      console.log("Verifying admin with token...");
       const { data, error } = await supabase.functions.invoke("admin-auth", {
         body: { action: "verify" },
         headers: {
@@ -36,45 +35,15 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         },
       });
 
-      console.log("Admin verify response:", { data, error });
-
-      if (error) {
-        console.error("Admin verify error:", error);
-        throw error;
-      }
+      if (error) throw error;
       
       if (data?.admin) {
-        console.log("Admin verified:", data.admin.email);
         setAdmin(data.admin);
         setSession(currentSession);
       } else {
-        console.warn("No admin data in response, checking database directly...");
-        
-        // Fallback: check database directly
-        const { data: adminData, error: dbError } = await supabase
-          .from("admin_users")
-          .select("*")
-          .eq("user_id", currentSession.user.id)
-          .eq("is_active", true)
-          .single();
-        
-        console.log("Database check:", { adminData, dbError });
-        
-        if (adminData && !dbError) {
-          console.log("Admin found in database:", adminData.email);
-          setAdmin({
-            id: adminData.id,
-            email: adminData.email,
-            full_name: adminData.full_name,
-            role: adminData.role
-          });
-          setSession(currentSession);
-        } else {
-          console.error("Not an admin user");
-          setAdmin(null);
-          setSession(null);
-          await supabase.auth.signOut();
-        }
+        setAdmin(null);
+        setSession(null);
+        await supabase.auth.signOut();
       }
     } catch (error) {
       console.error("Admin verification failed:", error);
@@ -86,51 +55,29 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    let mounted = true;
-
-    const initAuth = async () => {
-      try {
-        // Check existing session
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log("Admin session check:", session ? "Found" : "None");
-        
-        if (mounted) {
-          if (session) {
-            await verifyAdmin(session);
-          } else {
-            setLoading(false);
-          }
-        }
-      } catch (error) {
-        console.error("Session init error:", error);
-        if (mounted) {
-          setLoading(false);
-        }
+    // Check existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        verifyAdmin(session);
+      } else {
+        setLoading(false);
       }
-    };
-
-    initAuth();
+    });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        console.log("Admin auth change:", _event, session ? "Has session" : "No session");
-        if (mounted) {
-          if (session) {
-            await verifyAdmin(session);
-          } else {
-            setAdmin(null);
-            setSession(null);
-            setLoading(false);
-          }
+      (_event, session) => {
+        if (session) {
+          verifyAdmin(session);
+        } else {
+          setAdmin(null);
+          setSession(null);
+          setLoading(false);
         }
       }
     );
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
