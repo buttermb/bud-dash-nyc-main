@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { playNotificationSound, playSuccessSound } from '@/utils/notificationSound';
 
 // Fix Leaflet default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -333,6 +334,9 @@ export default function CourierDashboard() {
     onSuccess: async (data) => {
       console.log('✅ Accept order SUCCESS, data:', data);
       
+      // Play notification sound
+      playNotificationSound();
+      
       const fullOrder = data?.order;
       console.log('🔍 Extracted fullOrder:', fullOrder);
       
@@ -397,6 +401,11 @@ export default function CourierDashboard() {
       };
       
       toast.success(statusMessages[variables.newStatus] || "Status updated successfully");
+      
+      // Play success sound for delivery completion
+      if (variables.newStatus === 'delivered') {
+        playSuccessSound();
+      }
       
       // Delay the refresh slightly for delivered orders to let user see the success message
       if (variables.newStatus === 'delivered') {
