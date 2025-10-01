@@ -9,7 +9,8 @@ import {
   FileText,
   LogOut,
   Clock,
-  Truck
+  Truck,
+  CheckCircle
 } from "lucide-react";
 import {
   Sidebar,
@@ -34,6 +35,7 @@ const menuItems = [
   { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
   { title: "Couriers", url: "/admin/couriers", icon: Truck },
   { title: "Users", url: "/admin/users", icon: Users },
+  { title: "Age Verification", url: "/admin/age-verification", icon: CheckCircle },
   { title: "Compliance", url: "/admin/compliance", icon: Shield },
   { title: "Analytics", url: "/admin/analytics", icon: TrendingUp },
   { title: "Audit Logs", url: "/admin/audit-logs", icon: FileText },

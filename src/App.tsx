@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AdminProvider } from "./contexts/AdminContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -39,6 +39,7 @@ import AdminCompliance from "./pages/admin/AdminCompliance";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
+import AdminAgeVerification from "./pages/admin/AdminAgeVerification";
 
 const queryClient = new QueryClient();
 
@@ -75,12 +76,14 @@ const App = () => (
                   </AdminProtectedRoute>
                 }
               >
+                <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="live-map" element={<AdminLiveMap />} />
                 <Route path="live-orders" element={<AdminLiveOrders />} />
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="couriers" element={<AdminCouriers />} />
                 <Route path="users" element={<AdminUsers />} />
+                <Route path="age-verification" element={<AdminAgeVerification />} />
                 <Route path="compliance" element={<AdminCompliance />} />
                 <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="audit-logs" element={<AdminAuditLogs />} />

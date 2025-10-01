@@ -22,7 +22,8 @@ const AdminLogin = () => {
     );
   }
 
-  if (admin) {
+  // Redirect authenticated admins
+  if (admin && !loading) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
@@ -32,10 +33,11 @@ const AdminLogin = () => {
     
     try {
       await signIn(email, password);
-      navigate("/admin/dashboard");
+      // Wait a bit for state to update, then redirect
+      setTimeout(() => {
+        navigate("/admin/dashboard", { replace: true });
+      }, 100);
     } catch (error) {
-      // Error is handled in context
-    } finally {
       setLoading(false);
     }
   };
