@@ -72,14 +72,27 @@ export const CourierProvider = ({ children }: { children: ReactNode }) => {
 
   const loadCourierData = async (userId: string) => {
     try {
+      console.log("Loading courier data for user:", userId);
       const { data, error } = await supabase
         .from("couriers")
         .select("*")
         .eq("user_id", userId)
         .single();
 
-      if (error) throw error;
-      setCourier(data);
+      console.log("Courier data response:", { data, error });
+
+      if (error) {
+        console.error("Courier data error:", error);
+        throw error;
+      }
+      
+      if (data) {
+        console.log("Courier loaded:", data.full_name);
+        setCourier(data);
+      } else {
+        console.warn("No courier found for user");
+        setCourier(null);
+      }
     } catch (error) {
       console.error("Failed to load courier data:", error);
       setCourier(null);

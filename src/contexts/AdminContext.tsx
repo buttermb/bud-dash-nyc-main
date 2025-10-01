@@ -28,6 +28,7 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
   const verifyAdmin = async (currentSession: Session) => {
     try {
+      console.log("Verifying admin with token...");
       const { data, error } = await supabase.functions.invoke("admin-auth", {
         body: { action: "verify" },
         headers: {
@@ -35,15 +36,45 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         },
       });
 
-      if (error) throw error;
+      console.log("Admin verify response:", { data, error });
+
+      if (error) {
+        console.error("Admin verify error:", error);
+        throw error;
+      }
       
       if (data?.admin) {
+        console.log("Admin verified:", data.admin.email);
         setAdmin(data.admin);
         setSession(currentSession);
       } else {
-        setAdmin(null);
-        setSession(null);
-        await supabase.auth.signOut();
+        console.warn("No admin data in response, checking database directly...");
+        
+        // Fallback: check database directly
+        const { data: adminData, error: dbError } = await supabase
+          .from("admin_users")
+          .select("*")
+          .eq("user_id", currentSession.user.id)
+          .eq("is_active", true)
+          .single();
+        
+        console.log("Database check:", { adminData, dbError });
+        
+        if (adminData && !dbError) {
+          console.log("Admin found in database:", adminData.email);
+          setAdmin({
+            id: adminData.id,
+            email: adminData.email,
+            full_name: adminData.full_name,
+            role: adminData.role
+          });
+          setSession(currentSession);
+        } else {
+          console.error("Not an admin user");
+          setAdmin(null);
+          setSession(null);
+          await supabase.auth.signOut();
+        }
       }
     } catch (error) {
       console.error("Admin verification failed:", error);
