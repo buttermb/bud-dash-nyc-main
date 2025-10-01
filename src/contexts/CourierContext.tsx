@@ -60,18 +60,31 @@ export function CourierProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('courier-app', {
-        body: { endpoint: 'login' }
-      });
+      // Query couriers table directly instead of using edge function
+      const { data: courierData, error } = await supabase
+        .from('couriers')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
 
-      if (error) {
+      if (error || !courierData) {
         // Silently fail if user is not a courier (e.g., admin accessing other pages)
         setLoading(false);
         return;
       }
 
-      setCourier(data.courier);
-      setIsOnline(data.courier.is_online);
+      setCourier({
+        id: courierData.id,
+        email: courierData.email,
+        full_name: courierData.full_name,
+        phone: courierData.phone,
+        vehicle_type: courierData.vehicle_type,
+        is_online: courierData.is_online,
+        commission_rate: 30, // Default commission rate
+        current_lat: courierData.current_lat || undefined,
+        current_lng: courierData.current_lng || undefined
+      });
+      setIsOnline(courierData.is_online);
     } catch (error) {
       // Silently fail - user might not be a courier
       console.log('Not a courier user');
