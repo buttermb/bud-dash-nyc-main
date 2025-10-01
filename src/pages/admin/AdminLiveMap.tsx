@@ -141,10 +141,13 @@ const AdminLiveMap = () => {
         },
         (payload) => {
           console.log("Order update received:", payload);
-          // Only refresh for accepted/active orders
+          // Only refresh for accepted/active orders (not delivered or cancelled)
           const newRecord = payload.new as any;
           if (newRecord && ['accepted', 'confirmed', 'preparing', 'out_for_delivery'].includes(newRecord.status)) {
             fetchLiveDeliveries();
+          } else if (newRecord && newRecord.status === 'delivered') {
+            // Remove delivered order from live map immediately
+            setDeliveries(prev => prev.filter(d => d.order_id !== newRecord.id));
           }
         }
       )
@@ -510,7 +513,13 @@ const AdminLiveMap = () => {
 
       const data = await response.json();
       console.log("Live deliveries data:", data);
-      setDeliveries(data.deliveries || []);
+      
+      // Filter out delivered orders from live map
+      const activeDeliveries = (data.deliveries || []).filter(
+        (delivery: any) => delivery.order?.status !== 'delivered'
+      );
+      
+      setDeliveries(activeDeliveries);
     } catch (error) {
       console.error("Failed to fetch live deliveries:", error);
       setDeliveries([]); // Set empty array on error
