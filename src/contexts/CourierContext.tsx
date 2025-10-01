@@ -42,21 +42,62 @@ export function CourierProvider({ children }: { children: React.ReactNode }) {
     loadCourierData();
   }, []);
 
-  // Track location when online
+  // Track location when online - continuous updates
   useEffect(() => {
     if (!isOnline || !courier) return;
 
+    let lastLat: number | null = null;
+    let lastLng: number | null = null;
+
+    // Watch position with high accuracy and frequent updates
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
-        updateLocation(position.coords.latitude, position.coords.longitude);
+        const { latitude, longitude } = position.coords;
+        lastLat = latitude;
+        lastLng = longitude;
+        console.log('📍 Location update:', { latitude, longitude, accuracy: position.coords.accuracy });
+        updateLocation(latitude, longitude);
       },
       (error) => {
         console.error('Location error:', error);
+        toast({
+          title: "Location Error",
+          description: "Unable to track your location. Please enable GPS.",
+          variant: "destructive"
+        });
       },
-      { enableHighAccuracy: true, maximumAge: 30000 }
+      { 
+        enableHighAccuracy: true, 
+        maximumAge: 5000, // Cache for only 5 seconds
+        timeout: 10000 // 10 second timeout
+      }
     );
 
-    return () => navigator.geolocation.clearWatch(watchId);
+    // Force location update every 10 seconds even if position hasn't changed much
+    const forceUpdateInterval = setInterval(() => {
+      if (lastLat !== null && lastLng !== null) {
+        console.log('🔄 Forcing location update:', { lastLat, lastLng });
+        updateLocation(lastLat, lastLng);
+      } else {
+        // Try to get current position if we don't have one
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            lastLat = latitude;
+            lastLng = longitude;
+            console.log('📍 Got current position:', { latitude, longitude });
+            updateLocation(latitude, longitude);
+          },
+          (error) => console.error('Failed to get current position:', error),
+          { enableHighAccuracy: true, timeout: 5000 }
+        );
+      }
+    }, 10000); // Every 10 seconds
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+      clearInterval(forceUpdateInterval);
+    };
   }, [isOnline, courier]);
 
   const loadCourierData = async () => {
@@ -135,13 +176,20 @@ export function CourierProvider({ children }: { children: React.ReactNode }) {
     if (!courier) return;
 
     try {
-      await supabase.functions.invoke('courier-app', {
+      console.log('📤 Sending location update to backend:', { lat, lng });
+      const { data, error } = await supabase.functions.invoke('courier-app', {
         body: {
           endpoint: 'update-location',
           lat,
           lng
         }
       });
+
+      if (error) {
+        console.error('Location update error:', error);
+      } else {
+        console.log('✅ Location updated successfully');
+      }
     } catch (error) {
       console.error('Failed to update location:', error);
     }
