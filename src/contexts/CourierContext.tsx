@@ -5,13 +5,20 @@ import { useToast } from '@/hooks/use-toast';
 interface CourierData {
   id: string;
   email: string;
-  full_name: string;
   phone: string;
+  full_name: string;
   vehicle_type: string;
+  vehicle_make?: string;
+  vehicle_model?: string;
+  vehicle_plate?: string;
+  license_number?: string;
   is_online: boolean;
+  current_lat: number | null;
+  current_lng: number | null;
   commission_rate: number;
-  current_lat?: number;
-  current_lng?: number;
+  rating?: number;
+  total_deliveries?: number;
+  on_time_rate?: number;
 }
 
 interface CourierContextType {

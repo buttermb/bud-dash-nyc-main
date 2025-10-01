@@ -31,6 +31,8 @@ import BlogPost from "./pages/BlogPost";
 import CourierLogin from "./pages/CourierLogin";
 import CourierDashboard from "./pages/CourierDashboard";
 import CourierEarnings from "./pages/CourierEarnings";
+import CourierHistory from "./pages/CourierHistory";
+import CourierProfile from "./pages/CourierProfile";
 import TrackOrder from "./pages/TrackOrder";
 import TrackOrderLive from "./pages/TrackOrderLive";
 import MerchantDashboard from "./pages/MerchantDashboard";
@@ -94,6 +96,22 @@ const App = () => (
                   element={
                     <ProtectedCourierRoute>
                       <CourierEarnings />
+                    </ProtectedCourierRoute>
+                  }
+                />
+                <Route
+                  path="/courier/history"
+                  element={
+                    <ProtectedCourierRoute>
+                      <CourierHistory />
+                    </ProtectedCourierRoute>
+                  }
+                />
+                <Route
+                  path="/courier/profile"
+                  element={
+                    <ProtectedCourierRoute>
+                      <CourierProfile />
                     </ProtectedCourierRoute>
                   }
                 />

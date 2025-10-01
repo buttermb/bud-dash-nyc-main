@@ -40,8 +40,9 @@ serve(async (req) => {
       );
     }
 
-    const url = new URL(req.url);
-    const endpoint = url.searchParams.get("endpoint");
+    // Parse request body to get endpoint
+    const body = await req.json();
+    const endpoint = body.endpoint;
     
     console.log("Courier app request:", { endpoint, courier: courier.email });
 
@@ -68,7 +69,6 @@ serve(async (req) => {
     }
 
     if (endpoint === "toggle-online") {
-      const body = await req.json();
       const isOnline = body.is_online;
 
       let shiftId = null;
@@ -131,7 +131,6 @@ serve(async (req) => {
     }
 
     if (endpoint === "update-location") {
-      const body = await req.json();
       const { lat, lng, accuracy, speed, heading, order_id } = body;
 
       await supabase
@@ -162,7 +161,7 @@ serve(async (req) => {
     }
 
     if (endpoint === "my-orders") {
-      const status = url.searchParams.get("status") || "all";
+      const status = body.status || "all";
       
       let query = supabase
         .from("orders")
@@ -229,7 +228,6 @@ serve(async (req) => {
     }
 
     if (endpoint === "accept-order") {
-      const body = await req.json();
       const orderId = body.order_id;
 
       const { data: order } = await supabase
@@ -378,7 +376,7 @@ serve(async (req) => {
     }
 
     if (endpoint === "earnings") {
-      const period = url.searchParams.get("period") || "week";
+      const period = body.period || "week";
       
       let query = supabase
         .from("courier_earnings")
