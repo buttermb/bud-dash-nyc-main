@@ -30,6 +30,7 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import CourierLogin from "./pages/CourierLogin";
 import CourierDashboard from "./pages/CourierDashboard";
+import CourierEarnings from "./pages/CourierEarnings";
 import TrackOrder from "./pages/TrackOrder";
 import TrackOrderLive from "./pages/TrackOrderLive";
 import MerchantDashboard from "./pages/MerchantDashboard";
@@ -85,6 +86,14 @@ const App = () => (
                   element={
                     <ProtectedCourierRoute>
                       <CourierDashboard />
+                    </ProtectedCourierRoute>
+                  }
+                />
+                <Route
+                  path="/courier/earnings"
+                  element={
+                    <ProtectedCourierRoute>
+                      <CourierEarnings />
                     </ProtectedCourierRoute>
                   }
                 />

@@ -23,7 +23,9 @@ export type Database = {
           id: string
           is_default: boolean | null
           lat: number | null
+          latitude: number | null
           lng: number | null
+          longitude: number | null
           state: string
           street: string
           user_id: string
@@ -37,7 +39,9 @@ export type Database = {
           id?: string
           is_default?: boolean | null
           lat?: number | null
+          latitude?: number | null
           lng?: number | null
+          longitude?: number | null
           state?: string
           street: string
           user_id: string
@@ -51,7 +55,9 @@ export type Database = {
           id?: string
           is_default?: boolean | null
           lat?: number | null
+          latitude?: number | null
           lng?: number | null
+          longitude?: number | null
           state?: string
           street?: string
           user_id?: string
@@ -382,8 +388,45 @@ export type Database = {
           },
         ]
       }
+      courier_bonuses: {
+        Row: {
+          amount: number
+          bonus_type: string
+          courier_id: string | null
+          description: string | null
+          earned_at: string | null
+          id: string
+        }
+        Insert: {
+          amount: number
+          bonus_type: string
+          courier_id?: string | null
+          description?: string | null
+          earned_at?: string | null
+          id?: string
+        }
+        Update: {
+          amount?: number
+          bonus_type?: string
+          courier_id?: string | null
+          description?: string | null
+          earned_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_bonuses_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courier_earnings: {
         Row: {
+          base_pay: number | null
+          bonus_amount: number | null
           commission_amount: number
           commission_rate: number
           courier_id: string | null
@@ -400,6 +443,8 @@ export type Database = {
           week_start_date: string
         }
         Insert: {
+          base_pay?: number | null
+          bonus_amount?: number | null
           commission_amount: number
           commission_rate: number
           courier_id?: string | null
@@ -416,6 +461,8 @@ export type Database = {
           week_start_date: string
         }
         Update: {
+          base_pay?: number | null
+          bonus_amount?: number | null
           commission_amount?: number
           commission_rate?: number
           courier_id?: string | null
@@ -506,6 +553,58 @@ export type Database = {
           },
           {
             foreignKeyName: "courier_location_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_order_tracking"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courier_messages: {
+        Row: {
+          courier_id: string | null
+          created_at: string | null
+          id: string
+          message: string
+          order_id: string | null
+          read: boolean | null
+          sender_type: string
+        }
+        Insert: {
+          courier_id?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          order_id?: string | null
+          read?: boolean | null
+          sender_type: string
+        }
+        Update: {
+          courier_id?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          order_id?: string | null
+          read?: boolean | null
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_messages_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_messages_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "public_order_tracking"
@@ -607,6 +706,38 @@ export type Database = {
           },
         ]
       }
+      courier_streaks: {
+        Row: {
+          bonus_earned: number | null
+          consecutive_deliveries: number | null
+          courier_id: string | null
+          id: string
+          streak_date: string
+        }
+        Insert: {
+          bonus_earned?: number | null
+          consecutive_deliveries?: number | null
+          courier_id?: string | null
+          id?: string
+          streak_date: string
+        }
+        Update: {
+          bonus_earned?: number | null
+          consecutive_deliveries?: number | null
+          courier_id?: string | null
+          id?: string
+          streak_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_streaks_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       couriers: {
         Row: {
           age_verified: boolean | null
@@ -619,8 +750,13 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_online: boolean | null
+          last_location_update: string | null
           license_number: string
+          on_time_rate: number | null
           phone: string
+          profile_photo_url: string | null
+          rating: number | null
+          total_deliveries: number | null
           updated_at: string | null
           user_id: string
           vehicle_make: string | null
@@ -639,8 +775,13 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_online?: boolean | null
+          last_location_update?: string | null
           license_number: string
+          on_time_rate?: number | null
           phone: string
+          profile_photo_url?: string | null
+          rating?: number | null
+          total_deliveries?: number | null
           updated_at?: string | null
           user_id: string
           vehicle_make?: string | null
@@ -659,8 +800,13 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_online?: boolean | null
+          last_location_update?: string | null
           license_number?: string
+          on_time_rate?: number | null
           phone?: string
+          profile_photo_url?: string | null
+          rating?: number | null
+          total_deliveries?: number | null
           updated_at?: string | null
           user_id?: string
           vehicle_make?: string | null
@@ -872,8 +1018,10 @@ export type Database = {
           email: string
           id: string
           is_active: boolean | null
+          latitude: number | null
           license_number: string
           license_verified: boolean | null
+          longitude: number | null
           phone: string
           service_radius: number | null
           updated_at: string | null
@@ -886,8 +1034,10 @@ export type Database = {
           email: string
           id?: string
           is_active?: boolean | null
+          latitude?: number | null
           license_number: string
           license_verified?: boolean | null
+          longitude?: number | null
           phone: string
           service_radius?: number | null
           updated_at?: string | null
@@ -900,8 +1050,10 @@ export type Database = {
           email?: string
           id?: string
           is_active?: boolean | null
+          latitude?: number | null
           license_number?: string
           license_verified?: boolean | null
+          longitude?: number | null
           phone?: string
           service_radius?: number | null
           updated_at?: string | null
@@ -1010,22 +1162,36 @@ export type Database = {
           address_id: string | null
           courier_accepted_at: string | null
           courier_assigned_at: string | null
+          courier_feedback: string | null
           courier_id: string | null
+          courier_rating: number | null
           created_at: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          customer_signature_url: string | null
           delivered_at: string | null
           delivery_address: string
           delivery_borough: string
           delivery_fee: number
           delivery_notes: string | null
+          distance_miles: number | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
           estimated_delivery: string | null
           id: string
           merchant_id: string | null
           order_number: string | null
           payment_method: string
           payment_status: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          proof_of_delivery_url: string | null
+          requires_id_check: boolean | null
           scheduled_delivery_time: string | null
+          special_instructions: string | null
           status: string
           subtotal: number
+          tip_amount: number | null
           total_amount: number
           tracking_code: string | null
           tracking_url: string | null
@@ -1035,22 +1201,36 @@ export type Database = {
           address_id?: string | null
           courier_accepted_at?: string | null
           courier_assigned_at?: string | null
+          courier_feedback?: string | null
           courier_id?: string | null
+          courier_rating?: number | null
           created_at?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          customer_signature_url?: string | null
           delivered_at?: string | null
           delivery_address: string
           delivery_borough: string
           delivery_fee: number
           delivery_notes?: string | null
+          distance_miles?: number | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
           estimated_delivery?: string | null
           id?: string
           merchant_id?: string | null
           order_number?: string | null
           payment_method: string
           payment_status?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          proof_of_delivery_url?: string | null
+          requires_id_check?: boolean | null
           scheduled_delivery_time?: string | null
+          special_instructions?: string | null
           status?: string
           subtotal: number
+          tip_amount?: number | null
           total_amount: number
           tracking_code?: string | null
           tracking_url?: string | null
@@ -1060,22 +1240,36 @@ export type Database = {
           address_id?: string | null
           courier_accepted_at?: string | null
           courier_assigned_at?: string | null
+          courier_feedback?: string | null
           courier_id?: string | null
+          courier_rating?: number | null
           created_at?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          customer_signature_url?: string | null
           delivered_at?: string | null
           delivery_address?: string
           delivery_borough?: string
           delivery_fee?: number
           delivery_notes?: string | null
+          distance_miles?: number | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
           estimated_delivery?: string | null
           id?: string
           merchant_id?: string | null
           order_number?: string | null
           payment_method?: string
           payment_status?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          proof_of_delivery_url?: string | null
+          requires_id_check?: boolean | null
           scheduled_delivery_time?: string | null
+          special_instructions?: string | null
           status?: string
           subtotal?: number
+          tip_amount?: number | null
           total_amount?: number
           tracking_code?: string | null
           tracking_url?: string | null
