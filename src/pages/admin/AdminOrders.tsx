@@ -84,12 +84,12 @@ const AdminOrders = () => {
   const handleAction = async () => {
     if (!selectedOrder || !actionDialog) return;
     
-    // For accept action, no reason is required
-    if (actionDialog === "decline" && !reason) {
+    // For decline and flag actions, reason is required
+    if ((actionDialog === "decline" || actionDialog === "flag") && !reason) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Please provide a reason for declining",
+        description: `Please provide a reason for ${actionDialog === "decline" ? "declining" : "flagging"}`,
       });
       return;
     }

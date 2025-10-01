@@ -20,7 +20,27 @@ const OrderTracking = () => {
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
-      if (!orderId) return;
+      if (!orderId) {
+        toast({
+          title: "Invalid Order",
+          description: "Please provide a valid order ID.",
+          variant: "destructive",
+        });
+        navigate("/track-order");
+        return;
+      }
+
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(orderId)) {
+        toast({
+          title: "Invalid Order ID",
+          description: "The order ID format is invalid.",
+          variant: "destructive",
+        });
+        navigate("/track-order");
+        return;
+      }
 
       try {
         const { data: orderData, error: orderError } = await supabase
@@ -57,6 +77,7 @@ const OrderTracking = () => {
           description: "Failed to load order details.",
           variant: "destructive",
         });
+        navigate("/track-order");
       } finally {
         setLoading(false);
       }

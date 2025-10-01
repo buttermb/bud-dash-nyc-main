@@ -50,9 +50,9 @@ const AdminLiveMap = () => {
       fetchRealtimeStats();
     }, 10000);
     
-    // Set up real-time subscription
+    // Set up real-time subscription for both deliveries and orders
     const channel = supabase
-      .channel("live-deliveries")
+      .channel("live-map-updates")
       .on(
         "postgres_changes",
         {
@@ -61,12 +61,28 @@ const AdminLiveMap = () => {
           table: "deliveries",
         },
         (payload) => {
-          console.log("Real-time update received:", payload);
+          console.log("Delivery update received:", payload);
           fetchLiveDeliveries();
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "orders",
+        },
+        (payload) => {
+          console.log("Order update received:", payload);
+          // Only refresh for accepted/active orders
+          const newRecord = payload.new as any;
+          if (newRecord && ['accepted', 'confirmed', 'preparing', 'out_for_delivery'].includes(newRecord.status)) {
+            fetchLiveDeliveries();
+          }
+        }
+      )
       .subscribe((status) => {
-        console.log("Subscription status:", status);
+        console.log("Real-time subscription status:", status);
       });
 
     return () => {
@@ -151,6 +167,12 @@ const AdminLiveMap = () => {
       
       // Show destination marker (dropoff)
       if (delivery.dropoff_lat && delivery.dropoff_lng) {
+        const orderNumber = delivery.order?.order_number || `#${delivery.order?.id?.substring(0, 8).toUpperCase() || 'Order'}`;
+        const items = delivery.order?.items || [];
+        const itemsList = items.length > 0 
+          ? items.map((item: any) => `${item.product_name || 'Product'} x${item.quantity || 1}`).join('<br/>')
+          : 'No items';
+        
         const destinationMarker = new mapboxgl.Marker({ 
           color: "#ef4444" // Red for destination
         })
@@ -159,21 +181,35 @@ const AdminLiveMap = () => {
             parseFloat(delivery.dropoff_lat),
           ])
           .setPopup(
-            new mapboxgl.Popup().setHTML(
-              `<div style="padding: 8px;">
-                <strong>${delivery.order?.order_number || 'Order'}</strong><br/>
-                <span style="color: #666;">Status: ${delivery.order?.status?.replace("_", " ") || 'Unknown'}</span><br/>
-                <span style="color: #666;">Address: ${delivery.order?.delivery_address || 'Unknown'}</span><br/>
-                <span style="color: #666;">Items: ${delivery.order?.items?.length || 0}</span><br/>
-                <span style="color: #666;">Total: $${parseFloat(delivery.order?.total_amount || 0).toFixed(2)}</span><br/>
-                ${delivery.courier ? `<span style="color: #16a34a;">Courier: ${delivery.courier.full_name}</span>` : '<span style="color: #dc2626;">No courier assigned</span>'}
+            new mapboxgl.Popup({ maxWidth: '300px' }).setHTML(
+              `<div style="padding: 12px; font-family: system-ui;">
+                <strong style="font-size: 16px;">${orderNumber}</strong><br/>
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+                  <div style="color: #059669; font-weight: 600; margin-bottom: 4px;">Status: ${delivery.order?.status?.replace(/_/g, " ").toUpperCase() || 'PENDING'}</div>
+                  <div style="color: #374151; margin: 4px 0;"><strong>Delivery Address:</strong><br/>${delivery.order?.delivery_address || 'Unknown'}</div>
+                  <div style="color: #374151; margin: 4px 0;"><strong>Borough:</strong> ${delivery.order?.delivery_borough || 'N/A'}</div>
+                </div>
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+                  <strong>Items (${items.length}):</strong><br/>
+                  <div style="font-size: 14px; color: #4b5563; margin-top: 4px;">${itemsList}</div>
+                </div>
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+                  <strong>Total:</strong> <span style="color: #059669; font-weight: 600;">$${parseFloat(delivery.order?.total_amount || 0).toFixed(2)}</span>
+                </div>
+                ${delivery.courier 
+                  ? `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; color: #059669;">
+                       <strong>🚗 Courier:</strong> ${delivery.courier.full_name}<br/>
+                       <span style="font-size: 14px;">${delivery.courier.vehicle_type} - ${delivery.courier.vehicle_plate}</span>
+                     </div>` 
+                  : '<div style="margin-top: 8px; color: #dc2626;">⚠️ No courier assigned yet</div>'
+                }
               </div>`
             )
           )
           .addTo(map.current!);
 
         markers.current.push(destinationMarker);
-        console.log("Added destination marker for order:", delivery.order?.order_number);
+        console.log("Added destination marker for order:", orderNumber);
       }
       
       // Show courier location if available (green marker)
@@ -187,10 +223,13 @@ const AdminLiveMap = () => {
           ])
           .setPopup(
             new mapboxgl.Popup().setHTML(
-              `<div style="padding: 8px;">
-                <strong>Courier: ${delivery.courier.full_name}</strong><br/>
-                <span style="color: #666;">Delivering: ${delivery.order?.order_number || 'Order'}</span><br/>
-                <span style="color: #666;">${delivery.courier.vehicle_type} - ${delivery.courier.vehicle_plate}</span>
+              `<div style="padding: 12px; font-family: system-ui;">
+                <strong style="font-size: 16px;">🚗 ${delivery.courier.full_name}</strong><br/>
+                <div style="margin-top: 8px; color: #374151;">
+                  <strong>Delivering:</strong> ${delivery.order?.order_number || 'Order'}<br/>
+                  <strong>Vehicle:</strong> ${delivery.courier.vehicle_type}<br/>
+                  <strong>Plate:</strong> ${delivery.courier.vehicle_plate}
+                </div>
               </div>`
             )
           )
