@@ -1,113 +1,66 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, Mail, Phone, Car, DollarSign, Package, Clock, MapPin } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Switch } from '@/components/ui/switch';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-
-interface Courier {
-  id: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  vehicle_type: string;
-  vehicle_make: string | null;
-  vehicle_model: string | null;
-  vehicle_plate: string | null;
-  license_number: string;
-  is_active: boolean;
-  is_online: boolean;
-  commission_rate: number | null;
-  age_verified: boolean;
-  created_at: string;
-  current_lat?: number | null;
-  current_lng?: number | null;
-}
-
-interface CourierStats {
-  total_deliveries: number;
-  total_earnings: number;
-  avg_per_delivery: number;
-}
-
-interface Shift {
-  id: string;
-  started_at: string;
-  ended_at: string | null;
-  total_hours: number;
-  total_deliveries: number;
-  total_earnings: number;
-  status: string;
-}
+import { ArrowLeft } from 'lucide-react';
 
 export default function AdminCourierDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [courier, setCourier] = useState<Courier | null>(null);
-  const [stats, setStats] = useState<CourierStats | null>(null);
-  const [shifts, setShifts] = useState<Shift[]>([]);
+  const [courier, setCourier] = useState<any>(null);
   const [earnings, setEarnings] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCommissionDialog, setShowCommissionDialog] = useState(false);
+  const [newCommissionRate, setNewCommissionRate] = useState('');
+  const [commissionReason, setCommissionReason] = useState('');
 
   useEffect(() => {
-    fetchCourierDetails();
+    if (id) {
+      fetchCourierData();
+    }
   }, [id]);
 
-  const fetchCourierDetails = async () => {
+  const fetchCourierData = async () => {
+    setLoading(true);
     try {
-      // Fetch courier profile
-      const { data: courierData, error: courierError } = await supabase
-        .from('couriers')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const [courierRes, earningsRes, ordersRes] = await Promise.all([
+        supabase.from('couriers').select('*').eq('id', id).single(),
+        supabase.from('courier_earnings').select('*').eq('courier_id', id).order('created_at', { ascending: false }),
+        supabase.from('orders').select('*, merchants(*), addresses(*)').eq('courier_id', id).order('created_at', { ascending: false })
+      ]);
 
-      if (courierError) throw courierError;
-      setCourier(courierData as unknown as Courier);
-
-      // Fetch all orders for this courier
-      const { data: ordersData } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('courier_id', id);
-
-      // Fetch earnings
-      const { data: earningsData } = await supabase
-        .from('courier_earnings')
-        .select('*')
-        .eq('courier_id', id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      setEarnings(earningsData || []);
-
-      // Calculate stats
-      const totalDeliveries = ordersData?.filter(o => o.status === 'delivered').length || 0;
-      const totalEarnings = earningsData?.reduce((sum, e) => sum + parseFloat(e.total_earned.toString()), 0) || 0;
-      const avgPerDelivery = totalDeliveries > 0 ? totalEarnings / totalDeliveries : 0;
-
-      setStats({
-        total_deliveries: totalDeliveries,
-        total_earnings: totalEarnings,
-        avg_per_delivery: avgPerDelivery
-      });
-
-      // Fetch recent shifts
-      const { data: shiftsData } = await supabase
-        .from('courier_shifts')
-        .select('*')
-        .eq('courier_id', id)
-        .order('started_at', { ascending: false })
-        .limit(10);
-
-      setShifts(shiftsData || []);
+      if (courierRes.error) throw courierRes.error;
+      
+      setCourier(courierRes.data);
+      setEarnings(earningsRes.data || []);
+      setOrders(ordersRes.data || []);
+      setNewCommissionRate(courierRes.data.commission_rate?.toString() || '30');
     } catch (error) {
-      console.error('Error fetching courier details:', error);
+      console.error('Error fetching courier:', error);
       toast({
         title: "Error",
         description: "Failed to load courier details",
@@ -118,26 +71,95 @@ export default function AdminCourierDetails() {
     }
   };
 
-  const toggleCourierStatus = async () => {
-    if (!courier) return;
+  const handleCommissionChange = async () => {
+    if (!newCommissionRate || parseFloat(newCommissionRate) < 0 || parseFloat(newCommissionRate) > 100) {
+      toast({
+        title: "Invalid rate",
+        description: "Commission rate must be between 0 and 100",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
       const { error } = await supabase
         .from('couriers')
-        .update({ is_active: !courier.is_active })
-        .eq('id', courier.id);
+        .update({ commission_rate: parseFloat(newCommissionRate) })
+        .eq('id', id);
 
       if (error) throw error;
 
-      setCourier({ ...courier, is_active: !courier.is_active });
       toast({
-        title: "Status updated",
-        description: `Courier ${!courier.is_active ? 'activated' : 'deactivated'}`
+        title: "Success",
+        description: "Commission rate updated successfully"
       });
+
+      setShowCommissionDialog(false);
+      fetchCourierData();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update status",
+        description: "Failed to update commission rate",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleProcessPayout = async () => {
+    const pendingEarnings = earnings.filter(e => e.status === 'pending');
+    if (pendingEarnings.length === 0) {
+      toast({
+        title: "No pending earnings",
+        description: "This courier has no pending earnings to process"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('courier_earnings')
+        .update({ status: 'paid', paid_at: new Date().toISOString() })
+        .eq('courier_id', id)
+        .eq('status', 'pending');
+
+      if (error) throw error;
+
+      const totalPaid = pendingEarnings.reduce((sum, e) => sum + parseFloat(e.total_earned), 0);
+
+      toast({
+        title: "Payout Processed",
+        description: `Successfully processed $${totalPaid.toFixed(2)} payout`
+      });
+
+      fetchCourierData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to process payout",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const toggleCourierStatus = async () => {
+    try {
+      const { error } = await supabase
+        .from('couriers')
+        .update({ is_active: !courier.is_active })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Courier ${!courier.is_active ? 'activated' : 'deactivated'}`
+      });
+
+      fetchCourierData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update courier status",
         variant: "destructive"
       });
     }
@@ -145,245 +167,213 @@ export default function AdminCourierDetails() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (!courier) {
     return (
-      <div className="p-6">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">Courier not found</p>
-            <Button onClick={() => navigate('/admin/couriers')} className="mt-4">
-              Back to Couriers
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Courier not found</p>
+        <Button onClick={() => navigate('/admin/couriers')} className="mt-4">
+          Back to Couriers
+        </Button>
       </div>
     );
   }
 
+  const totalEarnings = earnings.reduce((sum, e) => sum + parseFloat(e.total_earned), 0);
+  const pendingEarnings = earnings.filter(e => e.status === 'pending').reduce((sum, e) => sum + parseFloat(e.total_earned), 0);
+  const totalDeliveries = earnings.length;
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin/couriers')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">{courier.full_name}</h1>
-            <p className="text-muted-foreground">Courier Details</p>
-          </div>
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/admin/couriers')}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold">{courier.full_name}</h1>
+          <p className="text-muted-foreground">{courier.email}</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="ml-auto flex gap-2">
           <Badge variant={courier.is_online ? "default" : "secondary"}>
-            {courier.is_online ? 'Online' : 'Offline'}
+            {courier.is_online ? '🟢 Online' : '⚪ Offline'}
           </Badge>
-          <div className="flex items-center gap-2">
-            <span className="text-sm">Active:</span>
-            <Switch checked={courier.is_active} onCheckedChange={toggleCourierStatus} />
-          </div>
+          <Badge variant={courier.is_active ? "default" : "destructive"}>
+            {courier.is_active ? 'Active' : 'Inactive'}
+          </Badge>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              Total Deliveries
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_deliveries || 0}</div>
-          </CardContent>
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="p-6">
+          <p className="text-sm text-muted-foreground">Commission Rate</p>
+          <p className="text-3xl font-bold">{courier.commission_rate}%</p>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              Total Earnings
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">${stats?.total_earnings.toFixed(2) || '0.00'}</div>
-          </CardContent>
+        <Card className="p-6">
+          <p className="text-sm text-muted-foreground">Total Deliveries</p>
+          <p className="text-3xl font-bold">{totalDeliveries}</p>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              Avg Per Delivery
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${stats?.avg_per_delivery.toFixed(2) || '0.00'}</div>
-          </CardContent>
+        <Card className="p-6">
+          <p className="text-sm text-muted-foreground">Total Earnings</p>
+          <p className="text-3xl font-bold">${totalEarnings.toFixed(2)}</p>
+        </Card>
+        <Card className="p-6">
+          <p className="text-sm text-muted-foreground">Pending Earnings</p>
+          <p className="text-3xl font-bold text-orange-600">${pendingEarnings.toFixed(2)}</p>
         </Card>
       </div>
 
-      {/* Info Cards */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Personal Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <span>{courier.email}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-muted-foreground" />
-              <span>{courier.phone}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">License:</span>
-              <span className="font-mono">{courier.license_number}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Age Verified:</span>
-              <Badge variant={courier.age_verified ? "default" : "secondary"}>
-                {courier.age_verified ? 'Yes' : 'No'}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Vehicle Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Vehicle Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Car className="h-4 w-4 text-muted-foreground" />
-              <span className="capitalize">{courier.vehicle_type}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Make/Model:</span>
-              <span>{courier.vehicle_make} {courier.vehicle_model}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Plate:</span>
-              <Badge variant="outline">{courier.vehicle_plate}</Badge>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Commission Rate:</span>
-              <span className="font-semibold">{courier.commission_rate || 0}%</span>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Action Buttons */}
+      <div className="flex gap-3">
+        <Button onClick={() => setShowCommissionDialog(true)}>
+          Change Commission
+        </Button>
+        <Button onClick={handleProcessPayout} disabled={pendingEarnings === 0}>
+          Process Payout (${pendingEarnings.toFixed(2)})
+        </Button>
+        <Button variant={courier.is_active ? "destructive" : "default"} onClick={toggleCourierStatus}>
+          {courier.is_active ? 'Deactivate Courier' : 'Activate Courier'}
+        </Button>
       </div>
 
-      {/* Location */}
-      {courier.current_lat && courier.current_lng && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Location</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span className="font-mono text-sm">
-                {courier.current_lat.toFixed(6)}, {courier.current_lng.toFixed(6)}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Tabs */}
+      <Tabs defaultValue="earnings" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="earnings">Earnings</TabsTrigger>
+          <TabsTrigger value="orders">Orders</TabsTrigger>
+        </TabsList>
 
-      {/* Recent Earnings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Earnings</CardTitle>
-          <CardDescription>Last 20 earnings records</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {earnings.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No earnings yet
-            </div>
-          ) : (
+        <TabsContent value="earnings">
+          <Card>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead>Order Total</TableHead>
+                  <TableHead>Order ID</TableHead>
                   <TableHead>Commission</TableHead>
-                  <TableHead>Earned</TableHead>
+                  <TableHead>Tip</TableHead>
+                  <TableHead>Total</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {earnings.map((earning) => (
-                  <TableRow key={earning.id}>
-                    <TableCell>{new Date(earning.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell>${earning.order_total}</TableCell>
-                    <TableCell>{earning.commission_rate}%</TableCell>
-                    <TableCell className="font-semibold text-green-600">
-                      ${earning.total_earned}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={earning.status === 'paid' ? 'default' : 'secondary'}>
-                        {earning.status}
-                      </Badge>
+                {earnings.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      No earnings yet
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  earnings.map((earning) => (
+                    <TableRow key={earning.id}>
+                      <TableCell>{new Date(earning.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell className="font-mono text-sm">{earning.order_id?.substring(0, 8)}</TableCell>
+                      <TableCell>${earning.commission_amount}</TableCell>
+                      <TableCell>${earning.tip_amount || 0}</TableCell>
+                      <TableCell className="font-semibold">${earning.total_earned}</TableCell>
+                      <TableCell>
+                        <Badge variant={earning.status === 'paid' ? 'default' : 'secondary'}>
+                          {earning.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
-          )}
-        </CardContent>
-      </Card>
+          </Card>
+        </TabsContent>
 
-      {/* Recent Shifts */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Shifts</CardTitle>
-          <CardDescription>Last 10 work sessions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {shifts.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No shifts yet
-            </div>
-          ) : (
+        <TabsContent value="orders">
+          <Card>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead>Started</TableHead>
-                  <TableHead>Ended</TableHead>
-                  <TableHead>Hours</TableHead>
-                  <TableHead>Deliveries</TableHead>
-                  <TableHead>Earnings</TableHead>
+                  <TableHead>Order #</TableHead>
+                  <TableHead>Restaurant</TableHead>
+                  <TableHead>Delivery Address</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {shifts.map((shift) => (
-                  <TableRow key={shift.id}>
-                    <TableCell>{new Date(shift.started_at).toLocaleDateString()}</TableCell>
-                    <TableCell>{new Date(shift.started_at).toLocaleTimeString()}</TableCell>
-                    <TableCell>
-                      {shift.ended_at ? new Date(shift.ended_at).toLocaleTimeString() : 'Active'}
+                {orders.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      No orders yet
                     </TableCell>
-                    <TableCell>{shift.total_hours?.toFixed(1) || '-'}h</TableCell>
-                    <TableCell>{shift.total_deliveries}</TableCell>
-                    <TableCell className="font-semibold">${shift.total_earnings}</TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  orders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell className="font-mono">{order.order_number}</TableCell>
+                      <TableCell>{order.merchants?.business_name}</TableCell>
+                      <TableCell className="text-sm">{order.addresses?.street}</TableCell>
+                      <TableCell className="font-semibold">${order.total_amount}</TableCell>
+                      <TableCell>
+                        <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
+                          {order.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
-          )}
-        </CardContent>
-      </Card>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Commission Change Dialog */}
+      <Dialog open={showCommissionDialog} onOpenChange={setShowCommissionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Commission Rate</DialogTitle>
+            <DialogDescription>
+              Update the commission rate for {courier.full_name}. This will apply to all future deliveries.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Current Rate: {courier.commission_rate}%</label>
+              <Input
+                type="number"
+                placeholder="New rate"
+                value={newCommissionRate}
+                onChange={(e) => setNewCommissionRate(e.target.value)}
+                min="0"
+                max="100"
+                step="0.01"
+                className="mt-2"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Reason (optional)</label>
+              <Textarea
+                placeholder="Why are you changing the commission rate?"
+                value={commissionReason}
+                onChange={(e) => setCommissionReason(e.target.value)}
+                className="mt-2"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCommissionDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCommissionChange}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
