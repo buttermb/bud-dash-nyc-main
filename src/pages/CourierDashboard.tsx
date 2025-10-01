@@ -3,7 +3,8 @@ import { useCourier } from '@/contexts/CourierContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Loader2, MapPin, Phone, Store, Home, Navigation } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, MapPin, Phone, Store, Home, Navigation, Clock, Star, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -33,10 +34,15 @@ interface Order {
   requires_id_check?: boolean;
   customer_name?: string;
   customer_phone?: string;
+  customer_id?: string;
+  user_id?: string;
+  accepted_at?: string;
   pickup_lat?: number;
   pickup_lng?: number;
   dropoff_lat?: number;
   dropoff_lng?: number;
+  customer_order_count?: number;
+  distance?: string;
   addresses?: {
     street: string;
     city: string;
@@ -55,6 +61,66 @@ interface Order {
     };
   }>;
 }
+
+// Countdown Timer Component
+const CountdownTimer = ({ startTime }: { startTime: string }) => {
+  const [timeLeft, setTimeLeft] = useState('');
+  const [isOverdue, setIsOverdue] = useState(false);
+
+  useEffect(() => {
+    const calculateTime = () => {
+      const start = new Date(startTime);
+      const deadline = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour
+      const now = new Date();
+      const diff = deadline.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setIsOverdue(true);
+        const overdue = Math.abs(diff);
+        const minutes = Math.floor(overdue / 60000);
+        setTimeLeft(`${minutes} min OVERDUE`);
+      } else {
+        setIsOverdue(false);
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+      }
+    };
+
+    calculateTime();
+    const interval = setInterval(calculateTime, 1000);
+    return () => clearInterval(interval);
+  }, [startTime]);
+
+  return (
+    <div className={`flex items-center gap-2 ${isOverdue ? 'text-red-600' : 'text-white'}`}>
+      <Clock className="w-5 h-5" />
+      <span className={`font-bold text-lg ${isOverdue ? 'animate-pulse' : ''}`}>
+        {timeLeft}
+      </span>
+      {isOverdue && <span className="text-xs">(URGENT!)</span>}
+    </div>
+  );
+};
+
+// Customer Badge Component
+const CustomerBadge = ({ orderCount }: { orderCount: number }) => {
+  if (orderCount === 0) {
+    return (
+      <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
+        <User className="w-3 h-3 mr-1" />
+        New Customer
+      </Badge>
+    );
+  }
+  
+  return (
+    <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+      <Star className="w-3 h-3 mr-1" />
+      Returning ({orderCount})
+    </Badge>
+  );
+};
 
 interface TodayStats {
   deliveries_completed: number;
@@ -82,6 +148,19 @@ export default function CourierDashboard() {
   const [showAcceptedModal, setShowAcceptedModal] = useState(false);
   const [acceptedOrder, setAcceptedOrder] = useState<Order | null>(null);
   const [autoOpenMaps, setAutoOpenMaps] = useState(true);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window) {
+      Notification.requestPermission().then(permission => {
+        setNotificationPermission(permission);
+      });
+    }
+    // Create audio element for notifications
+    audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSyByPLaiTcIGWi77eefTRAMUKfj8LZjHAY4ktfyzHksBSR3x/DdkEAKFF606+uoVRQKRp/g8r5sIQUsgcjy2ok3CBlou+3nn00QDFCS');
+  }, []);
 
   // Start location tracking
   useEffect(() => {
@@ -172,7 +251,7 @@ export default function CourierDashboard() {
     enabled: !!courier
   });
 
-  // Fetch active orders
+  // Fetch active orders with customer info
   const { data: myOrdersData } = useQuery({
     queryKey: ['courier-my-orders'],
     queryFn: async () => {
@@ -180,13 +259,33 @@ export default function CourierDashboard() {
         body: { endpoint: 'my-orders', status: 'active' }
       });
       if (error) throw error;
+      
+      // Fetch customer order counts
+      if (data?.orders) {
+        const ordersWithCounts = await Promise.all(
+          data.orders.map(async (order: Order) => {
+            if (order.user_id) {
+              const { count } = await supabase
+                .from('orders')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', order.user_id)
+                .eq('status', 'delivered');
+              
+              return { ...order, customer_order_count: count || 0 };
+            }
+            return { ...order, customer_order_count: 0 };
+          })
+        );
+        return { ...data, orders: ordersWithCounts };
+      }
+      
       return data;
     },
     refetchInterval: 15000,
     enabled: !!courier
   });
 
-  // Fetch available orders
+  // Fetch available orders with customer info
   const { data: availableOrdersData } = useQuery({
     queryKey: ['courier-available-orders'],
     queryFn: async () => {
@@ -194,6 +293,26 @@ export default function CourierDashboard() {
         body: { endpoint: 'available-orders' }
       });
       if (error) throw error;
+      
+      // Fetch customer order counts
+      if (data?.orders) {
+        const ordersWithCounts = await Promise.all(
+          data.orders.map(async (order: Order) => {
+            if (order.user_id) {
+              const { count } = await supabase
+                .from('orders')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', order.user_id)
+                .eq('status', 'delivered');
+              
+              return { ...order, customer_order_count: count || 0 };
+            }
+            return { ...order, customer_order_count: 0 };
+          })
+        );
+        return { ...data, orders: ordersWithCounts };
+      }
+      
       return data;
     },
     refetchInterval: 15000,
@@ -315,6 +434,16 @@ export default function CourierDashboard() {
         return distA - distB;
       });
   }
+
+  // Show notification if there are active deliveries
+  useEffect(() => {
+    if (activeOrders.length > 0 && notificationPermission === 'granted') {
+      new Notification('Active Delivery', {
+        body: `You have ${activeOrders.length} active ${activeOrders.length === 1 ? 'delivery' : 'deliveries'}`,
+        tag: 'active-delivery'
+      });
+    }
+  }, [activeOrders.length, notificationPermission]);
   
   const courierCommissionRate = courier?.commission_rate || 30;
 
@@ -328,8 +457,18 @@ export default function CourierDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Active Delivery Notification Banner */}
+      {activeOrders.length > 0 && (
+        <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-3 text-center font-bold animate-pulse sticky top-0 z-50 shadow-lg">
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-2xl animate-bounce">🚨</span>
+            <span>{activeOrders.length} ACTIVE {activeOrders.length === 1 ? 'DELIVERY' : 'DELIVERIES'} IN PROGRESS</span>
+          </div>
+        </div>
+      )}
+
       {/* Fixed Top Bar */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white sticky top-0 z-50 shadow-lg">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white sticky top-0 z-40 shadow-lg">
         <div className="px-4 py-4">
           {/* Online Toggle - Prominent */}
           <div className="flex items-center justify-between mb-3">
@@ -405,12 +544,17 @@ export default function CourierDashboard() {
                       className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 cursor-pointer"
                       onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
                     >
-                      <div className="flex justify-between items-start mb-2">
+                      {/* Countdown Timer - Prominent */}
+                      {order.accepted_at && (
+                        <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 mb-3">
+                          <CountdownTimer startTime={order.accepted_at} />
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-start mb-3">
                         <div>
-                          <p className="text-sm opacity-90">Order #{order.order_number}</p>
-                          {order.tracking_code && (
-                            <p className="text-xs opacity-75">{order.tracking_code}</p>
-                          )}
+                          <p className="font-bold text-lg">Order #{order.tracking_code || order.order_number}</p>
+                          <p className="text-sm opacity-90">{order.order_items?.length || 0} items</p>
                         </div>
                         <div className="text-right">
                           <div className="text-3xl font-bold">${earnings}</div>
@@ -419,17 +563,29 @@ export default function CourierDashboard() {
                           )}
                         </div>
                       </div>
+
+                      {/* Customer Info */}
+                      <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 mb-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm opacity-75">Customer:</p>
+                            <p className="font-bold text-lg">{order.customer_name || 'Customer'}</p>
+                            <p className="text-sm opacity-90">📞 {order.customer_phone || 'N/A'}</p>
+                          </div>
+                          <CustomerBadge orderCount={order.customer_order_count || 0} />
+                        </div>
+                      </div>
                       
                       <div className="flex items-center justify-between">
                         <span className={`
-                          inline-block px-3 py-1 rounded-full text-sm font-bold
+                          inline-block px-4 py-2 rounded-full text-sm font-bold
                           ${order.status === 'preparing' ? 'bg-yellow-400 text-yellow-900' : 'bg-blue-400 text-blue-900'}
                         `}>
-                          {order.status === 'preparing' ? '👨‍🍳 Being Prepared' : '🚗 Out for Delivery'}
+                          {order.status === 'preparing' ? '👨‍🍳 Preparing' : '🚗 Out for Delivery'}
                         </span>
                         
-                        <div className="text-white text-sm font-medium">
-                          {isExpanded ? '▼ Collapse' : '▶ Expand'}
+                        <div className="text-white flex items-center gap-2">
+                          {isExpanded ? '▼ Collapse' : '▶ Expand Details'}
                         </div>
                       </div>
                     </div>
@@ -485,15 +641,22 @@ export default function CourierDashboard() {
                       <div className="bg-green-50 rounded-xl p-3 border-2 border-green-200">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <p className="text-xs font-bold text-green-600">📍 DELIVER TO</p>
+                            <div className="flex items-center justify-between mb-3">
+                              <p className="text-sm font-bold text-green-600">📍 DELIVER TO</p>
                               {order.status === 'out_for_delivery' && (
-                                <span className="bg-green-200 text-green-800 px-2 py-1 rounded text-xs font-bold animate-pulse">
-                                  DELIVER HERE
+                                <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse">
+                                  🎯 DELIVER HERE
                                 </span>
                               )}
                             </div>
-                            <p className="font-bold text-gray-900">{order.customer_name || 'Customer'}</p>
+                            
+                            {/* Customer Name Prominent */}
+                            <div className="bg-green-100 rounded-lg p-3 mb-3">
+                              <p className="text-xs text-green-600">Delivering to:</p>
+                              <p className="font-bold text-2xl text-green-900">{order.customer_name || 'Customer'}</p>
+                              <p className="text-sm text-green-700">📞 {order.customer_phone || 'N/A'}</p>
+                            </div>
+                            
                             <p className="text-sm text-gray-600">{order.addresses?.street}</p>
                             <p className="text-sm text-gray-600">
                               {order.addresses?.city}, {order.addresses?.state} {order.addresses?.zip_code}
@@ -584,40 +747,61 @@ export default function CourierDashboard() {
           </div>
         )}
 
-        {/* Available Orders */}
-        {isOnline && availableOrders.length > 0 && (
+        {/* Available Orders - ALWAYS VISIBLE IF ONLINE */}
+        {isOnline && (
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-bold text-gray-900">📦 Available Orders Nearby</h2>
-              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold">
-                {availableOrders.length}
-              </span>
-            </div>
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              📦 Available Orders Nearby
+              {availableOrders.length > 0 ? (
+                <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold">
+                  {availableOrders.length} Available
+                </span>
+              ) : (
+                <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-sm">
+                  None Available
+                </span>
+              )}
+            </h2>
 
-            <div className="space-y-3">
-              {availableOrders.map(order => {
-                // Calculate commission on subtotal only (excludes delivery fee)
-                const earnings = (parseFloat(order.subtotal?.toString() || '0') * (courierCommissionRate / 100)).toFixed(2);
-                const distance = (order as any).distance || '?';
-                const estimatedTime = distance !== '?' ? Math.ceil(parseFloat(distance) * 3) : '?';
-                
-                return (
-                  <div key={order.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
-                    <div className="p-4">
+            {availableOrders.length > 0 ? (
+              <div className="space-y-3">
+                {availableOrders.map(order => {
+                  // Calculate commission on subtotal (excludes delivery fee)
+                  const earnings = (parseFloat(order.subtotal?.toString() || '0') * (courierCommissionRate / 100)).toFixed(2);
+                  const distance = (order as any).distance || '?';
+                  const estimatedTime = distance !== '?' ? Math.ceil(parseFloat(distance) * 3) : '?';
+                  
+                  return (
+                    <div key={order.id} className="bg-white rounded-2xl shadow-lg mb-3 p-4 border-2 border-gray-200 hover:border-green-400 transition">
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
-                          <p className="text-sm text-gray-500">Order #{order.order_number}</p>
-                          <p className="font-bold text-lg text-gray-900">{order.merchants?.business_name}</p>
-                          <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
-                            <span>📍 {distance} mi</span>
+                          <p className="font-bold text-xl mb-1">{order.merchants?.business_name}</p>
+                          <p className="text-sm text-gray-600 mb-2">{order.merchants?.address}</p>
+                          
+                          {/* Customer Info Preview */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm text-gray-600">
+                              For: <span className="font-semibold">{order.customer_name || 'Customer'}</span>
+                            </span>
+                            <CustomerBadge orderCount={order.customer_order_count || 0} />
+                          </div>
+                          
+                          <div className="flex items-center gap-3 text-sm text-gray-600">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />
+                              {distance} mi
+                            </span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              ~{estimatedTime} min
+                            </span>
                             <span>•</span>
                             <span>💰 ${order.total_amount}</span>
-                            <span>•</span>
-                            <span>⏱️ ~{estimatedTime} min</span>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-3xl font-bold text-green-600">${earnings}</div>
+                          <div className="text-4xl font-bold text-green-600">${earnings}</div>
                           <div className="text-xs text-gray-500">You earn</div>
                         </div>
                       </div>
@@ -625,7 +809,7 @@ export default function CourierDashboard() {
                       <button
                         onClick={() => acceptOrderMutation.mutate(order.id)}
                         disabled={acceptOrderMutation.isPending}
-                        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 rounded-xl transition transform hover:scale-[1.02] active:scale-95 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 rounded-xl shadow-lg text-lg transform hover:scale-105 transition"
                       >
                         {acceptOrderMutation.isPending ? (
                           <span className="flex items-center justify-center">
@@ -637,10 +821,15 @@ export default function CourierDashboard() {
                         )}
                       </button>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-gray-100 rounded-xl">
+                <p className="text-gray-500">No orders available right now</p>
+                <p className="text-sm text-gray-400 mt-1">Keep checking back!</p>
+              </div>
+            )}
           </div>
         )}
 

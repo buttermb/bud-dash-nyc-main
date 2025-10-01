@@ -752,6 +752,8 @@ export type Database = {
           is_online: boolean | null
           last_location_update: string | null
           license_number: string
+          notification_sound: boolean | null
+          notification_vibrate: boolean | null
           on_time_rate: number | null
           phone: string
           profile_photo_url: string | null
@@ -777,6 +779,8 @@ export type Database = {
           is_online?: boolean | null
           last_location_update?: string | null
           license_number: string
+          notification_sound?: boolean | null
+          notification_vibrate?: boolean | null
           on_time_rate?: number | null
           phone: string
           profile_photo_url?: string | null
@@ -802,6 +806,8 @@ export type Database = {
           is_online?: boolean | null
           last_location_update?: string | null
           license_number?: string
+          notification_sound?: boolean | null
+          notification_vibrate?: boolean | null
           on_time_rate?: number | null
           phone?: string
           profile_photo_url?: string | null
@@ -1207,6 +1213,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          accepted_at: string | null
           address_id: string | null
           courier_accepted_at: string | null
           courier_assigned_at: string | null
@@ -1214,6 +1221,7 @@ export type Database = {
           courier_id: string | null
           courier_rating: number | null
           created_at: string | null
+          customer_id: string | null
           customer_name: string | null
           customer_phone: string | null
           customer_signature_url: string | null
@@ -1246,6 +1254,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          accepted_at?: string | null
           address_id?: string | null
           courier_accepted_at?: string | null
           courier_assigned_at?: string | null
@@ -1253,6 +1262,7 @@ export type Database = {
           courier_id?: string | null
           courier_rating?: number | null
           created_at?: string | null
+          customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           customer_signature_url?: string | null
@@ -1285,6 +1295,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          accepted_at?: string | null
           address_id?: string | null
           courier_accepted_at?: string | null
           courier_assigned_at?: string | null
@@ -1292,6 +1303,7 @@ export type Database = {
           courier_id?: string | null
           courier_rating?: number | null
           created_at?: string | null
+          customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           customer_signature_url?: string | null
@@ -1443,6 +1455,7 @@ export type Database = {
         Row: {
           age_verified: boolean | null
           created_at: string | null
+          full_name: string | null
           id: string
           id_document_url: string | null
           phone: string | null
@@ -1455,6 +1468,7 @@ export type Database = {
         Insert: {
           age_verified?: boolean | null
           created_at?: string | null
+          full_name?: string | null
           id?: string
           id_document_url?: string | null
           phone?: string | null
@@ -1467,6 +1481,7 @@ export type Database = {
         Update: {
           age_verified?: boolean | null
           created_at?: string | null
+          full_name?: string | null
           id?: string
           id_document_url?: string | null
           phone?: string | null
