@@ -143,7 +143,7 @@ serve(async (req) => {
       .from("orders")
       .update({ 
         courier_id: selectedCourierId,
-        status: "confirmed"
+        status: "preparing"
       })
       .eq("id", orderId);
 
@@ -175,7 +175,7 @@ serve(async (req) => {
     // Add tracking update
     await supabase.from("order_tracking").insert({
       order_id: orderId,
-      status: "confirmed",
+      status: "preparing",
       message: `Courier ${courier.full_name} assigned to your order`,
     });
 
