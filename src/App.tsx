@@ -36,6 +36,9 @@ import AdminLiveMap from "./pages/admin/AdminLiveMap";
 import AdminLiveOrders from "./pages/admin/AdminLiveOrders";
 import AdminCouriers from "./pages/admin/AdminCouriers";
 import AdminCompliance from "./pages/admin/AdminCompliance";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
 
 const queryClient = new QueryClient();
 
@@ -77,10 +80,10 @@ const App = () => (
                 <Route path="live-orders" element={<AdminLiveOrders />} />
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="couriers" element={<AdminCouriers />} />
-                <Route path="users" element={<div className="p-6">Users Management Coming Soon</div>} />
+                <Route path="users" element={<AdminUsers />} />
                 <Route path="compliance" element={<AdminCompliance />} />
-                <Route path="analytics" element={<div className="p-6">Analytics Coming Soon</div>} />
-                <Route path="audit-logs" element={<div className="p-6">Audit Logs Coming Soon</div>} />
+                <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="audit-logs" element={<AdminAuditLogs />} />
               </Route>
 
               <Route

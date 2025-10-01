@@ -12,8 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-// Use public token - get yours from https://mapbox.com/
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN || "pk.eyJ1IjoiYnV1dGVybWIiLCJhIjoiY20yajhqNGt2MDQ4ODJscXNocG8zNDV0NyJ9.example";
+// Use public token from environment or fallback
+const MAPBOX_TOKEN = "pk.eyJ1IjoiYnV1dGVybWIiLCJhIjoiY21nNzNrd3U3MGlyNjJqcTNlMnhsenFwbCJ9.Ss9KyWJkDeSvZilooUFZgA";
 mapboxgl.accessToken = MAPBOX_TOKEN;
 
 // Geocoding helper function
