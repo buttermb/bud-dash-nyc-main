@@ -264,13 +264,19 @@ const AdminLiveMap = () => {
     deliveries.forEach(async (delivery) => {
       console.log("Processing delivery:", delivery);
       
+      // Use coordinates from order object, not delivery object
+      const actualDropoffLat = delivery.order?.dropoff_lat || delivery.dropoff_lat;
+      const actualDropoffLng = delivery.order?.dropoff_lng || delivery.dropoff_lng;
+      
+      console.log("Using coordinates:", { actualDropoffLat, actualDropoffLng });
+      
       // Calculate route if courier is assigned
       let routeData = null;
-      if (delivery.courier?.current_lat && delivery.courier?.current_lng && delivery.dropoff_lat && delivery.dropoff_lng) {
+      if (delivery.courier?.current_lat && delivery.courier?.current_lng && actualDropoffLat && actualDropoffLng) {
         const courierLng = parseFloat(delivery.courier.current_lng);
         const courierLat = parseFloat(delivery.courier.current_lat);
-        const dropoffLng = parseFloat(delivery.dropoff_lng);
-        const dropoffLat = parseFloat(delivery.dropoff_lat);
+        const dropoffLng = parseFloat(actualDropoffLng);
+        const dropoffLat = parseFloat(actualDropoffLat);
         
         routeData = await getOptimizedRoute(
           [courierLng, courierLat],
@@ -314,7 +320,7 @@ const AdminLiveMap = () => {
       const etaText = routeData ? `⏱️ <strong>ETA:</strong> ${Math.round(routeData.duration / 60)} min | ${(routeData.distance / 1000).toFixed(1)} km` : '';
       
       // Show destination marker (dropoff)
-      if (delivery.dropoff_lat && delivery.dropoff_lng) {
+      if (actualDropoffLat && actualDropoffLng) {
         const orderNumber = delivery.order?.order_number || `#${delivery.order?.id?.substring(0, 8).toUpperCase() || 'Order'}`;
         const items = delivery.order?.items || [];
         const itemsList = items.length > 0 
@@ -373,8 +379,8 @@ const AdminLiveMap = () => {
 
         const destinationMarker = new mapboxgl.Marker({ element: markerElement })
           .setLngLat([
-            parseFloat(delivery.dropoff_lng),
-            parseFloat(delivery.dropoff_lat),
+            parseFloat(actualDropoffLng),
+            parseFloat(actualDropoffLat),
           ])
           .setPopup(popup)
           .addTo(map.current!);
@@ -538,10 +544,14 @@ const AdminLiveMap = () => {
   };
 
   const centerMapOnDelivery = (delivery: any) => {
-    if (!map.current || !delivery.dropoff_lat || !delivery.dropoff_lng) return;
+    // Use coordinates from order object, not delivery object
+    const actualDropoffLat = delivery.order?.dropoff_lat || delivery.dropoff_lat;
+    const actualDropoffLng = delivery.order?.dropoff_lng || delivery.dropoff_lng;
+    
+    if (!map.current || !actualDropoffLat || !actualDropoffLng) return;
 
-    const dropoffLng = parseFloat(delivery.dropoff_lng);
-    const dropoffLat = parseFloat(delivery.dropoff_lat);
+    const dropoffLng = parseFloat(actualDropoffLng);
+    const dropoffLat = parseFloat(actualDropoffLat);
 
     // Center and zoom to the delivery location
     map.current.flyTo({
