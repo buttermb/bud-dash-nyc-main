@@ -38,6 +38,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminLiveMap from "./pages/admin/AdminLiveMap";
 import AdminLiveOrders from "./pages/admin/AdminLiveOrders";
 import AdminCouriers from "./pages/admin/AdminCouriers";
+import AdminCourierDetails from "./pages/admin/AdminCourierDetails";
 import AdminCompliance from "./pages/admin/AdminCompliance";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
@@ -98,6 +99,7 @@ const App = () => (
                 <Route path="live-orders" element={<AdminLiveOrders />} />
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="couriers" element={<AdminCouriers />} />
+                <Route path="couriers/:id" element={<AdminCourierDetails />} />
                 <Route path="courier-applications" element={<AdminCourierApplications />} />
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="age-verification" element={<AdminAgeVerification />} />

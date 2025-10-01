@@ -64,17 +64,17 @@ export function CourierProvider({ children }: { children: React.ReactNode }) {
         body: { endpoint: 'login' }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Silently fail if user is not a courier (e.g., admin accessing other pages)
+        setLoading(false);
+        return;
+      }
 
       setCourier(data.courier);
       setIsOnline(data.courier.is_online);
     } catch (error) {
-      console.error('Failed to load courier data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load courier profile",
-        variant: "destructive"
-      });
+      // Silently fail - user might not be a courier
+      console.log('Not a courier user');
     } finally {
       setLoading(false);
     }
