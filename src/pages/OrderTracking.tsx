@@ -84,6 +84,49 @@ const OrderTracking = () => {
     };
 
     fetchOrderDetails();
+
+    // Set up real-time subscription for order updates
+    if (orderId) {
+      const channel = supabase
+        .channel(`order-${orderId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "orders",
+            filter: `id=eq.${orderId}`,
+          },
+          (payload) => {
+            console.log("Order status updated:", payload);
+            setOrder(payload.new as any);
+            
+            // Show toast notification for status changes
+            const newStatus = (payload.new as any).status;
+            if (newStatus === "delivered") {
+              toast({
+                title: "Order Delivered! 🎉",
+                description: "Your order has been successfully delivered.",
+              });
+            } else if (newStatus === "out_for_delivery") {
+              toast({
+                title: "Out for Delivery",
+                description: "Your order is on its way!",
+              });
+            } else if (newStatus === "preparing") {
+              toast({
+                title: "Order Being Prepared",
+                description: "Your order is being prepared for delivery.",
+              });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [orderId, navigate, toast]);
 
   const getStatusInfo = (status: string) => {
