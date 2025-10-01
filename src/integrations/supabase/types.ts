@@ -446,6 +446,13 @@ export type Database = {
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "courier_earnings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_order_tracking"
+            referencedColumns: ["id"]
+          },
         ]
       }
       courier_location_history: {
@@ -495,6 +502,13 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_location_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_order_tracking"
             referencedColumns: ["id"]
           },
         ]
@@ -732,6 +746,13 @@ export type Database = {
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "deliveries_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "public_order_tracking"
+            referencedColumns: ["id"]
+          },
         ]
       }
       inventory: {
@@ -833,6 +854,13 @@ export type Database = {
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "loyalty_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_order_tracking"
+            referencedColumns: ["id"]
+          },
         ]
       }
       merchants: {
@@ -917,6 +945,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_order_tracking"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "order_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -961,6 +996,13 @@ export type Database = {
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "order_tracking_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_order_tracking"
+            referencedColumns: ["id"]
+          },
         ]
       }
       orders: {
@@ -985,6 +1027,8 @@ export type Database = {
           status: string
           subtotal: number
           total_amount: number
+          tracking_code: string | null
+          tracking_url: string | null
           user_id: string
         }
         Insert: {
@@ -1008,6 +1052,8 @@ export type Database = {
           status?: string
           subtotal: number
           total_amount: number
+          tracking_code?: string | null
+          tracking_url?: string | null
           user_id: string
         }
         Update: {
@@ -1031,6 +1077,8 @@ export type Database = {
           status?: string
           subtotal?: number
           total_amount?: number
+          tracking_code?: string | null
+          tracking_url?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1255,6 +1303,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_order_tracking"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "reviews_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -1316,7 +1371,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_order_tracking: {
+        Row: {
+          courier_lat: number | null
+          courier_lng: number | null
+          courier_name: string | null
+          courier_vehicle: string | null
+          created_at: string | null
+          delivered_at: string | null
+          delivery_address: string | null
+          delivery_borough: string | null
+          estimated_delivery: string | null
+          id: string | null
+          merchant_address: string | null
+          merchant_name: string | null
+          order_number: string | null
+          status: string | null
+          total_amount: number | null
+          tracking_code: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_is_admin: {
@@ -1326,6 +1401,10 @@ export type Database = {
       decrement_inventory: {
         Args: { _product_id: string; _quantity: number }
         Returns: boolean
+      }
+      generate_tracking_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_admin_role: {
         Args: { _user_id: string }

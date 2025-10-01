@@ -30,6 +30,8 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import CourierLogin from "./pages/CourierLogin";
 import CourierDashboard from "./pages/CourierDashboard";
+import TrackOrder from "./pages/TrackOrder";
+import TrackOrderLive from "./pages/TrackOrderLive";
 import MerchantDashboard from "./pages/MerchantDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -71,6 +73,10 @@ const App = () => (
                 <Route path="/become-courier" element={<BecomeCourier />} />
                 <Route path="/partner-shops" element={<PartnerShops />} />
                 <Route path="/track-order" element={<OrderLookup />} />
+                
+                {/* Public Order Tracking */}
+                <Route path="/track" element={<TrackOrder />} />
+                <Route path="/track/:code" element={<TrackOrderLive />} />
                 
                 {/* Courier Routes */}
                 <Route path="/courier/login" element={<CourierLogin />} />
