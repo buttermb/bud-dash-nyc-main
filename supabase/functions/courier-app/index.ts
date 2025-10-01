@@ -354,6 +354,37 @@ serve(async (req) => {
 
       console.log('✅ Order updated successfully:', updatedOrder);
 
+      // Fetch customer info from profiles
+      let customerName = updatedOrder.customer_name;
+      let customerPhone = updatedOrder.customer_phone;
+      
+      if (!customerName || !customerPhone) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, phone")
+          .eq("user_id", updatedOrder.user_id)
+          .maybeSingle();
+        
+        if (profile) {
+          customerName = profile.full_name || customerName;
+          customerPhone = profile.phone || customerPhone;
+        }
+      }
+
+      // Get customer order count
+      const { count } = await supabase
+        .from('orders')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', updatedOrder.user_id)
+        .eq('status', 'delivered');
+
+      const orderWithCustomerInfo = {
+        ...updatedOrder,
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        customer_order_count: count || 0
+      };
+
       await supabase
         .from("order_tracking")
         .insert({
@@ -366,7 +397,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true,
-          order: updatedOrder
+          order: orderWithCustomerInfo
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );

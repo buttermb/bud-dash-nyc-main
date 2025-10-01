@@ -359,8 +359,12 @@ export default function CourierDashboard() {
         console.error('❌ No order found in response data:', data);
       }
       
-      queryClient.invalidateQueries({ queryKey: ['courier-my-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['courier-available-orders'] });
+      // Delay query refresh to ensure database update completes
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['courier-my-orders'] });
+        queryClient.invalidateQueries({ queryKey: ['courier-available-orders'] });
+        queryClient.invalidateQueries({ queryKey: ['courier-today-stats'] });
+      }, 800);
     },
     onError: (error) => {
       console.error('❌ Accept order ERROR:', error);
