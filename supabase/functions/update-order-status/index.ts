@@ -27,7 +27,7 @@ serve(async (req) => {
       });
     }
 
-    const { orderId, status, message, lat, lng } = await req.json();
+    const { orderId, status, message, lat, lng, courierId } = await req.json();
 
     // Verify user has permission (courier or admin)
     const { data: roles } = await supabase
@@ -43,10 +43,35 @@ serve(async (req) => {
       );
     }
 
+    // Get courier record if courierId provided or if user is a courier
+    let courierRecordId = null;
+    if (courierId || (roles.some(r => r.role === "courier") && status === "confirmed")) {
+      const { data: courierRecord } = await supabase
+        .from("couriers")
+        .select("id")
+        .eq("user_id", courierId || user.id)
+        .single();
+      
+      if (courierRecord) {
+        courierRecordId = courierRecord.id;
+      }
+    }
+
+    // Build update object
+    const updateData: any = { 
+      status, 
+      updated_at: new Date().toISOString() 
+    };
+
+    // If confirming order and courier is accepting, assign them
+    if (status === "confirmed" && courierRecordId) {
+      updateData.courier_id = courierRecordId;
+    }
+
     // Update order status
     const { error: updateError } = await supabase
       .from("orders")
-      .update({ status, updated_at: new Date().toISOString() })
+      .update(updateData)
       .eq("id", orderId);
 
     if (updateError) {
