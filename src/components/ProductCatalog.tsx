@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import ProductCard from "./ProductCard";
 import AuthModal from "./AuthModal";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, ShoppingBag, Leaf, Cookie, Droplets, Cigarette, Wind } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ProductCatalog = () => {
@@ -97,11 +97,12 @@ const ProductCatalog = () => {
   }, [allProducts, category, searchQuery, priceRange, sortBy, strainType, potencyRange, selectedEffects]);
 
   const categories = [
-    { value: "all", label: "All Products", icon: "🌿", desc: "Browse everything" },
-    { value: "flower", label: "Flower", icon: "🌸", desc: "Premium THCA flower" },
-    { value: "edibles", label: "Edibles", icon: "🍬", desc: "Tasty treats" },
-    { value: "vapes", label: "Vapes", icon: "💨", desc: "Convenient vaping" },
-    { value: "concentrates", label: "Concentrates", icon: "💧", desc: "High potency oils" },
+    { value: "all", label: "All Products", icon: ShoppingBag, desc: "Browse everything" },
+    { value: "flower", label: "Flower", icon: Leaf, desc: "Premium cannabis flower" },
+    { value: "edibles", label: "Edibles", icon: Cookie, desc: "Delicious infused treats" },
+    { value: "concentrates", label: "Concentrates", icon: Droplets, desc: "High-potency extracts" },
+    { value: "pre-rolls", label: "Pre-Rolls", icon: Cigarette, desc: "Convenient & ready" },
+    { value: "vapes", label: "Vapes", icon: Wind, desc: "Smooth vapor experience" },
   ];
 
   return (
@@ -223,42 +224,39 @@ const ProductCatalog = () => {
           </div>
         </div>
 
-        <Tabs value={category} onValueChange={setCategory} className="w-full">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8 max-w-6xl mx-auto">
-            {categories.map((cat) => (
-              <button
-                key={cat.value}
-                onClick={() => setCategory(cat.value)}
-                className={cn(
-                  "group relative p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105",
-                  "flex flex-col items-center gap-3 text-center",
-                  category === cat.value
-                    ? "border-primary bg-primary/10 shadow-lg shadow-primary/20"
-                    : "border-border hover:border-primary/50 bg-card"
-                )}
-              >
-                <span className="text-4xl group-hover:scale-110 transition-transform">
-                  {cat.icon}
-                </span>
-                <div>
-                  <h3 className={cn(
-                    "font-semibold text-base mb-1",
-                    category === cat.value ? "text-primary" : ""
-                  )}>
-                    {cat.label}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {cat.desc}
-                  </p>
-                </div>
-                {category === cat.value && (
-                  <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                    <span className="text-xs text-primary-foreground">✓</span>
-                  </div>
-                )}
-              </button>
-            ))}
+        {/* Category Filter Buttons */}
+        <div className="mb-12">
+          <div className="flex justify-center gap-4 flex-wrap">
+            {categories.map((cat) => {
+              const Icon = cat.icon;
+              const isActive = category === cat.value;
+              return (
+                <button
+                  key={cat.value}
+                  onClick={() => setCategory(cat.value)}
+                  className={cn(
+                    "px-8 py-3 rounded-full font-semibold transition-all flex items-center gap-2",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-lg"
+                      : "bg-card text-muted-foreground hover:bg-muted border border-border"
+                  )}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
           </div>
+        </div>
+
+        <Tabs value={category} onValueChange={setCategory} className="w-full">
+          <TabsList className="hidden">
+            {categories.map((cat) => (
+              <TabsTrigger key={cat.value} value={cat.value}>
+                {cat.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
           {isLoading ? (
             <div className="flex justify-center py-20">

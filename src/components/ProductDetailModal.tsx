@@ -1,7 +1,7 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, ExternalLink } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Loader2, Package, FileText } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,173 +89,193 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
   };
 
   const getStockStatus = () => {
-    if (!product.in_stock || product.stock === 0) return { text: "Out of Stock", color: "destructive" };
-    if (product.stock <= 5) return { text: "Low Stock", color: "warning" };
-    return { text: "In Stock", color: "default" };
+    if (!product.in_stock || product.stock === 0) return { text: "Out of Stock", color: "bg-destructive/10 text-destructive" };
+    if (product.stock <= 5) return { text: "Low Stock", color: "bg-warning/10 text-warning" };
+    return { text: "In Stock", color: "bg-success/10 text-success" };
   };
-
-  const stockStatus = getStockStatus();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{product.name}</DialogTitle>
-        </DialogHeader>
-        
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="space-y-4">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <div className="grid lg:grid-cols-2 gap-8 p-2">
+          {/* Product Image */}
+          <div className="relative aspect-square rounded-xl overflow-hidden bg-muted">
             <img
-              src={product.image_url || "https://images.unsplash.com/photo-1605313448639-eb6f5b70f7fd"}
+              src={product.image_url || "/placeholder.svg"}
               alt={product.name}
-              className="w-full h-64 object-cover rounded-lg cursor-zoom-in hover:opacity-90 transition-opacity"
+              className="w-full h-full object-cover"
             />
-            <div className="flex items-center gap-2">
-              <Badge variant={stockStatus.color as any}>{stockStatus.text}</Badge>
-              {product.strain_type && (
-                <Badge variant="outline" className="capitalize">{product.strain_type}</Badge>
-              )}
-            </div>
-
-            {/* Lab Results & COA */}
-            <div className="space-y-2">
-              {product.coa_url && (
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => window.open(product.coa_url, '_blank')}
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  View Certificate of Analysis
-                </Button>
-              )}
-              {product.lab_results_url && (
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => window.open(product.lab_results_url, '_blank')}
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  View Lab Results
-                </Button>
-              )}
-            </div>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <Badge className="mb-2">{product.category}</Badge>
-              <p className="text-3xl font-bold">${Number(product.price).toFixed(2)}</p>
-              {product.vendor_name && (
-                <p className="text-sm text-muted-foreground mt-1">By {product.vendor_name}</p>
+          {/* Product Info */}
+          <div className="flex flex-col">
+            <div className="mb-6">
+              <Badge variant="secondary" className="mb-3 uppercase text-xs">
+                {product.category}
+              </Badge>
+              <h2 className="text-4xl font-bold mb-4">{product.name}</h2>
+            </div>
+
+            {/* Specifications */}
+            <div className="space-y-3 mb-6">
+              {product.thca_percentage && (
+                <div className="flex justify-between py-3 border-b">
+                  <span className="font-semibold text-muted-foreground">THCa:</span>
+                  <span className="font-medium">{product.thca_percentage}%</span>
+                </div>
+              )}
+              {product.strain_type && (
+                <div className="flex justify-between py-3 border-b">
+                  <span className="font-semibold text-muted-foreground">Type:</span>
+                  <span className="font-medium capitalize">{product.strain_type}</span>
+                </div>
+              )}
+              {product.effects && product.effects.length > 0 && (
+                <div className="flex justify-between py-3 border-b">
+                  <span className="font-semibold text-muted-foreground">Effects:</span>
+                  <span className="font-medium text-right capitalize">{product.effects.join(", ")}</span>
+                </div>
+              )}
+              {product.strain_lineage && (
+                <div className="flex justify-between py-3 border-b">
+                  <span className="font-semibold text-muted-foreground">Genetics:</span>
+                  <span className="font-medium text-right">{product.strain_lineage}</span>
+                </div>
               )}
             </div>
 
-            {/* Potency */}
-            <div className="space-y-2">
-              <h4 className="font-semibold">THCA Content</h4>
-              <div className="w-full bg-secondary h-4 rounded-full overflow-hidden">
-                <div 
-                  className="bg-primary h-full transition-all"
-                  style={{ width: `${Math.min((product.thca_percentage / 30) * 100, 100)}%` }}
-                />
+            {/* Stock Status */}
+            <div className="mb-6">
+              <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium ${getStockStatus().color}`}>
+                <Package className="w-4 h-4" />
+                {getStockStatus().text}
               </div>
-              <p className="text-sm text-muted-foreground">{product.thca_percentage}% THCA</p>
             </div>
 
-            {/* Effects */}
-            {product.effects && product.effects.length > 0 && (
-              <div>
-                <h4 className="font-semibold mb-2">Effects</h4>
-                <div className="flex flex-wrap gap-2">
-                  {product.effects.map((effect: string) => (
-                    <Badge key={effect} variant="secondary" className="capitalize">
-                      {effect}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Price */}
+            <div className="text-4xl font-bold text-primary mb-6">
+              ${Number(product.price).toFixed(2)}
+            </div>
 
-            {/* Terpenes */}
-            {product.terpenes && Object.keys(product.terpenes).length > 0 && (
-              <div>
-                <h4 className="font-semibold mb-2">Terpene Profile</h4>
-                <div className="space-y-1">
-                  {Object.entries(product.terpenes).map(([name, value]: [string, any]) => (
-                    <div key={name} className="flex justify-between text-sm">
-                      <span className="capitalize">{name}</span>
-                      <span className="text-muted-foreground">{value}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Description */}
-            {product.description && (
-              <div>
-                <h4 className="font-semibold mb-2">Description</h4>
-                <p className="text-sm text-muted-foreground">{product.description}</p>
-              </div>
-            )}
-
-            {/* Strain Lineage */}
-            {product.strain_lineage && (
-              <div>
-                <h4 className="font-semibold mb-2">Strain Lineage</h4>
-                <p className="text-sm text-muted-foreground">{product.strain_lineage}</p>
-              </div>
-            )}
-
-            {/* Usage Tips */}
-            {product.usage_tips && (
-              <div>
-                <h4 className="font-semibold mb-2">Usage Tips</h4>
-                <p className="text-sm text-muted-foreground">{product.usage_tips}</p>
-              </div>
-            )}
-
-            {/* Strain Info */}
-            {product.strain_info && (
-              <div>
-                <h4 className="font-semibold mb-2">Strain Information</h4>
-                <p className="text-sm text-muted-foreground">{product.strain_info}</p>
-              </div>
-            )}
-
-            {/* Add to Cart */}
-            <div className="space-y-3 pt-4 border-t">
-              <div className="flex items-center gap-3">
+            {/* Quantity Control */}
+            <div className="flex items-center gap-4 mb-6">
+              <span className="text-sm font-semibold">Quantity:</span>
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={quantity <= 1}
+                  disabled={loading}
                 >
-                  <Minus className="h-4 w-4" />
+                  <Minus className="w-4 h-4" />
                 </Button>
                 <span className="w-12 text-center font-semibold">{quantity}</span>
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setQuantity(Math.min(10, quantity + 1))}
-                  disabled={quantity >= 10}
+                  onClick={() => setQuantity(quantity + 1)}
+                  disabled={loading}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="w-4 h-4" />
                 </Button>
               </div>
-
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={handleAddToCart}
-                disabled={!product.in_stock || loading}
-              >
-                {loading ? "Adding..." : "Add to Cart"}
-              </Button>
             </div>
+
+            {/* Add to Cart Button */}
+            <Button
+              onClick={handleAddToCart}
+              disabled={!product.in_stock || loading}
+              className="w-full mb-4"
+              size="lg"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Add to Cart
+                </>
+              )}
+            </Button>
+
+            {/* Additional Links */}
+            {(product.coa_url || product.lab_results_url) && (
+              <div className="pt-4 border-t space-y-2">
+                {product.coa_url && (
+                  <a
+                    href={product.coa_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-primary hover:underline"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Certificate of Analysis
+                  </a>
+                )}
+                {product.lab_results_url && (
+                  <a
+                    href={product.lab_results_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-primary hover:underline"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Lab Results
+                  </a>
+                )}
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Description and Details Section */}
+        <div className="p-6 border-t space-y-8">
+          {product.description && (
+            <div>
+              <h3 className="text-2xl font-bold mb-4">Description</h3>
+              <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+            </div>
+          )}
+
+          {product.usage_tips && (
+            <div>
+              <h3 className="text-2xl font-bold mb-4">Why You'll Love {product.name}</h3>
+              <div className="space-y-3">
+                {product.usage_tips.split('\n').filter((tip: string) => tip.trim()).map((tip: string, index: number) => (
+                  <div key={index} className="flex items-start gap-3">
+                    <span className="text-primary mt-1">✓</span>
+                    <span className="text-muted-foreground">{tip}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {product.terpenes && (
+            <div>
+              <h3 className="text-2xl font-bold mb-4">Terpene Profile</h3>
+              <div className="grid gap-4">
+                {(Array.isArray(product.terpenes) ? product.terpenes : Object.entries(product.terpenes)).map((terpene: any, index: number) => {
+                  const name = Array.isArray(product.terpenes) ? terpene.name || terpene : terpene[0];
+                  const description = Array.isArray(product.terpenes) ? terpene.description : `${terpene[1]}%`;
+                  
+                  return (
+                    <div key={index} className="bg-muted rounded-lg p-4">
+                      <h4 className="font-bold text-primary mb-1 capitalize">
+                        {name}
+                      </h4>
+                      {description && (
+                        <p className="text-sm text-muted-foreground">{description}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

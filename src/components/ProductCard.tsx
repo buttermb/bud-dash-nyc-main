@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Plus, Minus, Check, Star, Flame, Sparkles } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Check, Star, Flame, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -100,123 +100,157 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
     }
   };
 
-  const getCategoryColor = (category: string) => {
+  const getCategoryColor = () => {
     const colors: Record<string, string> = {
-      flower: "bg-primary/10 text-primary",
-      edibles: "bg-secondary/10 text-secondary",
-      vapes: "bg-accent/10 text-accent",
-      concentrates: "bg-primary/10 text-primary",
+      flower: "bg-primary/10 text-primary border-primary/20",
+      edibles: "bg-secondary/10 text-secondary border-secondary/20",
+      vapes: "bg-accent/10 text-accent border-accent/20",
+      concentrates: "bg-primary/10 text-primary border-primary/20",
+      "pre-rolls": "bg-primary/10 text-primary border-primary/20",
     };
-    return colors[category] || colors.flower;
+    return colors[product.category] || colors.flower;
+  };
+
+  const handleIncrement = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setQuantity(quantity + 1);
+  };
+
+  const handleDecrement = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setQuantity(Math.max(1, quantity - 1));
   };
 
   return (
     <>
       <Card 
-        className="hover:shadow-strong transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+        className="group overflow-hidden hover:ring-2 hover:ring-primary transition-all duration-300 cursor-pointer relative bg-card"
         onClick={handleCardClick}
       >
-        <CardHeader className="pb-4">
-          <div className="relative aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center">
-          {badge && (
-            <Badge className={`absolute top-2 left-2 z-10 ${badge.className} flex items-center gap-1`}>
+        {/* Out of Stock Overlay */}
+        {!product.in_stock && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-xl font-bold text-destructive">Out of Stock</p>
+              <p className="text-sm text-muted-foreground">Check back soon</p>
+            </div>
+          </div>
+        )}
+
+        {/* Category Badge */}
+        <div className="absolute top-3 left-3 z-20">
+          <Badge className={`${getCategoryColor()} uppercase text-xs font-bold`}>
+            {product.category}
+          </Badge>
+        </div>
+
+        {/* Product Badge */}
+        {badge && (
+          <div className="absolute top-3 right-3 z-20">
+            <Badge className={`${badge.className} flex items-center gap-1`}>
               <badge.icon className="w-3 h-3" />
               {badge.text}
             </Badge>
-          )}
-          {!product.in_stock && (
-            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
-              <span className="text-lg font-semibold text-muted-foreground">Out of Stock</span>
-            </div>
-          )}
-          {product.image_url ? (
-            <img src={product.image_url} alt={product.name} className="w-full h-full object-cover rounded-lg" />
-          ) : (
-            <span className="text-muted-foreground text-6xl">🌿</span>
-          )}
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-bold text-lg leading-tight">{product.name}</h3>
-            <Badge className={getCategoryColor(product.category)}>
-              {product.category}
-            </Badge>
           </div>
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {product.description}
-          </p>
-        </div>
-      </CardHeader>
+        )}
 
-      <CardContent className="pb-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="relative h-64 overflow-hidden">
+          <img
+            src={product.image_url || "/placeholder.svg"}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+          />
+        </div>
+
+        <CardContent className="p-6 space-y-4">
           <div>
-            <div className="text-sm text-muted-foreground">THCA</div>
-            <div className="text-lg font-bold">{product.thca_percentage}%</div>
+            <h3 className="text-2xl font-bold mb-2">{product.name}</h3>
+            {product.strain_type && (
+              <p className="text-sm text-muted-foreground capitalize">{product.strain_type}</p>
+            )}
           </div>
-          <div className="text-right">
-            <div className="text-sm text-muted-foreground">Price</div>
-            <div className="text-2xl font-bold">${product.price.toFixed(2)}</div>
+          
+          <div className="flex items-center justify-between">
+            {product.thca_percentage && (
+              <span className="text-sm font-semibold text-primary">
+                {product.thca_percentage}% THCa
+              </span>
+            )}
+            <span className="text-xl font-bold">${Number(product.price).toFixed(2)}</span>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2 mb-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              setQuantity(Math.max(1, quantity - 1));
-            }}
-            disabled={quantity <= 1}
-          >
-            <Minus className="w-4 h-4" />
-          </Button>
-          <div className="flex-1 text-center font-medium">{quantity}</div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              setQuantity(quantity + 1);
-            }}
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
-        </div>
-      </CardContent>
-
-      <CardFooter>
-        <Button 
-          variant="hero" 
-          className="w-full"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleAddToCart();
-          }}
-          disabled={loading || !product.in_stock || added}
-        >
-          {added ? (
-            <>
-              <Check className="w-4 h-4 mr-2" />
-              Added ✓
-            </>
-          ) : (
-            <>
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              {loading ? "Adding..." : product.in_stock ? "Add to Cart" : "Out of Stock"}
-            </>
+          {product.description && (
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {product.description}
+            </p>
           )}
-        </Button>
-      </CardFooter>
-    </Card>
+        </CardContent>
 
-    <ProductDetailModal
-      product={product}
-      open={showDetailModal}
-      onOpenChange={setShowDetailModal}
-      onAuthRequired={onAuthRequired}
-    />
+        <CardFooter className="flex flex-col gap-2 p-6 pt-0">
+          <div className="flex items-center gap-2 w-full" onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleDecrement}
+              disabled={quantity <= 1 || loading || !product.in_stock}
+              className="h-9 w-9 shrink-0"
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+            <div className="flex-1 text-center font-semibold">{quantity}</div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleIncrement}
+              disabled={loading || !product.in_stock}
+              className="h-9 w-9 shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddToCart();
+              }}
+              disabled={loading || !product.in_stock || added}
+              className="flex-1"
+              variant={added ? "secondary" : "default"}
+            >
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : added ? (
+                <>
+                  <Check className="h-4 w-4 mr-1" />
+                  Added
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="h-4 w-4 mr-1" />
+                  Add
+                </>
+              )}
+            </Button>
+          </div>
+
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCardClick();
+            }}
+          >
+            View Details
+          </Button>
+        </CardFooter>
+      </Card>
+
+      <ProductDetailModal
+        product={product}
+        open={showDetailModal}
+        onOpenChange={setShowDetailModal}
+        onAuthRequired={onAuthRequired}
+      />
     </>
   );
 };
