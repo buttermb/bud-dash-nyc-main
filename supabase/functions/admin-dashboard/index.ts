@@ -606,6 +606,158 @@ serve(async (req) => {
       );
     }
 
+    // ==================== COURIER MANAGEMENT ====================
+    if (endpoint === "couriers") {
+      const status = url.searchParams.get("status");
+      const page = parseInt(url.searchParams.get("page") || "1");
+      const limit = parseInt(url.searchParams.get("limit") || "50");
+
+      let query = supabase
+        .from("couriers")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range((page - 1) * limit, page * limit - 1);
+
+      if (status === "online") query = query.eq("is_online", true);
+      if (status === "offline") query = query.eq("is_online", false);
+
+      const { data: couriers, count } = await query;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const { data: todayEarnings } = await supabase
+        .from("courier_earnings")
+        .select("courier_id, total_earned")
+        .gte("created_at", today.toISOString());
+
+      const couriersWithEarnings = couriers?.map(courier => ({
+        ...courier,
+        today_earnings: todayEarnings
+          ?.filter(e => e.courier_id === courier.id)
+          .reduce((sum, e) => sum + parseFloat(e.total_earned), 0) || 0
+      }));
+
+      return new Response(
+        JSON.stringify({
+          couriers: couriersWithEarnings,
+          pagination: {
+            page,
+            limit,
+            total: count || 0,
+            totalPages: Math.ceil((count || 0) / limit)
+          }
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ==================== COURIER DETAILS ====================
+    if (endpoint === "courier-details") {
+      const courierId = url.searchParams.get("courierId");
+      
+      const { data: courier } = await supabase
+        .from("couriers")
+        .select("*")
+        .eq("id", courierId)
+        .single();
+
+      if (!courier) {
+        return new Response(
+          JSON.stringify({ error: "Courier not found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const [
+        { data: allOrders },
+        { data: allEarnings },
+        { data: recentShifts }
+      ] = await Promise.all([
+        supabase.from("orders").select("*").eq("courier_id", courierId),
+        supabase.from("courier_earnings").select("*").eq("courier_id", courierId),
+        supabase.from("courier_shifts").select("*").eq("courier_id", courierId).order("started_at", { ascending: false }).limit(10)
+      ]);
+
+      const totalEarnings = allEarnings?.reduce((sum, e) => sum + parseFloat(e.total_earned), 0) || 0;
+      const totalDeliveries = allOrders?.filter(o => o.status === "delivered").length || 0;
+
+      return new Response(
+        JSON.stringify({
+          courier,
+          stats: {
+            total_deliveries: totalDeliveries,
+            total_earnings: totalEarnings,
+            avg_per_delivery: totalDeliveries > 0 ? totalEarnings / totalDeliveries : 0
+          },
+          recent_shifts: recentShifts
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ==================== UPDATE COURIER STATUS ====================
+    if (endpoint === "update-courier-status") {
+      const body = await req.json();
+      const { courier_id, is_active } = body;
+
+      const { data: courier } = await supabase
+        .from("couriers")
+        .update({ is_active })
+        .eq("id", courier_id)
+        .select()
+        .single();
+
+      await logAdminAction(supabase, adminUser.id, "UPDATE_COURIER_STATUS", "courier", courier_id, { is_active }, req);
+
+      return new Response(
+        JSON.stringify({ success: true, courier }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ==================== UPDATE COMMISSION RATE ====================
+    if (endpoint === "update-commission-rate") {
+      const body = await req.json();
+      const { courier_id, commission_rate } = body;
+
+      const { data: courier } = await supabase
+        .from("couriers")
+        .update({ commission_rate })
+        .eq("id", courier_id)
+        .select()
+        .single();
+
+      await logAdminAction(supabase, adminUser.id, "UPDATE_COMMISSION_RATE", "courier", courier_id, { commission_rate }, req);
+
+      return new Response(
+        JSON.stringify({ success: true, courier }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ==================== PAY COURIER ====================
+    if (endpoint === "pay-courier") {
+      const body = await req.json();
+      const { earnings_ids, payment_method } = body;
+
+      await supabase
+        .from("courier_earnings")
+        .update({
+          status: "paid",
+          paid_at: new Date().toISOString(),
+          payment_method
+        })
+        .in("id", earnings_ids);
+
+      await logAdminAction(supabase, adminUser.id, "PAY_COURIER", "earnings", earnings_ids.join(","), { payment_method }, req);
+
+      return new Response(
+        JSON.stringify({ success: true, count: earnings_ids.length }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ error: "Invalid endpoint" }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }

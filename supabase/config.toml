@@ -2,3 +2,6 @@ project_id = "vltveasdxtfvvqbzxzuf"
 
 [functions.add-courier]
 verify_jwt = true
+
+[functions.courier-app]
+verify_jwt = true

@@ -382,6 +382,217 @@ export type Database = {
           },
         ]
       }
+      courier_earnings: {
+        Row: {
+          commission_amount: number
+          commission_rate: number
+          courier_id: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          order_id: string | null
+          order_total: number
+          paid_at: string | null
+          payment_method: string | null
+          status: string | null
+          tip_amount: number | null
+          total_earned: number
+          week_start_date: string
+        }
+        Insert: {
+          commission_amount: number
+          commission_rate: number
+          courier_id?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          order_total: number
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string | null
+          tip_amount?: number | null
+          total_earned: number
+          week_start_date: string
+        }
+        Update: {
+          commission_amount?: number
+          commission_rate?: number
+          courier_id?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          order_total?: number
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string | null
+          tip_amount?: number | null
+          total_earned?: number
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_earnings_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_earnings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courier_location_history: {
+        Row: {
+          accuracy: number | null
+          courier_id: string | null
+          heading: number | null
+          id: string
+          lat: number
+          lng: number
+          order_id: string | null
+          speed: number | null
+          timestamp: string | null
+        }
+        Insert: {
+          accuracy?: number | null
+          courier_id?: string | null
+          heading?: number | null
+          id?: string
+          lat: number
+          lng: number
+          order_id?: string | null
+          speed?: number | null
+          timestamp?: string | null
+        }
+        Update: {
+          accuracy?: number | null
+          courier_id?: string | null
+          heading?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          order_id?: string | null
+          speed?: number | null
+          timestamp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_location_history_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_location_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courier_metrics: {
+        Row: {
+          avg_delivery_time_minutes: number | null
+          avg_rating: number | null
+          courier_id: string | null
+          date: string
+          deliveries_cancelled: number | null
+          deliveries_completed: number | null
+          id: string
+          id_verification_failures: number | null
+          late_deliveries: number | null
+          total_distance_miles: number | null
+          total_earnings: number | null
+          total_ratings: number | null
+        }
+        Insert: {
+          avg_delivery_time_minutes?: number | null
+          avg_rating?: number | null
+          courier_id?: string | null
+          date: string
+          deliveries_cancelled?: number | null
+          deliveries_completed?: number | null
+          id?: string
+          id_verification_failures?: number | null
+          late_deliveries?: number | null
+          total_distance_miles?: number | null
+          total_earnings?: number | null
+          total_ratings?: number | null
+        }
+        Update: {
+          avg_delivery_time_minutes?: number | null
+          avg_rating?: number | null
+          courier_id?: string | null
+          date?: string
+          deliveries_cancelled?: number | null
+          deliveries_completed?: number | null
+          id?: string
+          id_verification_failures?: number | null
+          late_deliveries?: number | null
+          total_distance_miles?: number | null
+          total_earnings?: number | null
+          total_ratings?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_metrics_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courier_shifts: {
+        Row: {
+          courier_id: string | null
+          ended_at: string | null
+          id: string
+          started_at: string
+          status: string | null
+          total_deliveries: number | null
+          total_earnings: number | null
+          total_hours: number | null
+        }
+        Insert: {
+          courier_id?: string | null
+          ended_at?: string | null
+          id?: string
+          started_at: string
+          status?: string | null
+          total_deliveries?: number | null
+          total_earnings?: number | null
+          total_hours?: number | null
+        }
+        Update: {
+          courier_id?: string | null
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          status?: string | null
+          total_deliveries?: number | null
+          total_earnings?: number | null
+          total_hours?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_shifts_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       couriers: {
         Row: {
           age_verified: boolean | null
@@ -448,6 +659,7 @@ export type Database = {
           actual_pickup_time: string | null
           courier_id: string
           created_at: string | null
+          delivery_notes: string | null
           delivery_photo_url: string | null
           dropoff_lat: number
           dropoff_lng: number
@@ -459,6 +671,7 @@ export type Database = {
           order_id: string
           pickup_lat: number
           pickup_lng: number
+          pickup_photo_url: string | null
           signature_url: string | null
         }
         Insert: {
@@ -466,6 +679,7 @@ export type Database = {
           actual_pickup_time?: string | null
           courier_id: string
           created_at?: string | null
+          delivery_notes?: string | null
           delivery_photo_url?: string | null
           dropoff_lat: number
           dropoff_lng: number
@@ -477,6 +691,7 @@ export type Database = {
           order_id: string
           pickup_lat: number
           pickup_lng: number
+          pickup_photo_url?: string | null
           signature_url?: string | null
         }
         Update: {
@@ -484,6 +699,7 @@ export type Database = {
           actual_pickup_time?: string | null
           courier_id?: string
           created_at?: string | null
+          delivery_notes?: string | null
           delivery_photo_url?: string | null
           dropoff_lat?: number
           dropoff_lng?: number
@@ -495,6 +711,7 @@ export type Database = {
           order_id?: string
           pickup_lat?: number
           pickup_lng?: number
+          pickup_photo_url?: string | null
           signature_url?: string | null
         }
         Relationships: [
@@ -746,8 +963,11 @@ export type Database = {
       orders: {
         Row: {
           address_id: string | null
+          courier_accepted_at: string | null
+          courier_assigned_at: string | null
           courier_id: string | null
           created_at: string | null
+          delivered_at: string | null
           delivery_address: string
           delivery_borough: string
           delivery_fee: number
@@ -766,8 +986,11 @@ export type Database = {
         }
         Insert: {
           address_id?: string | null
+          courier_accepted_at?: string | null
+          courier_assigned_at?: string | null
           courier_id?: string | null
           created_at?: string | null
+          delivered_at?: string | null
           delivery_address: string
           delivery_borough: string
           delivery_fee: number
@@ -786,8 +1009,11 @@ export type Database = {
         }
         Update: {
           address_id?: string | null
+          courier_accepted_at?: string | null
+          courier_assigned_at?: string | null
           courier_id?: string | null
           created_at?: string | null
+          delivered_at?: string | null
           delivery_address?: string
           delivery_borough?: string
           delivery_fee?: number
