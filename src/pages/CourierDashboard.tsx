@@ -3,12 +3,24 @@ import { useCourier } from "@/contexts/CourierContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Package, MapPin, Clock, Navigation, Power, LogOut } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { 
+  Loader2, 
+  Package, 
+  DollarSign, 
+  Clock, 
+  TrendingUp, 
+  Navigation, 
+  Power, 
+  LogOut,
+  CheckCircle,
+  Truck
+} from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { OrderCard } from "@/components/courier/OrderCard";
+import { StatsCard } from "@/components/courier/StatsCard";
+import { StatusToggle } from "@/components/courier/StatusToggle";
 
 const CourierDashboard = () => {
   const { courier, signOut, toggleOnlineStatus, updateLocation } = useCourier();
@@ -38,7 +50,8 @@ const CourierDashboard = () => {
     };
   }, [trackingLocation, courier, updateLocation]);
 
-  const { data: orders, isLoading: ordersLoading } = useQuery({
+  // Fetch orders with optimized query
+  const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ["courier-orders", courier?.id],
     queryFn: async () => {
       if (!courier) return [];
@@ -51,9 +64,38 @@ const CourierDashboard = () => {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      return data;
+      return data || [];
     },
     enabled: !!courier,
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
+  });
+
+  // Fetch today's stats
+  const { data: todayStats } = useQuery({
+    queryKey: ["courier-stats", courier?.id],
+    queryFn: async () => {
+      if (!courier) return null;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const { data, error } = await supabase
+        .from("orders")
+        .select("id, total_amount, status")
+        .eq("courier_id", courier.id)
+        .gte("created_at", today.toISOString());
+
+      if (error) throw error;
+
+      const completed = data?.filter(o => o.status === "delivered").length || 0;
+      const earnings = data
+        ?.filter(o => o.status === "delivered")
+        .reduce((sum, o) => sum + Number(o.total_amount), 0) || 0;
+
+      return { completed, earnings, total: data?.length || 0 };
+    },
+    enabled: !!courier,
+    refetchInterval: 60000, // Refresh every minute
   });
 
   const updateOrderStatus = useMutation({
@@ -66,239 +108,226 @@ const CourierDashboard = () => {
       const { error } = await supabase.from("orders").update(updates).eq("id", orderId);
       if (error) throw error;
 
-      // Log tracking update
-      await supabase.from("order_tracking").insert({
+      // Log tracking update with location if available
+      const trackingData: any = {
         order_id: orderId,
         status,
         message: `Order ${status.replace("_", " ")}`,
-      });
+      };
+
+      if (courier?.current_lat && courier?.current_lng) {
+        trackingData.lat = courier.current_lat;
+        trackingData.lng = courier.current_lng;
+      }
+
+      await supabase.from("order_tracking").insert(trackingData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["courier-orders"] });
-      toast({ title: "Order status updated" });
+      queryClient.invalidateQueries({ queryKey: ["courier-stats"] });
+      toast({ 
+        title: "Success", 
+        description: "Order status updated successfully"
+      });
     },
-    onError: () => {
-      toast({ title: "Failed to update order", variant: "destructive" });
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to update order", 
+        variant: "destructive" 
+      });
     },
   });
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "secondary";
-      case "confirmed":
-        return "default";
-      case "out_for_delivery":
-        return "default";
-      case "delivered":
-        return "default";
-      default:
-        return "secondary";
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "text-yellow-600";
-      case "confirmed":
-        return "text-blue-600";
-      case "out_for_delivery":
-        return "text-purple-600";
-      case "delivered":
-        return "text-green-600";
-      default:
-        return "text-gray-600";
-    }
-  };
 
   if (!courier) {
     return null;
   }
 
+  const pendingOrders = orders.filter(o => o.status === "pending");
+  const activeOrders = orders.filter(o => ["confirmed", "out_for_delivery"].includes(o.status));
+
+  // Loading skeleton
+  if (ordersLoading && !orders.length) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="space-y-4">
+          <Skeleton className="h-12 w-64" />
+          <div className="grid md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-32" />
+            ))}
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            {[1, 2].map(i => (
+              <Skeleton key={i} className="h-64" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-4xl font-bold">Driver Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, {courier.full_name}</p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between animate-fade-in">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Driver Dashboard
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Welcome back, <span className="font-semibold">{courier.full_name}</span>
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={signOut}
+            className="hover:bg-destructive hover:text-destructive-foreground transition-colors"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
         </div>
-        <Button variant="outline" onClick={signOut}>
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
-        </Button>
-      </div>
 
-      {/* Status Controls */}
-      <div className="grid md:grid-cols-3 gap-4 mb-8">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label htmlFor="online-status">Online Status</Label>
-                <p className="text-sm text-muted-foreground">
-                  {courier.is_online ? "Available for orders" : "Offline"}
-                </p>
-              </div>
-              <Switch
-                id="online-status"
-                checked={courier.is_online}
-                onCheckedChange={toggleOnlineStatus}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label htmlFor="location-tracking">Location Tracking</Label>
-                <p className="text-sm text-muted-foreground">
-                  {trackingLocation ? "Sharing location" : "Not sharing"}
-                </p>
-              </div>
-              <Switch
-                id="location-tracking"
-                checked={trackingLocation}
-                onCheckedChange={setTrackingLocation}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-1">
-              <Label>Active Orders</Label>
-              <p className="text-2xl font-bold">{orders?.length || 0}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {ordersLoading ? (
-        <div className="flex justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin" />
+        {/* Stats Cards */}
+        <div className="grid md:grid-cols-4 gap-4 animate-fade-in">
+          <StatsCard
+            title="Today's Deliveries"
+            value={todayStats?.completed || 0}
+            icon={CheckCircle}
+            description="Completed orders"
+            colorClass="text-green-600"
+          />
+          <StatsCard
+            title="Today's Earnings"
+            value={`$${(todayStats?.earnings || 0).toFixed(2)}`}
+            icon={DollarSign}
+            description="Total earned today"
+            colorClass="text-green-600"
+          />
+          <StatsCard
+            title="Active Orders"
+            value={activeOrders.length}
+            icon={Truck}
+            description="Currently delivering"
+            colorClass="text-blue-600"
+          />
+          <StatsCard
+            title="Available Orders"
+            value={pendingOrders.length}
+            icon={Package}
+            description="Ready to accept"
+            colorClass="text-purple-600"
+          />
         </div>
-      ) : (
-        <div className="grid gap-4">
-          {orders?.map((order) => (
-            <Card key={order.id}>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg mb-1">Order #{order.id.slice(0, 8)}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(order.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                    <Badge variant={getStatusBadgeVariant(order.status)} className={getStatusColor(order.status)}>
-                      {order.status.replace("_", " ")}
-                    </Badge>
-                  </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-start gap-2">
-                        <MapPin className="h-4 w-4 mt-1 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">Delivery Address</p>
-                          <p className="text-sm text-muted-foreground">{order.delivery_address}</p>
-                          <p className="text-sm text-muted-foreground">{order.delivery_borough}</p>
-                        </div>
-                      </div>
+        {/* Status Controls */}
+        <div className="grid md:grid-cols-2 gap-4 animate-fade-in">
+          <StatusToggle
+            id="online-status"
+            label="Online Status"
+            description="Toggle your availability for new orders"
+            checked={courier.is_online}
+            onCheckedChange={toggleOnlineStatus}
+            icon={Power}
+            activeText="Available for Orders"
+            inactiveText="Offline"
+          />
+          <StatusToggle
+            id="location-tracking"
+            label="Location Tracking"
+            description="Share your real-time location with customers"
+            checked={trackingLocation}
+            onCheckedChange={setTrackingLocation}
+            icon={Navigation}
+            activeText="Sharing Location"
+            inactiveText="Not Sharing"
+          />
+        </div>
 
+        {/* Orders Section */}
+        <div className="space-y-6 animate-fade-in">
+          {/* Available Orders */}
+          {pendingOrders.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Package className="h-5 w-5 text-purple-600" />
+                <h2 className="text-2xl font-bold">Available Orders</h2>
+                <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium">
+                  {pendingOrders.length}
+                </span>
+              </div>
+              <div className="grid gap-4">
+                {pendingOrders.map(order => (
+                  <OrderCard
+                    key={order.id}
+                    order={order}
+                    courierId={courier.id}
+                    onStatusUpdate={(orderId, status, courierId) =>
+                      updateOrderStatus.mutate({ orderId, status, courierId })
+                    }
+                    isUpdating={updateOrderStatus.isPending}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
-                      {order.scheduled_delivery_time && (
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <p className="text-sm">
-                            Scheduled: {new Date(order.scheduled_delivery_time).toLocaleString()}
-                          </p>
-                        </div>
-                      )}
-                    </div>
+          {/* Active Deliveries */}
+          {activeOrders.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Truck className="h-5 w-5 text-blue-600" />
+                <h2 className="text-2xl font-bold">Active Deliveries</h2>
+                <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
+                  {activeOrders.length}
+                </span>
+              </div>
+              <div className="grid gap-4">
+                {activeOrders.map(order => (
+                  <OrderCard
+                    key={order.id}
+                    order={order}
+                    courierId={courier.id}
+                    onStatusUpdate={(orderId, status) =>
+                      updateOrderStatus.mutate({ orderId, status })
+                    }
+                    isUpdating={updateOrderStatus.isPending}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
-                    <div className="space-y-2">
-                      <div className="flex items-start gap-2">
-                        <Package className="h-4 w-4 mt-1 text-muted-foreground" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium mb-1">Items</p>
-                          {order.order_items.map((item: any) => (
-                            <p key={item.id} className="text-sm text-muted-foreground">
-                              {item.product_name} x{item.quantity}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="pt-2 border-t">
-                        <p className="text-sm font-medium">
-                          Total: <span className="text-lg">${order.total_amount}</span>
-                        </p>
-                        <p className="text-sm text-muted-foreground">Payment: {order.payment_method}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {order.delivery_notes && (
-                    <div className="pt-2 border-t">
-                      <p className="text-sm font-medium mb-1">Delivery Notes</p>
-                      <p className="text-sm text-muted-foreground">{order.delivery_notes}</p>
-                    </div>
-                  )}
-
-                  <div className="pt-4 border-t flex gap-2">
-                    {order.status === "pending" && (
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          updateOrderStatus.mutate({
-                            orderId: order.id,
-                            status: "confirmed",
-                            courierId: courier.id,
-                          })
-                        }
-                      >
-                        Accept Delivery
-                      </Button>
-                    )}
-
-                    {order.status === "confirmed" && (
-                      <Button
-                        size="sm"
-                        onClick={() => updateOrderStatus.mutate({ orderId: order.id, status: "out_for_delivery" })}
-                      >
-                        Start Delivery
-                      </Button>
-                    )}
-
-                    {order.status === "out_for_delivery" && (
-                      <Button
-                        size="sm"
-                        variant="default"
-                        onClick={() => updateOrderStatus.mutate({ orderId: order.id, status: "delivered" })}
-                      >
-                        Mark as Delivered
-                      </Button>
-                    )}
+          {/* Empty State */}
+          {orders.length === 0 && (
+            <Card className="border-dashed">
+              <div className="py-16 text-center space-y-4">
+                <div className="flex justify-center">
+                  <div className="p-4 bg-muted rounded-full">
+                    <Package className="h-12 w-12 text-muted-foreground" />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-
-          {orders?.length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No active orders at the moment</p>
-              </CardContent>
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">No Orders Available</h3>
+                  <p className="text-muted-foreground">
+                    {courier.is_online 
+                      ? "New orders will appear here when they're available"
+                      : "Go online to start receiving orders"}
+                  </p>
+                </div>
+                {!courier.is_online && (
+                  <Button onClick={toggleOnlineStatus} size="lg">
+                    <Power className="mr-2 h-5 w-5" />
+                    Go Online
+                  </Button>
+                )}
+              </div>
             </Card>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
