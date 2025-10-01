@@ -326,6 +326,62 @@ export type Database = {
           },
         ]
       }
+      courier_applications: {
+        Row: {
+          admin_notes: string | null
+          borough: string
+          created_at: string | null
+          email: string
+          experience: string
+          full_name: string
+          id: string
+          phone: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string | null
+          vehicle_type: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          borough: string
+          created_at?: string | null
+          email: string
+          experience: string
+          full_name: string
+          id?: string
+          phone: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string | null
+          vehicle_type: string
+        }
+        Update: {
+          admin_notes?: string | null
+          borough?: string
+          created_at?: string | null
+          email?: string
+          experience?: string
+          full_name?: string
+          id?: string
+          phone?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string | null
+          vehicle_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_applications_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       couriers: {
         Row: {
           age_verified: boolean | null

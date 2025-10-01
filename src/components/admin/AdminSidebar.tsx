@@ -34,6 +34,7 @@ const menuItems = [
   { title: "Live Orders", url: "/admin/live-orders", icon: Clock },
   { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
   { title: "Couriers", url: "/admin/couriers", icon: Truck },
+  { title: "Courier Applications", url: "/admin/courier-applications", icon: FileText },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Age Verification", url: "/admin/age-verification", icon: CheckCircle },
   { title: "Compliance", url: "/admin/compliance", icon: Shield },

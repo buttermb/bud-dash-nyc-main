@@ -40,6 +40,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
 import AdminAgeVerification from "./pages/admin/AdminAgeVerification";
+import AdminCourierApplications from "./pages/admin/AdminCourierApplications";
 
 const queryClient = new QueryClient();
 
@@ -82,6 +83,7 @@ const App = () => (
                 <Route path="live-orders" element={<AdminLiveOrders />} />
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="couriers" element={<AdminCouriers />} />
+                <Route path="courier-applications" element={<AdminCourierApplications />} />
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="age-verification" element={<AdminAgeVerification />} />
                 <Route path="compliance" element={<AdminCompliance />} />

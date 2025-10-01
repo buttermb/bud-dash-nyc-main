@@ -7,9 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle2, DollarSign, Calendar, Shield } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const BecomeCourier = () => {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -19,20 +21,47 @@ const BecomeCourier = () => {
     experience: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Application Submitted",
-      description: "We'll review your application and get back to you within 48 hours.",
-    });
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      borough: "",
-      vehicle: "",
-      experience: "",
-    });
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase
+        .from('courier_applications')
+        .insert({
+          full_name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          borough: formData.borough,
+          vehicle_type: formData.vehicle,
+          experience: formData.experience || "No previous experience provided",
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Application Submitted Successfully",
+        description: "New York Minute will review your application and get back to you within 48 hours.",
+      });
+      
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        borough: "",
+        vehicle: "",
+        experience: "",
+      });
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your application. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -40,9 +69,9 @@ const BecomeCourier = () => {
       <Navigation />
       <main className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-6">Become a Courier</h1>
+          <h1 className="text-4xl font-bold mb-6">Become a New York Minute Courier</h1>
           <p className="text-lg text-muted-foreground mb-12">
-            Join our network of independent couriers and earn money delivering premium THCA products 
+            Join New York Minute's network of independent couriers and earn money delivering premium THCA products 
             across New York City. Set your own schedule and be part of the growing legal cannabis industry.
           </p>
 
@@ -163,8 +192,8 @@ const BecomeCourier = () => {
                 />
               </div>
 
-              <Button type="submit" size="lg" className="w-full">
-                Submit Application
+              <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Submitting..." : "Submit Application"}
               </Button>
 
               <p className="text-sm text-muted-foreground text-center">
