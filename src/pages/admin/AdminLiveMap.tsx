@@ -838,6 +838,35 @@ const AdminLiveMap = () => {
                     </p>
                   </div>
                 )}
+
+                <div className="flex gap-2 pt-3">
+                  {delivery.courier ? (
+                    <Button
+                      size="sm"
+                      onClick={() => handleMarkDelivered(delivery.order_id)}
+                      className="w-full flex items-center gap-2"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      Mark as Delivered
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedOrder({
+                          id: delivery.order_id,
+                          address: delivery.order?.delivery_address
+                        });
+                        setAssignDialogOpen(true);
+                      }}
+                      className="w-full flex items-center gap-2"
+                    >
+                      <UserPlus className="h-4 w-4" />
+                      Assign Courier
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))
