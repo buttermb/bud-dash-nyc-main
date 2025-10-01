@@ -170,7 +170,7 @@ const AdminOrders = () => {
       const { error } = await supabase
         .from('orders')
         .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
+        .gte('created_at', '1970-01-01'); // Match all orders
 
       if (error) throw error;
 
