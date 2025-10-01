@@ -22,6 +22,9 @@ const AgeVerificationModal = () => {
     if (!user) {
       // Remove localStorage check - age verification now requires real ID verification
       setOpen(true);
+    } else {
+      // Close auth modal if user just logged in
+      setShowAuthModal(false);
     }
   }, [user]);
 
@@ -29,10 +32,12 @@ const AgeVerificationModal = () => {
     if (isOver21) {
       // Remove localStorage - age verification now requires account creation and real ID verification
       setOpen(false);
-      // Prompt to sign up for ID verification
-      setTimeout(() => {
-        setShowAuthModal(true);
-      }, 500);
+      // Only prompt to sign up if user is not already authenticated
+      if (!user) {
+        setTimeout(() => {
+          setShowAuthModal(true);
+        }, 500);
+      }
     } else {
       window.location.href = "https://google.com";
     }
