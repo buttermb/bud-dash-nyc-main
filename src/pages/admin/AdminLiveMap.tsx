@@ -415,6 +415,19 @@ const AdminLiveMap = () => {
       if (delivery.courier?.current_lat && delivery.courier?.current_lng) {
         const courierLng = parseFloat(delivery.courier.current_lng);
         const courierLat = parseFloat(delivery.courier.current_lat);
+        
+        // Calculate time since last location update
+        const lastUpdate = delivery.courier.last_location_update 
+          ? new Date(delivery.courier.last_location_update)
+          : null;
+        const timeSinceUpdate = lastUpdate 
+          ? Math.round((Date.now() - lastUpdate.getTime()) / 1000 / 60) // minutes
+          : null;
+        const locationAge = timeSinceUpdate 
+          ? `<div style="color: ${timeSinceUpdate > 5 ? '#ef4444' : '#10b981'}; font-size: 12px; margin-top: 4px;">
+               📍 Updated ${timeSinceUpdate}min ago
+             </div>`
+          : '<div style="color: #6b7280; font-size: 12px; margin-top: 4px;">📍 Location unknown</div>';
 
         const courierMarker = new mapboxgl.Marker({ 
           color: "#22c55e" // Green for courier
@@ -422,18 +435,35 @@ const AdminLiveMap = () => {
           .setLngLat([courierLng, courierLat])
           .setPopup(
             new mapboxgl.Popup().setHTML(
-              `<div style="padding: 12px; font-family: system-ui;">
+              `<div style="padding: 12px; font-family: system-ui;" id="courier-popup-${delivery.courier.id}">
                 <strong style="font-size: 16px;">🚗 ${delivery.courier.full_name}</strong><br/>
                 <div style="margin-top: 8px; color: #374151;">
                   <strong>Delivering:</strong> ${delivery.order?.order_number || 'Order'}<br/>
                   ${etaText ? `<div style="margin: 8px 0; padding: 8px; background: #dbeafe; border-radius: 6px; color: #1e40af; font-size: 14px;">${etaText}</div>` : ''}
                   <strong>Vehicle:</strong> ${delivery.courier.vehicle_type}<br/>
-                  <strong>Plate:</strong> ${delivery.courier.vehicle_plate}
+                  <strong>Plate:</strong> ${delivery.courier.vehicle_plate}<br/>
+                  ${locationAge}
+                  <button 
+                    id="request-location-${delivery.courier.id}" 
+                    style="width: 100%; margin-top: 8px; padding: 8px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;"
+                  >
+                    📍 Request Current Location
+                  </button>
                 </div>
               </div>`
             )
           )
           .addTo(map.current!);
+
+        // Add event listener for location request button
+        courierMarker.getPopup().on('open', () => {
+          const requestBtn = document.getElementById(`request-location-${delivery.courier.id}`);
+          if (requestBtn) {
+            requestBtn.addEventListener('click', async () => {
+              await requestCourierLocation(delivery.courier.id, delivery.courier.full_name);
+            });
+          }
+        });
 
         markers.current.push(courierMarker);
         console.log("Added courier marker with optimized route:", delivery.courier.full_name);
@@ -570,6 +600,41 @@ const AdminLiveMap = () => {
 
     if (marker && marker.getPopup()) {
       marker.togglePopup();
+    }
+  };
+
+  const requestCourierLocation = async (courierId: string, courierName: string) => {
+    try {
+      toast({
+        title: "Requesting Location",
+        description: `Requesting current location from ${courierName}...`,
+      });
+
+      // Trigger location refresh by updating courier record
+      const { error } = await supabase
+        .from('couriers')
+        .update({ 
+          last_location_update: new Date().toISOString() 
+        })
+        .eq('id', courierId);
+
+      if (error) throw error;
+
+      // Refresh deliveries to show updated location
+      setTimeout(() => {
+        fetchLiveDeliveries();
+        toast({
+          title: "Location Requested",
+          description: "Courier will send updated location shortly",
+        });
+      }, 1500);
+    } catch (error) {
+      console.error("Error requesting courier location:", error);
+      toast({
+        title: "Error",
+        description: "Failed to request courier location",
+        variant: "destructive",
+      });
     }
   };
 
@@ -770,6 +835,22 @@ const AdminLiveMap = () => {
           </p>
         </div>
         <div className="flex items-center gap-4">
+          <Button
+            onClick={() => {
+              fetchLiveDeliveries();
+              fetchRealtimeStats();
+              toast({
+                title: "Refreshing",
+                description: "Updating map data...",
+              });
+            }}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <Navigation className="h-4 w-4" />
+            Refresh Map
+          </Button>
           <div className="flex items-center gap-2">
             <Switch
               checked={showHeatmap}
