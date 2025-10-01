@@ -136,7 +136,15 @@ const Checkout = () => {
     setAddress(newAddress);
     if (lat) setAddressLat(lat);
     if (lng) setAddressLng(lng);
-    if (detectedBorough) setBorough(detectedBorough);
+    if (detectedBorough) {
+      setBorough(detectedBorough);
+      const boroughNames: Record<string, string> = {
+        brooklyn: "Brooklyn",
+        queens: "Queens",
+        manhattan: "Manhattan"
+      };
+      toast.success(`✓ ${boroughNames[detectedBorough]} detected - Delivery fee updated`);
+    }
   };
 
   const handlePlaceOrder = async () => {
@@ -599,12 +607,32 @@ const Checkout = () => {
                     <span>${subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Delivery Fee</span>
-                    <span>${deliveryFee.toFixed(2)}</span>
+                    <span className="flex items-center gap-2">
+                      Delivery Fee
+                      {courierAvailability !== undefined && courierAvailability < 5 && (
+                        <span className="text-xs px-1.5 py-0.5 bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded">
+                          High Demand
+                        </span>
+                      )}
+                    </span>
+                    <span className="font-semibold">${deliveryFee.toFixed(2)}</span>
                   </div>
-                  {borough === "manhattan" && (
-                    <div className="text-xs text-muted-foreground">
-                      Includes $5 Manhattan surcharge
+                  {borough && (
+                    <div className="text-xs text-muted-foreground space-y-0.5">
+                      {borough === "manhattan" && (
+                        <p>• Manhattan: +$5 base surcharge</p>
+                      )}
+                      {borough === "queens" && (
+                        <p>• Queens: +$2 base surcharge</p>
+                      )}
+                      {borough === "brooklyn" && (
+                        <p>• Brooklyn: Base delivery fee</p>
+                      )}
+                      {courierAvailability !== undefined && courierAvailability < 5 && (
+                        <p className="text-orange-600 dark:text-orange-400">
+                          • High demand: {courierAvailability < 3 ? '2x' : '1.5x'} multiplier ({courierAvailability} courier{courierAvailability !== 1 ? 's' : ''} available)
+                        </p>
+                      )}
                     </div>
                   )}
                   {promoDiscount > 0 && (
