@@ -160,37 +160,43 @@ const AdminLiveMap = () => {
     };
   }, [session]);
 
-  // Initialize map immediately when component mounts
+  // Initialize map when container is ready
   useEffect(() => {
-    if (map.current || !mapContainer.current) {
+    if (map.current) {
+      return; // Map already initialized
+    }
+
+    if (!mapContainer.current) {
+      console.log("Map container not ready yet");
       return;
     }
 
     console.log("Initializing Mapbox map...");
     try {
-      map.current = new mapboxgl.Map({
+      const mapInstance = new mapboxgl.Map({
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/streets-v11",
         center: [-73.98, 40.75], // Manhattan center
         zoom: 11,
       });
 
-      map.current.on('load', () => {
+      mapInstance.on('load', () => {
         console.log("Mapbox map loaded successfully");
+        map.current = mapInstance;
         setLoading(false);
       });
 
-      map.current.on('error', (e) => {
+      mapInstance.on('error', (e) => {
         console.error("Mapbox error:", e);
         setLoading(false);
       });
 
-      map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+      mapInstance.addControl(new mapboxgl.NavigationControl(), "top-right");
     } catch (error) {
       console.error("Failed to initialize map:", error);
       setLoading(false);
     }
-  }, []);
+  });
 
   // Cleanup on unmount
   useEffect(() => {
