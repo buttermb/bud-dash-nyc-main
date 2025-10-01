@@ -84,7 +84,7 @@ const Navigation = () => {
             <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center">
               <Leaf className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold hidden sm:inline">Network Minute</span>
+            <span className="text-xl font-bold hidden sm:inline">New York Minute</span>
           </a>
 
           {/* Desktop Navigation */}
