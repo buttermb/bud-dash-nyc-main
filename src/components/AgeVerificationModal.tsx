@@ -18,20 +18,18 @@ const AgeVerificationModal = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    // Only show to non-authenticated users
+    // Only show to non-authenticated users who haven't been age-verified
     if (!user) {
-      const verified = localStorage.getItem("age_verified");
-      if (!verified) {
-        setOpen(true);
-      }
+      // Remove localStorage check - age verification now requires real ID verification
+      setOpen(true);
     }
   }, [user]);
 
   const handleVerify = (isOver21: boolean) => {
     if (isOver21) {
-      localStorage.setItem("age_verified", "true");
+      // Remove localStorage - age verification now requires account creation and real ID verification
       setOpen(false);
-      // Prompt to sign up for full access
+      // Prompt to sign up for ID verification
       setTimeout(() => {
         setShowAuthModal(true);
       }, 500);
@@ -72,7 +70,7 @@ const AgeVerificationModal = () => {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground text-center pt-4">
-            You'll need to sign up or sign in to view products. By entering, you agree to our Terms of Service and Privacy Policy.
+            You'll need to create an account and verify your ID with a government-issued document. By entering, you agree to our Terms of Service and Privacy Policy.
           </p>
         </DialogContent>
       </Dialog>

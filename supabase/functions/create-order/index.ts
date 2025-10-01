@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { validateRateLimit, sanitizeString } from "../_shared/validation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,6 +49,22 @@ serve(async (req) => {
       });
     }
 
+    // Rate limiting: 10 orders per hour per user
+    const clientIP = req.headers.get("x-forwarded-for") || "unknown";
+    if (!validateRateLimit(`order:${user.id}`, 10, 3600000)) {
+      await supabase.from("security_events").insert({
+        event_type: "rate_limit_exceeded",
+        user_id: user.id,
+        ip_address: clientIP,
+        details: { action: "create_order" }
+      });
+      
+      return new Response(
+        JSON.stringify({ error: "Too many orders. Please try again later." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Parse and validate input
     const rawInput = await req.json();
     
@@ -67,8 +84,9 @@ serve(async (req) => {
     }
 
     const items = rawInput.items;
-    const addressId = String(rawInput.addressId || '').slice(0, 36);
-    const paymentMethod = String(rawInput.paymentMethod || '').slice(0, 20);
+    const addressId = sanitizeString(String(rawInput.addressId || ''), 36);
+    const paymentMethod = sanitizeString(String(rawInput.paymentMethod || ''), 20);
+    const deliveryNotes = rawInput.deliveryNotes ? sanitizeString(String(rawInput.deliveryNotes), 500) : undefined;
 
     if (!['cash', 'card', 'crypto'].includes(paymentMethod)) {
       return new Response(JSON.stringify({ error: "Invalid payment method" }), {

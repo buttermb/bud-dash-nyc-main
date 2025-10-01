@@ -71,8 +71,29 @@ export function sanitizeOrderInput(input: any): {
   };
 }
 
+// Simple in-memory rate limiting (use Redis in production)
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+
 export function validateRateLimit(identifier: string, limit: number, window: number): boolean {
-  // This would integrate with Redis in production
-  // For now, basic implementation
+  const now = Date.now();
+  const key = `${identifier}:${Math.floor(now / window)}`;
+  
+  const current = rateLimitStore.get(key);
+  
+  if (!current) {
+    rateLimitStore.set(key, { count: 1, resetAt: now + window });
+    return true;
+  }
+  
+  if (now > current.resetAt) {
+    rateLimitStore.set(key, { count: 1, resetAt: now + window });
+    return true;
+  }
+  
+  if (current.count >= limit) {
+    return false;
+  }
+  
+  current.count++;
   return true;
 }

@@ -854,6 +854,10 @@ export type Database = {
           id_document_url: string | null
           phone: string | null
           user_id: string
+          verification_approved_at: string | null
+          verification_rejected_at: string | null
+          verification_rejection_reason: string | null
+          verification_submitted_at: string | null
         }
         Insert: {
           age_verified?: boolean | null
@@ -862,6 +866,10 @@ export type Database = {
           id_document_url?: string | null
           phone?: string | null
           user_id: string
+          verification_approved_at?: string | null
+          verification_rejected_at?: string | null
+          verification_rejection_reason?: string | null
+          verification_submitted_at?: string | null
         }
         Update: {
           age_verified?: boolean | null
@@ -870,6 +878,10 @@ export type Database = {
           id_document_url?: string | null
           phone?: string | null
           user_id?: string
+          verification_approved_at?: string | null
+          verification_rejected_at?: string | null
+          verification_rejection_reason?: string | null
+          verification_submitted_at?: string | null
         }
         Relationships: []
       }
@@ -947,6 +959,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_events: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
