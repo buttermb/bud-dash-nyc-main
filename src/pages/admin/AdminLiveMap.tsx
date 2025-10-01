@@ -93,26 +93,27 @@ const AdminLiveMap = () => {
 
   // Initialize map with retry logic
   useEffect(() => {
-    // Delay initialization to ensure container is ready
-    const timer = setTimeout(() => {
-      if (!mapContainer.current) {
-        console.log("Map container not ready");
-        return;
-      }
+    let attempts = 0;
+    const maxAttempts = 20;
 
+    const tryInit = () => {
       if (map.current) {
         console.log("Map already initialized");
-        return;
+        return true;
+      }
+
+      if (!mapContainer.current) {
+        attempts++;
+        console.log("Map container not ready");
+        return attempts >= maxAttempts;
       }
 
       console.log("Initializing Mapbox map...");
-      
       try {
-        // Initialize map centered on New York
         map.current = new mapboxgl.Map({
-          container: mapContainer.current,
+          container: mapContainer.current!,
           style: "mapbox://styles/mapbox/dark-v11",
-          center: [-73.935242, 40.730610], // NYC coordinates
+          center: [-73.935242, 40.73061], // NYC coordinates
           zoom: 11,
         });
 
@@ -125,12 +126,25 @@ const AdminLiveMap = () => {
         });
 
         map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+        return true;
       } catch (error) {
         console.error("Failed to initialize map:", error);
+        return false;
       }
-    }, 100);
+    };
 
-    return () => clearTimeout(timer);
+    // Attempt immediately and then retry until success or attempts exhausted
+    let initialized = tryInit();
+    const intervalId = setInterval(() => {
+      if (!initialized) {
+        initialized = tryInit();
+      }
+      if (initialized) {
+        clearInterval(intervalId);
+      }
+    }, 300);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   // Cleanup on unmount

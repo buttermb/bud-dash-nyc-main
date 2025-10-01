@@ -129,11 +129,7 @@ serve(async (req) => {
         // Fetch all active orders (accepted, confirmed, preparing, out_for_delivery)
         const { data: orders, error: ordersError } = await supabase
           .from("orders")
-          .select(`
-            *,
-            addresses (*),
-            couriers (*)
-          `)
+          .select("*")
           .in("status", ["accepted", "confirmed", "preparing", "out_for_delivery"])
           .order("created_at", { ascending: false });
 
@@ -162,6 +158,18 @@ serve(async (req) => {
           ? await supabase.from("profiles").select("*").in("user_id", userIds)
           : { data: [] };
 
+        // Fetch addresses and couriers referenced by orders
+        const addressIds = [...new Set(orders?.map(o => o.address_id).filter(Boolean) || [])];
+        const courierIds = [...new Set(orders?.map(o => o.courier_id).filter(Boolean) || [])];
+
+        const { data: addresses } = addressIds.length > 0
+          ? await supabase.from("addresses").select("*").in("id", addressIds)
+          : { data: [] };
+
+        const { data: couriers } = courierIds.length > 0
+          ? await supabase.from("couriers").select("*").in("id", courierIds)
+          : { data: [] };
+
         // Fetch order items
         const { data: orderItems } = orderIds.length > 0
           ? await supabase
@@ -176,19 +184,21 @@ serve(async (req) => {
         // Transform orders into delivery format for the map
         const enrichedDeliveries = orders?.map(order => {
           const delivery = deliveries?.find(d => d.order_id === order.id);
+          const address = addresses?.find(a => a.id === order.address_id) || null;
+          const courier = couriers?.find(c => c.id === order.courier_id) || null;
           return {
             id: delivery?.id || order.id,
             order_id: order.id,
             courier_id: order.courier_id,
             pickup_lat: delivery?.pickup_lat || 40.7589, // NYC default
             pickup_lng: delivery?.pickup_lng || -73.9851,
-            dropoff_lat: order.addresses?.lat || delivery?.dropoff_lat || 40.7589,
-            dropoff_lng: order.addresses?.lng || delivery?.dropoff_lng || -73.9851,
+            dropoff_lat: (address?.lat as any) || delivery?.dropoff_lat || 40.7589,
+            dropoff_lng: (address?.lng as any) || delivery?.dropoff_lng || -73.9851,
             estimated_pickup_time: delivery?.estimated_pickup_time,
             estimated_dropoff_time: delivery?.estimated_dropoff_time || order.estimated_delivery,
             actual_pickup_time: delivery?.actual_pickup_time,
             created_at: delivery?.created_at || order.created_at,
-            courier: order.couriers || null,
+            courier: courier,
             order: {
               ...order,
               user: profiles?.find(p => p.user_id === order.user_id) || null,
