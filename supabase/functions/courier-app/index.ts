@@ -253,7 +253,41 @@ serve(async (req) => {
           status: "preparing"
         })
         .eq("id", orderId)
-        .select()
+        .select(`
+          *,
+          merchants (
+            id,
+            business_name,
+            address,
+            phone,
+            latitude,
+            longitude
+          ),
+          addresses (
+            street,
+            apartment,
+            city,
+            state,
+            zip_code,
+            borough,
+            latitude,
+            longitude
+          ),
+          order_items (
+            id,
+            quantity,
+            price,
+            subtotal,
+            special_instructions,
+            product_name,
+            products (
+              id,
+              name,
+              image_url,
+              description
+            )
+          )
+        `)
         .single();
 
       await supabase

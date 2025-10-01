@@ -207,20 +207,18 @@ export default function CourierDashboard() {
         body: { endpoint: 'accept-order', order_id: orderId }
       });
       if (error) throw error;
-      return { orderId };
+      return data;
     },
-    onSuccess: async ({ orderId }) => {
-      // Fetch full order details
-      const { data } = await supabase.functions.invoke('courier-app', {
-        body: { endpoint: 'my-orders', status: 'active' }
-      });
+    onSuccess: async (data) => {
+      console.log('Order accepted successfully:', data);
       
-      const fullOrder = data?.orders?.find((o: Order) => o.id === orderId);
+      const fullOrder = data?.order;
       
       if (fullOrder) {
+        console.log('Setting modal with order:', fullOrder);
         setAcceptedOrder(fullOrder);
         setShowAcceptedModal(true);
-        setExpandedOrderId(orderId);
+        setExpandedOrderId(fullOrder.id);
         
         // Auto-open maps if enabled
         if (autoOpenMaps && fullOrder.pickup_lat && fullOrder.pickup_lng) {
@@ -228,12 +226,15 @@ export default function CourierDashboard() {
             openNavigation(fullOrder, 'pickup');
           }, 1500);
         }
+      } else {
+        console.error('No order in response:', data);
       }
       
       queryClient.invalidateQueries({ queryKey: ['courier-my-orders'] });
       queryClient.invalidateQueries({ queryKey: ['courier-available-orders'] });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Accept order error:', error);
       toast.error("Order no longer available - someone else accepted it!");
     }
   });
