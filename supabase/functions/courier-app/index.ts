@@ -229,6 +229,7 @@ serve(async (req) => {
 
     if (endpoint === "accept-order") {
       const orderId = body.order_id;
+      console.log('Accept order request for:', orderId);
 
       const { data: order } = await supabase
         .from("orders")
@@ -238,13 +239,15 @@ serve(async (req) => {
         .maybeSingle();
 
       if (!order) {
+        console.log('Order not available or already assigned');
         return new Response(
           JSON.stringify({ error: "Order no longer available" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      const { data: updatedOrder } = await supabase
+      console.log('Updating order and fetching full details...');
+      const { data: updatedOrder, error: updateError } = await supabase
         .from("orders")
         .update({
           courier_id: courier.id,
@@ -290,6 +293,16 @@ serve(async (req) => {
         `)
         .single();
 
+      if (updateError) {
+        console.error('Error updating order:', updateError);
+        return new Response(
+          JSON.stringify({ error: updateError.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      console.log('✅ Order updated successfully:', updatedOrder);
+
       await supabase
         .from("order_tracking")
         .insert({
@@ -298,6 +311,7 @@ serve(async (req) => {
           message: `Courier ${courier.full_name} accepted the order`
         });
 
+      console.log('Returning response with full order data');
       return new Response(
         JSON.stringify({ 
           success: true,

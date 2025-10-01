@@ -203,38 +203,48 @@ export default function CourierDashboard() {
   // Accept order mutation
   const acceptOrderMutation = useMutation({
     mutationFn: async (orderId: string) => {
+      console.log('🚀 Accepting order:', orderId);
       const { data, error } = await supabase.functions.invoke('courier-app', {
         body: { endpoint: 'accept-order', order_id: orderId }
       });
+      console.log('📦 Accept order response:', { data, error });
       if (error) throw error;
       return data;
     },
     onSuccess: async (data) => {
-      console.log('Order accepted successfully:', data);
+      console.log('✅ Accept order SUCCESS, data:', data);
       
       const fullOrder = data?.order;
+      console.log('🔍 Extracted fullOrder:', fullOrder);
       
       if (fullOrder) {
-        console.log('Setting modal with order:', fullOrder);
+        console.log('🎉 Setting modal states...');
+        console.log('  - acceptedOrder:', fullOrder);
+        console.log('  - showAcceptedModal: true');
+        console.log('  - expandedOrderId:', fullOrder.id);
+        
         setAcceptedOrder(fullOrder);
         setShowAcceptedModal(true);
         setExpandedOrderId(fullOrder.id);
         
+        console.log('✅ Modal states set! Modal should appear now.');
+        
         // Auto-open maps if enabled
         if (autoOpenMaps && fullOrder.pickup_lat && fullOrder.pickup_lng) {
+          console.log('🗺️ Auto-opening maps in 1.5s...');
           setTimeout(() => {
             openNavigation(fullOrder, 'pickup');
           }, 1500);
         }
       } else {
-        console.error('No order in response:', data);
+        console.error('❌ No order found in response data:', data);
       }
       
       queryClient.invalidateQueries({ queryKey: ['courier-my-orders'] });
       queryClient.invalidateQueries({ queryKey: ['courier-available-orders'] });
     },
     onError: (error) => {
-      console.error('Accept order error:', error);
+      console.error('❌ Accept order ERROR:', error);
       toast.error("Order no longer available - someone else accepted it!");
     }
   });
