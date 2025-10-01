@@ -129,6 +129,9 @@ const Checkout = () => {
     try {
       // First create/update address record if we have coordinates
       let addressId = null;
+      let dropoffLat = addressLat;
+      let dropoffLng = addressLng;
+      
       if (addressLat && addressLng) {
         const { data: addressData, error: addressError } = await supabase
           .from("addresses")
@@ -138,9 +141,9 @@ const Checkout = () => {
             borough: borough,
             city: "New York",
             state: "NY",
-            zip_code: "00000", // Will be updated later
-            lat: addressLat,
-            lng: addressLng,
+            zip_code: "00000",
+            latitude: addressLat,
+            longitude: addressLng,
             is_default: false,
           })
           .select()
@@ -153,10 +156,24 @@ const Checkout = () => {
         }
       }
 
+      // Get merchant data for pickup location (use first product's merchant)
+      const firstItem = cartItems[0];
+      const { data: product } = await supabase
+        .from("products")
+        .select("merchant_id, merchants(id, business_name, address, latitude, longitude)")
+        .eq("id", firstItem.product_id)
+        .single();
+
+      const merchant = product?.merchants;
+      const pickupLat = merchant?.latitude;
+      const pickupLng = merchant?.longitude;
+
+      // Create order with all location data
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
           user_id: user.id,
+          merchant_id: merchant?.id,
           delivery_address: address,
           delivery_borough: borough,
           address_id: addressId,
@@ -166,6 +183,11 @@ const Checkout = () => {
           total_amount: total,
           scheduled_delivery_time: getScheduledDateTime(),
           delivery_notes: notes || null,
+          status: 'pending',
+          pickup_lat: pickupLat,
+          pickup_lng: pickupLng,
+          dropoff_lat: dropoffLat,
+          dropoff_lng: dropoffLng,
         })
         .select()
         .single();
