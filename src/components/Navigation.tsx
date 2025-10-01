@@ -125,7 +125,10 @@ const Navigation = () => {
                     </DropdownMenuItem>
                     <DropdownMenuItem>Profile Settings</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={signOut}>
+                    <DropdownMenuItem onClick={async () => {
+                      await signOut();
+                      navigate("/");
+                    }}>
                       Sign Out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -171,7 +174,10 @@ const Navigation = () => {
                     </a>
                   ))}
                   {user ? (
-                    <Button variant="outline" onClick={signOut}>
+                    <Button variant="outline" onClick={async () => {
+                      await signOut();
+                      navigate("/");
+                    }}>
                       Sign Out
                     </Button>
                   ) : (

@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -42,6 +42,7 @@ const menuItems = [
 export function AdminSidebar() {
   const { state } = useSidebar();
   const { admin, signOut } = useAdmin();
+  const navigate = useNavigate();
   const isCollapsed = state === "collapsed";
 
   return (
@@ -91,7 +92,10 @@ export function AdminSidebar() {
         <Button
           variant="ghost"
           className="w-full justify-start"
-          onClick={signOut}
+          onClick={async () => {
+            await signOut();
+            navigate("/admin/login");
+          }}
         >
           <LogOut className="h-4 w-4" />
           {!isCollapsed && <span className="ml-2">Sign Out</span>}
