@@ -38,8 +38,18 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
     enabled: !!user,
   });
 
+  const getItemPrice = (item: any) => {
+    const product = item.products;
+    const selectedWeight = item.selected_weight || "unit";
+    
+    if (product?.prices && typeof product.prices === 'object') {
+      return product.prices[selectedWeight] || product.price || 0;
+    }
+    return product?.price || 0;
+  };
+
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + (item.products?.price || 0) * item.quantity,
+    (sum, item) => sum + getItemPrice(item) * item.quantity,
     0
   );
 
@@ -102,58 +112,76 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
         ) : (
           <>
             <div className="flex-1 overflow-y-auto space-y-4 py-4">
-              {cartItems.map((item) => (
-                <div key={item.id} className="flex gap-4">
-                  <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="text-3xl">🌿</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-sm truncate">
-                      {item.products?.name}
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      ${item.products?.price?.toFixed(2)} each
-                    </p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() =>
-                          updateQuantity(item.id, Math.max(1, item.quantity - 1))
-                        }
-                        disabled={item.quantity <= 1}
-                      >
-                        <Minus className="w-3 h-3" />
-                      </Button>
-                      <span className="text-sm font-medium w-8 text-center">
-                        {item.quantity}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      >
-                        <Plus className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 ml-auto"
-                        onClick={() => removeItem(item.id)}
-                      >
-                        <Trash2 className="w-3 h-3 text-destructive" />
-                      </Button>
+              {cartItems.map((item) => {
+                const itemPrice = getItemPrice(item);
+                const selectedWeight = item.selected_weight || "unit";
+                
+                return (
+                  <div key={item.id} className="flex gap-4">
+                    <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                      {item.products?.image_url ? (
+                        <img 
+                          src={item.products.image_url} 
+                          alt={item.products.name}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <span className="text-3xl">🌿</span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-sm truncate">
+                        {item.products?.name}
+                      </h4>
+                      {selectedWeight !== "unit" && (
+                        <p className="text-xs text-muted-foreground">
+                          Weight: {selectedWeight}
+                        </p>
+                      )}
+                      <p className="text-sm text-muted-foreground">
+                        ${itemPrice.toFixed(2)} each
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() =>
+                            updateQuantity(item.id, Math.max(1, item.quantity - 1))
+                          }
+                          disabled={item.quantity <= 1}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="text-sm font-medium w-8 text-center">
+                          {item.quantity}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 ml-auto"
+                          onClick={() => removeItem(item.id)}
+                        >
+                          <Trash2 className="w-3 h-3 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">
+                        ${(itemPrice * item.quantity).toFixed(2)}
+                      </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold">
-                      ${((item.products?.price || 0) * item.quantity).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="space-y-4 border-t pt-4">

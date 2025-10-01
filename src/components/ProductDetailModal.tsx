@@ -2,7 +2,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Minus, Plus, ShoppingCart, Loader2, Package, FileText } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,9 +18,20 @@ interface ProductDetailModalProps {
 export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired }: ProductDetailModalProps) => {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [selectedWeight, setSelectedWeight] = useState<string>("");
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Initialize selected weight when modal opens or product changes
+  useEffect(() => {
+    if (product?.prices && typeof product.prices === 'object') {
+      const weights = Object.keys(product.prices);
+      if (weights.length > 0) {
+        setSelectedWeight(weights[0]);
+      }
+    }
+  }, [product, open]);
 
   const handleAddToCart = async () => {
     if (!user) {
@@ -39,11 +50,13 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
 
     setLoading(true);
     try {
+      // Check for existing item with same weight
       const { data: existingItem } = await supabase
         .from("cart_items")
         .select("*")
         .eq("user_id", user.id)
         .eq("product_id", product.id)
+        .eq("selected_weight", selectedWeight || "unit")
         .maybeSingle();
 
       if (existingItem) {
@@ -61,6 +74,7 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
             user_id: user.id,
             product_id: product.id,
             quantity: quantity,
+            selected_weight: selectedWeight || "unit",
           });
 
         if (error) throw error;
@@ -71,7 +85,7 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
       
       toast({
         title: "Added to cart!",
-        description: `${product.name} has been added to your cart.`,
+        description: `${product.name} (${selectedWeight || "unit"}) has been added to your cart.`,
       });
 
       onOpenChange(false);
@@ -93,6 +107,25 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
     if (product.stock <= 5) return { text: "Low Stock", color: "bg-warning/10 text-warning" };
     return { text: "In Stock", color: "bg-success/10 text-success" };
   };
+
+  // Get current price based on selected weight
+  const getCurrentPrice = () => {
+    if (product.prices && typeof product.prices === 'object') {
+      return product.prices[selectedWeight] || product.price;
+    }
+    return product.price;
+  };
+
+  // Get available weights
+  const getWeights = () => {
+    if (product.prices && typeof product.prices === 'object') {
+      return Object.keys(product.prices);
+    }
+    return [];
+  };
+
+  const weights = getWeights();
+  const currentPrice = getCurrentPrice();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -144,6 +177,27 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
               )}
             </div>
 
+            {/* Weight Selection - Only for products with multiple weights */}
+            {weights.length > 1 && (
+              <div className="mb-6">
+                <label className="block text-sm font-semibold mb-3">
+                  Select Weight:
+                </label>
+                <div className="grid grid-cols-4 gap-3">
+                  {weights.map((weight) => (
+                    <Button
+                      key={weight}
+                      variant={selectedWeight === weight ? "default" : "outline"}
+                      onClick={() => setSelectedWeight(weight)}
+                      className="font-semibold"
+                    >
+                      {weight}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Stock Status */}
             <div className="mb-6">
               <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium ${getStockStatus().color}`}>
@@ -154,7 +208,7 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
 
             {/* Price */}
             <div className="text-4xl font-bold text-primary mb-6">
-              ${Number(product.price).toFixed(2)}
+              ${Number(currentPrice).toFixed(2)}
             </div>
 
             {/* Quantity Control */}

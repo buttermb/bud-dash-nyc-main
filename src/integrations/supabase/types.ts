@@ -306,6 +306,7 @@ export type Database = {
           id: string
           product_id: string
           quantity: number
+          selected_weight: string | null
           user_id: string
         }
         Insert: {
@@ -313,6 +314,7 @@ export type Database = {
           id?: string
           product_id: string
           quantity?: number
+          selected_weight?: string | null
           user_id: string
         }
         Update: {
@@ -320,6 +322,7 @@ export type Database = {
           id?: string
           product_id?: string
           quantity?: number
+          selected_weight?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1376,6 +1379,7 @@ export type Database = {
           merchant_id: string | null
           name: string
           price: number
+          prices: Json | null
           review_count: number | null
           strain_info: string | null
           strain_lineage: string | null
@@ -1403,6 +1407,7 @@ export type Database = {
           merchant_id?: string | null
           name: string
           price: number
+          prices?: Json | null
           review_count?: number | null
           strain_info?: string | null
           strain_lineage?: string | null
@@ -1430,6 +1435,7 @@ export type Database = {
           merchant_id?: string | null
           name?: string
           price?: number
+          prices?: Json | null
           review_count?: number | null
           strain_info?: string | null
           strain_lineage?: string | null

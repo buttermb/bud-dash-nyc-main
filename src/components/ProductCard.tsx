@@ -61,11 +61,17 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
 
     setLoading(true);
     try {
+      // Get default weight for products with weight options
+      const defaultWeight = product.prices && typeof product.prices === 'object' 
+        ? Object.keys(product.prices)[0] 
+        : "unit";
+
       const { data: existing } = await supabase
         .from("cart_items")
         .select("*")
         .eq("user_id", user.id)
         .eq("product_id", product.id)
+        .eq("selected_weight", defaultWeight)
         .maybeSingle();
 
       if (existing) {
@@ -82,6 +88,7 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
             user_id: user.id,
             product_id: product.id,
             quantity: quantity,
+            selected_weight: defaultWeight,
           });
         
         if (error) throw error;
@@ -176,7 +183,13 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
                 {product.thca_percentage}% THCa
               </span>
             )}
-            <span className="text-xl font-bold">${Number(product.price).toFixed(2)}</span>
+            {product.prices && typeof product.prices === 'object' && Object.keys(product.prices).length > 1 ? (
+              <span className="text-xl font-bold">
+                From ${Number(Math.min(...Object.values(product.prices).map(p => Number(p)))).toFixed(2)}
+              </span>
+            ) : (
+              <span className="text-xl font-bold">${Number(product.price).toFixed(2)}</span>
+            )}
           </div>
 
           {product.description && (

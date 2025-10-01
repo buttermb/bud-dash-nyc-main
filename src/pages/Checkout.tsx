@@ -67,8 +67,18 @@ const Checkout = () => {
     enabled: !!user,
   });
 
+  const getItemPrice = (item: any) => {
+    const product = item.products;
+    const selectedWeight = item.selected_weight || "unit";
+    
+    if (product?.prices && typeof product.prices === 'object') {
+      return product.prices[selectedWeight] || product.price || 0;
+    }
+    return product?.price || 0;
+  };
+
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + (item.products?.price || 0) * item.quantity,
+    (sum, item) => sum + getItemPrice(item) * item.quantity,
     0
   );
 
@@ -248,7 +258,7 @@ const Checkout = () => {
         order_id: order.id,
         product_id: item.product_id,
         quantity: item.quantity,
-        price: item.products?.price || 0,
+        price: getItemPrice(item),
         product_name: item.products?.name || "",
       }));
 
@@ -645,16 +655,26 @@ const Checkout = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  {cartItems.map((item) => (
-                    <div key={item.id} className="flex justify-between text-sm">
-                      <span>
-                        {item.products?.name} x{item.quantity}
-                      </span>
-                      <span>
-                        ${((item.products?.price || 0) * item.quantity).toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
+                  {cartItems.map((item) => {
+                    const itemPrice = getItemPrice(item);
+                    const selectedWeight = item.selected_weight || "unit";
+                    
+                    return (
+                      <div key={item.id} className="flex justify-between text-sm">
+                        <span>
+                          {item.products?.name} x{item.quantity}
+                          {selectedWeight !== "unit" && (
+                            <span className="text-muted-foreground ml-1">
+                              ({selectedWeight})
+                            </span>
+                          )}
+                        </span>
+                        <span>
+                          ${(itemPrice * item.quantity).toFixed(2)}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <Separator />
