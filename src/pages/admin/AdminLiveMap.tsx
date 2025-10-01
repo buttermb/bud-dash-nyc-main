@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { MapPin, Truck, Package, Clock, DollarSign, Users, Navigation, UserPlus, CheckCircle2 } from "lucide-react";
+import { MapPin, Truck, Package, Clock, DollarSign, Users, Navigation, UserPlus, CheckCircle2, Shield } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AssignCourierDialog } from "@/components/admin/AssignCourierDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -102,7 +102,6 @@ const AdminLiveMap = () => {
   useEffect(() => {
     if (!session) {
       console.log("No session available, skipping data fetch");
-      setLoading(false);
       return;
     }
 
@@ -161,60 +160,36 @@ const AdminLiveMap = () => {
     };
   }, [session]);
 
-  // Initialize map with retry logic
+  // Initialize map immediately when component mounts
   useEffect(() => {
-    let attempts = 0;
-    const maxAttempts = 20;
+    if (map.current || !mapContainer.current) {
+      return;
+    }
 
-    const tryInit = () => {
-      if (map.current) {
-        console.log("Map already initialized");
-        return true;
-      }
+    console.log("Initializing Mapbox map...");
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/streets-v11",
+        center: [-73.98, 40.75], // Manhattan center
+        zoom: 11,
+      });
 
-      if (!mapContainer.current) {
-        attempts++;
-        console.log("Map container not ready");
-        return attempts >= maxAttempts;
-      }
+      map.current.on('load', () => {
+        console.log("Mapbox map loaded successfully");
+        setLoading(false);
+      });
 
-      console.log("Initializing Mapbox map...");
-      try {
-        map.current = new mapboxgl.Map({
-          container: mapContainer.current!,
-          style: "mapbox://styles/mapbox/streets-v11",
-          center: [-73.98, 40.75], // Manhattan center
-          zoom: 12,
-        });
+      map.current.on('error', (e) => {
+        console.error("Mapbox error:", e);
+        setLoading(false);
+      });
 
-        map.current.on('load', () => {
-          console.log("Mapbox map loaded successfully");
-        });
-
-        map.current.on('error', (e) => {
-          console.error("Mapbox error:", e);
-        });
-
-        map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
-        return true;
-      } catch (error) {
-        console.error("Failed to initialize map:", error);
-        return false;
-      }
-    };
-
-    // Attempt immediately and then retry until success or attempts exhausted
-    let initialized = tryInit();
-    const intervalId = setInterval(() => {
-      if (!initialized) {
-        initialized = tryInit();
-      }
-      if (initialized) {
-        clearInterval(intervalId);
-      }
-    }, 300);
-
-    return () => clearInterval(intervalId);
+      map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+    } catch (error) {
+      console.error("Failed to initialize map:", error);
+      setLoading(false);
+    }
   }, []);
 
   // Cleanup on unmount
@@ -653,8 +628,32 @@ const AdminLiveMap = () => {
   if (loading) {
     return (
       <div className="p-6 space-y-6">
-        <Skeleton className="h-8 w-64" />
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-96" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
         <Skeleton className="h-[600px] w-full" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-lg font-semibold">Authentication Required</p>
+            <p className="text-sm text-muted-foreground">
+              Please log in to view the live delivery map
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -762,7 +761,9 @@ const AdminLiveMap = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Avg Delivery</p>
-                  <p className="text-2xl font-bold">{stats.avgDeliveryTime}m</p>
+                  <p className="text-2xl font-bold">
+                    {stats.avgDeliveryTime > 0 ? `${stats.avgDeliveryTime}m` : 'N/A'}
+                  </p>
                 </div>
                 <Navigation className="h-8 w-8 text-indigo-500" />
               </div>

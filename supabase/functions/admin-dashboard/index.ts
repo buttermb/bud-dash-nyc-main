@@ -448,27 +448,35 @@ serve(async (req) => {
       // Calculate average delivery time (using actual pickup to actual dropoff)
       const { data: recentDeliveries } = await supabase
         .from("deliveries")
-        .select("estimated_pickup_time, actual_pickup_time, actual_dropoff_time, created_at")
+        .select("actual_pickup_time, actual_dropoff_time, created_at")
         .not("actual_dropoff_time", "is", null)
+        .not("created_at", "is", null)
         .gte("actual_dropoff_time", hourAgo.toISOString());
 
       let avgDeliveryTime = 0;
       if (recentDeliveries && recentDeliveries.length > 0) {
-        const validDeliveries = recentDeliveries.filter(del => {
-          if (!del.actual_dropoff_time) return false;
-          // Use actual_pickup_time if available, otherwise use created_at as fallback
-          const startTime = del.actual_pickup_time || del.created_at;
-          if (!startTime) return false;
-          const diff = new Date(del.actual_dropoff_time).getTime() - new Date(startTime).getTime();
-          return diff > 0; // Only count positive delivery times
-        });
+        const validDeliveries = recentDeliveries
+          .map(del => {
+            // Use actual_pickup_time if available, otherwise use created_at as fallback
+            const startTime = del.actual_pickup_time || del.created_at;
+            const endTime = del.actual_dropoff_time;
+            
+            if (!startTime || !endTime) return null;
+            
+            const startMs = new Date(startTime).getTime();
+            const endMs = new Date(endTime).getTime();
+            const diffMinutes = (endMs - startMs) / 1000 / 60;
+            
+            // Only accept delivery times between 5 minutes and 4 hours (240 minutes)
+            if (diffMinutes > 5 && diffMinutes < 240) {
+              return diffMinutes;
+            }
+            return null;
+          })
+          .filter((time): time is number => time !== null);
         
         if (validDeliveries.length > 0) {
-          const totalMinutes = validDeliveries.reduce((sum, del) => {
-            const startTime = del.actual_pickup_time || del.created_at;
-            const diff = new Date(del.actual_dropoff_time).getTime() - new Date(startTime).getTime();
-            return sum + (diff / 1000 / 60);
-          }, 0);
+          const totalMinutes = validDeliveries.reduce((sum, minutes) => sum + minutes, 0);
           avgDeliveryTime = Math.round(totalMinutes / validDeliveries.length);
         }
       }

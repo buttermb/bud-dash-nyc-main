@@ -108,8 +108,19 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
+    if (cartItems.length === 0) {
+      toast.error("Your cart is empty");
+      navigate("/");
+      return;
+    }
+
     if (!address || !borough) {
       toast.error("Please enter a delivery address and select borough");
+      return;
+    }
+
+    if (deliveryType === "scheduled" && (!selectedDate || !selectedTimeSlot)) {
+      toast.error("Please select a delivery date and time slot");
       return;
     }
 
