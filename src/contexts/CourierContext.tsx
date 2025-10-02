@@ -48,6 +48,7 @@ export function CourierProvider({ children }: { children: React.ReactNode }) {
 
     let lastLat: number | null = null;
     let lastLng: number | null = null;
+    let hasLoggedGeoError = false;
 
     // Watch position with high accuracy and frequent updates
     const watchId = navigator.geolocation.watchPosition(
@@ -88,7 +89,13 @@ export function CourierProvider({ children }: { children: React.ReactNode }) {
             console.log('📍 Got current position:', { latitude, longitude });
             updateLocation(latitude, longitude);
           },
-          (error) => console.error('Failed to get current position:', error),
+          (error) => {
+            // Only log geolocation errors once to avoid console spam
+            if (!hasLoggedGeoError) {
+              console.warn('Geolocation unavailable. Location tracking disabled.', error.message);
+              hasLoggedGeoError = true;
+            }
+          },
           { enableHighAccuracy: true, timeout: 5000 }
         );
       }

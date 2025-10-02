@@ -36,7 +36,7 @@ const Checkout = () => {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
   const [notes, setNotes] = useState("");
-  const [zipcode, setZipcode] = useState("");
+  const [detectedZipcode, setDetectedZipcode] = useState("");
   
   // Guest checkout fields
   const [guestName, setGuestName] = useState("");
@@ -166,6 +166,13 @@ const Checkout = () => {
     setAddress(newAddress);
     if (lat) setAddressLat(lat);
     if (lng) setAddressLng(lng);
+    
+    // Auto-extract ZIP code from address
+    const zipMatch = newAddress.match(/\b\d{5}\b/);
+    if (zipMatch) {
+      setDetectedZipcode(zipMatch[0]);
+    }
+    
     if (detectedBorough) {
       setBorough(detectedBorough);
       const boroughNames: Record<string, string> = {
@@ -692,58 +699,47 @@ const Checkout = () => {
                   )}
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="zipcode">ZIP Code *</Label>
-                    <Input
-                      id="zipcode"
-                      type="text"
-                      placeholder="10001"
-                      value={zipcode}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '').slice(0, 5);
-                        setZipcode(value);
-                      }}
-                      maxLength={5}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Delivery Notes</Label>
-                    <Input
-                      id="notes"
-                      placeholder="Apt #, building instructions"
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Delivery Notes (Optional)</Label>
+                  <Input
+                    id="notes"
+                    placeholder="Apt #, building instructions, buzzer code"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
                 </div>
 
-                {zipcode.length === 5 && (
-                  <Card className="border-2 animate-in fade-in-50 duration-300">
-                    <CardContent className="pt-4">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-16 h-16 ${getRiskColor(getNeighborhoodFromZip(zipcode).risk)} rounded-lg flex flex-col items-center justify-center text-white flex-shrink-0`}>
-                          <div className="text-2xl font-bold">{getNeighborhoodFromZip(zipcode).risk}</div>
-                          <div className="text-xs">/10</div>
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-semibold text-lg">{getNeighborhoodFromZip(zipcode).name}</div>
-                          <div className="text-sm text-muted-foreground">{getNeighborhoodFromZip(zipcode).borough}</div>
-                          <div className={`text-sm font-semibold mt-1 flex items-center gap-2 ${getRiskTextColor(getNeighborhoodFromZip(zipcode).risk)}`}>
-                            <AlertTriangle className="w-4 h-4" />
-                            {getRiskLabel(getNeighborhoodFromZip(zipcode).risk)} Delivery Zone
+                {detectedZipcode.length === 5 && (() => {
+                  const neighborhood = getNeighborhoodFromZip(detectedZipcode);
+                  if (!neighborhood) return null;
+                  
+                  return (
+                    <Card className="border-2 animate-in fade-in-50 duration-300">
+                      <CardContent className="pt-4">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-16 h-16 ${getRiskColor(neighborhood.risk)} rounded-lg flex flex-col items-center justify-center text-white flex-shrink-0`}>
+                            <div className="text-2xl font-bold">{neighborhood.risk}</div>
+                            <div className="text-xs">/10</div>
                           </div>
-                        </div>
-                        {getNeighborhoodFromZip(zipcode).risk >= 7 && (
-                          <div className="text-xs bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 px-3 py-2 rounded-lg">
-                            <div className="font-bold">High Risk Area</div>
-                            <div>Extra verification required</div>
+                          <div className="flex-1">
+                            <div className="font-semibold text-lg">{neighborhood.name}</div>
+                            <div className="text-sm text-muted-foreground">{neighborhood.borough}</div>
+                            <div className={`text-sm font-semibold mt-1 flex items-center gap-2 ${getRiskTextColor(neighborhood.risk)}`}>
+                              <AlertTriangle className="w-4 h-4" />
+                              {getRiskLabel(neighborhood.risk)} Delivery Zone
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                          {neighborhood.risk >= 7 && (
+                            <div className="text-xs bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 px-3 py-2 rounded-lg">
+                              <div className="font-bold">High Risk Area</div>
+                              <div>Extra verification required</div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
               </CardContent>
             </Card>
 
