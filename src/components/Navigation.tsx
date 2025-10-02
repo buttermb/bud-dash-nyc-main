@@ -41,6 +41,20 @@ const Navigation = () => {
   });
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  
+  const getItemPrice = (item: any) => {
+    const product = item.products;
+    const selectedWeight = item.selected_weight || "unit";
+    if (product?.prices && typeof product.prices === 'object') {
+      return product.prices[selectedWeight] || product.price || 0;
+    }
+    return product?.price || 0;
+  };
+
+  const cartTotal = cartItems.reduce(
+    (sum, item) => sum + getItemPrice(item) * item.quantity,
+    0
+  );
 
 
   const openAuth = (mode: "signin" | "signup") => {
@@ -113,17 +127,42 @@ const Navigation = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            {/* Sticky Cart Preview */}
+            <Button
+              variant="outline"
+              className="relative gap-2 hidden sm:flex"
+              onClick={() => user ? setShowCart(true) : openAuth("signin")}
+            >
+              <ShoppingCart className="w-5 h-5" />
+              <div className="flex flex-col items-start">
+                <span className="text-xs font-semibold">
+                  {cartCount} {cartCount === 1 ? 'item' : 'items'}
+                </span>
+                {cartTotal > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    ${cartTotal.toFixed(2)}
+                  </span>
+                )}
+              </div>
+              {cartCount > 0 && (
+                <Badge variant="default" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0">
+                  {cartCount}
+                </Badge>
+              )}
+            </Button>
+
+            {/* Mobile Cart Icon */}
             <Button
               variant="ghost"
               size="icon"
-              className="relative"
+              className="relative sm:hidden"
               onClick={() => user ? setShowCart(true) : openAuth("signin")}
             >
               <ShoppingCart className="w-5 h-5" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
+                <Badge variant="default" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
                   {cartCount}
-                </span>
+                </Badge>
               )}
             </Button>
 

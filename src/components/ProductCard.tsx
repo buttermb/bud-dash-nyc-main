@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Plus, Minus, Check, Star, Flame, Sparkles, Loader2, AlertCircle } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Check, Star, Flame, Sparkles, Loader2, AlertCircle, Award } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -161,17 +161,22 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
           </div>
         )}
 
-        {/* Category Badge */}
-        <div className="absolute top-3 left-3 z-20">
+        {/* Badge Stack */}
+        <div className="absolute top-3 left-3 z-20 flex flex-col gap-2">
           <Badge className={`${getCategoryColor()} uppercase text-xs font-bold`}>
             {product.category}
+          </Badge>
+          {/* Lab Test Badge - Always Visible */}
+          <Badge className="bg-primary/90 text-primary-foreground flex items-center gap-1 backdrop-blur-sm">
+            <Award className="w-3 h-3" />
+            Lab Tested
           </Badge>
         </div>
 
         {/* Product Badge */}
         {badge && (
           <div className="absolute top-3 right-3 z-20">
-            <Badge className={`${badge.className} flex items-center gap-1`}>
+            <Badge className={`${badge.className} flex items-center gap-1 backdrop-blur-sm`}>
               <badge.icon className="w-3 h-3" />
               {badge.text}
             </Badge>

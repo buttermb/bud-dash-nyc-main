@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -547,7 +548,17 @@ const Checkout = () => {
 
                 {/* Delivery Timing */}
                 <div className="space-y-4">
-                  <Label>Delivery Speed</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Delivery Speed</Label>
+                    {deliveryType && (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {deliveryType === "express" && "~25-45 min"}
+                        {deliveryType === "standard" && "~45-90 min"}
+                        {deliveryType === "economy" && "Scheduled"}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="space-y-3">
                     <button
                       type="button"
@@ -564,7 +575,10 @@ const Checkout = () => {
                           <Zap className="w-5 h-5 text-primary" />
                         </div>
                         <div className="text-left">
-                          <h4 className="font-semibold">Express - 45 min or less</h4>
+                          <h4 className="font-semibold flex items-center gap-2">
+                            Express
+                            <span className="text-xs font-normal text-primary">~25-45 min</span>
+                          </h4>
                           <p className="text-xs text-muted-foreground">
                             {subtotal >= 500 ? 'FREE!' : subtotal >= 100 ? '+30% delivery fee' : '+30% delivery fee'}
                           </p>
@@ -590,7 +604,10 @@ const Checkout = () => {
                           <Clock className="w-5 h-5 text-primary" />
                         </div>
                         <div className="text-left">
-                          <h4 className="font-semibold">Standard - Within 1.5 hours</h4>
+                          <h4 className="font-semibold flex items-center gap-2">
+                            Standard
+                            <span className="text-xs font-normal text-primary">~45-90 min</span>
+                          </h4>
                           <p className="text-xs text-muted-foreground">
                             {subtotal >= 100 ? 'FREE!' : 'Normal delivery fee'}
                           </p>
@@ -616,7 +633,10 @@ const Checkout = () => {
                           <CalendarIcon className="w-5 h-5 text-primary" />
                         </div>
                         <div className="text-left">
-                          <h4 className="font-semibold">Schedule for Later</h4>
+                          <h4 className="font-semibold flex items-center gap-2">
+                            Schedule for Later
+                            <span className="text-xs font-normal text-primary">Pick time</span>
+                          </h4>
                           <p className="text-xs text-muted-foreground">
                             {subtotal >= 100 ? 'FREE!' : 'Choose date & time'}
                           </p>
