@@ -28,7 +28,7 @@ export type Database = {
           longitude: number | null
           state: string
           street: string
-          user_id: string
+          user_id: string | null
           zip_code: string
         }
         Insert: {
@@ -44,7 +44,7 @@ export type Database = {
           longitude?: number | null
           state?: string
           street: string
-          user_id: string
+          user_id?: string | null
           zip_code: string
         }
         Update: {
@@ -60,7 +60,7 @@ export type Database = {
           longitude?: number | null
           state?: string
           street?: string
-          user_id?: string
+          user_id?: string | null
           zip_code?: string
         }
         Relationships: []
@@ -1254,7 +1254,7 @@ export type Database = {
           total_amount: number
           tracking_code: string | null
           tracking_url: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           accepted_at?: string | null
@@ -1295,7 +1295,7 @@ export type Database = {
           total_amount: number
           tracking_code?: string | null
           tracking_url?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           accepted_at?: string | null
@@ -1336,7 +1336,7 @@ export type Database = {
           total_amount?: number
           tracking_code?: string | null
           tracking_url?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {

@@ -35,6 +35,11 @@ const Checkout = () => {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
   const [notes, setNotes] = useState("");
+  
+  // Guest checkout fields
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
 
   const timeSlots = [
     { value: "09:00-12:00", label: "Morning", time: "9:00 AM - 12:00 PM", icon: "🌅" },
@@ -182,6 +187,22 @@ const Checkout = () => {
       return;
     }
 
+    // Guest checkout validation
+    if (!user) {
+      if (!guestName.trim()) {
+        toast.error("Please enter your name");
+        return;
+      }
+      if (!guestPhone.trim()) {
+        toast.error("Please enter your phone number");
+        return;
+      }
+      if (!guestEmail.trim() || !guestEmail.includes('@')) {
+        toast.error("Please enter a valid email address");
+        return;
+      }
+    }
+
     if (deliveryType === "economy" && (!selectedDate || !selectedTimeSlot)) {
       toast.error("Please select a delivery date and time slot");
       return;
@@ -231,11 +252,11 @@ const Checkout = () => {
       const pickupLat = merchant?.latitude;
       const pickupLng = merchant?.longitude;
 
-      // Create order with all location data
+      // Create order with all location data and guest info if applicable
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
-          user_id: user.id,
+          user_id: user?.id || null,
           merchant_id: merchant?.id,
           delivery_address: address,
           delivery_borough: borough,
@@ -251,6 +272,8 @@ const Checkout = () => {
           pickup_lng: pickupLng,
           dropoff_lat: dropoffLat,
           dropoff_lng: dropoffLng,
+          customer_name: user ? null : guestName,
+          customer_phone: user ? null : guestPhone,
         })
         .select()
         .single();
@@ -272,13 +295,15 @@ const Checkout = () => {
 
       if (itemsError) throw itemsError;
 
-      // Clear cart
-      const { error: clearError } = await supabase
-        .from("cart_items")
-        .delete()
-        .eq("user_id", user.id);
+      // Clear cart (only if user is authenticated)
+      if (user) {
+        const { error: clearError } = await supabase
+          .from("cart_items")
+          .delete()
+          .eq("user_id", user.id);
 
-      if (clearError) throw clearError;
+        if (clearError) throw clearError;
+      }
 
       toast.success("Order placed successfully!");
       queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -308,6 +333,60 @@ const Checkout = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
+            {/* Guest Checkout Info */}
+            {!user && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
+                      ℹ️
+                    </span>
+                    Your Information (Guest Checkout)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="guest-name">Full Name *</Label>
+                    <Input
+                      id="guest-name"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      placeholder="John Doe"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="guest-phone">Phone Number *</Label>
+                    <Input
+                      id="guest-phone"
+                      type="tel"
+                      value={guestPhone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      placeholder="(555) 123-4567"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Required for delivery updates and courier contact
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="guest-email">Email Address *</Label>
+                    <Input
+                      id="guest-email"
+                      type="email"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      placeholder="john@example.com"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Order confirmation will be sent here
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Step 1: Delivery Address */}
             <Card>
               <CardHeader>
