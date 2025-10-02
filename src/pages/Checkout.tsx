@@ -252,6 +252,10 @@ const Checkout = () => {
       const pickupLat = merchant?.latitude;
       const pickupLng = merchant?.longitude;
 
+      // Extract ZIP code from address or use a placeholder
+      const zipMatch = address.match(/\b\d{5}\b/);
+      const zipcode = zipMatch ? zipMatch[0] : "00000";
+
       // Create order with all location data and guest info if applicable
       const { data: order, error: orderError } = await supabase
         .from("orders")

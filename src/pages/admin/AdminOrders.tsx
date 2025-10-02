@@ -14,6 +14,10 @@ interface Order {
   total_amount: number;
   created_at: string;
   delivered_at?: string;
+  delivery_address: string;
+  delivery_borough: string;
+  customer_name?: string;
+  customer_phone?: string;
   merchants?: {
     business_name: string;
     address: string;
@@ -238,9 +242,15 @@ export default function AdminOrders() {
                     </p>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-sm">{order.addresses?.street}</p>
+                    {order.customer_name && (
+                      <p className="text-sm font-medium">{order.customer_name}</p>
+                    )}
+                    {order.customer_phone && (
+                      <p className="text-xs text-muted-foreground">{order.customer_phone}</p>
+                    )}
+                    <p className="text-sm">{order.addresses?.street || order.delivery_address}</p>
                     <p className="text-xs text-muted-foreground">
-                      {order.addresses?.city}, {order.addresses?.state}
+                      {order.addresses?.city || 'New York'}, {order.addresses?.state || order.delivery_borough}
                     </p>
                   </td>
                   <td className="px-6 py-4">
@@ -366,10 +376,16 @@ export default function AdminOrders() {
                   </div>
 
                   <div>
-                    <h3 className="font-bold mb-2">Delivery Address:</h3>
-                    <p className="text-lg">{selectedOrder.addresses?.street}</p>
+                    <h3 className="font-bold mb-2">Customer & Delivery:</h3>
+                    {selectedOrder.customer_name && (
+                      <p className="text-lg font-semibold">{selectedOrder.customer_name}</p>
+                    )}
+                    {selectedOrder.customer_phone && (
+                      <p className="text-sm text-muted-foreground mb-2">📞 {selectedOrder.customer_phone}</p>
+                    )}
+                    <p className="text-lg">{selectedOrder.addresses?.street || selectedOrder.delivery_address}</p>
                     <p className="text-sm text-muted-foreground">
-                      {selectedOrder.addresses?.city}, {selectedOrder.addresses?.state} {selectedOrder.addresses?.zip_code}
+                      {selectedOrder.addresses?.city || 'New York'}, {selectedOrder.addresses?.state || selectedOrder.delivery_borough} {selectedOrder.addresses?.zip_code}
                     </p>
                   </div>
 
