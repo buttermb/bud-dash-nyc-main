@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import Navigation from "@/components/Navigation";
 import MapboxAddressAutocomplete from "@/components/MapboxAddressAutocomplete";
+import CheckoutUpsells from "@/components/CheckoutUpsells";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -645,6 +646,9 @@ const Checkout = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Upsells - Frequently Bought Together */}
+            <CheckoutUpsells cartItems={cartItems} />
           </div>
 
           {/* Order Summary */}
