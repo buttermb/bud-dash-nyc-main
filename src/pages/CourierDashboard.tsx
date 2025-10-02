@@ -474,6 +474,35 @@ export default function CourierDashboard() {
   };
 
   const markDelivered = (orderId: string) => {
+    // Find the order to check location
+    const order = activeOrders.find(o => o.id === orderId);
+    
+    if (!order || !order.dropoff_lat || !order.dropoff_lng) {
+      toast.error("Cannot verify delivery location");
+      return;
+    }
+    
+    if (!currentLocation) {
+      toast.error("Unable to get your current location. Please enable GPS.");
+      return;
+    }
+    
+    // Calculate distance between courier and delivery address
+    const distanceToDelivery = calculateDistance(
+      currentLocation.latitude,
+      currentLocation.longitude,
+      order.dropoff_lat,
+      order.dropoff_lng
+    );
+    
+    const distanceInMiles = parseFloat(distanceToDelivery);
+    
+    // Check if within 0.5 miles
+    if (distanceInMiles > 0.5) {
+      toast.error(`You must be within 0.5 miles of delivery address. You are ${distanceToDelivery} miles away.`);
+      return;
+    }
+    
     updateStatusMutation.mutate({ orderId, newStatus: 'delivered' });
   };
 

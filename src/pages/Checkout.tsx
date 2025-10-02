@@ -330,12 +330,15 @@ const Checkout = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <button
                       type="button"
-                      onClick={() => setBorough("brooklyn")}
+                      onClick={() => !addressLat ? setBorough("brooklyn") : null}
+                      disabled={addressLat && borough !== "brooklyn"}
                       className={cn(
-                        "p-4 rounded-lg border-2 text-left transition-all hover:scale-[1.02]",
+                        "p-4 rounded-lg border-2 text-left transition-all",
                         borough === "brooklyn"
                           ? "border-primary bg-primary/10 shadow-lg"
-                          : "border-border hover:border-primary/50"
+                          : addressLat && borough !== "brooklyn"
+                          ? "border-border/30 opacity-40 cursor-not-allowed"
+                          : "border-border hover:border-primary/50 hover:scale-[1.02]"
                       )}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -350,12 +353,15 @@ const Checkout = () => {
 
                     <button
                       type="button"
-                      onClick={() => setBorough("queens")}
+                      onClick={() => !addressLat ? setBorough("queens") : null}
+                      disabled={addressLat && borough !== "queens"}
                       className={cn(
-                        "p-4 rounded-lg border-2 text-left transition-all hover:scale-[1.02]",
+                        "p-4 rounded-lg border-2 text-left transition-all",
                         borough === "queens"
                           ? "border-primary bg-primary/10 shadow-lg"
-                          : "border-border hover:border-primary/50"
+                          : addressLat && borough !== "queens"
+                          ? "border-border/30 opacity-40 cursor-not-allowed"
+                          : "border-border hover:border-primary/50 hover:scale-[1.02]"
                       )}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -370,12 +376,15 @@ const Checkout = () => {
 
                     <button
                       type="button"
-                      onClick={() => setBorough("manhattan")}
+                      onClick={() => !addressLat ? setBorough("manhattan") : null}
+                      disabled={addressLat && borough !== "manhattan"}
                       className={cn(
-                        "p-4 rounded-lg border-2 text-left transition-all hover:scale-[1.02]",
+                        "p-4 rounded-lg border-2 text-left transition-all",
                         borough === "manhattan"
                           ? "border-primary bg-primary/10 shadow-lg"
-                          : "border-border hover:border-primary/50"
+                          : addressLat && borough !== "manhattan"
+                          ? "border-border/30 opacity-40 cursor-not-allowed"
+                          : "border-border hover:border-primary/50 hover:scale-[1.02]"
                       )}
                     >
                       <div className="flex items-center justify-between mb-2">
