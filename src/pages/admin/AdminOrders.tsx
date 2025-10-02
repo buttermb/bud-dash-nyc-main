@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
+import { getNeighborhoodFromZip, getRiskColor, getRiskLabel, getRiskTextColor } from '@/utils/neighborhoods';
 
 interface Order {
   id: string;
@@ -233,13 +234,24 @@ export default function AdminOrders() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {filteredOrders.map(order => (
+              {filteredOrders.map(order => {
+                const neighborhood = order.addresses?.zip_code ? getNeighborhoodFromZip(order.addresses.zip_code) : null;
+                return (
                 <tr key={order.id} className="hover:bg-muted/50">
                   <td className="px-6 py-4">
-                    <p className="font-semibold">{order.tracking_code}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(order.created_at).toLocaleString()}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      {neighborhood && (
+                        <div className={`w-10 h-10 ${getRiskColor(neighborhood.risk)} rounded flex flex-col items-center justify-center text-white flex-shrink-0`}>
+                          <div className="text-sm font-bold">{neighborhood.risk}</div>
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-semibold">{order.tracking_code}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(order.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     {order.customer_name && (
@@ -252,6 +264,12 @@ export default function AdminOrders() {
                     <p className="text-xs text-muted-foreground">
                       {order.addresses?.city || 'New York'}, {order.addresses?.state || order.delivery_borough}
                     </p>
+                    {neighborhood && (
+                      <div className={`text-xs font-semibold mt-1 flex items-center gap-1 ${getRiskTextColor(neighborhood.risk)}`}>
+                        <AlertTriangle className="w-3 h-3" />
+                        {neighborhood.name} - {getRiskLabel(neighborhood.risk)}
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <p className="text-sm font-medium">{order.merchants?.business_name}</p>
@@ -318,7 +336,7 @@ export default function AdminOrders() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>
@@ -333,10 +351,18 @@ export default function AdminOrders() {
       {/* Order Detail Modal */}
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          {selectedOrder && (
+          {selectedOrder && (() => {
+            const neighborhood = selectedOrder.addresses?.zip_code ? getNeighborhoodFromZip(selectedOrder.addresses.zip_code) : null;
+            return (
             <>
               <DialogHeader>
-                <DialogTitle className="text-2xl">
+                <DialogTitle className="text-2xl flex items-center gap-3">
+                  {neighborhood && (
+                    <div className={`w-12 h-12 ${getRiskColor(neighborhood.risk)} rounded-lg flex flex-col items-center justify-center text-white flex-shrink-0`}>
+                      <div className="text-xl font-bold">{neighborhood.risk}</div>
+                      <div className="text-[10px]">/10</div>
+                    </div>
+                  )}
                   Order #{selectedOrder.tracking_code}
                 </DialogTitle>
                 <p className="text-sm text-muted-foreground">
@@ -387,6 +413,21 @@ export default function AdminOrders() {
                     <p className="text-sm text-muted-foreground">
                       {selectedOrder.addresses?.city || 'New York'}, {selectedOrder.addresses?.state || selectedOrder.delivery_borough} {selectedOrder.addresses?.zip_code}
                     </p>
+                    {neighborhood && (
+                      <div className="mt-3 p-3 rounded-lg border-2" style={{ borderColor: `hsl(var(--${neighborhood.risk <= 3 ? 'success' : neighborhood.risk <= 6 ? 'warning' : 'destructive'}))` }}>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-12 h-12 ${getRiskColor(neighborhood.risk)} rounded flex items-center justify-center text-white`}>
+                            <div className="text-xl font-bold">{neighborhood.risk}</div>
+                          </div>
+                          <div>
+                            <div className="font-semibold">{neighborhood.name}</div>
+                            <div className={`text-sm font-semibold ${getRiskTextColor(neighborhood.risk)}`}>
+                              {getRiskLabel(neighborhood.risk)} Delivery Zone
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {selectedOrder.couriers && (
@@ -435,7 +476,7 @@ export default function AdminOrders() {
                 </div>
               </div>
             </>
-          )}
+          )})()}
         </DialogContent>
       </Dialog>
     </div>

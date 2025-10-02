@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, MapPin, Phone, Store, Home, Navigation, Clock, Star, User } from 'lucide-react';
+import { Loader2, MapPin, Phone, Store, Home, Navigation, Clock, Star, User, AlertTriangle, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -13,6 +13,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { playNotificationSound, playSuccessSound } from '@/utils/notificationSound';
 import CourierSafetyInfo from '@/components/CourierSafetyInfo';
+import { getNeighborhoodFromZip, getRiskColor, getRiskLabel, getRiskTextColor, getSafetyTips } from '@/utils/neighborhoods';
 
 // Fix Leaflet default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -735,6 +736,39 @@ export default function CourierDashboard() {
                           </a>
                         </div>
                       </div>
+
+                      {/* Safety Information Card */}
+                      {order.addresses?.zip_code && (
+                        <Card className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 border-2">
+                          <div className="p-4">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className={`w-14 h-14 ${getRiskColor(getNeighborhoodFromZip(order.addresses.zip_code).risk)} rounded-lg flex flex-col items-center justify-center text-white flex-shrink-0`}>
+                                <div className="text-xl font-bold">{getNeighborhoodFromZip(order.addresses.zip_code).risk}</div>
+                                <div className="text-[10px]">/10</div>
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Shield className="w-4 h-4" />
+                                  <span className="font-bold text-sm">Safety Zone Info</span>
+                                </div>
+                                <div className="font-semibold">{getNeighborhoodFromZip(order.addresses.zip_code).name}</div>
+                                <div className={`text-sm font-semibold flex items-center gap-1 ${getRiskTextColor(getNeighborhoodFromZip(order.addresses.zip_code).risk)}`}>
+                                  <AlertTriangle className="w-3 h-3" />
+                                  {getRiskLabel(getNeighborhoodFromZip(order.addresses.zip_code).risk)} Risk
+                                </div>
+                              </div>
+                            </div>
+                            <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
+                              <div className="font-bold text-xs mb-2">🛡️ Safety Guidelines:</div>
+                              <ul className="text-xs space-y-1 text-gray-700 dark:text-gray-300">
+                                {getSafetyTips(getNeighborhoodFromZip(order.addresses.zip_code).risk).slice(0, 3).map((tip, i) => (
+                                  <li key={i}>• {tip}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </Card>
+                      )}
 
                       {/* Items Preview */}
                       {order.order_items && order.order_items.length > 0 && (
