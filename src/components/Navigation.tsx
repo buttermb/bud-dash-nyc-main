@@ -83,7 +83,7 @@ const Navigation = () => {
       <div className="bg-gradient-primary text-primary-foreground py-2">
         <div className="container mx-auto px-4 flex items-center justify-center gap-2 text-sm font-medium">
           <Truck className="h-4 w-4" />
-          <span>Free Shipping on Orders $100+</span>
+          <span>Free Delivery $100+ • Free Express $500+</span>
           <Badge variant="secondary" className="ml-2">Limited Time</Badge>
         </div>
       </div>

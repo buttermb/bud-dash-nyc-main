@@ -102,8 +102,11 @@ const Checkout = () => {
   const calculateDeliveryFee = () => {
     if (!borough) return 0;
     
-    // Free delivery for orders over $100
-    if (subtotal >= 100) return 0;
+    // Free delivery (including express) for orders over $500
+    if (subtotal >= 500) return 0;
+    
+    // Free standard/economy delivery for orders over $100 (but NOT express)
+    if (subtotal >= 100 && deliveryType !== "express") return 0;
     
     let baseFee = 5;
     
@@ -423,15 +426,29 @@ const Checkout = () => {
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Add ${(100 - subtotal).toFixed(2)} more to qualify for free delivery!
+                      Add ${(100 - subtotal).toFixed(2)} more to qualify for free standard delivery!
                     </p>
                   </div>
                 )}
 
-                {subtotal >= 100 && (
-                  <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
+                {subtotal >= 100 && subtotal < 500 && (
+                  <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg space-y-2">
                     <p className="text-sm font-semibold text-primary flex items-center gap-2">
-                      ✓ You qualify for FREE delivery! 🎉
+                      ✓ Free standard delivery unlocked! 🎉
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Add ${(500 - subtotal).toFixed(2)} more for FREE express delivery too!
+                    </p>
+                  </div>
+                )}
+
+                {subtotal >= 500 && (
+                  <div className="p-4 bg-gradient-to-r from-primary to-primary/80 border border-primary rounded-lg">
+                    <p className="text-sm font-bold text-primary-foreground flex items-center gap-2">
+                      ⚡ FREE EXPRESS DELIVERY! 🎉
+                    </p>
+                    <p className="text-xs text-primary-foreground/80">
+                      All delivery speeds are free on your order!
                     </p>
                   </div>
                 )}
@@ -456,7 +473,9 @@ const Checkout = () => {
                         </div>
                         <div className="text-left">
                           <h4 className="font-semibold">Express - 45 min or less</h4>
-                          <p className="text-xs text-muted-foreground">+30% delivery fee</p>
+                          <p className="text-xs text-muted-foreground">
+                            {subtotal >= 500 ? 'FREE!' : subtotal >= 100 ? '+30% delivery fee' : '+30% delivery fee'}
+                          </p>
                         </div>
                       </div>
                       {deliveryType === "express" && (
@@ -480,7 +499,9 @@ const Checkout = () => {
                         </div>
                         <div className="text-left">
                           <h4 className="font-semibold">Standard - Within 1.5 hours</h4>
-                          <p className="text-xs text-muted-foreground">Normal delivery fee</p>
+                          <p className="text-xs text-muted-foreground">
+                            {subtotal >= 100 ? 'FREE!' : 'Normal delivery fee'}
+                          </p>
                         </div>
                       </div>
                       {deliveryType === "standard" && (
@@ -504,7 +525,9 @@ const Checkout = () => {
                         </div>
                         <div className="text-left">
                           <h4 className="font-semibold">Schedule for Later</h4>
-                          <p className="text-xs text-muted-foreground">Choose date & time</p>
+                          <p className="text-xs text-muted-foreground">
+                            {subtotal >= 100 ? 'FREE!' : 'Choose date & time'}
+                          </p>
                         </div>
                       </div>
                       {deliveryType === "economy" && (
