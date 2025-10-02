@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -86,6 +88,10 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
     onOpenChange(false);
     navigate("/checkout");
   };
+
+  const freeShippingThreshold = 100;
+  const shippingProgress = Math.min((subtotal / freeShippingThreshold) * 100, 100);
+  const amountToFreeShipping = Math.max(freeShippingThreshold - subtotal, 0);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -185,6 +191,25 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
             </div>
 
             <div className="space-y-4 border-t pt-4">
+              {/* Free Shipping Progress */}
+              {subtotal < freeShippingThreshold ? (
+                <div className="space-y-2 p-3 bg-primary/5 rounded-lg">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      <Truck className="h-4 w-4" />
+                      Free Shipping Progress
+                    </span>
+                    <span className="font-semibold">${amountToFreeShipping.toFixed(2)} to go</span>
+                  </div>
+                  <Progress value={shippingProgress} className="h-2" />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg text-primary">
+                  <Truck className="h-5 w-5" />
+                  <span className="font-semibold">You've unlocked FREE SHIPPING! 🎉</span>
+                </div>
+              )}
+
               <div className="flex justify-between text-lg font-semibold">
                 <span>Subtotal</span>
                 <span>${subtotal.toFixed(2)}</span>

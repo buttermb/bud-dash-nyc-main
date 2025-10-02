@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Plus, Minus, Check, Star, Flame, Sparkles, Loader2 } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Check, Star, Flame, Sparkles, Loader2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProductDetailModal } from "./ProductDetailModal";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
@@ -23,6 +23,23 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
   const [added, setAdded] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const queryClient = useQueryClient();
+
+  // Fetch inventory to check stock levels
+  const { data: inventory } = useQuery({
+    queryKey: ["inventory", product.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("inventory")
+        .select("stock")
+        .eq("product_id", product.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const stockLevel = inventory?.stock || 0;
+  const isLowStock = stockLevel > 0 && stockLevel <= 5;
 
   const handleCardClick = () => {
     addToRecentlyViewed(product.id);
@@ -184,13 +201,32 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
               </span>
             )}
             {product.prices && typeof product.prices === 'object' && Object.keys(product.prices).length > 1 ? (
-              <span className="text-xl font-bold">
-                From ${Number(Math.min(...Object.values(product.prices).map(p => Number(p)))).toFixed(2)}
-              </span>
+              <div className="text-right">
+                <span className="text-xl font-bold">
+                  From ${Number(Math.min(...Object.values(product.prices).map(p => Number(p)))).toFixed(2)}
+                </span>
+                {/* Show bundle savings for weight-based products */}
+                {Object.keys(product.prices).length >= 2 && (
+                  <p className="text-xs text-primary font-medium mt-1">
+                    Save up to ${(
+                      (Number(Object.values(product.prices)[0]) * 8) - 
+                      Number(Object.values(product.prices)[Object.keys(product.prices).length - 1])
+                    ).toFixed(2)} with bulk!
+                  </p>
+                )}
+              </div>
             ) : (
               <span className="text-xl font-bold">${Number(product.price).toFixed(2)}</span>
             )}
           </div>
+
+          {/* Low Stock Alert */}
+          {isLowStock && (
+            <div className="flex items-center gap-1 text-xs text-destructive font-medium">
+              <AlertCircle className="h-3 w-3" />
+              Only {stockLevel} left in stock!
+            </div>
+          )}
 
           {product.description && (
             <p className="text-sm text-muted-foreground line-clamp-2">

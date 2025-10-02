@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
@@ -9,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Leaf, Menu, ShoppingCart, User } from "lucide-react";
+import { Leaf, Menu, ShoppingCart, User, Truck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -78,6 +79,15 @@ const Navigation = () => {
 
   return (
     <>
+      {/* Free Shipping Banner */}
+      <div className="bg-gradient-primary text-primary-foreground py-2">
+        <div className="container mx-auto px-4 flex items-center justify-center gap-2 text-sm font-medium">
+          <Truck className="h-4 w-4" />
+          <span>Free Shipping on Orders $100+</span>
+          <Badge variant="secondary" className="ml-2">Limited Time</Badge>
+        </div>
+      </div>
+
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between px-4">
           <a href="/" className="flex items-center gap-2">
