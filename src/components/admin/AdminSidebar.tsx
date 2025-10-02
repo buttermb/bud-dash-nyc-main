@@ -10,7 +10,8 @@ import {
   LogOut,
   Clock,
   Truck,
-  CheckCircle
+  CheckCircle,
+  AlertTriangle
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,6 +41,7 @@ const menuItems = [
   { title: "Compliance", url: "/admin/compliance", icon: Shield },
   { title: "Analytics", url: "/admin/analytics", icon: TrendingUp },
   { title: "Audit Logs", url: "/admin/audit-logs", icon: FileText },
+  { title: "Delivery Safety", url: "/admin/safety", icon: AlertTriangle },
 ];
 
 export function AdminSidebar() {

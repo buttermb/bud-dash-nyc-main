@@ -50,6 +50,7 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
 import AdminAgeVerification from "./pages/admin/AdminAgeVerification";
 import AdminCourierApplications from "./pages/admin/AdminCourierApplications";
+import AdminDeliverySafety from "./pages/admin/AdminDeliverySafety";
 
 const queryClient = new QueryClient();
 
@@ -139,6 +140,7 @@ const App = () => (
                 <Route path="compliance" element={<AdminCompliance />} />
                 <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="audit-logs" element={<AdminAuditLogs />} />
+                <Route path="safety" element={<AdminDeliverySafety />} />
               </Route>
 
               <Route
