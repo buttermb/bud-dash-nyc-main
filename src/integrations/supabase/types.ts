@@ -1367,15 +1367,21 @@ export type Database = {
           average_rating: number | null
           category: string
           cbd_content: number | null
+          coa_pdf_url: string | null
+          coa_qr_code_url: string | null
           coa_url: string | null
+          consumption_methods: string[] | null
           created_at: string | null
           description: string | null
           effects: string[] | null
+          effects_timeline: Json | null
+          growing_info: Json | null
           id: string
           image_url: string | null
           in_stock: boolean | null
           is_concentrate: boolean | null
           lab_results_url: string | null
+          medical_benefits: string[] | null
           merchant_id: string | null
           name: string
           price: number
@@ -1395,15 +1401,21 @@ export type Database = {
           average_rating?: number | null
           category: string
           cbd_content?: number | null
+          coa_pdf_url?: string | null
+          coa_qr_code_url?: string | null
           coa_url?: string | null
+          consumption_methods?: string[] | null
           created_at?: string | null
           description?: string | null
           effects?: string[] | null
+          effects_timeline?: Json | null
+          growing_info?: Json | null
           id?: string
           image_url?: string | null
           in_stock?: boolean | null
           is_concentrate?: boolean | null
           lab_results_url?: string | null
+          medical_benefits?: string[] | null
           merchant_id?: string | null
           name: string
           price: number
@@ -1423,15 +1435,21 @@ export type Database = {
           average_rating?: number | null
           category?: string
           cbd_content?: number | null
+          coa_pdf_url?: string | null
+          coa_qr_code_url?: string | null
           coa_url?: string | null
+          consumption_methods?: string[] | null
           created_at?: string | null
           description?: string | null
           effects?: string[] | null
+          effects_timeline?: Json | null
+          growing_info?: Json | null
           id?: string
           image_url?: string | null
           in_stock?: boolean | null
           is_concentrate?: boolean | null
           lab_results_url?: string | null
+          medical_benefits?: string[] | null
           merchant_id?: string | null
           name?: string
           price?: number
@@ -1529,12 +1547,45 @@ export type Database = {
         }
         Relationships: []
       }
+      recent_purchases: {
+        Row: {
+          created_at: string | null
+          customer_name: string
+          id: string
+          location: string
+          product_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_name: string
+          id?: string
+          location: string
+          product_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_name?: string
+          id?: string
+          location?: string
+          product_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recent_purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           comment: string | null
           created_at: string | null
           id: string
           order_id: string | null
+          photo_urls: string[] | null
           product_id: string
           rating: number
           user_id: string
@@ -1544,6 +1595,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           order_id?: string | null
+          photo_urls?: string[] | null
           product_id: string
           rating: number
           user_id: string
@@ -1553,6 +1605,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           order_id?: string | null
+          photo_urls?: string[] | null
           product_id?: string
           rating?: number
           user_id?: string

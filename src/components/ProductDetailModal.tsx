@@ -1,12 +1,15 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, ShoppingCart, Loader2, Package, FileText } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Minus, Plus, ShoppingCart, Loader2, Package, FileText, Download, QrCode, Shield, Award, Leaf, Clock, Activity, Heart, Star } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 
 interface ProductDetailModalProps {
   product: any;
@@ -23,7 +26,23 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Initialize selected weight when modal opens or product changes
+  // Fetch reviews with photos
+  const { data: reviews = [] } = useQuery({
+    queryKey: ["product-reviews", product?.id],
+    queryFn: async () => {
+      if (!product?.id) return [];
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("*")
+        .eq("product_id", product.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!product?.id && open,
+  });
+
   useEffect(() => {
     if (product?.prices && typeof product.prices === 'object') {
       const weights = Object.keys(product.prices);
@@ -39,7 +58,7 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
       return;
     }
 
-    if (!product.in_stock || product.stock === 0) {
+    if (!product.in_stock) {
       toast({
         title: "Out of Stock",
         description: "This product is currently unavailable.",
@@ -50,7 +69,6 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
 
     setLoading(true);
     try {
-      // Check for existing item with same weight
       const { data: existingItem } = await supabase
         .from("cart_items")
         .select("*")
@@ -60,12 +78,10 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
         .maybeSingle();
 
       if (existingItem) {
-        const newQuantity = existingItem.quantity + quantity;
         const { error } = await supabase
           .from("cart_items")
-          .update({ quantity: newQuantity })
+          .update({ quantity: existingItem.quantity + quantity })
           .eq("id", existingItem.id);
-
         if (error) throw error;
       } else {
         const { error } = await supabase
@@ -76,22 +92,18 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
             quantity: quantity,
             selected_weight: selectedWeight || "unit",
           });
-
         if (error) throw error;
       }
 
       queryClient.invalidateQueries({ queryKey: ["cart"] });
-      queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
-      
       toast({
         title: "Added to cart!",
-        description: `${product.name} (${selectedWeight || "unit"}) has been added to your cart.`,
+        description: `${product.name} has been added to your cart.`,
       });
 
       onOpenChange(false);
       setQuantity(1);
     } catch (error) {
-      console.error("Error adding to cart:", error);
       toast({
         title: "Failed to add to cart",
         description: "Please try again.",
@@ -102,13 +114,6 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
     }
   };
 
-  const getStockStatus = () => {
-    if (!product.in_stock || product.stock === 0) return { text: "Out of Stock", color: "bg-destructive/10 text-destructive" };
-    if (product.stock <= 5) return { text: "Low Stock", color: "bg-warning/10 text-warning" };
-    return { text: "In Stock", color: "bg-success/10 text-success" };
-  };
-
-  // Get current price based on selected weight
   const getCurrentPrice = () => {
     if (product.prices && typeof product.prices === 'object') {
       return product.prices[selectedWeight] || product.price;
@@ -116,7 +121,6 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
     return product.price;
   };
 
-  // Get available weights
   const getWeights = () => {
     if (product.prices && typeof product.prices === 'object') {
       return Object.keys(product.prices);
@@ -127,62 +131,83 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
   const weights = getWeights();
   const currentPrice = getCurrentPrice();
 
+  // Parse growing info
+  const growingInfo = product.growing_info || {};
+  const effectsTimeline = product.effects_timeline || {};
+  const medicalBenefits = product.medical_benefits || [];
+  const consumptionMethods = product.consumption_methods || [];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <div className="grid lg:grid-cols-2 gap-8 p-2">
-          {/* Product Image */}
-          <div className="relative aspect-square rounded-xl overflow-hidden bg-muted">
-            <img
-              src={product.image_url || "/placeholder.svg"}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
+      <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto p-0">
+        {/* Header Section */}
+        <div className="grid lg:grid-cols-2 gap-8 p-6">
+          {/* Product Image Gallery */}
+          <div className="space-y-4">
+            <div className="relative aspect-square rounded-xl overflow-hidden bg-muted">
+              <img
+                src={product.image_url || "/placeholder.svg"}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Trust Badges */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="flex flex-col items-center gap-1 p-3 bg-muted/50 rounded-lg">
+                <Award className="w-6 h-6 text-primary" />
+                <span className="text-xs font-medium text-center">Lab Tested</span>
+              </div>
+              <div className="flex flex-col items-center gap-1 p-3 bg-muted/50 rounded-lg">
+                <Shield className="w-6 h-6 text-primary" />
+                <span className="text-xs font-medium text-center">Quality Assured</span>
+              </div>
+              <div className="flex flex-col items-center gap-1 p-3 bg-muted/50 rounded-lg">
+                <Leaf className="w-6 h-6 text-primary" />
+                <span className="text-xs font-medium text-center">USA Grown</span>
+              </div>
+            </div>
           </div>
 
           {/* Product Info */}
           <div className="flex flex-col">
-            <div className="mb-6">
+            <div className="mb-4">
               <Badge variant="secondary" className="mb-3 uppercase text-xs">
                 {product.category}
               </Badge>
-              <h2 className="text-4xl font-bold mb-4">{product.name}</h2>
-            </div>
-
-            {/* Specifications */}
-            <div className="space-y-3 mb-6">
-              {product.thca_percentage && (
-                <div className="flex justify-between py-3 border-b">
-                  <span className="font-semibold text-muted-foreground">THCa:</span>
-                  <span className="font-medium">{product.thca_percentage}%</span>
-                </div>
-              )}
+              <h2 className="text-4xl font-bold mb-2">{product.name}</h2>
               {product.strain_type && (
-                <div className="flex justify-between py-3 border-b">
-                  <span className="font-semibold text-muted-foreground">Type:</span>
-                  <span className="font-medium capitalize">{product.strain_type}</span>
-                </div>
-              )}
-              {product.effects && product.effects.length > 0 && (
-                <div className="flex justify-between py-3 border-b">
-                  <span className="font-semibold text-muted-foreground">Effects:</span>
-                  <span className="font-medium text-right capitalize">{product.effects.join(", ")}</span>
-                </div>
-              )}
-              {product.strain_lineage && (
-                <div className="flex justify-between py-3 border-b">
-                  <span className="font-semibold text-muted-foreground">Genetics:</span>
-                  <span className="font-medium text-right">{product.strain_lineage}</span>
-                </div>
+                <p className="text-muted-foreground capitalize">{product.strain_type} Strain</p>
               )}
             </div>
 
-            {/* Weight Selection - Only for products with multiple weights */}
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {product.thca_percentage && (
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-3xl font-bold text-primary">{product.thca_percentage}%</p>
+                    <p className="text-xs text-muted-foreground">THCa Content</p>
+                  </CardContent>
+                </Card>
+              )}
+              {product.average_rating > 0 && (
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Star className="w-5 h-5 fill-primary text-primary" />
+                      <p className="text-3xl font-bold">{product.average_rating.toFixed(1)}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{product.review_count} Reviews</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Weight Selection */}
             {weights.length > 1 && (
               <div className="mb-6">
-                <label className="block text-sm font-semibold mb-3">
-                  Select Weight:
-                </label>
+                <label className="block text-sm font-semibold mb-3">Select Weight:</label>
                 <div className="grid grid-cols-4 gap-3">
                   {weights.map((weight) => (
                     <Button
@@ -198,139 +223,331 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
               </div>
             )}
 
-            {/* Stock Status */}
-            <div className="mb-6">
-              <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium ${getStockStatus().color}`}>
-                <Package className="w-4 h-4" />
-                {getStockStatus().text}
+            {/* Price & Stock */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="text-4xl font-bold text-primary">
+                ${Number(currentPrice).toFixed(2)}
               </div>
+              <Badge className={product.in_stock ? "bg-green-500/10 text-green-600" : "bg-destructive/10 text-destructive"}>
+                <Package className="w-4 h-4 mr-1" />
+                {product.in_stock ? "In Stock" : "Out of Stock"}
+              </Badge>
             </div>
 
-            {/* Price */}
-            <div className="text-4xl font-bold text-primary mb-6">
-              ${Number(currentPrice).toFixed(2)}
-            </div>
-
-            {/* Quantity Control */}
-            <div className="flex items-center gap-4 mb-6">
-              <span className="text-sm font-semibold">Quantity:</span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={loading}
-                >
-                  <Minus className="w-4 h-4" />
-                </Button>
-                <span className="w-12 text-center font-semibold">{quantity}</span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setQuantity(quantity + 1)}
-                  disabled={loading}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
+            {/* Quantity & Add to Cart */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-semibold">Quantity:</span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    disabled={loading}
+                  >
+                    <Minus className="w-4 h-4" />
+                  </Button>
+                  <span className="w-12 text-center font-semibold">{quantity}</span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setQuantity(quantity + 1)}
+                    disabled={loading}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
+
+              <Button
+                onClick={handleAddToCart}
+                disabled={!product.in_stock || loading}
+                className="w-full"
+                size="lg"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Add to Cart - ${(Number(currentPrice) * quantity).toFixed(2)}
+                  </>
+                )}
+              </Button>
             </div>
 
-            {/* Add to Cart Button */}
-            <Button
-              onClick={handleAddToCart}
-              disabled={!product.in_stock || loading}
-              className="w-full mb-4"
-              size="lg"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Adding...
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Add to Cart
-                </>
-              )}
-            </Button>
-
-            {/* Additional Links */}
-            {(product.coa_url || product.lab_results_url) && (
-              <div className="pt-4 border-t space-y-2">
-                {product.coa_url && (
-                  <a
-                    href={product.coa_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-primary hover:underline"
-                  >
-                    <FileText className="w-4 h-4" />
-                    Certificate of Analysis
-                  </a>
-                )}
-                {product.lab_results_url && (
-                  <a
-                    href={product.lab_results_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-primary hover:underline"
-                  >
-                    <FileText className="w-4 h-4" />
-                    Lab Results
-                  </a>
-                )}
+            {/* COA Download */}
+            {(product.coa_pdf_url || product.coa_url || product.lab_results_url) && (
+              <div className="mt-6 p-4 bg-primary/5 rounded-lg space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-primary" />
+                    <span className="font-semibold">Lab Test Results (COA)</span>
+                  </div>
+                  {product.coa_qr_code_url && (
+                    <QrCode className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {(product.coa_pdf_url || product.coa_url) && (
+                    <Button variant="outline" size="sm" asChild className="flex-1">
+                      <a href={product.coa_pdf_url || product.coa_url} target="_blank" rel="noopener noreferrer">
+                        <Download className="w-4 h-4 mr-2" />
+                        Download PDF
+                      </a>
+                    </Button>
+                  )}
+                  {product.lab_results_url && (
+                    <Button variant="outline" size="sm" asChild className="flex-1">
+                      <a href={product.lab_results_url} target="_blank" rel="noopener noreferrer">
+                        View Full Results
+                      </a>
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Description and Details Section */}
-        <div className="p-6 border-t space-y-8">
-          {product.description && (
-            <div>
-              <h3 className="text-2xl font-bold mb-4">Description</h3>
-              <p className="text-muted-foreground leading-relaxed">{product.description}</p>
-            </div>
-          )}
+        {/* Detailed Information Tabs */}
+        <Tabs defaultValue="overview" className="px-6 pb-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="effects">Effects</TabsTrigger>
+            <TabsTrigger value="terpenes">Terpenes</TabsTrigger>
+            <TabsTrigger value="growing">Growing Info</TabsTrigger>
+            <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
+          </TabsList>
 
-          {product.usage_tips && (
-            <div>
-              <h3 className="text-2xl font-bold mb-4">Why You'll Love {product.name}</h3>
-              <div className="space-y-3">
-                {product.usage_tips.split('\n').filter((tip: string) => tip.trim()).map((tip: string, index: number) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <span className="text-primary mt-1">✓</span>
-                    <span className="text-muted-foreground">{tip}</span>
+          <TabsContent value="overview" className="space-y-6 mt-6">
+            {product.description && (
+              <div>
+                <h3 className="text-xl font-bold mb-3">Description</h3>
+                <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+              </div>
+            )}
+
+            {consumptionMethods.length > 0 && (
+              <div>
+                <h3 className="text-xl font-bold mb-3">How to Use</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {consumptionMethods.map((method, index) => (
+                    <div key={index} className="p-3 bg-muted rounded-lg text-center">
+                      <p className="font-medium capitalize">{method}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {product.usage_tips && (
+              <div>
+                <h3 className="text-xl font-bold mb-3">Why You'll Love It</h3>
+                <div className="space-y-2">
+                  {product.usage_tips.split('\n').filter((tip: string) => tip.trim()).map((tip: string, index: number) => (
+                    <div key={index} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                      <span className="text-primary mt-0.5">✓</span>
+                      <span>{tip}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="effects" className="space-y-6 mt-6">
+            {product.effects && product.effects.length > 0 && (
+              <div>
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  Common Effects
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {product.effects.map((effect: string, index: number) => (
+                    <div key={index} className="p-4 bg-primary/5 rounded-lg text-center border border-primary/10">
+                      <p className="font-semibold capitalize">{effect}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {effectsTimeline.onset && (
+              <div>
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  Effects Timeline
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                    <span className="font-semibold">Onset Time</span>
+                    <span className="text-primary">{effectsTimeline.onset}</span>
                   </div>
+                  {effectsTimeline.peak && (
+                    <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                      <span className="font-semibold">Peak Effects</span>
+                      <span className="text-primary">{effectsTimeline.peak}</span>
+                    </div>
+                  )}
+                  {effectsTimeline.duration && (
+                    <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                      <span className="font-semibold">Duration</span>
+                      <span className="text-primary">{effectsTimeline.duration}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {medicalBenefits.length > 0 && (
+              <div>
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Heart className="w-5 h-5" />
+                  Potential Medical Benefits
+                </h3>
+                <div className="grid gap-3">
+                  {medicalBenefits.map((benefit, index) => (
+                    <div key={index} className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+                      <div className="w-2 h-2 bg-primary rounded-full"></div>
+                      <span>{benefit}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-4 italic">
+                  * These statements have not been evaluated by the FDA. This product is not intended to diagnose, treat, cure, or prevent any disease.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="terpenes" className="space-y-6 mt-6">
+            {product.terpenes && (
+              <div>
+                <h3 className="text-xl font-bold mb-4">Terpene Profile</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Terpenes are aromatic compounds that contribute to the unique flavor, aroma, and effects of cannabis.
+                </p>
+                <div className="space-y-4">
+                  {(Array.isArray(product.terpenes) ? product.terpenes : Object.entries(product.terpenes)).map((terpene: any, index: number) => {
+                    const name = Array.isArray(product.terpenes) ? terpene.name || terpene : terpene[0];
+                    const percentage = Array.isArray(product.terpenes) ? terpene.percentage : terpene[1];
+                    const description = Array.isArray(product.terpenes) ? terpene.description : "";
+                    
+                    return (
+                      <div key={index} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold capitalize">{name}</h4>
+                          {percentage && <span className="text-primary font-semibold">{percentage}%</span>}
+                        </div>
+                        {percentage && (
+                          <Progress value={Number(percentage) * 10} className="h-2" />
+                        )}
+                        {description && (
+                          <p className="text-sm text-muted-foreground">{description}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="growing" className="space-y-6 mt-6">
+            <div>
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Leaf className="w-5 h-5" />
+                Growing Information
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <h4 className="font-semibold mb-2">Growing Method</h4>
+                    <p className="text-2xl font-bold capitalize text-primary">
+                      {growingInfo.method || "Indoor"}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <h4 className="font-semibold mb-2">Organic</h4>
+                    <p className="text-2xl font-bold text-primary">
+                      {growingInfo.organic ? "Yes" : "Standard"}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+              {growingInfo.location && (
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-semibold mb-2">Location</h4>
+                  <p className="text-muted-foreground">{growingInfo.location}</p>
+                </div>
+              )}
+              {product.strain_lineage && (
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-semibold mb-2">Strain Genetics</h4>
+                  <p className="text-muted-foreground">{product.strain_lineage}</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="reviews" className="space-y-6 mt-6">
+            {reviews.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No reviews yet. Be the first to review this product!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {reviews.map((review) => (
+                  <Card key={review.id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="font-semibold">Customer Review</p>
+                        <div className="flex items-center gap-1 mt-1">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < review.rating
+                                  ? "fill-primary text-primary"
+                                  : "text-muted-foreground"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(review.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {review.comment && (
+                        <p className="text-muted-foreground mb-3">{review.comment}</p>
+                      )}
+                      {review.photo_urls && review.photo_urls.length > 0 && (
+                        <div className="grid grid-cols-3 gap-2">
+                          {review.photo_urls.map((url: string, index: number) => (
+                            <img
+                              key={index}
+                              src={url}
+                              alt={`Review photo ${index + 1}`}
+                              className="w-full h-24 object-cover rounded-lg"
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
-            </div>
-          )}
-
-          {product.terpenes && (
-            <div>
-              <h3 className="text-2xl font-bold mb-4">Terpene Profile</h3>
-              <div className="grid gap-4">
-                {(Array.isArray(product.terpenes) ? product.terpenes : Object.entries(product.terpenes)).map((terpene: any, index: number) => {
-                  const name = Array.isArray(product.terpenes) ? terpene.name || terpene : terpene[0];
-                  const description = Array.isArray(product.terpenes) ? terpene.description : `${terpene[1]}%`;
-                  
-                  return (
-                    <div key={index} className="bg-muted rounded-lg p-4">
-                      <h4 className="font-bold text-primary mb-1 capitalize">
-                        {name}
-                      </h4>
-                      {description && (
-                        <p className="text-sm text-muted-foreground">{description}</p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

@@ -8,11 +8,13 @@ import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 import Navigation from "@/components/Navigation";
 import AgeVerificationModal from "@/components/AgeVerificationModal";
+import RecentPurchaseNotification from "@/components/RecentPurchaseNotification";
 
 const Index = () => {
   return (
     <div className="min-h-screen">
       <AgeVerificationModal />
+      <RecentPurchaseNotification />
       <Navigation />
       <Hero />
       <div id="how-it-works">
