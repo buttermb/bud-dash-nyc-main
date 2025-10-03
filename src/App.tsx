@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AdminProvider } from "./contexts/AdminContext";
 import { CourierProvider } from "./contexts/CourierContext";
+import { CourierPinProvider } from "./contexts/CourierPinContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProtectedCourierRoute from "./components/ProtectedCourierRoute";
@@ -60,7 +61,8 @@ const App = () => (
       <AuthProvider>
         <AdminProvider>
           <CourierProvider>
-            <TooltipProvider>
+            <CourierPinProvider>
+              <TooltipProvider>
             <BrowserRouter>
               <Toaster />
               <Sonner />
@@ -195,7 +197,8 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-          </TooltipProvider>
+              </TooltipProvider>
+            </CourierPinProvider>
           </CourierProvider>
         </AdminProvider>
       </AuthProvider>

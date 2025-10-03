@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useCourier } from '@/contexts/CourierContext';
+import { useCourierPin } from '@/contexts/CourierPinContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -14,6 +15,9 @@ import 'leaflet/dist/leaflet.css';
 import { playNotificationSound, playSuccessSound } from '@/utils/notificationSound';
 import CourierSafetyInfo from '@/components/CourierSafetyInfo';
 import { getNeighborhoodFromZip, getRiskColor, getRiskLabel, getRiskTextColor, getSafetyTips } from '@/utils/neighborhoods';
+import PinSetupModal from '@/components/courier/PinSetupModal';
+import PinUnlockModal from '@/components/courier/PinUnlockModal';
+import LocationPermissionModal from '@/components/courier/LocationPermissionModal';
 
 // Fix Leaflet default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -141,11 +145,14 @@ interface CourierLocation {
 
 export default function CourierDashboard() {
   const { courier, loading: courierLoading, isOnline, toggleOnlineStatus } = useCourier();
+  const { hasPinSetup, isUnlocked, setupPin, verifyPin } = useCourierPin();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showMap, setShowMap] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<CourierLocation | null>(null);
+  const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
   const locationWatchId = useRef<number | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [showAcceptedModal, setShowAcceptedModal] = useState(false);
@@ -154,33 +161,71 @@ export default function CourierDashboard() {
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Request notification permission on mount
+  // Check location permission on mount
   useEffect(() => {
+    checkLocationPermission();
+    
     if ('Notification' in window) {
       Notification.requestPermission().then(permission => {
         setNotificationPermission(permission);
       });
     }
-    // Create audio element for notifications
     audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSyByPLaiTcIGWi77eefTRAMUKfj8LZjHAY4ktfyzHksBSR3x/DdkEAKFF606+uoVRQKRp/g8r5sIQUsgcjy2ok3CBlou+3nn00QDFCS');
   }, []);
 
+  const checkLocationPermission = async () => {
+    if ('geolocation' in navigator) {
+      try {
+        await navigator.geolocation.getCurrentPosition(
+          () => setLocationPermissionGranted(true),
+          () => setShowLocationModal(true)
+        );
+      } catch (error) {
+        setShowLocationModal(true);
+      }
+    } else {
+      toast.error('Geolocation is not supported by your device');
+    }
+  };
+
+  const requestLocationPermission = () => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        () => {
+          setLocationPermissionGranted(true);
+          setShowLocationModal(false);
+          toast.success('Location access granted');
+        },
+        (error) => {
+          if (error.code === error.PERMISSION_DENIED) {
+            toast.error('Location access denied. Please enable it in your device settings.');
+          } else {
+            toast.error('Unable to access location. Please try again.');
+          }
+        },
+        { enableHighAccuracy: true }
+      );
+    }
+  };
+
   // Start location tracking
   useEffect(() => {
-    if ('geolocation' in navigator && isOnline) {
+    if ('geolocation' in navigator && isOnline && locationPermissionGranted) {
       locationWatchId.current = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude, accuracy, speed, heading } = position.coords;
           setCurrentLocation({ latitude, longitude });
           
-          // Update location in database every 15 seconds
+          // Update location in database
           updateLocationInDB(latitude, longitude, accuracy, speed, heading);
         },
         (error) => {
           console.error('Location error:', error);
-          toast.error('Unable to track location. Please enable GPS.');
+          if (error.code === error.PERMISSION_DENIED) {
+            setShowLocationModal(true);
+          }
         },
-        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
       );
     }
 
@@ -189,7 +234,7 @@ export default function CourierDashboard() {
         navigator.geolocation.clearWatch(locationWatchId.current);
       }
     };
-  }, [isOnline]);
+  }, [isOnline, locationPermissionGranted]);
 
   const updateLocationInDB = async (lat: number, lng: number, accuracy?: number, speed?: number | null, heading?: number | null) => {
     try {
@@ -438,6 +483,36 @@ export default function CourierDashboard() {
   if (!courier) {
     navigate('/courier/login');
     return null;
+  }
+
+  // Show PIN setup modal if no PIN is set
+  if (!hasPinSetup) {
+    return (
+      <div className="min-h-screen bg-background">
+        <PinSetupModal open={true} onPinSet={setupPin} />
+      </div>
+    );
+  }
+
+  // Show PIN unlock modal if not unlocked
+  if (!isUnlocked) {
+    return (
+      <div className="min-h-screen bg-background">
+        <PinUnlockModal open={true} onUnlock={verifyPin} />
+      </div>
+    );
+  }
+
+  // Show location permission modal if not granted
+  if (!locationPermissionGranted) {
+    return (
+      <div className="min-h-screen bg-background">
+        <LocationPermissionModal 
+          open={showLocationModal} 
+          onRequestPermission={requestLocationPermission}
+        />
+      </div>
+    );
   }
 
   const activeOrders = (myOrdersData?.orders || []) as Order[];

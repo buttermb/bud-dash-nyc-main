@@ -759,6 +759,7 @@ export type Database = {
           notification_vibrate: boolean | null
           on_time_rate: number | null
           phone: string
+          pin_hash: string | null
           profile_photo_url: string | null
           rating: number | null
           total_deliveries: number | null
@@ -786,6 +787,7 @@ export type Database = {
           notification_vibrate?: boolean | null
           on_time_rate?: number | null
           phone: string
+          pin_hash?: string | null
           profile_photo_url?: string | null
           rating?: number | null
           total_deliveries?: number | null
@@ -813,6 +815,7 @@ export type Database = {
           notification_vibrate?: boolean | null
           on_time_rate?: number | null
           phone?: string
+          pin_hash?: string | null
           profile_photo_url?: string | null
           rating?: number | null
           total_deliveries?: number | null
