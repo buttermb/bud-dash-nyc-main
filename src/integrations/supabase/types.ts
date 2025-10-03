@@ -743,6 +743,8 @@ export type Database = {
       }
       couriers: {
         Row: {
+          admin_pin: string | null
+          admin_pin_verified: boolean | null
           age_verified: boolean | null
           commission_rate: number | null
           created_at: string | null
@@ -771,6 +773,8 @@ export type Database = {
           vehicle_type: string
         }
         Insert: {
+          admin_pin?: string | null
+          admin_pin_verified?: boolean | null
           age_verified?: boolean | null
           commission_rate?: number | null
           created_at?: string | null
@@ -799,6 +803,8 @@ export type Database = {
           vehicle_type: string
         }
         Update: {
+          admin_pin?: string | null
+          admin_pin_verified?: boolean | null
           age_verified?: boolean | null
           commission_rate?: number | null
           created_at?: string | null
@@ -1240,6 +1246,8 @@ export type Database = {
           dropoff_lat: number | null
           dropoff_lng: number | null
           estimated_delivery: string | null
+          eta_minutes: number | null
+          eta_updated_at: string | null
           id: string
           merchant_id: string | null
           order_number: string | null
@@ -1281,6 +1289,8 @@ export type Database = {
           dropoff_lat?: number | null
           dropoff_lng?: number | null
           estimated_delivery?: string | null
+          eta_minutes?: number | null
+          eta_updated_at?: string | null
           id?: string
           merchant_id?: string | null
           order_number?: string | null
@@ -1322,6 +1332,8 @@ export type Database = {
           dropoff_lat?: number | null
           dropoff_lng?: number | null
           estimated_delivery?: string | null
+          eta_minutes?: number | null
+          eta_updated_at?: string | null
           id?: string
           merchant_id?: string | null
           order_number?: string | null
@@ -1721,6 +1733,10 @@ export type Database = {
         Args: { _product_id: string; _quantity: number }
         Returns: boolean
       }
+      generate_admin_pin: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_tracking_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1767,6 +1783,10 @@ export type Database = {
           _user_id: string
         }
         Returns: undefined
+      }
+      verify_admin_pin: {
+        Args: { courier_user_id: string; pin: string }
+        Returns: boolean
       }
     }
     Enums: {
