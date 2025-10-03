@@ -8,11 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Package } from 'lucide-react';
 import { useCourier } from '@/contexts/CourierContext';
+import AdminPinVerificationModal from '@/components/courier/AdminPinVerificationModal';
 
 export default function CourierLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showAdminPinModal, setShowAdminPinModal] = useState(false);
+  const [courierUserId, setCourierUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { courier, refreshCourier } = useCourier();
@@ -53,6 +56,13 @@ export default function CourierLogin() {
         throw new Error('Your courier account is inactive. Please contact support.');
       }
 
+      // Check if admin PIN is required (first login)
+      if (courierData.admin_pin && !courierData.admin_pin_verified) {
+        setCourierUserId(authData.user.id);
+        setShowAdminPinModal(true);
+        return;
+      }
+
       // Refresh courier context to load data
       await refreshCourier();
       
@@ -73,6 +83,46 @@ export default function CourierLogin() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAdminPinVerify = async (pin: string): Promise<boolean> => {
+    if (!courierUserId) return false;
+
+    try {
+      const { data, error } = await supabase.rpc('verify_admin_pin', {
+        courier_user_id: courierUserId,
+        pin
+      });
+
+      if (error) throw error;
+
+      if (data) {
+        // Mark admin PIN as verified
+        await supabase
+          .from('couriers')
+          .update({ admin_pin_verified: true })
+          .eq('user_id', courierUserId);
+
+        setShowAdminPinModal(false);
+        await refreshCourier();
+        
+        toast({
+          title: "Verification complete!",
+          description: "Redirecting to dashboard..."
+        });
+
+        setTimeout(() => {
+          navigate('/courier/dashboard', { replace: true });
+        }, 100);
+
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Admin PIN verification error:', error);
+      return false;
     }
   };
 
@@ -133,6 +183,11 @@ export default function CourierLogin() {
           </div>
         </CardContent>
       </Card>
+      
+      <AdminPinVerificationModal
+        open={showAdminPinModal}
+        onVerify={handleAdminPinVerify}
+      />
     </div>
   );
 }

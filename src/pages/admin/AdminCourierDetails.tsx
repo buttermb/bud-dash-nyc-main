@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
+import CourierPinManagement from '@/components/admin/CourierPinManagement';
 
 export default function AdminCourierDetails() {
   const { id } = useParams();
@@ -240,6 +241,13 @@ export default function AdminCourierDetails() {
           {courier.is_active ? 'Deactivate Courier' : 'Activate Courier'}
         </Button>
       </div>
+
+      {/* PIN Management */}
+      <CourierPinManagement
+        courierId={courier.id}
+        currentPin={courier.admin_pin}
+        courierName={courier.full_name}
+      />
 
       {/* Tabs */}
       <Tabs defaultValue="earnings" className="space-y-4">
