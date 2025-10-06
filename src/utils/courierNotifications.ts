@@ -1,40 +1,25 @@
-// Notification sound - success sound
+// Notification sound using HTML5 audio (doesn't trigger microphone icon on iOS)
 export const playOrderSound = () => {
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  const oscillator = audioContext.createOscillator();
-  const gainNode = audioContext.createGain();
-
-  oscillator.connect(gainNode);
-  gainNode.connect(audioContext.destination);
-
-  oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-  oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
-  oscillator.frequency.setValueAtTime(1200, audioContext.currentTime + 0.2);
-
-  gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-
-  oscillator.start(audioContext.currentTime);
-  oscillator.stop(audioContext.currentTime + 0.5);
+  try {
+    // Simple notification sound using HTML5 audio
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGmi78N+oVRQLUKbh8LJeHAU7k9bxy3crc');
+    audio.volume = 0.3;
+    audio.play().catch(e => console.log('Audio play failed:', e));
+  } catch (error) {
+    console.log('Could not play order sound:', error);
+  }
 };
 
-// Success sound
+// Success sound using HTML5 audio (doesn't trigger microphone icon on iOS)
 export const playSuccessSound = () => {
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  const oscillator = audioContext.createOscillator();
-  const gainNode = audioContext.createGain();
-
-  oscillator.connect(gainNode);
-  gainNode.connect(audioContext.destination);
-
-  oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-  oscillator.frequency.setValueAtTime(900, audioContext.currentTime + 0.1);
-
-  gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-
-  oscillator.start(audioContext.currentTime);
-  oscillator.stop(audioContext.currentTime + 0.3);
+  try {
+    // Simple success sound using HTML5 audio
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGmi78N+oVRQLUKbh8LJeHAU7k9bxy3crc');
+    audio.volume = 0.3;
+    audio.play().catch(e => console.log('Audio play failed:', e));
+  } catch (error) {
+    console.log('Could not play success sound:', error);
+  }
 };
 
 // Vibrate on mobile
