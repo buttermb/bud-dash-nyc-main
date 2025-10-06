@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ArrowLeft, Bitcoin, DollarSign, Calendar as CalendarIcon, Clock, Zap, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Bitcoin, DollarSign, Calendar as CalendarIcon, Clock, Zap, AlertTriangle, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -834,24 +834,38 @@ const Checkout = () => {
                 <CardTitle>Order Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {cartItems.map((item) => {
                     const itemPrice = getItemPrice(item);
                     const selectedWeight = item.selected_weight || "unit";
+                    const coaUrl = item.products?.coa_url || item.products?.coa_pdf_url || item.products?.lab_results_url;
                     
                     return (
-                      <div key={item.id} className="flex justify-between text-sm">
-                        <span>
-                          {item.products?.name} x{item.quantity}
-                          {selectedWeight !== "unit" && (
-                            <span className="text-muted-foreground ml-1">
-                              ({selectedWeight})
-                            </span>
-                          )}
-                        </span>
-                        <span>
-                          ${(itemPrice * item.quantity).toFixed(2)}
-                        </span>
+                      <div key={item.id} className="border-b pb-3 last:border-0 last:pb-0">
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="font-medium">
+                            {item.products?.name} x{item.quantity}
+                            {selectedWeight !== "unit" && (
+                              <span className="text-muted-foreground ml-1">
+                                ({selectedWeight})
+                              </span>
+                            )}
+                          </span>
+                          <span className="font-semibold">
+                            ${(itemPrice * item.quantity).toFixed(2)}
+                          </span>
+                        </div>
+                        {coaUrl && (
+                          <a 
+                            href={coaUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                          >
+                            <Download className="w-3 h-3" />
+                            View COA
+                          </a>
+                        )}
                       </div>
                     );
                   })}

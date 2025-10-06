@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Plus, Minus, Check, Star, Flame, Sparkles, Loader2, AlertCircle, Award } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Check, Star, Flame, Sparkles, Loader2, AlertCircle, Award, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -142,6 +142,17 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
   const handleDecrement = (e: React.MouseEvent) => {
     e.stopPropagation();
     setQuantity(Math.max(1, quantity - 1));
+  };
+
+  const handleDownloadCOA = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const coaUrl = product.coa_url || product.coa_pdf_url || product.lab_results_url;
+    if (coaUrl) {
+      window.open(coaUrl, '_blank');
+      toast.success("Opening Certificate of Analysis");
+    } else {
+      toast.error("COA not available for this product");
+    }
   };
 
   return (
@@ -285,16 +296,27 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
             </Button>
           </div>
 
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCardClick();
-            }}
-          >
-            View Details
-          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCardClick();
+              }}
+            >
+              View Details
+            </Button>
+            
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={handleDownloadCOA}
+            >
+              <Download className="w-4 h-4" />
+              COA
+            </Button>
+          </div>
         </CardFooter>
       </Card>
 

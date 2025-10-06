@@ -278,37 +278,45 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
               </Button>
             </div>
 
-            {/* COA Download */}
-            {(product.coa_pdf_url || product.coa_url || product.lab_results_url) && (
-              <div className="mt-6 p-4 bg-primary/5 rounded-lg space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-primary" />
-                    <span className="font-semibold">Lab Test Results (COA)</span>
+            {/* COA Download - Always Visible */}
+            <div className="mt-6 p-6 bg-gradient-primary/10 backdrop-blur-sm rounded-lg border-2 border-primary/30 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-primary" />
                   </div>
-                  {product.coa_qr_code_url && (
-                    <QrCode className="w-5 h-5 text-muted-foreground" />
-                  )}
+                  <div>
+                    <span className="font-black text-lg uppercase tracking-wide">Certificate of Analysis</span>
+                    <p className="text-xs text-muted-foreground">Lab-tested for potency and purity</p>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  {(product.coa_pdf_url || product.coa_url) && (
-                    <Button variant="outline" size="sm" asChild className="flex-1">
-                      <a href={product.coa_pdf_url || product.coa_url} target="_blank" rel="noopener noreferrer">
-                        <Download className="w-4 h-4 mr-2" />
-                        Download PDF
-                      </a>
-                    </Button>
-                  )}
-                  {product.lab_results_url && (
-                    <Button variant="outline" size="sm" asChild className="flex-1">
-                      <a href={product.lab_results_url} target="_blank" rel="noopener noreferrer">
-                        View Full Results
-                      </a>
-                    </Button>
-                  )}
-                </div>
+                <Award className="w-8 h-8 text-primary/50" />
               </div>
-            )}
+              <div className="flex gap-3">
+                {(product.coa_pdf_url || product.coa_url || product.lab_results_url) ? (
+                  <>
+                    <Button variant="default" size="lg" asChild className="flex-1">
+                      <a href={product.coa_pdf_url || product.coa_url || product.lab_results_url} target="_blank" rel="noopener noreferrer">
+                        <Download className="w-5 h-5 mr-2" />
+                        Download COA
+                      </a>
+                    </Button>
+                    {product.lab_results_url && product.coa_url && (
+                      <Button variant="outline" size="lg" asChild>
+                        <a href={product.lab_results_url} target="_blank" rel="noopener noreferrer">
+                          View Online
+                        </a>
+                      </Button>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex-1 text-center py-3 text-sm text-muted-foreground">
+                    <p className="font-semibold">COA Coming Soon</p>
+                    <p className="text-xs">Lab results will be available shortly</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
