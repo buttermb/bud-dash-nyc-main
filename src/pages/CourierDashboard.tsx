@@ -17,6 +17,7 @@ import LocationPermissionModal from '@/components/courier/LocationPermissionModa
 import TutorialModal from '@/components/courier/TutorialModal';
 import NotificationPermissionBanner from '@/components/courier/NotificationPermissionBanner';
 import OrderCountdownTimer from '@/components/courier/OrderCountdownTimer';
+import AgeVerificationScanner from '@/components/courier/AgeVerificationScanner';
 import { 
   requestNotificationPermission, 
   notifyNewOrder, 
@@ -84,6 +85,7 @@ export default function CourierDashboard() {
   const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
   const [newOrderCount, setNewOrderCount] = useState(0);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [showAgeVerification, setShowAgeVerification] = useState(false);
   const previousOrderCountRef = useRef(0);
 
   // Check for first-time user and location permission
@@ -419,7 +421,27 @@ export default function CourierDashboard() {
     <div className="min-h-screen bg-[#0f172a] text-white pb-20">
       {/* Modals */}
       <TutorialModal open={showTutorial} onComplete={handleTutorialComplete} />
-      <LocationPermissionModal open={showLocationModal} onRequestPermission={requestLocationPermission} />
+      
+      {/* Age Verification Scanner */}
+      <AgeVerificationScanner
+        open={showAgeVerification}
+        onClose={() => setShowAgeVerification(false)}
+        onVerified={(isOver21, ageData) => {
+          console.log('Age verification:', { isOver21, ageData });
+          setShowAgeVerification(false);
+          
+          if (isOver21) {
+            toast.success('Age verified - Continue to complete delivery');
+            setOrderStatus('pickup'); // Reset for next delivery
+            if (activeOrder) {
+              updateStatusMutation.mutate({ orderId: activeOrder.id, newStatus: 'delivered' });
+            }
+          } else {
+            toast.error('Customer under 21 - Cannot complete delivery');
+            // TODO: Handle underage rejection flow - return to store
+          }
+        }}
+      />
       
       {/* Notification Permission Banner */}
       {isOnline && <NotificationPermissionBanner />}
@@ -447,8 +469,8 @@ export default function CourierDashboard() {
           </div>
           <div className="flex items-center space-x-3">
             <div className="text-right">
-              <div className="text-2xl font-black text-teal-400">${todayEarnings.toFixed(0)}</div>
-              <div className="text-xs text-slate-400">Today</div>
+              <div className="text-2xl font-black text-teal-400">${todayEarnings.toFixed(2)}</div>
+              <div className="text-xs text-slate-400">Your Earnings Today</div>
             </div>
             <div className="menu-container relative">
               <button 
@@ -566,13 +588,24 @@ export default function CourierDashboard() {
 
               {/* Order Info Card */}
               <div className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-teal-500/30 p-6">
+                {/* Courier Earnings Display - Prominent */}
+                <div className="bg-teal-500/10 border border-teal-500/30 rounded-lg p-4 mb-4">
+                  <div className="text-xs text-teal-400 font-bold mb-1">YOUR EARNINGS</div>
+                  <div className="text-4xl font-black text-teal-400 mb-2">
+                    ${((activeOrder.total_amount || 0) * 0.30 + (activeOrder.tip_amount || 0)).toFixed(2)}
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    Base: ${((activeOrder.total_amount || 0) * 0.30).toFixed(2)}
+                    {activeOrder.tip_amount && activeOrder.tip_amount > 0 && ` | Tip: $${activeOrder.tip_amount.toFixed(2)}`}
+                  </div>
+                </div>
+
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="text-xs text-teal-400 font-bold mb-1">ORDER ID</div>
                     <div className="text-2xl font-black">{activeOrder.order_number}</div>
                   </div>
                   <div className="flex flex-col items-end space-y-2">
-                    <div className="text-3xl font-black">${activeOrder.total_amount}</div>
                     {activeOrder.accepted_at && (
                       <OrderCountdownTimer 
                         orderNumber={activeOrder.order_number}
@@ -679,7 +712,7 @@ export default function CourierDashboard() {
                   {orderStatus === 'arrived' && (
                     <>
                       <button 
-                        onClick={() => setOrderStatus('verifying')}
+                        onClick={() => setShowAgeVerification(true)}
                         className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 py-4 font-black text-lg transition flex items-center justify-center space-x-2"
                       >
                         <AlertCircle size={20} />
@@ -690,40 +723,6 @@ export default function CourierDashboard() {
                         Must verify customer is 21+ before delivery
                       </div>
                     </>
-                  )}
-
-                  {orderStatus === 'verifying' && (
-                    <div className="space-y-4">
-                      <div className="bg-slate-900 border-2 border-yellow-500 p-6 text-center">
-                        <AlertCircle className="mx-auto mb-3 text-yellow-500" size={48} />
-                        <div className="text-xl font-black mb-2">VERIFY AGE (21+)</div>
-                        <div className="text-sm text-slate-400 mb-4">Check customer's valid ID</div>
-                        
-                        <div className="space-y-3">
-                          <button className="w-full bg-slate-800 hover:bg-slate-700 py-3 font-bold transition flex items-center justify-center space-x-2">
-                            <Camera size={18} />
-                            <span>Scan ID</span>
-                          </button>
-                          <input 
-                            type="date" 
-                            className="w-full bg-slate-800 border border-slate-700 px-4 py-3 text-center focus:outline-none focus:border-teal-500"
-                          />
-                        </div>
-                      </div>
-
-                      <button 
-                        onClick={() => updateStatusMutation.mutate({ orderId: activeOrder.id, newStatus: 'delivered' })}
-                        disabled={updateStatusMutation.isPending}
-                        className="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 py-4 font-black text-lg transition flex items-center justify-center space-x-2"
-                      >
-                        <CheckCircle size={20} />
-                        <span>COMPLETE DELIVERY</span>
-                      </button>
-
-                      <button className="w-full bg-red-600 hover:bg-red-700 py-3 font-bold transition">
-                        Customer Under 21 - Cancel Order
-                      </button>
-                    </div>
                   )}
                 </div>
               </div>
@@ -752,29 +751,42 @@ export default function CourierDashboard() {
               <div>No available orders</div>
             </div>
           ) : (
-            availableOrders.map((order: Order) => (
-              <div key={order.id} className="bg-slate-800 border border-slate-700 hover:border-teal-500 p-6 transition">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <div className="text-xl font-black mb-1">{order.order_number}</div>
-                    <div className="text-sm text-slate-400">
-                      {order.delivery_borough}
+            availableOrders.map((order: Order) => {
+              const baseCommission = (order.total_amount || 0) * 0.30;
+              const tipAmount = order.tip_amount || 0;
+              const courierEarnings = baseCommission + tipAmount;
+              
+              return (
+                <div key={order.id} className="bg-slate-800 border border-slate-700 hover:border-teal-500 p-6 transition">
+                  {/* Prominent Earnings Display */}
+                  <div className="bg-teal-500/10 border border-teal-500/30 rounded-lg p-4 mb-4">
+                    <div className="text-xs text-teal-400 font-bold mb-1">YOUR EARNINGS</div>
+                    <div className="text-4xl font-black text-teal-400">
+                      ${courierEarnings.toFixed(2)}
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1">
+                      Base: ${baseCommission.toFixed(2)} {tipAmount > 0 && `| Tip: $${tipAmount.toFixed(2)}`}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-black text-teal-400">${order.total_amount}</div>
-                    <div className="text-xs text-slate-400">{order.order_items?.length || 0} items</div>
+
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <div className="text-xl font-black mb-1">{order.order_number}</div>
+                      <div className="text-sm text-slate-400">
+                        {order.delivery_borough} • {order.order_items?.length || 0} items
+                      </div>
+                    </div>
                   </div>
+                  <button 
+                    onClick={() => acceptOrderMutation.mutate(order.id)}
+                    disabled={acceptOrderMutation.isPending}
+                    className="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 py-3 font-black transition"
+                  >
+                    ACCEPT ORDER
+                  </button>
                 </div>
-                <button 
-                  onClick={() => acceptOrderMutation.mutate(order.id)}
-                  disabled={acceptOrderMutation.isPending}
-                  className="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 py-3 font-black transition"
-                >
-                  ACCEPT ORDER
-                </button>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}
@@ -785,21 +797,25 @@ export default function CourierDashboard() {
           <div className="text-sm text-slate-400 mb-4">
             {completedOrders.length} deliveries completed today
           </div>
-          {completedOrders.map((order: Order) => (
-            <div key={order.id} className="bg-slate-800 border border-slate-700 p-4 flex items-center justify-between">
-              <div>
-                <div className="font-bold">{order.order_number}</div>
-                <div className="text-sm text-slate-400">{order.delivery_borough}</div>
-              </div>
-              <div className="text-right">
-                <div className="font-black text-teal-400">${order.total_amount}</div>
-                <div className="flex items-center space-x-1 text-yellow-500">
-                  <Star size={12} fill="currentColor" />
-                  <span className="text-xs">5.0</span>
+          {completedOrders.map((order: Order) => {
+            const courierEarnings = (order.total_amount || 0) * 0.30 + (order.tip_amount || 0);
+            return (
+              <div key={order.id} className="bg-slate-800 border border-slate-700 p-4 flex items-center justify-between">
+                <div>
+                  <div className="font-bold">{order.order_number}</div>
+                  <div className="text-sm text-slate-400">{order.delivery_borough}</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-black text-teal-400">${courierEarnings.toFixed(2)}</div>
+                  <div className="text-xs text-slate-500">Your earnings</div>
+                  <div className="flex items-center space-x-1 text-yellow-500 mt-1">
+                    <Star size={12} fill="currentColor" />
+                    <span className="text-xs">5.0</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
