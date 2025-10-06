@@ -57,20 +57,50 @@ export default function TrackOrderLive() {
     setRefreshing(!silent);
 
     try {
+      // Use the secure function instead of direct view access
       const { data, error } = await supabase
-        .from('public_order_tracking')
-        .select('*')
-        .eq('tracking_code', code)
-        .maybeSingle();
+        .rpc('get_order_by_tracking_code', { code: code || '' });
 
-      if (error || !data) {
+      if (error) {
+        console.error('Tracking error:', error);
         toast.error('Order not found');
         setLoading(false);
         return;
       }
 
-      setOrder(data);
+      // Data is returned as a single jsonb object (not an array)
+      if (!data) {
+        toast.error('Order not found');
+        setLoading(false);
+        return;
+      }
+
+      // Type cast the jsonb result
+      const orderJson = data as any;
+
+      // Transform the jsonb result to match OrderTracking interface
+      const orderData: OrderTracking = {
+        id: orderJson.id,
+        tracking_code: orderJson.tracking_code,
+        order_number: orderJson.order_number,
+        status: orderJson.status,
+        created_at: orderJson.created_at,
+        delivered_at: orderJson.delivered_at,
+        estimated_delivery: orderJson.estimated_delivery,
+        delivery_address: orderJson.delivery_address,
+        delivery_borough: orderJson.delivery_borough,
+        total_amount: orderJson.total_amount,
+        merchant_name: orderJson.merchant?.business_name || '',
+        merchant_address: orderJson.merchant?.address || '',
+        courier_name: orderJson.courier?.full_name || null,
+        courier_vehicle: orderJson.courier ? `${orderJson.courier.vehicle_make || ''} ${orderJson.courier.vehicle_model || ''}`.trim() : null,
+        courier_lat: orderJson.courier?.current_lat || null,
+        courier_lng: orderJson.courier?.current_lng || null,
+      };
+
+      setOrder(orderData);
     } catch (err) {
+      console.error('Fetch error:', err);
       toast.error('Failed to load tracking information');
     } finally {
       setLoading(false);

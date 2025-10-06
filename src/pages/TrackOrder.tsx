@@ -27,20 +27,28 @@ export default function TrackOrder() {
   const fetchOrder = async (orderCode: string) => {
     setLoading(true);
     try {
+      // Use secure tracking function instead of direct query
       const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          merchants (*),
-          addresses (*),
-          couriers (full_name, phone, vehicle_type),
-          order_items (*, products (*))
-        `)
-        .eq('tracking_code', orderCode.toUpperCase())
-        .single();
+        .rpc('get_order_by_tracking_code', { code: orderCode.toUpperCase() });
 
       if (error) throw error;
-      setOrder(data);
+      
+      if (!data) {
+        throw new Error('Order not found');
+      }
+      
+      // Parse the jsonb result (type cast for safety)
+      const orderData = data as any;
+      
+      // Transform to match expected format
+      const transformedData = {
+        ...orderData,
+        merchants: orderData.merchant,
+        couriers: orderData.courier,
+        order_items: orderData.order_items || []
+      };
+      
+      setOrder(transformedData);
     } catch (error) {
       toast({
         title: "Order not found",
