@@ -97,7 +97,7 @@ const Navigation = () => {
       {/* Free Shipping Banner */}
       <div className="bg-card border-b border-border py-2">
         <div className="container mx-auto px-4 text-center text-sm font-medium">
-          <span>Licensed NY Hemp Retailer | THCA Products | Same-Day Delivery | Free Shipping $75+</span>
+          <span>Licensed NY Hemp Retailer | THCA Products | Same-Day Delivery | Free Shipping $100+</span>
         </div>
       </div>
 

@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, Clock, Leaf, MapPin } from "lucide-react";
+import { ShieldCheck, Clock, Leaf } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Hero = () => {
+  const navigate = useNavigate();
+  
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
       {/* Solid gradient background - no image */}
@@ -34,28 +37,6 @@ const Hero = () => {
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
             Hemp-derived THCA products. Lab-tested. NYC licensed.
           </p>
-
-          {/* Coordinates Info Box */}
-          <div className="border-2 border-primary/30 bg-card/50 backdrop-blur p-6 rounded-lg max-w-md mx-auto">
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <MapPin className="w-5 h-5 text-primary" />
-              <span className="font-black text-lg tracking-wider">NYC</span>
-            </div>
-            <div className="grid grid-cols-1 gap-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Coordinates:</span>
-                <span className="font-semibold">40°42'45"N 74°00'21"W</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Area:</span>
-                <span className="font-semibold">468.19 sq mi | 1,212.60 km²</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Delivery Zones:</span>
-                <span className="font-semibold">All 5 Boroughs</span>
-              </div>
-            </div>
-          </div>
 
           {/* Trust Indicators */}
           <div className="flex flex-wrap justify-center gap-6 pt-4">
@@ -90,12 +71,9 @@ const Hero = () => {
               variant="outline" 
               size="lg" 
               className="text-lg px-8 py-6"
-              onClick={() => {
-                const howItWorksSection = document.getElementById('how-it-works');
-                howItWorksSection?.scrollIntoView({ behavior: 'smooth' });
-              }}
+              onClick={() => navigate('/track-order')}
             >
-              Check Delivery
+              Track Order
             </Button>
           </div>
 
