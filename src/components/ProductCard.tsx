@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Plus, Minus, Check, Star, Flame, Sparkles, Loader2, AlertCircle, Award, Download } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Check, Star, Flame, Sparkles, Loader2, AlertCircle, Award, Download, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -209,30 +209,35 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
             )}
           </div>
           
-          <div className="flex items-center justify-between">
+          {/* THCA % Badge + Price - Side by Side */}
+          <div className="flex items-center justify-between gap-4">
             {product.thca_percentage && (
-              <Badge className="bg-primary text-primary-foreground px-4 py-2 text-base font-bold">
-                {product.thca_percentage}% THCA
-              </Badge>
+              <div className="flex-shrink-0">
+                <Badge className="bg-teal-500 text-white px-5 py-3 text-lg font-black border-2 border-teal-400/50 shadow-glow">
+                  {product.thca_percentage}% THCA
+                </Badge>
+              </div>
             )}
             {product.prices && typeof product.prices === 'object' && Object.keys(product.prices).length > 1 ? (
               <div className="text-right">
-                <span className="text-3xl font-black">
+                <span className="text-3xl font-black text-white">
                   From ${Number(Math.min(...Object.values(product.prices).map(p => Number(p)))).toFixed(0)}
                 </span>
-                {/* Show bundle savings for weight-based products */}
                 {Object.keys(product.prices).length >= 2 && (
-                  <p className="text-sm text-primary font-semibold mt-2">
-                    Save up to ${(
-                      (Number(Object.values(product.prices)[0]) * 8) - 
-                      Number(Object.values(product.prices)[Object.keys(product.prices).length - 1])
-                    ).toFixed(0)} with bulk!
+                  <p className="text-sm text-teal-400 font-semibold mt-2">
+                    Save with bulk!
                   </p>
                 )}
               </div>
             ) : (
-              <span className="text-3xl font-black">${Number(product.price).toFixed(0)}</span>
+              <span className="text-3xl font-black text-white">${Number(product.price).toFixed(0)}</span>
             )}
+          </div>
+
+          {/* Delivery Time Badge */}
+          <div className="flex items-center gap-2 text-sm font-semibold text-teal-400 bg-teal-500/10 px-4 py-2 rounded-lg border border-teal-500/20">
+            <Clock className="w-4 h-4" />
+            <span>30-40 min delivery</span>
           </div>
 
           {/* Low Stock Alert */}
