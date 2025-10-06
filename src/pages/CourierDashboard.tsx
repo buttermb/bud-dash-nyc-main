@@ -4,13 +4,16 @@ import { useCourierPin } from '@/contexts/CourierPinContext';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Loader2, MapPin, Phone, Navigation, Clock, CheckCircle, 
-  DollarSign, Package, User, Camera, AlertCircle, Circle, Star 
+  DollarSign, Package, User, Camera, AlertCircle, Circle, Star, LogOut, Menu 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Switch } from '@/components/ui/switch';
 import PinSetupModal from '@/components/courier/PinSetupModal';
 import PinUnlockModal from '@/components/courier/PinUnlockModal';
+import LocationPermissionModal from '@/components/courier/LocationPermissionModal';
+import TutorialModal from '@/components/courier/TutorialModal';
 
 interface OrderItem {
   product_name: string;
@@ -57,7 +60,7 @@ interface TodayStats {
 }
 
 export default function CourierDashboard() {
-  const { courier, loading: courierLoading, isOnline } = useCourier();
+  const { courier, loading: courierLoading, isOnline, toggleOnlineStatus } = useCourier();
   const { hasPinSetup, isUnlocked, setupPin, verifyPin } = useCourierPin();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -65,6 +68,106 @@ export default function CourierDashboard() {
   const [currentView, setCurrentView] = useState<'active' | 'available' | 'completed' | 'earnings'>('active');
   const [orderStatus, setOrderStatus] = useState<'pickup' | 'delivering' | 'arrived' | 'verifying'>('pickup');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
+
+  // Check for first-time user and location permission
+  useEffect(() => {
+    if (courier && isUnlocked) {
+      // Check if first time user
+      const hasSeenTutorial = localStorage.getItem('courier_tutorial_completed');
+      if (!hasSeenTutorial) {
+        setShowTutorial(true);
+      }
+
+      // Check location permission
+      checkLocationPermission();
+    }
+  }, [courier, isUnlocked]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showMenu && !target.closest('.menu-container')) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showMenu]);
+
+  const checkLocationPermission = async () => {
+    if ('geolocation' in navigator) {
+      try {
+        const result = await navigator.permissions.query({ name: 'geolocation' });
+        if (result.state === 'granted') {
+          setLocationPermissionGranted(true);
+        } else if (result.state === 'prompt') {
+          setShowLocationModal(true);
+        } else {
+          setShowLocationModal(true);
+        }
+      } catch (error) {
+        // Fallback for browsers that don't support permissions API
+        navigator.geolocation.getCurrentPosition(
+          () => setLocationPermissionGranted(true),
+          () => setShowLocationModal(true)
+        );
+      }
+    }
+  };
+
+  const requestLocationPermission = () => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        () => {
+          setLocationPermissionGranted(true);
+          setShowLocationModal(false);
+          toast.success('Location access granted!');
+        },
+        (error) => {
+          if (error.code === error.PERMISSION_DENIED) {
+            toast.error('Please enable location in your browser settings');
+          } else {
+            toast.error('Unable to access location');
+          }
+        },
+        { enableHighAccuracy: true }
+      );
+    }
+  };
+
+  const handleTutorialComplete = () => {
+    localStorage.setItem('courier_tutorial_completed', 'true');
+    setShowTutorial(false);
+    if (!locationPermissionGranted) {
+      setShowLocationModal(true);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/courier/login');
+      toast.success('Logged out successfully');
+    } catch (error) {
+      toast.error('Error logging out');
+    }
+  };
+
+  const handleToggleOnline = async () => {
+    if (!locationPermissionGranted && !isOnline) {
+      setShowLocationModal(true);
+      return;
+    }
+    await toggleOnlineStatus();
+  };
 
   // Fetch today's stats
   const { data: stats } = useQuery<TodayStats>({
@@ -229,6 +332,10 @@ export default function CourierDashboard() {
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white pb-20">
+      {/* Modals */}
+      <TutorialModal open={showTutorial} onComplete={handleTutorialComplete} />
+      <LocationPermissionModal open={showLocationModal} onRequestPermission={requestLocationPermission} />
+
       {/* Header */}
       <div className="bg-slate-900 border-b border-slate-800 px-4 py-4 sticky top-0 z-50">
         <div className="flex items-center justify-between">
@@ -238,15 +345,53 @@ export default function CourierDashboard() {
             </div>
             <div>
               <div className="font-black text-sm">DRIVER PANEL</div>
-              <div className="text-xs text-slate-400">
-                {isOnline ? 'Online • Ready' : 'Offline'}
+              <div className="flex items-center space-x-2 text-xs">
+                <Switch 
+                  checked={isOnline} 
+                  onCheckedChange={handleToggleOnline}
+                  className="scale-75"
+                />
+                <span className={isOnline ? 'text-teal-400 font-bold' : 'text-slate-400'}>
+                  {isOnline ? 'Online' : 'Offline'}
+                </span>
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             <div className="text-right">
               <div className="text-2xl font-black text-teal-400">${todayEarnings.toFixed(0)}</div>
               <div className="text-xs text-slate-400">Today</div>
+            </div>
+            <div className="menu-container relative">
+              <button 
+                onClick={() => setShowMenu(!showMenu)}
+                className="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-slate-700 transition border border-slate-700"
+              >
+                <Menu size={20} />
+              </button>
+              
+              {/* Dropdown Menu */}
+              {showMenu && (
+                <div className="absolute right-0 top-12 bg-slate-800 border border-slate-700 rounded shadow-lg overflow-hidden z-50 min-w-[200px]">
+                  <button
+                    onClick={() => {
+                      setShowTutorial(true);
+                      setShowMenu(false);
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-slate-700 transition flex items-center space-x-2 border-b border-slate-700"
+                  >
+                    <AlertCircle size={18} />
+                    <span>View Tutorial</span>
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 text-left hover:bg-slate-700 transition flex items-center space-x-2 text-red-400"
+                  >
+                    <LogOut size={18} />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
