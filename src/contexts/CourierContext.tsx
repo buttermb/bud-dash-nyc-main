@@ -153,6 +153,14 @@ export function CourierProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const newStatus = !isOnline;
+      
+      // Check if user is still authenticated before making the call
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log('No active session, skipping status update');
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('courier-app', {
         body: { 
           endpoint: 'toggle-online',
@@ -171,11 +179,15 @@ export function CourierProvider({ children }: { children: React.ReactNode }) {
       });
     } catch (error) {
       console.error('Failed to toggle status:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update status",
-        variant: "destructive"
-      });
+      // Only show error if user is still authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        toast({
+          title: "Error",
+          description: "Failed to update status",
+          variant: "destructive"
+        });
+      }
     }
   };
 

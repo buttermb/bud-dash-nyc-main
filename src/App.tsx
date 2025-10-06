@@ -154,14 +154,6 @@ const App = () => (
                 }
               />
               <Route
-                path="/courier"
-                element={
-                  <ProtectedRoute>
-                    <CourierDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/checkout"
                 element={
                   <ProtectedRoute>
