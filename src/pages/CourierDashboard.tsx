@@ -474,6 +474,13 @@ export default function CourierDashboard() {
     }
   });
 
+  // Redirect to login if not authenticated - must be in useEffect
+  useEffect(() => {
+    if (!courierLoading && !courier) {
+      navigate('/courier/login');
+    }
+  }, [courier, courierLoading, navigate]);
+
   if (courierLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -483,8 +490,7 @@ export default function CourierDashboard() {
   }
 
   if (!courier) {
-    navigate('/courier/login');
-    return null;
+    return null; // useEffect will handle navigation
   }
 
   // Show PIN setup modal if no PIN is set

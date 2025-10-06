@@ -35,6 +35,13 @@ export default function CourierHistory() {
     }
   }, [period, courier]);
 
+  // Redirect to login if not authenticated - must be in useEffect
+  useEffect(() => {
+    if (!courierLoading && !courier) {
+      navigate('/courier/login');
+    }
+  }, [courier, courierLoading, navigate]);
+
   const fetchHistory = async () => {
     setLoading(true);
     try {
@@ -89,8 +96,7 @@ export default function CourierHistory() {
   }
 
   if (!courier) {
-    navigate('/courier/login');
-    return null;
+    return null; // useEffect will handle navigation
   }
 
   const totalDeliveries = orders.length;

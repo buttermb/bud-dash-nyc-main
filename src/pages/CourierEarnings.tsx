@@ -49,6 +49,13 @@ export default function CourierEarnings() {
     }
   }, [period, courier]);
 
+  // Redirect to login if not authenticated - must be in useEffect
+  useEffect(() => {
+    if (!courierLoading && !courier) {
+      navigate('/courier/login');
+    }
+  }, [courier, courierLoading, navigate]);
+
   const fetchEarnings = async () => {
     setLoading(true);
     try {
@@ -94,8 +101,7 @@ export default function CourierEarnings() {
   }
 
   if (!courier) {
-    navigate('/courier/login');
-    return null;
+    return null; // useEffect will handle navigation
   }
 
   return (

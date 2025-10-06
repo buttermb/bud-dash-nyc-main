@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useCourier } from '@/contexts/CourierContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +20,13 @@ export default function CourierProfile() {
     }
   };
 
+  // Redirect to login if not authenticated - must be in useEffect
+  useEffect(() => {
+    if (!loading && !courier) {
+      navigate('/courier/login');
+    }
+  }, [courier, loading, navigate]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -28,8 +36,7 @@ export default function CourierProfile() {
   }
 
   if (!courier) {
-    navigate('/courier/login');
-    return null;
+    return null; // useEffect will handle navigation
   }
 
   return (
