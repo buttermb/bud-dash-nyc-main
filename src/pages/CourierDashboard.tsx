@@ -161,7 +161,89 @@ export default function CourierDashboard() {
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Check location permission on mount
+  // Fetch today's stats
+  const { data: stats } = useQuery<TodayStats>({
+    queryKey: ['courier-today-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('courier-app', {
+        body: { endpoint: 'today-stats' }
+      });
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: 30000,
+    enabled: !!courier
+  });
+
+  // Fetch active orders with customer info
+  const { data: myOrdersData } = useQuery({
+    queryKey: ['courier-my-orders'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('courier-app', {
+        body: { endpoint: 'my-orders', status: 'active' }
+      });
+      if (error) throw error;
+      
+      // Fetch customer order counts
+      if (data?.orders) {
+        const ordersWithCounts = await Promise.all(
+          data.orders.map(async (order: Order) => {
+            if (order.user_id) {
+              const { count } = await supabase
+                .from('orders')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', order.user_id)
+                .eq('status', 'delivered');
+              
+              return { ...order, customer_order_count: count || 0 };
+            }
+            return { ...order, customer_order_count: 0 };
+          })
+        );
+        return { ...data, orders: ordersWithCounts };
+      }
+      
+      return data;
+    },
+    refetchInterval: 15000,
+    enabled: !!courier
+  });
+
+  // Fetch available orders with customer info
+  const { data: availableOrdersData } = useQuery({
+    queryKey: ['courier-available-orders'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('courier-app', {
+        body: { endpoint: 'available-orders' }
+      });
+      if (error) throw error;
+      
+      // Fetch customer order counts
+      if (data?.orders) {
+        const ordersWithCounts = await Promise.all(
+          data.orders.map(async (order: Order) => {
+            if (order.user_id) {
+              const { count } = await supabase
+                .from('orders')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', order.user_id)
+                .eq('status', 'delivered');
+              
+              return { ...order, customer_order_count: count || 0 };
+            }
+            return { ...order, customer_order_count: 0 };
+          })
+        );
+        return { ...data, orders: ordersWithCounts };
+      }
+      
+      return data;
+    },
+    refetchInterval: 15000,
+    enabled: !!courier && isOnline
+  });
+
+  // Start location tracking
   useEffect(() => {
     checkLocationPermission();
     
@@ -285,87 +367,7 @@ export default function CourierDashboard() {
     window.open(url, '_blank');
   };
 
-  // Fetch today's stats
-  const { data: stats } = useQuery<TodayStats>({
-    queryKey: ['courier-today-stats'],
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('courier-app', {
-        body: { endpoint: 'today-stats' }
-      });
-      if (error) throw error;
-      return data;
-    },
-    refetchInterval: 30000,
-    enabled: !!courier
-  });
-
-  // Fetch active orders with customer info
-  const { data: myOrdersData } = useQuery({
-    queryKey: ['courier-my-orders'],
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('courier-app', {
-        body: { endpoint: 'my-orders', status: 'active' }
-      });
-      if (error) throw error;
-      
-      // Fetch customer order counts
-      if (data?.orders) {
-        const ordersWithCounts = await Promise.all(
-          data.orders.map(async (order: Order) => {
-            if (order.user_id) {
-              const { count } = await supabase
-                .from('orders')
-                .select('id', { count: 'exact', head: true })
-                .eq('user_id', order.user_id)
-                .eq('status', 'delivered');
-              
-              return { ...order, customer_order_count: count || 0 };
-            }
-            return { ...order, customer_order_count: 0 };
-          })
-        );
-        return { ...data, orders: ordersWithCounts };
-      }
-      
-      return data;
-    },
-    refetchInterval: 15000,
-    enabled: !!courier
-  });
-
-  // Fetch available orders with customer info
-  const { data: availableOrdersData } = useQuery({
-    queryKey: ['courier-available-orders'],
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('courier-app', {
-        body: { endpoint: 'available-orders' }
-      });
-      if (error) throw error;
-      
-      // Fetch customer order counts
-      if (data?.orders) {
-        const ordersWithCounts = await Promise.all(
-          data.orders.map(async (order: Order) => {
-            if (order.user_id) {
-              const { count } = await supabase
-                .from('orders')
-                .select('id', { count: 'exact', head: true })
-                .eq('user_id', order.user_id)
-                .eq('status', 'delivered');
-              
-              return { ...order, customer_order_count: count || 0 };
-            }
-            return { ...order, customer_order_count: 0 };
-          })
-        );
-        return { ...data, orders: ordersWithCounts };
-      }
-      
-      return data;
-    },
-    refetchInterval: 15000,
-    enabled: !!courier && isOnline
-  });
+  // These were moved before early returns - DELETED
 
   // Accept order mutation
   const acceptOrderMutation = useMutation({
@@ -515,6 +517,7 @@ export default function CourierDashboard() {
     );
   }
 
+  // Compute active/available orders after all early returns
   const activeOrders = (myOrdersData?.orders || []) as Order[];
   let availableOrders = (availableOrdersData?.orders || []) as Order[];
   
@@ -534,16 +537,6 @@ export default function CourierDashboard() {
       });
   }
 
-  // Show notification if there are active deliveries
-  useEffect(() => {
-    if (activeOrders.length > 0 && notificationPermission === 'granted') {
-      new Notification('Active Delivery', {
-        body: `You have ${activeOrders.length} active ${activeOrders.length === 1 ? 'delivery' : 'deliveries'}`,
-        tag: 'active-delivery'
-      });
-    }
-  }, [activeOrders.length, notificationPermission]);
-  
   const courierCommissionRate = courier?.commission_rate || 30;
 
   const markPickedUp = (orderId: string) => {
