@@ -20,6 +20,7 @@ All colors MUST be HSL.
     
     --primary: 173 80% 40%;     /* #14b8a6 teal */
     --primary-foreground: 0 0% 100%;
+    --primary-glow: 173 72% 70%;
     
     --secondary: 217 33% 17%;   /* #1e293b */
     --secondary-foreground: 0 0% 100%;
@@ -39,14 +40,22 @@ All colors MUST be HSL.
     
     --radius: 0.5rem;
     
+    /* Premium Gold Accents */
+    --gold: 43 96% 56%;
+    --gold-muted: 43 86% 70%;
+    
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(173 80% 40%), hsl(173 80% 35%));
-    --gradient-hero: linear-gradient(180deg, hsl(222 47% 11%), hsl(217 33% 17%));
+    --gradient-hero: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(217 33% 17%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(217 33% 17%) 0%, hsl(222 47% 11%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(222 47% 11%) 0%, hsl(217 33% 17%) 100%);
+    --gradient-button: linear-gradient(90deg, hsl(173 80% 40%) 0%, hsl(173 80% 35%) 100%);
     
-    /* Shadows */
-    --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-strong: 0 8px 24px rgba(0, 0, 0, 0.4);
-    --shadow-glow: 0 0 20px rgba(20, 184, 166, 0.3);
+    /* Premium Shadows */
+    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.25);
+    --shadow-glow: 0 0 40px hsl(173 80% 40% / 0.3);
+    --shadow-strong: 0 10px 40px rgba(0, 0, 0, 0.4);
+    --shadow-elegant: 0 10px 30px -10px hsl(173 80% 40% / 0.4);
     
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

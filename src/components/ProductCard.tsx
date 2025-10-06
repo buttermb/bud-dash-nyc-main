@@ -148,7 +148,7 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
   return (
     <>
       <Card 
-        className="group overflow-hidden hover:ring-2 hover:ring-primary transition-all duration-300 cursor-pointer relative bg-card"
+        className="group overflow-hidden hover:ring-2 hover:ring-primary transition-all duration-300 cursor-pointer relative bg-card hover:shadow-elegant hover:-translate-y-2"
         onClick={handleCardClick}
       >
         {/* Out of Stock Overlay */}
@@ -191,44 +191,44 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
           />
         </div>
 
-        <CardContent className="p-6 space-y-4">
+        <CardContent className="p-8 space-y-6">
           <div>
-            <h3 className="text-2xl font-bold mb-2">{product.name}</h3>
+            <h3 className="text-3xl font-black mb-3 uppercase tracking-wide">{product.name}</h3>
             {product.strain_type && (
-              <p className="text-sm text-muted-foreground capitalize">{product.strain_type}</p>
+              <p className="text-base text-muted-foreground capitalize font-medium">{product.strain_type}</p>
             )}
           </div>
           
           <div className="flex items-center justify-between">
             {product.thca_percentage && (
-              <span className="text-sm font-semibold text-primary">
-                {product.thca_percentage}% THCa
-              </span>
+              <Badge className="bg-primary text-primary-foreground px-4 py-2 text-base font-bold">
+                {product.thca_percentage}% THCA
+              </Badge>
             )}
             {product.prices && typeof product.prices === 'object' && Object.keys(product.prices).length > 1 ? (
               <div className="text-right">
-                <span className="text-xl font-bold">
-                  From ${Number(Math.min(...Object.values(product.prices).map(p => Number(p)))).toFixed(2)}
+                <span className="text-3xl font-black">
+                  From ${Number(Math.min(...Object.values(product.prices).map(p => Number(p)))).toFixed(0)}
                 </span>
                 {/* Show bundle savings for weight-based products */}
                 {Object.keys(product.prices).length >= 2 && (
-                  <p className="text-xs text-primary font-medium mt-1">
+                  <p className="text-sm text-primary font-semibold mt-2">
                     Save up to ${(
                       (Number(Object.values(product.prices)[0]) * 8) - 
                       Number(Object.values(product.prices)[Object.keys(product.prices).length - 1])
-                    ).toFixed(2)} with bulk!
+                    ).toFixed(0)} with bulk!
                   </p>
                 )}
               </div>
             ) : (
-              <span className="text-xl font-bold">${Number(product.price).toFixed(2)}</span>
+              <span className="text-3xl font-black">${Number(product.price).toFixed(0)}</span>
             )}
           </div>
 
           {/* Low Stock Alert */}
           {isLowStock && (
-            <div className="flex items-center gap-1 text-xs text-destructive font-medium">
-              <AlertCircle className="h-3 w-3" />
+            <div className="flex items-center gap-2 text-sm text-destructive font-semibold px-4 py-2 bg-destructive/10 rounded-lg">
+              <AlertCircle className="h-4 w-4" />
               Only {stockLevel} left in stock!
             </div>
           )}

@@ -106,11 +106,11 @@ const ProductCatalog = () => {
   ];
 
   return (
-    <section id="products" className="py-20">
+    <section id="products" className="py-32 bg-gradient-subtle">
       <div className="container px-4 mx-auto">
-        <div className="text-center space-y-4 mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold">Shop THCA Products</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <div className="text-center space-y-6 mb-20">
+          <h2 className="text-6xl md:text-7xl font-black uppercase tracking-wider">Shop THCA Products</h2>
+          <p className="text-2xl text-muted-foreground max-w-3xl mx-auto font-medium">
             Premium hemp-derived THCA products from licensed NYC vendors
           </p>
         </div>
@@ -295,7 +295,7 @@ const ProductCatalog = () => {
             </div>
           ) : (
             <TabsContent value={category} className="mt-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {products.map((product) => (
                   <ProductCard
                     key={product.id}

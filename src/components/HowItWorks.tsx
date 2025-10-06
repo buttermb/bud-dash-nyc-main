@@ -21,32 +21,32 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-20 bg-muted/30">
+    <section className="py-32 bg-muted/30">
       <div className="container px-4 mx-auto">
-        <div className="text-center space-y-4 mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold">How It Works</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <div className="text-center space-y-6 mb-24">
+          <h2 className="text-6xl md:text-7xl font-black uppercase tracking-wider">How It Works</h2>
+          <p className="text-2xl text-muted-foreground max-w-3xl mx-auto font-medium">
             Three simple steps to get premium THCA delivered to your door
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-6xl mx-auto">
           {steps.map((step, index) => {
             const Icon = step.icon;
             return (
               <Card 
                 key={index} 
-                className="relative overflow-hidden border-2 hover:shadow-strong transition-all duration-300 hover:-translate-y-1"
+                className="relative overflow-hidden border-2 hover:shadow-elegant transition-all duration-300 hover:-translate-y-2 bg-card/50 backdrop-blur-sm"
               >
-                <CardContent className="pt-12 pb-8 text-center space-y-4">
-                  <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-sm font-bold text-primary">{index + 1}</span>
+                <CardContent className="pt-16 pb-12 text-center space-y-6">
+                  <div className="absolute top-6 right-6 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-xl font-black text-primary">{index + 1}</span>
                   </div>
-                  <div className="w-16 h-16 mx-auto rounded-full bg-gradient-primary flex items-center justify-center">
-                    <Icon className="w-8 h-8 text-primary-foreground" />
+                  <div className="w-20 h-20 mx-auto rounded-full bg-gradient-primary flex items-center justify-center">
+                    <Icon className="w-10 h-10 text-primary-foreground" />
                   </div>
-                  <h3 className="text-2xl font-bold">{step.title}</h3>
-                  <p className="text-muted-foreground">{step.description}</p>
+                  <h3 className="text-3xl font-black uppercase tracking-wide">{step.title}</h3>
+                  <p className="text-muted-foreground text-lg">{step.description}</p>
                 </CardContent>
               </Card>
             );

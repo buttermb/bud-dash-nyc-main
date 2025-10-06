@@ -101,7 +101,7 @@ const Navigation = () => {
         </div>
       </div>
 
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/95">
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/98 backdrop-blur-lg supports-[backdrop-filter]:bg-background/95 shadow-soft">
         <div className="container flex h-20 items-center justify-between px-4">
           <a href="/" className="flex items-center gap-3">
             <NYMLogo size={60} />
