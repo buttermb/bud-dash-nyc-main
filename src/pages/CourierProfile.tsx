@@ -20,23 +20,12 @@ export default function CourierProfile() {
     }
   };
 
-  // Redirect to login if not authenticated - must be in useEffect
-  useEffect(() => {
-    if (!loading && !courier) {
-      navigate('/courier/login');
-    }
-  }, [courier, loading, navigate]);
-
-  if (loading) {
+  if (loading || !courier) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
-  }
-
-  if (!courier) {
-    return null; // useEffect will handle navigation
   }
 
   return (

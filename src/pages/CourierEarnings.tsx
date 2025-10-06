@@ -49,13 +49,6 @@ export default function CourierEarnings() {
     }
   }, [period, courier]);
 
-  // Redirect to login if not authenticated - must be in useEffect
-  useEffect(() => {
-    if (!courierLoading && !courier) {
-      navigate('/courier/login');
-    }
-  }, [courier, courierLoading, navigate]);
-
   const fetchEarnings = async () => {
     setLoading(true);
     try {
@@ -92,16 +85,12 @@ export default function CourierEarnings() {
     }
   };
 
-  if (courierLoading || loading) {
+  if (courierLoading || loading || !courier) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
-  }
-
-  if (!courier) {
-    return null; // useEffect will handle navigation
   }
 
   return (

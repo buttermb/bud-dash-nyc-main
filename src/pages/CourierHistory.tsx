@@ -35,13 +35,6 @@ export default function CourierHistory() {
     }
   }, [period, courier]);
 
-  // Redirect to login if not authenticated - must be in useEffect
-  useEffect(() => {
-    if (!courierLoading && !courier) {
-      navigate('/courier/login');
-    }
-  }, [courier, courierLoading, navigate]);
-
   const fetchHistory = async () => {
     setLoading(true);
     try {
@@ -87,16 +80,12 @@ export default function CourierHistory() {
     }
   };
 
-  if (courierLoading || loading) {
+  if (courierLoading || loading || !courier) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
-  }
-
-  if (!courier) {
-    return null; // useEffect will handle navigation
   }
 
   const totalDeliveries = orders.length;
