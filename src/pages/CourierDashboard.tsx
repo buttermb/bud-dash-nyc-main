@@ -290,24 +290,6 @@ export default function CourierDashboard() {
     enabled: !!courier && currentView === 'completed'
   });
 
-  // Track new order count
-  useEffect(() => {
-    const currentCount = availableOrdersData?.orders?.length || 0;
-    const previousCount = previousOrderCountRef.current;
-    
-    if (currentCount > previousCount && previousCount > 0) {
-      const newOrders = currentCount - previousCount;
-      setNewOrderCount(prev => prev + newOrders);
-      
-      // Clear badge after 10 seconds
-      setTimeout(() => {
-        setNewOrderCount(0);
-      }, 10000);
-    }
-    
-    previousOrderCountRef.current = currentCount;
-  }, [availableOrdersData]);
-
   // Accept order mutation
   const acceptOrderMutation = useMutation({
     mutationFn: async (orderId: string) => {
@@ -362,6 +344,25 @@ export default function CourierDashboard() {
       toast.error("Error updating status");
     }
   });
+
+  // Track new order count - Must come AFTER availableOrdersData is declared
+  useEffect(() => {
+    const currentCount = availableOrdersData?.orders?.length || 0;
+    const previousCount = previousOrderCountRef.current;
+    
+    if (currentCount > previousCount && previousCount > 0) {
+      const newOrders = currentCount - previousCount;
+      setNewOrderCount(prev => prev + newOrders);
+      
+      // Clear badge after 10 seconds
+      setTimeout(() => {
+        setNewOrderCount(0);
+      }, 10000);
+    }
+    
+    previousOrderCountRef.current = currentCount;
+  }, [availableOrdersData]);
+
 
   // Open navigation
   const openNavigation = (order: Order, destination: 'pickup' | 'delivery') => {
