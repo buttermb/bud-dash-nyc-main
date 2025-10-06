@@ -67,13 +67,45 @@ export default function IncomingOrderModal({ order, open, onAccept, onReject }: 
             </div>
           </div>
 
+          {/* YOUR EARNINGS - Most Important */}
+          <div className="bg-green-50 dark:bg-green-950 border-2 border-green-500 rounded-lg p-4">
+            <p className="text-sm font-medium text-green-700 dark:text-green-300">YOUR EARNINGS</p>
+            <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+              ${((order.total_amount || 0) * ((order.commission_rate || 30) / 100) + (order.tip_amount || 0)).toFixed(2)}
+            </p>
+            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+              Base: ${((order.total_amount || 0) * ((order.commission_rate || 30) / 100)).toFixed(2)} 
+              {order.tip_amount > 0 && ` | Tip: $${order.tip_amount.toFixed(2)}`}
+            </p>
+          </div>
+
+          {/* ORDER ITEMS - Show what to deliver */}
+          {order.order_items && order.order_items.length > 0 && (
+            <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center gap-2 mb-2">
+                <Package className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <p className="font-semibold text-blue-900 dark:text-blue-100">Items to Deliver ({order.order_items.length})</p>
+              </div>
+              <div className="space-y-2">
+                {order.order_items.map((item: any, index: number) => (
+                  <div key={index} className="flex justify-between text-sm bg-white dark:bg-gray-900 p-2 rounded">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                      {item.product_name || item.products?.name || 'Product'}
+                    </span>
+                    <span className="text-gray-600 dark:text-gray-400">x{item.quantity}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* ETA */}
           {order.eta_minutes && (
-            <div className="bg-primary/10 rounded-lg p-4 flex items-center gap-3">
-              <Clock className="h-6 w-6 text-primary" />
+            <div className="bg-primary/10 rounded-lg p-3 flex items-center gap-3">
+              <Clock className="h-5 w-5 text-primary" />
               <div>
-                <p className="text-sm text-muted-foreground">Estimated Time</p>
-                <p className="text-xl font-bold">{order.eta_minutes} minutes</p>
+                <p className="text-xs text-muted-foreground">Estimated Time</p>
+                <p className="text-lg font-bold">{order.eta_minutes} minutes</p>
               </div>
             </div>
           )}
@@ -81,9 +113,11 @@ export default function IncomingOrderModal({ order, open, onAccept, onReject }: 
           {/* Pickup Location */}
           <div className="space-y-2">
             <div className="flex items-start gap-3">
-              <Package className="h-5 w-5 text-primary mt-1" />
+              <div className="bg-green-100 dark:bg-green-900 p-2 rounded-full">
+                <Package className="h-4 w-4 text-green-600 dark:text-green-400" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Pickup</p>
+                <p className="text-xs font-medium text-muted-foreground">PICKUP</p>
                 <p className="font-medium">{order.merchant_name || 'Merchant Location'}</p>
                 <p className="text-sm text-muted-foreground">{order.pickup_address || 'Address loading...'}</p>
               </div>
@@ -93,9 +127,11 @@ export default function IncomingOrderModal({ order, open, onAccept, onReject }: 
           {/* Delivery Location */}
           <div className="space-y-2">
             <div className="flex items-start gap-3">
-              <MapPin className="h-5 w-5 text-primary mt-1" />
+              <div className="bg-red-100 dark:bg-red-900 p-2 rounded-full">
+                <MapPin className="h-4 w-4 text-red-600 dark:text-red-400" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Delivery</p>
+                <p className="text-xs font-medium text-muted-foreground">DELIVERY</p>
                 <p className="font-medium">{order.customer_name || 'Customer'}</p>
                 <p className="text-sm text-muted-foreground">{order.delivery_address}</p>
                 <p className="text-sm text-muted-foreground">{order.delivery_borough}</p>
@@ -103,17 +139,13 @@ export default function IncomingOrderModal({ order, open, onAccept, onReject }: 
             </div>
           </div>
 
-          {/* Order Info */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-            <div>
-              <p className="text-sm text-muted-foreground">Order Total</p>
-              <p className="text-lg font-bold">${order.total_amount?.toFixed(2)}</p>
+          {/* Distance */}
+          {order.distance_miles && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Navigation className="h-4 w-4" />
+              <span>{order.distance_miles} mi</span>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Distance</p>
-              <p className="text-lg font-bold">{order.distance_miles || '—'} mi</p>
-            </div>
-          </div>
+          )}
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-3 pt-4">

@@ -759,9 +759,9 @@ export default function CourierDashboard() {
               return (
                 <div key={order.id} className="bg-slate-800 border border-slate-700 hover:border-teal-500 p-6 transition">
                   {/* Prominent Earnings Display */}
-                  <div className="bg-teal-500/10 border border-teal-500/30 rounded-lg p-4 mb-4">
-                    <div className="text-xs text-teal-400 font-bold mb-1">YOUR EARNINGS</div>
-                    <div className="text-4xl font-black text-teal-400">
+                  <div className="bg-green-500/10 border-2 border-green-500 rounded-lg p-4 mb-4">
+                    <div className="text-xs text-green-400 font-bold mb-1">YOUR EARNINGS</div>
+                    <div className="text-4xl font-black text-green-400">
                       ${courierEarnings.toFixed(2)}
                     </div>
                     <div className="text-xs text-slate-400 mt-1">
@@ -769,14 +769,45 @@ export default function CourierDashboard() {
                     </div>
                   </div>
 
+                  {/* ORDER ITEMS - Show what to deliver */}
+                  {order.order_items && order.order_items.length > 0 && (
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-4">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <Package className="text-blue-400" size={16} />
+                        <div className="text-xs text-blue-400 font-bold">ITEMS TO DELIVER ({order.order_items.length})</div>
+                      </div>
+                      <div className="space-y-2">
+                        {order.order_items.map((item: OrderItem, idx: number) => (
+                          <div key={idx} className="flex items-center justify-between bg-slate-900/50 border border-slate-700 p-3 rounded">
+                            <div>
+                              <div className="font-bold text-sm">{item.products?.name || item.product_name}</div>
+                              {item.products?.thca_percentage && (
+                                <div className="text-xs text-slate-400">{item.products.thca_percentage}% THCA</div>
+                              )}
+                            </div>
+                            <div className="text-sm font-bold text-slate-300">x{item.quantity}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <div className="text-xl font-black mb-1">{order.order_number}</div>
                       <div className="text-sm text-slate-400">
-                        {order.delivery_borough} • {order.order_items?.length || 0} items
+                        {order.delivery_borough}
                       </div>
                     </div>
                   </div>
+
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-start space-x-2">
+                      <MapPin className="text-teal-400 flex-shrink-0 mt-1" size={14} />
+                      <div className="text-sm text-slate-300">{order.delivery_address}</div>
+                    </div>
+                  </div>
+
                   <button 
                     onClick={() => acceptOrderMutation.mutate(order.id)}
                     disabled={acceptOrderMutation.isPending}
