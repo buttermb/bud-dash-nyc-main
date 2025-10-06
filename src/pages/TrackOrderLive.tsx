@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Loader2, RefreshCw, Phone, MessageCircle, MapPin, Store, User, Clock } from 'lucide-react';
+import { CustomerLocationSharing } from '@/components/CustomerLocationSharing';
 
 interface OrderTracking {
   id: string;
@@ -312,6 +313,10 @@ export default function TrackOrderLive() {
             </div>
           </Card>
         </div>
+
+        {order.status !== 'delivered' && order.status !== 'cancelled' && (
+          <CustomerLocationSharing orderId={order.id} />
+        )}
 
         {/* Help Section */}
         <Card className="mt-8 p-6 text-center">

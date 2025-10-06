@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Package, MapPin, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
+import { CustomerLocationSharing } from "@/components/CustomerLocationSharing";
 
 const OrderConfirmation = () => {
   const navigate = useNavigate();
@@ -174,6 +175,8 @@ const OrderConfirmation = () => {
               </div>
             </CardContent>
           </Card>
+
+          <CustomerLocationSharing orderId={orderId} />
 
           <div className="flex gap-4">
             <Button
