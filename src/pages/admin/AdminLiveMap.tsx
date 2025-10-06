@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Truck, Package, Clock, DollarSign, Users, Navigation, UserPlus, CheckCircle2, Shield } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AssignCourierDialog } from "@/components/admin/AssignCourierDialog";
@@ -93,6 +94,8 @@ const AdminLiveMap = () => {
   const [loading, setLoading] = useState(true);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [boroughFilter, setBoroughFilter] = useState<string>("all");
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
@@ -198,9 +201,13 @@ const AdminLiveMap = () => {
     try {
       const mapInstance = new mapboxgl.Map({
         container: mapContainer.current,
-        style: "mapbox://styles/mapbox/streets-v11",
-        center: [-73.98, 40.75], // Manhattan center
+        style: "mapbox://styles/mapbox/dark-v11", // Dark mode for NYM branding
+        center: [-73.9855, 40.7580], // Manhattan center (40.7580, -73.9855)
         zoom: 11,
+        maxBounds: [
+          [-74.2591, 40.4774], // Southwest (Staten Island)
+          [-73.7004, 40.9176], // Northeast (Bronx)
+        ],
       });
 
       mapInstance.on('load', () => {
@@ -260,23 +267,44 @@ const AdminLiveMap = () => {
       return;
     }
 
+    // Filter deliveries based on status and borough
+    const filteredDeliveries = deliveries.filter((delivery) => {
+      const statusMatch = statusFilter === "all" || delivery.order?.status === statusFilter;
+      const boroughMatch = boroughFilter === "all" || delivery.order?.delivery_borough === boroughFilter;
+      return statusMatch && boroughMatch;
+    });
+
     // Add markers and routes for each delivery
-    deliveries.forEach(async (delivery) => {
+    filteredDeliveries.forEach(async (delivery) => {
       console.log("Processing delivery:", delivery);
       
       // Use coordinates from order object, not delivery object
       const actualDropoffLat = delivery.order?.dropoff_lat || delivery.dropoff_lat;
       const actualDropoffLng = delivery.order?.dropoff_lng || delivery.dropoff_lng;
       
-      console.log("Using coordinates:", { actualDropoffLat, actualDropoffLng });
+      // Customer live location
+      const customerLat = delivery.order?.customer_lat;
+      const customerLng = delivery.order?.customer_lng;
+      const customerLocationEnabled = delivery.order?.customer_location_enabled;
       
-      // Calculate route if courier is assigned
+      console.log("Using coordinates:", { actualDropoffLat, actualDropoffLng, customerLat, customerLng, customerLocationEnabled });
+      
+      // Calculate route to customer's live location if available, otherwise to address
       let routeData = null;
-      if (delivery.courier?.current_lat && delivery.courier?.current_lng && actualDropoffLat && actualDropoffLng) {
+      let routeTargetLat = actualDropoffLat;
+      let routeTargetLng = actualDropoffLng;
+      
+      // Prefer customer's live location if available
+      if (customerLocationEnabled && customerLat && customerLng) {
+        routeTargetLat = customerLat;
+        routeTargetLng = customerLng;
+      }
+      
+      if (delivery.courier?.current_lat && delivery.courier?.current_lng && routeTargetLat && routeTargetLng) {
         const courierLng = parseFloat(delivery.courier.current_lng);
         const courierLat = parseFloat(delivery.courier.current_lat);
-        const dropoffLng = parseFloat(actualDropoffLng);
-        const dropoffLat = parseFloat(actualDropoffLat);
+        const dropoffLng = parseFloat(routeTargetLng);
+        const dropoffLat = parseFloat(routeTargetLat);
         
         routeData = await getOptimizedRoute(
           [courierLng, courierLat],
@@ -319,7 +347,107 @@ const AdminLiveMap = () => {
 
       const etaText = routeData ? `⏱️ <strong>ETA:</strong> ${Math.round(routeData.duration / 60)} min | ${(routeData.distance / 1000).toFixed(1)} km` : '';
       
-      // Show destination marker (dropoff)
+      // Calculate customer location update age (used in multiple places)
+      const lastUpdate = delivery.order?.customer_location_updated_at 
+        ? new Date(delivery.order.customer_location_updated_at)
+        : null;
+      const updateAge = lastUpdate 
+        ? Math.round((Date.now() - lastUpdate.getTime()) / 1000)
+        : null;
+      const updateText = updateAge 
+        ? updateAge < 60 ? `${updateAge}s ago` : `${Math.round(updateAge / 60)}min ago`
+        : 'Unknown';
+      
+      // Show customer's live location marker if enabled (blue pulsing dot)
+      if (customerLocationEnabled && customerLat && customerLng) {
+        const customerMarkerEl = document.createElement('div');
+        customerMarkerEl.className = 'custom-customer-marker';
+        customerMarkerEl.innerHTML = `
+          <div style="position: relative;">
+            <div style="background: #3b82f6; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5); animation: pulse 2s infinite;">
+              📍
+            </div>
+          </div>
+        `;
+        
+        // Calculate distance from delivery address to customer location
+        const distanceFromAddress = customerLat && customerLng && actualDropoffLat && actualDropoffLng
+          ? Math.sqrt(Math.pow((customerLat - actualDropoffLat) * 69, 2) + Math.pow((customerLng - actualDropoffLng) * 54.6, 2))
+          : null;
+        
+        const locationStatus = distanceFromAddress 
+          ? distanceFromAddress < 0.02 ? '✓ At location' 
+            : distanceFromAddress < 0.1 ? '⚠️ Nearby' 
+            : '🚨 Not at address'
+          : '';
+        
+        const distanceText = distanceFromAddress 
+          ? `<div style="margin-top: 4px; color: ${distanceFromAddress < 0.02 ? '#10b981' : distanceFromAddress < 0.1 ? '#f59e0b' : '#ef4444'};">
+              ${locationStatus} (${(distanceFromAddress).toFixed(2)} mi from address)
+            </div>`
+          : '';
+        
+        const customerPopup = new mapboxgl.Popup({ maxWidth: '300px' }).setHTML(
+          `<div style="padding: 12px; font-family: system-ui;">
+            <strong style="font-size: 16px; color: #3b82f6;">📍 Customer Live Location</strong><br/>
+            <div style="margin-top: 8px; color: #374151;">
+              <div><strong>Order:</strong> ${delivery.order?.order_number || 'Unknown'}</div>
+              <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Updated ${updateText}</div>
+              ${distanceText}
+              ${delivery.order?.customer_name ? `<div style="margin-top: 4px;"><strong>Customer:</strong> ${delivery.order.customer_name}</div>` : ''}
+            </div>
+          </div>`
+        );
+        
+        const customerMarker = new mapboxgl.Marker({ element: customerMarkerEl })
+          .setLngLat([parseFloat(customerLng), parseFloat(customerLat)])
+          .setPopup(customerPopup)
+          .addTo(map.current!);
+        
+        markers.current.push(customerMarker);
+        console.log("Added customer live location marker");
+        
+        // Draw line from customer location to delivery address if they're different
+        if (distanceFromAddress && distanceFromAddress > 0.02) {
+          const distanceLineId = `distance-line-${delivery.id}`;
+          if (!routeLayersAdded.current.has(distanceLineId) && map.current) {
+            map.current.addSource(distanceLineId, {
+              type: 'geojson',
+              data: {
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                  type: 'LineString',
+                  coordinates: [
+                    [parseFloat(customerLng), parseFloat(customerLat)],
+                    [parseFloat(actualDropoffLng), parseFloat(actualDropoffLat)]
+                  ]
+                }
+              }
+            });
+            
+            map.current.addLayer({
+              id: distanceLineId,
+              type: 'line',
+              source: distanceLineId,
+              layout: {
+                'line-join': 'round',
+                'line-cap': 'round'
+              },
+              paint: {
+                'line-color': '#9ca3af',
+                'line-width': 2,
+                'line-dasharray': [2, 2],
+                'line-opacity': 0.6
+              }
+            });
+            
+            routeLayersAdded.current.add(distanceLineId);
+          }
+        }
+      }
+      
+      // Show destination marker (delivery address - red house icon)
       if (actualDropoffLat && actualDropoffLng) {
         const orderNumber = delivery.order?.order_number || `#${delivery.order?.id?.substring(0, 8).toUpperCase() || 'Order'}`;
         const items = delivery.order?.items || [];
@@ -327,12 +455,30 @@ const AdminLiveMap = () => {
           ? items.map((item: any) => `${item.product_name || 'Product'} x${item.quantity || 1}`).join('<br/>')
           : 'No items';
         
-        // Create custom marker element with action buttons
+        // Choose marker color and icon based on order status
+        const getMarkerStyle = (status: string) => {
+          switch (status) {
+            case 'pending':
+              return { bg: '#ef4444', icon: '📦', label: 'PENDING' }; // Red
+            case 'confirmed':
+              return { bg: '#f59e0b', icon: '📋', label: 'CONFIRMED' }; // Yellow
+            case 'out_for_delivery':
+              return { bg: '#3b82f6', icon: '🚚', label: 'EN ROUTE' }; // Blue
+            case 'delivered':
+              return { bg: '#6b7280', icon: '✓', label: 'DELIVERED' }; // Gray
+            default:
+              return { bg: '#ef4444', icon: '📦', label: 'PENDING' }; // Red default
+          }
+        };
+        
+        const markerStyle = getMarkerStyle(delivery.order?.status);
+        
+        // Create custom marker element (house icon for delivery address)
         const markerElement = document.createElement('div');
         markerElement.className = 'custom-marker';
         markerElement.innerHTML = `
-          <div style="background: #ef4444; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-            📦
+          <div style="background: ${markerStyle.bg}; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.3); border: 3px solid white;">
+            🏠
           </div>
         `;
         
@@ -345,9 +491,20 @@ const AdminLiveMap = () => {
             <strong style="font-size: 16px;">${orderNumber}</strong><br/>
             ${etaText ? `<div style="margin-top: 8px; padding: 8px; background: #dbeafe; border-radius: 6px; color: #1e40af; font-size: 14px; font-weight: 500;">${etaText}</div>` : ''}
             <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
-              <div style="color: #059669; font-weight: 600; margin-bottom: 4px;">Status: ${delivery.order?.status?.replace(/_/g, " ").toUpperCase() || 'PENDING'}</div>
-              <div style="color: #374151; margin: 4px 0;"><strong>Delivery Address:</strong><br/>${delivery.order?.delivery_address || 'Unknown'}</div>
+              <div style="color: #059669; font-weight: 600; margin-bottom: 4px;">Status: ${markerStyle.label}</div>
+              <div style="color: #374151; margin: 4px 0;"><strong>🏠 Delivery Address:</strong><br/>${delivery.order?.delivery_address || 'Unknown'}</div>
               <div style="color: #374151; margin: 4px 0;"><strong>Borough:</strong> ${delivery.order?.delivery_borough || 'N/A'}</div>
+              ${customerLocationEnabled && customerLat && customerLng 
+                ? `<div style="margin-top: 8px; padding: 8px; background: #dbeafe; border-radius: 6px;">
+                    <div style="color: #1e40af; font-weight: 600;">📍 Customer Location Active</div>
+                    <div style="font-size: 12px; color: #1e40af; margin-top: 4px;">
+                      Updated ${updateAge ? updateAge < 60 ? `${updateAge}s ago` : `${Math.round(updateAge / 60)}min ago` : 'recently'}
+                    </div>
+                  </div>`
+                : `<div style="margin-top: 8px; padding: 8px; background: #f3f4f6; border-radius: 6px;">
+                    <div style="color: #6b7280; font-size: 14px;">⚫ Customer location not available</div>
+                  </div>`
+              }
             </div>
             <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
               <strong>Items (${items.length}):</strong><br/>

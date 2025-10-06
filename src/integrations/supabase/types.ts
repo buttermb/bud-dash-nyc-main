@@ -1234,6 +1234,11 @@ export type Database = {
           courier_rating: number | null
           created_at: string | null
           customer_id: string | null
+          customer_lat: number | null
+          customer_lng: number | null
+          customer_location_accuracy: number | null
+          customer_location_enabled: boolean | null
+          customer_location_updated_at: string | null
           customer_name: string | null
           customer_phone: string | null
           customer_signature_url: string | null
@@ -1277,6 +1282,11 @@ export type Database = {
           courier_rating?: number | null
           created_at?: string | null
           customer_id?: string | null
+          customer_lat?: number | null
+          customer_lng?: number | null
+          customer_location_accuracy?: number | null
+          customer_location_enabled?: boolean | null
+          customer_location_updated_at?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           customer_signature_url?: string | null
@@ -1320,6 +1330,11 @@ export type Database = {
           courier_rating?: number | null
           created_at?: string | null
           customer_id?: string | null
+          customer_lat?: number | null
+          customer_lng?: number | null
+          customer_location_accuracy?: number | null
+          customer_location_enabled?: boolean | null
+          customer_location_updated_at?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           customer_signature_url?: string | null
