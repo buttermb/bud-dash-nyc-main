@@ -1,19 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useCourier } from '@/contexts/CourierContext';
 import { useCourierPin } from '@/contexts/CourierPinContext';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Loader2, MapPin, Phone, Navigation, Clock, CheckCircle, 
-  DollarSign, Package, User, Camera, AlertCircle, Circle, Star, LogOut, Menu 
+  DollarSign, Package, User, Camera, AlertCircle, Circle, Star, LogOut, Menu, Bell 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import PinSetupModal from '@/components/courier/PinSetupModal';
 import PinUnlockModal from '@/components/courier/PinUnlockModal';
 import LocationPermissionModal from '@/components/courier/LocationPermissionModal';
 import TutorialModal from '@/components/courier/TutorialModal';
+import NotificationPermissionBanner from '@/components/courier/NotificationPermissionBanner';
+import OrderCountdownTimer from '@/components/courier/OrderCountdownTimer';
+import { 
+  requestNotificationPermission, 
+  notifyNewOrder, 
+  notifyEarningsUpdate,
+  playOrderSound,
+  vibrateDevice 
+} from '@/utils/courierNotifications';
 
 interface OrderItem {
   product_name: string;
@@ -72,6 +82,9 @@ export default function CourierDashboard() {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
+  const [newOrderCount, setNewOrderCount] = useState(0);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const previousOrderCountRef = useRef(0);
 
   // Check for first-time user and location permission
   useEffect(() => {
@@ -84,8 +97,61 @@ export default function CourierDashboard() {
 
       // Check location permission
       checkLocationPermission();
+      
+      // Request notification permission
+      requestNotificationPermission().then(granted => {
+        setNotificationsEnabled(granted);
+      });
     }
   }, [courier, isUnlocked]);
+
+  // Real-time subscription for new orders
+  useEffect(() => {
+    if (!courier || !isOnline) return;
+
+    const channel = supabase
+      .channel('new-orders')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'orders',
+          filter: `status=eq.pending`
+        },
+        (payload) => {
+          console.log('🆕 New order detected:', payload);
+          const newOrder = payload.new as any;
+          
+          // Play sound and vibrate
+          playOrderSound();
+          vibrateDevice([200, 100, 200, 100, 200]);
+          
+          // Show notification
+          if (notificationsEnabled) {
+            notifyNewOrder(
+              newOrder.order_number,
+              newOrder.total_amount,
+              newOrder.delivery_borough
+            );
+          }
+          
+          // Show toast
+          toast.success('🚨 New Order Available!', {
+            description: `${newOrder.order_number} - $${newOrder.total_amount}`,
+            duration: 5000
+          });
+          
+          // Refresh available orders
+          queryClient.invalidateQueries({ queryKey: ['courier-available-orders'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [courier, isOnline, notificationsEnabled, queryClient]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -224,6 +290,24 @@ export default function CourierDashboard() {
     enabled: !!courier && currentView === 'completed'
   });
 
+  // Track new order count
+  useEffect(() => {
+    const currentCount = availableOrdersData?.orders?.length || 0;
+    const previousCount = previousOrderCountRef.current;
+    
+    if (currentCount > previousCount && previousCount > 0) {
+      const newOrders = currentCount - previousCount;
+      setNewOrderCount(prev => prev + newOrders);
+      
+      // Clear badge after 10 seconds
+      setTimeout(() => {
+        setNewOrderCount(0);
+      }, 10000);
+    }
+    
+    previousOrderCountRef.current = currentCount;
+  }, [availableOrdersData]);
+
   // Accept order mutation
   const acceptOrderMutation = useMutation({
     mutationFn: async (orderId: string) => {
@@ -335,6 +419,9 @@ export default function CourierDashboard() {
       {/* Modals */}
       <TutorialModal open={showTutorial} onComplete={handleTutorialComplete} />
       <LocationPermissionModal open={showLocationModal} onRequestPermission={requestLocationPermission} />
+      
+      {/* Notification Permission Banner */}
+      {isOnline && <NotificationPermissionBanner />}
 
       {/* Header */}
       <div className="bg-slate-900 border-b border-slate-800 px-4 py-4 sticky top-0 z-50">
@@ -400,8 +487,8 @@ export default function CourierDashboard() {
       {/* Tab Navigation */}
       <div className="bg-slate-800 border-b border-slate-700 px-2 py-2 flex space-x-2 overflow-x-auto">
         {[
-          { id: 'active' as const, label: 'Active', icon: Package },
-          { id: 'available' as const, label: 'Available', icon: Circle },
+          { id: 'active' as const, label: 'Active', icon: Package, count: myOrders.length },
+          { id: 'available' as const, label: 'Available', icon: Circle, count: newOrderCount },
           { id: 'completed' as const, label: 'Completed', icon: CheckCircle },
           { id: 'earnings' as const, label: 'Earnings', icon: DollarSign }
         ].map(tab => {
@@ -409,8 +496,13 @@ export default function CourierDashboard() {
           return (
             <button
               key={tab.id}
-              onClick={() => setCurrentView(tab.id)}
-              className={`flex items-center space-x-2 px-4 py-2 font-bold text-sm transition whitespace-nowrap ${
+              onClick={() => {
+                setCurrentView(tab.id);
+                if (tab.id === 'available') {
+                  setNewOrderCount(0);
+                }
+              }}
+              className={`relative flex items-center space-x-2 px-4 py-2 font-bold text-sm transition whitespace-nowrap ${
                 currentView === tab.id 
                   ? 'bg-teal-500 text-white' 
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
@@ -418,6 +510,11 @@ export default function CourierDashboard() {
             >
               <Icon size={16} />
               <span>{tab.label}</span>
+              {tab.count > 0 && (
+                <Badge className="absolute -top-1 -right-1 bg-red-500 text-white border-0 animate-pulse">
+                  {tab.count}
+                </Badge>
+              )}
             </button>
           );
         })}
@@ -469,12 +566,18 @@ export default function CourierDashboard() {
               {/* Order Info Card */}
               <div className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-teal-500/30 p-6">
                 <div className="flex items-start justify-between mb-4">
-                  <div>
+                  <div className="flex-1">
                     <div className="text-xs text-teal-400 font-bold mb-1">ORDER ID</div>
                     <div className="text-2xl font-black">{activeOrder.order_number}</div>
                   </div>
-                  <div className="text-right">
+                  <div className="flex flex-col items-end space-y-2">
                     <div className="text-3xl font-black">${activeOrder.total_amount}</div>
+                    {activeOrder.accepted_at && (
+                      <OrderCountdownTimer 
+                        orderNumber={activeOrder.order_number}
+                        acceptedAt={activeOrder.accepted_at}
+                      />
+                    )}
                   </div>
                 </div>
 
@@ -631,8 +734,16 @@ export default function CourierDashboard() {
       {/* Available Orders View */}
       {currentView === 'available' && (
         <div className="p-4 space-y-4">
-          <div className="text-sm text-slate-400 mb-4">
-            {availableOrders.length} orders available nearby
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm text-slate-400">
+              {availableOrders.length} orders available nearby
+            </div>
+            {isOnline && (
+              <div className="flex items-center space-x-2 text-xs text-teal-400">
+                <Bell size={14} className="animate-pulse" />
+                <span>Notifications Active</span>
+              </div>
+            )}
           </div>
           {availableOrders.length === 0 ? (
             <div className="text-center text-slate-400 py-12">
