@@ -9,6 +9,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProductDetailModal } from "./ProductDetailModal";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
+import { getDefaultWeight } from "@/utils/productHelpers";
 
 interface ProductCardProps {
   product: any;
@@ -78,10 +79,8 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
 
     setLoading(true);
     try {
-      // Get default weight for products with weight options
-      const defaultWeight = product.prices && typeof product.prices === 'object' 
-        ? Object.keys(product.prices)[0] 
-        : "unit";
+      // Get default weight for products with weight options (always starts at 3.5g)
+      const defaultWeight = getDefaultWeight(product.prices);
 
       const { data: existing } = await supabase
         .from("cart_items")

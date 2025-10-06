@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { sortProductWeights, getDefaultWeight, formatWeight } from "@/utils/productHelpers";
 
 interface ProductDetailModalProps {
   product: any;
@@ -45,10 +46,8 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
 
   useEffect(() => {
     if (product?.prices && typeof product.prices === 'object') {
-      const weights = Object.keys(product.prices);
-      if (weights.length > 0) {
-        setSelectedWeight(weights[0]);
-      }
+      const defaultWeight = getDefaultWeight(product.prices);
+      setSelectedWeight(defaultWeight);
     }
   }, [product, open]);
 
@@ -123,7 +122,7 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
 
   const getWeights = () => {
     if (product.prices && typeof product.prices === 'object') {
-      return Object.keys(product.prices);
+      return sortProductWeights(Object.keys(product.prices));
     }
     return [];
   };
@@ -214,9 +213,9 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
                       key={weight}
                       variant={selectedWeight === weight ? "default" : "outline"}
                       onClick={() => setSelectedWeight(weight)}
-                      className="font-semibold"
+                      className="font-semibold uppercase"
                     >
-                      {weight}
+                      {formatWeight(weight)}
                     </Button>
                   ))}
                 </div>

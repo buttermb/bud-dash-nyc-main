@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { getDefaultWeight } from "@/utils/productHelpers";
 
 interface CheckoutUpsellsProps {
   cartItems: any[];
@@ -65,9 +66,7 @@ const CheckoutUpsells = ({ cartItems }: CheckoutUpsellsProps) => {
 
     setAddingProduct(product.id);
     try {
-      const defaultWeight = product.prices && typeof product.prices === 'object' 
-        ? Object.keys(product.prices)[0] 
-        : "unit";
+      const defaultWeight = getDefaultWeight(product.prices);
 
       const { data: existing } = await supabase
         .from("cart_items")
