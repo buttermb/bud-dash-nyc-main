@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Leaf, Menu, ShoppingCart, User, Truck } from "lucide-react";
+import { Menu, ShoppingCart, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import AuthModal from "./AuthModal";
 import CartDrawer from "./CartDrawer";
 import ThemeToggle from "./ThemeToggle";
+import NYMLogo from "./NYMLogo";
 
 const Navigation = () => {
   const { user, signOut } = useAuth();
@@ -94,21 +95,20 @@ const Navigation = () => {
   return (
     <>
       {/* Free Shipping Banner */}
-      <div className="bg-gradient-primary text-primary-foreground py-2">
-        <div className="container mx-auto px-4 flex items-center justify-center gap-2 text-sm font-medium">
-          <Truck className="h-4 w-4" />
-          <span>Free Delivery $100+ • Free Express $500+</span>
-          <Badge variant="secondary" className="ml-2">Limited Time</Badge>
+      <div className="bg-card border-b border-border py-2">
+        <div className="container mx-auto px-4 text-center text-sm font-medium">
+          <span>Licensed NY Hemp Retailer | THCA Products | Same-Day Delivery | Free Shipping $75+</span>
         </div>
       </div>
 
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between px-4">
-          <a href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center">
-              <Leaf className="w-6 h-6 text-primary-foreground" />
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/95">
+        <div className="container flex h-20 items-center justify-between px-4">
+          <a href="/" className="flex items-center gap-3">
+            <NYMLogo size={60} />
+            <div className="flex flex-col">
+              <span className="font-black text-xl tracking-wider">NEW YORK MINUTE</span>
+              <span className="text-xs text-muted-foreground tracking-widest">THCA DELIVERY. ELEVATED.</span>
             </div>
-            <span className="text-xl font-bold hidden sm:inline">New York Minute</span>
           </a>
 
           {/* Desktop Navigation */}

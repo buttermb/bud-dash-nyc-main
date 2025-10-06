@@ -1,9 +1,10 @@
-import { Leaf, Shield, Award, Lock } from "lucide-react";
+import { Shield, Award, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import NYMLogo from "./NYMLogo";
 
 const Footer = () => {
   return (
-    <footer className="bg-muted/30 border-t py-12">
+    <footer className="bg-[hsl(222_47%_8%)] border-t border-border py-12">
       <div className="container px-4 mx-auto">
         {/* Compliance Badges Section */}
         <div className="mb-8 pb-8 border-b">
@@ -41,30 +42,31 @@ const Footer = () => {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
-                <Leaf className="w-5 h-5 text-primary-foreground" />
+              <NYMLogo size={50} />
+              <div className="flex flex-col">
+                <span className="font-black text-lg tracking-wider">NEW YORK MINUTE</span>
+                <span className="text-xs text-muted-foreground tracking-widest">THCA DELIVERY. ELEVATED.</span>
               </div>
-              <span className="text-xl font-bold">THCA NYC</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Premium THCA delivery connecting NYC customers with licensed local shops.
+              Hemp-derived THCA products. Lab-tested. NYC licensed.
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-semibold mb-4">Shop</h3>
+            <h3 className="font-black mb-4 uppercase tracking-wide">Shop</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="/#products" className="hover:text-primary transition-colors">Flower</a></li>
-              <li><a href="/#products" className="hover:text-primary transition-colors">Edibles</a></li>
-              <li><a href="/#products" className="hover:text-primary transition-colors">Vapes</a></li>
-              <li><a href="/#products" className="hover:text-primary transition-colors">Concentrates</a></li>
+              <li><a href="/#products" className="hover:text-primary transition-colors">THCA Flower</a></li>
+              <li><a href="/#products" className="hover:text-primary transition-colors">THCA Pre-Rolls</a></li>
+              <li><a href="/#products" className="hover:text-primary transition-colors">THCA Vapes</a></li>
+              <li><a href="/#products" className="hover:text-primary transition-colors">THCA Concentrates</a></li>
             </ul>
           </div>
 
           {/* Company */}
           <div>
-            <h3 className="font-semibold mb-4">Company</h3>
+            <h3 className="font-black mb-4 uppercase tracking-wide">Company</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><a href="/about" className="hover:text-primary transition-colors">About Us</a></li>
               <li><a href="/partner-shops" className="hover:text-primary transition-colors">Partner Shops</a></li>
@@ -75,7 +77,7 @@ const Footer = () => {
 
           {/* Support */}
           <div>
-            <h3 className="font-semibold mb-4">Support</h3>
+            <h3 className="font-black mb-4 uppercase tracking-wide">Legal</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><a href="/faq" className="hover:text-primary transition-colors">FAQ</a></li>
               <li><a href="/support" className="hover:text-primary transition-colors">Contact Support</a></li>
@@ -91,12 +93,13 @@ const Footer = () => {
             <div className="flex items-start gap-3">
               <Badge variant="outline" className="mt-1 flex-shrink-0">21+</Badge>
               <div className="text-xs text-muted-foreground space-y-2">
-                <p className="font-semibold text-foreground">Important Legal Information:</p>
+                <p className="font-semibold text-foreground">THCA Legal Notice:</p>
                 <ul className="list-disc list-inside space-y-1">
-                  <li><strong>Age Requirement:</strong> Must be 21 years or older to purchase. Valid government-issued ID required at delivery.</li>
-                  <li><strong>Legal Compliance:</strong> All products contain ≤0.3% delta-9 THC and are legal under the 2018 Farm Bill and NY State law.</li>
-                  <li><strong>Licensed Operations:</strong> We partner exclusively with licensed smoke shops and dispensaries in New York.</li>
-                  <li><strong>Quality Assurance:</strong> All products are third-party lab tested for safety, potency, and compliance.</li>
+                  <li><strong>Licensed NY Cannabinoid Hemp Retailer:</strong> All operations comply with NY State hemp laws.</li>
+                  <li><strong>Hemp-Derived THCA Products:</strong> All products contain ≤0.3% Delta-9 THC and are federally legal.</li>
+                  <li><strong>THCA is Non-Psychoactive:</strong> THCA does not produce psychoactive effects in its raw form.</li>
+                  <li><strong>21+ Age Verification:</strong> Must be 21+ with valid ID. Age verified at delivery.</li>
+                  <li><strong>Lab-Tested:</strong> All products tested for potency and purity by third-party laboratories.</li>
                   <li><strong>Discreet Delivery:</strong> Private packaging with no product identification on exterior.</li>
                 </ul>
               </div>
@@ -105,8 +108,8 @@ const Footer = () => {
 
           {/* Copyright */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-2 text-sm text-muted-foreground">
-            <p>© 2024 THCA NYC. All rights reserved.</p>
-            <p className="text-xs">Licensed • Compliant • Trusted</p>
+            <p>© 2024 New York Minute. All rights reserved.</p>
+            <p className="text-xs font-semibold tracking-wider">THCA DELIVERY. ELEVATED.</p>
           </div>
         </div>
       </div>
