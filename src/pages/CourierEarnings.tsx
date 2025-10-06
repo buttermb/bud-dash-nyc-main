@@ -41,10 +41,10 @@ export default function CourierEarnings() {
     deliveries: 0,
     avgPerDelivery: 0
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (courier) {
+    if (courier && earnings.length === 0) {
       fetchEarnings();
     }
   }, [period, courier]);

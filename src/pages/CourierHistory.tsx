@@ -26,11 +26,11 @@ export default function CourierHistory() {
   const { courier, loading: courierLoading } = useCourier();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<HistoryOrder[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [period, setPeriod] = useState<'today' | 'week' | 'month'>('today');
 
   useEffect(() => {
-    if (courier) {
+    if (courier && orders.length === 0) {
       fetchHistory();
     }
   }, [period, courier]);
