@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -13,7 +13,10 @@ import {
   CheckCircle,
   AlertTriangle,
   ShoppingBag,
-  Package
+  Package,
+  Image,
+  FileUp,
+  Settings
 } from "lucide-react";
 import {
   Sidebar,
@@ -24,40 +27,71 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
   useSidebar,
   SidebarHeader,
 } from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAdmin } from "@/contexts/AdminContext";
 import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
 
-const menuItems = [
-  { title: "Overview", url: "/admin/dashboard", icon: LayoutDashboard },
-  { title: "Products", url: "/admin/products", icon: ShoppingBag },
-  { title: "Inventory", url: "/admin/inventory", icon: Package },
-  { title: "Product Analytics", url: "/admin/product-analytics", icon: TrendingUp },
-  { title: "Media Library", url: "/admin/media-library", icon: FileText },
-  { title: "Templates", url: "/admin/product-templates", icon: FileText },
-  { title: "Import/Export", url: "/admin/import-export", icon: FileText },
-  { title: "COA Management", url: "/admin/coa-management", icon: FileText },
-  { title: "Live Map", url: "/admin/live-map", icon: MapPin },
-  { title: "Live Orders", url: "/admin/live-orders", icon: Clock },
-  { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
-  { title: "Couriers", url: "/admin/couriers", icon: Truck },
-  { title: "Courier Applications", url: "/admin/courier-applications", icon: FileText },
-  { title: "Users", url: "/admin/users", icon: Users },
-  { title: "Age Verification", url: "/admin/age-verification", icon: CheckCircle },
-  { title: "Compliance", url: "/admin/compliance", icon: Shield },
-  { title: "Analytics", url: "/admin/analytics", icon: TrendingUp },
-  { title: "Audit Logs", url: "/admin/audit-logs", icon: FileText },
-  { title: "Delivery Safety", url: "/admin/safety", icon: AlertTriangle },
+const menuGroups = [
+  {
+    title: "Dashboard",
+    items: [
+      { title: "Overview", url: "/admin/dashboard", icon: LayoutDashboard },
+    ]
+  },
+  {
+    title: "Product Management",
+    items: [
+      { title: "Products", url: "/admin/products", icon: ShoppingBag },
+      { title: "Inventory", url: "/admin/inventory", icon: Package },
+      { title: "Product Analytics", url: "/admin/product-analytics", icon: TrendingUp },
+      { title: "Media Library", url: "/admin/media-library", icon: Image },
+      { title: "Templates", url: "/admin/product-templates", icon: FileText },
+      { title: "Import/Export", url: "/admin/import-export", icon: FileUp },
+      { title: "COA Management", url: "/admin/coa-management", icon: Shield },
+    ]
+  },
+  {
+    title: "Orders & Delivery",
+    items: [
+      { title: "Live Map", url: "/admin/live-map", icon: MapPin },
+      { title: "Live Orders", url: "/admin/live-orders", icon: Clock },
+      { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
+      { title: "Couriers", url: "/admin/couriers", icon: Truck },
+      { title: "Applications", url: "/admin/courier-applications", icon: FileText },
+      { title: "Safety", url: "/admin/safety", icon: AlertTriangle },
+    ]
+  },
+  {
+    title: "Users & Security",
+    items: [
+      { title: "Users", url: "/admin/users", icon: Users },
+      { title: "Age Verification", url: "/admin/age-verification", icon: CheckCircle },
+      { title: "Compliance", url: "/admin/compliance", icon: Shield },
+    ]
+  },
+  {
+    title: "System",
+    items: [
+      { title: "Analytics", url: "/admin/analytics", icon: TrendingUp },
+      { title: "Audit Logs", url: "/admin/audit-logs", icon: FileText },
+    ]
+  }
 ];
 
 export function AdminSidebar() {
   const { state } = useSidebar();
   const { admin, signOut } = useAdmin();
   const navigate = useNavigate();
+  const location = useLocation();
   const isCollapsed = state === "collapsed";
+
+  const isGroupActive = (items: typeof menuGroups[0]['items']) => {
+    return items.some(item => location.pathname === item.url);
+  };
 
   return (
     <Sidebar className={isCollapsed ? "w-14" : "w-60"} collapsible="icon">
@@ -77,29 +111,46 @@ export function AdminSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink 
-                      to={item.url} 
-                      end
-                      className={({ isActive }) =>
-                        isActive ? "bg-muted text-primary font-medium" : "hover:bg-muted/50"
-                      }
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!isCollapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {menuGroups.map((group) => (
+          <Collapsible
+            key={group.title}
+            defaultOpen={isGroupActive(group.items)}
+            className="group/collapsible"
+          >
+            <SidebarGroup>
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex w-full items-center justify-between hover:bg-muted/50 rounded-md px-2">
+                  {!isCollapsed && <span>{group.title}</span>}
+                  {!isCollapsed && (
+                    <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                  )}
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.items.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild>
+                          <NavLink 
+                            to={item.url} 
+                            end
+                            className={({ isActive }) =>
+                              isActive ? "bg-muted text-primary font-medium" : "hover:bg-muted/50"
+                            }
+                          >
+                            <item.icon className="h-4 w-4" />
+                            {!isCollapsed && <span>{item.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        ))}
       </SidebarContent>
 
       <div className="mt-auto p-4 border-t">
