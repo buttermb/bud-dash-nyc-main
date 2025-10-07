@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 
 interface PricingStepProps {
   formData: any;
@@ -21,14 +21,20 @@ export function PricingStep({ formData, updateFormData }: PricingStepProps) {
   const addPriceVariation = (weight: string) => {
     const currentPrices = formData.prices || {};
     updateFormData({
-      prices: { ...currentPrices, [weight]: 0 },
+      prices: { ...currentPrices, [weight]: "" },
     });
   };
 
-  const updatePriceVariation = (weight: string, price: number) => {
+  const updatePriceVariation = (weight: string, price: string) => {
     updateFormData({
-      prices: { ...formData.prices, [weight]: price },
+      prices: { ...formData.prices, [weight]: price === "" ? "" : parseFloat(price) },
     });
+  };
+
+  const removePriceVariation = (weight: string) => {
+    const newPrices = { ...formData.prices };
+    delete newPrices[weight];
+    updateFormData({ prices: newPrices });
   };
 
   return (
@@ -166,20 +172,33 @@ export function PricingStep({ formData, updateFormData }: PricingStepProps) {
           Offer different sizes at different prices
         </p>
         <div className="space-y-2">
-          {Object.entries(formData.prices || {}).map(([weight, price]) => (
-            <div key={weight} className="flex gap-2 items-center">
-              <Input value={weight} disabled className="w-24" />
-              <div className="flex items-center flex-1">
-                <span className="mr-2">$</span>
-                <Input
-                  type="number"
-                  value={price as number}
-                  onChange={(e) => updatePriceVariation(weight, parseFloat(e.target.value))}
-                  placeholder="0.00"
-                />
+          {Object.entries(formData.prices || {})
+            .filter(([_, price]) => price !== null && price !== undefined)
+            .map(([weight, price]) => (
+              <div key={weight} className="flex gap-2 items-center">
+                <Input value={weight} disabled className="w-24" />
+                <div className="flex items-center flex-1">
+                  <span className="mr-2">$</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={price === "" ? "" : (typeof price === 'number' ? price : 0)}
+                    onChange={(e) => updatePriceVariation(weight, e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removePriceVariation(weight)}
+                  className="h-10 w-10"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
         <div className="flex gap-2 mt-2">
           {["3.5g", "7g", "14g", "28g"].map((weight) => (
