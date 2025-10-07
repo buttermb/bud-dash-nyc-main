@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,27 +29,47 @@ export default function ProductForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<any>({
-    name: "",
-    category: "",
-    strain_type: "",
-    thca_percentage: "",
-    cbd_content: "",
-    description: "",
-    price: "",
-    prices: {},
-    in_stock: true,
-    image_url: "",
-    images: [],
-    coa_url: "",
-    effects: [],
-    flavors: [],
-    terpenes: [],
+  
+  // Get storage key for this specific form instance
+  const storageKey = `product-form-${action || 'new'}-${id || 'draft'}`;
+  
+  // Initialize form data from localStorage or defaults
+  const [formData, setFormData] = useState<any>(() => {
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse saved form data:', e);
+      }
+    }
+    return {
+      name: "",
+      category: "",
+      strain_type: "",
+      thca_percentage: "",
+      cbd_content: "",
+      description: "",
+      price: "",
+      prices: {},
+      in_stock: true,
+      image_url: "",
+      images: [],
+      coa_url: "",
+      effects: [],
+      flavors: [],
+      terpenes: [],
+    };
   });
 
   const isEdit = action === "edit";
   const isDuplicate = action === "duplicate";
   const mode = isEdit ? "edit" : isDuplicate ? "duplicate" : "new";
+
+  // Auto-save to localStorage whenever formData changes
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify(formData));
+  }, [formData, storageKey]);
 
   // Load existing product data
   useQuery({
@@ -92,6 +112,9 @@ export default function ProductForm() {
       }
     },
     onSuccess: () => {
+      // Clear the saved form data after successful save
+      localStorage.removeItem(storageKey);
+      
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       toast({
         title: isEdit ? "Product updated" : "Product created",
@@ -129,7 +152,10 @@ export default function ProductForm() {
   };
 
   const updateFormData = (updates: any) => {
-    setFormData((prev: any) => ({ ...prev, ...updates }));
+    setFormData((prev: any) => {
+      const newData = { ...prev, ...updates };
+      return newData;
+    });
   };
 
   const CurrentStepComponent = STEPS[currentStep - 1].component;
