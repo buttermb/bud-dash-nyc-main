@@ -120,9 +120,14 @@ export default function ProductForm() {
       };
       
       if (isDuplicate) {
-        setFormData({ ...loadedData, name: `${loadedData.name} (Copy)`, id: undefined });
+        const duplicateData = { ...loadedData, name: `${loadedData.name} (Copy)`, id: undefined };
+        setFormData(duplicateData);
+        // Don't clear localStorage for duplicates - save the form data
+        localStorage.setItem(storageKey, JSON.stringify(duplicateData));
       } else {
         setFormData(loadedData);
+        // Clear localStorage when loading from DB to prevent stale data
+        localStorage.removeItem(storageKey);
       }
       
       return data;
@@ -195,8 +200,14 @@ export default function ProductForm() {
       }
 
       // Optional text fields - only add if not empty
-      if (data.strain_type?.trim()) {
-        sanitizedData.strain_type = data.strain_type.trim();
+      const validStrainTypes = ['indica', 'sativa', 'hybrid', 'cbd'];
+      if (data.strain_type?.trim() && validStrainTypes.includes(data.strain_type.toLowerCase())) {
+        sanitizedData.strain_type = data.strain_type.toLowerCase();
+      }
+      
+      const validCategories = ['flower', 'edibles', 'vapes', 'concentrates'];
+      if (data.category && !validCategories.includes(data.category)) {
+        throw new Error(`Invalid category. Must be one of: ${validCategories.join(', ')}`);
       }
       
       if (data.description?.trim()) {
@@ -205,6 +216,10 @@ export default function ProductForm() {
       
       if (data.vendor_name?.trim()) {
         sanitizedData.vendor_name = data.vendor_name.trim();
+      }
+      
+      if (data.strain_lineage?.trim()) {
+        sanitizedData.strain_lineage = data.strain_lineage.trim();
       }
       
       if (data.image_url?.trim()) {

@@ -34,14 +34,17 @@ export function BasicInfoStep({ formData, updateFormData }: BasicInfoStepProps) 
         </div>
 
         <div>
-          <Label htmlFor="strain">Strain Name *</Label>
+          <Label htmlFor="strain">Strain Name (Optional)</Label>
           <Input
             id="strain"
-            value={formData.strain_type || ""}
-            onChange={(e) => updateFormData({ strain_type: e.target.value })}
+            value={formData.strain_lineage || ""}
+            onChange={(e) => updateFormData({ strain_lineage: e.target.value })}
             placeholder="Example: Purple Haze"
             className="mt-1.5"
           />
+          <p className="text-xs text-muted-foreground mt-1">
+            The specific strain name (e.g., "Purple Haze", "OG Kush")
+          </p>
         </div>
 
         <div>
@@ -51,41 +54,49 @@ export function BasicInfoStep({ formData, updateFormData }: BasicInfoStepProps) 
             onValueChange={(value) => updateFormData({ category: value })}
             className="mt-3 space-y-2"
           >
-            {["flower", "pre-rolls", "edibles", "vapes", "concentrates", "tinctures", "topicals"].map(
+            {["flower", "edibles", "vapes", "concentrates"].map(
               (cat) => (
                 <div key={cat} className="flex items-center space-x-2">
-                  <RadioGroupItem value={cat} id={cat} />
-                  <Label htmlFor={cat} className="font-normal capitalize cursor-pointer">
+                  <RadioGroupItem value={cat} id={`cat-${cat}`} />
+                  <Label htmlFor={`cat-${cat}`} className="font-normal capitalize cursor-pointer">
                     {cat}
                   </Label>
                 </div>
               )
             )}
           </RadioGroup>
+          <p className="text-xs text-muted-foreground mt-1">
+            Choose the product category
+          </p>
         </div>
 
         <div>
-          <Label>Strain Type</Label>
+          <Label>Strain Type (Optional)</Label>
           <RadioGroup
-            value={formData.strain_info?.type || ""}
-            onValueChange={(value) =>
-              updateFormData({ strain_info: { ...formData.strain_info, type: value } })
-            }
+            value={formData.strain_type || ""}
+            onValueChange={(value) => updateFormData({ strain_type: value })}
             className="mt-3 flex gap-4"
           >
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="indica" id="indica" />
-              <Label htmlFor="indica" className="font-normal cursor-pointer">Indica</Label>
+              <RadioGroupItem value="indica" id="strain-indica" />
+              <Label htmlFor="strain-indica" className="font-normal cursor-pointer">Indica</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="sativa" id="sativa" />
-              <Label htmlFor="sativa" className="font-normal cursor-pointer">Sativa</Label>
+              <RadioGroupItem value="sativa" id="strain-sativa" />
+              <Label htmlFor="strain-sativa" className="font-normal cursor-pointer">Sativa</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="hybrid" id="hybrid" />
-              <Label htmlFor="hybrid" className="font-normal cursor-pointer">Hybrid</Label>
+              <RadioGroupItem value="hybrid" id="strain-hybrid" />
+              <Label htmlFor="strain-hybrid" className="font-normal cursor-pointer">Hybrid</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="cbd" id="strain-cbd" />
+              <Label htmlFor="strain-cbd" className="font-normal cursor-pointer">CBD</Label>
             </div>
           </RadioGroup>
+          <p className="text-xs text-muted-foreground mt-1">
+            Select indica, sativa, hybrid, or CBD
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
