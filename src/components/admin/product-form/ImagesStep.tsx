@@ -73,7 +73,7 @@ export function ImagesStep({ formData, updateFormData }: ImagesStepProps) {
         uploadImage(files[0], isMain);
       }
     },
-    [formData]
+    [uploadImage]
   );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, isMain = false) => {

@@ -33,8 +33,30 @@ export default function ProductForm() {
   // Get storage key for this specific form instance
   const storageKey = `product-form-${action || 'new'}-${id || 'draft'}`;
   
-  // Initialize form data from localStorage or defaults
+  // Initialize form data - ONLY use localStorage for new products (not edits)
   const [formData, setFormData] = useState<any>(() => {
+    // Never use localStorage for editing existing products
+    if (action === "edit" || action === "duplicate") {
+      return {
+        name: "",
+        category: "",
+        strain_type: "",
+        thca_percentage: "",
+        cbd_content: "",
+        description: "",
+        price: "",
+        prices: {},
+        in_stock: true,
+        image_url: "",
+        images: [],
+        coa_url: "",
+        effects: [],
+        flavors: [],
+        terpenes: [],
+      };
+    }
+    
+    // Only use localStorage for new products
     const saved = localStorage.getItem(storageKey);
     if (saved) {
       try {
@@ -66,10 +88,13 @@ export default function ProductForm() {
   const isDuplicate = action === "duplicate";
   const mode = isEdit ? "edit" : isDuplicate ? "duplicate" : "new";
 
-  // Auto-save to localStorage whenever formData changes
+  // Auto-save to localStorage ONLY for new products (not edits)
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(formData));
-  }, [formData, storageKey]);
+    // Don't auto-save to localStorage when editing existing products
+    if (mode === "new") {
+      localStorage.setItem(storageKey, JSON.stringify(formData));
+    }
+  }, [formData, storageKey, mode]);
 
   // Load existing product data
   const { isLoading } = useQuery({
@@ -122,13 +147,12 @@ export default function ProductForm() {
       if (isDuplicate) {
         const duplicateData = { ...loadedData, name: `${loadedData.name} (Copy)`, id: undefined };
         setFormData(duplicateData);
-        // Don't clear localStorage for duplicates - save the form data
-        localStorage.setItem(storageKey, JSON.stringify(duplicateData));
       } else {
         setFormData(loadedData);
-        // Clear localStorage when loading from DB to prevent stale data
-        localStorage.removeItem(storageKey);
       }
+      
+      // Always clear localStorage for edit/duplicate - database is source of truth
+      localStorage.removeItem(storageKey);
       
       return data;
     },
