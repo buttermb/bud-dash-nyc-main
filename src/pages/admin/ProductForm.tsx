@@ -239,9 +239,13 @@ export default function ProductForm() {
             </p>
           </div>
         </div>
-        <Button onClick={handleSaveDraft} variant="outline">
+        <Button 
+          onClick={handleSaveDraft} 
+          variant="outline"
+          disabled={saveProduct.isPending}
+        >
           <Save className="mr-2 h-4 w-4" />
-          Save Draft
+          {saveProduct.isPending ? "Saving..." : "Save Draft"}
         </Button>
       </div>
 
@@ -276,22 +280,32 @@ export default function ProductForm() {
         <Button
           onClick={handleBack}
           variant="outline"
-          disabled={currentStep === 1}
+          disabled={currentStep === 1 || saveProduct.isPending}
         >
           ← Back
         </Button>
         <div className="flex gap-2">
           {currentStep === STEPS.length ? (
             <>
-              <Button onClick={handleSaveDraft} variant="outline">
-                Save as Draft
+              <Button 
+                onClick={handleSaveDraft} 
+                variant="outline"
+                disabled={saveProduct.isPending}
+              >
+                {saveProduct.isPending ? "Saving..." : "Save as Draft"}
               </Button>
-              <Button onClick={handlePublish}>
-                Publish Product
+              <Button 
+                onClick={handlePublish}
+                disabled={saveProduct.isPending}
+              >
+                {saveProduct.isPending ? "Publishing..." : "Publish Product"}
               </Button>
             </>
           ) : (
-            <Button onClick={handleNext}>
+            <Button 
+              onClick={handleNext}
+              disabled={saveProduct.isPending}
+            >
               Next: {STEPS[currentStep]?.name} →
             </Button>
           )}
