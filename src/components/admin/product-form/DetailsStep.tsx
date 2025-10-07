@@ -22,7 +22,7 @@ const FLAVORS = [
 
 export function DetailsStep({ formData, updateFormData }: DetailsStepProps) {
   const toggleEffect = (effect: string) => {
-    const currentEffects = formData.effects || [];
+    const currentEffects = Array.isArray(formData.effects) ? formData.effects : [];
     const newEffects = currentEffects.includes(effect)
       ? currentEffects.filter((e: string) => e !== effect)
       : [...currentEffects, effect];
@@ -30,7 +30,7 @@ export function DetailsStep({ formData, updateFormData }: DetailsStepProps) {
   };
 
   const toggleFlavor = (flavor: string) => {
-    const currentFlavors = formData.flavors || [];
+    const currentFlavors = Array.isArray(formData.flavors) ? formData.flavors : [];
     const newFlavors = currentFlavors.includes(flavor)
       ? currentFlavors.filter((f: string) => f !== flavor)
       : [...currentFlavors, flavor];
@@ -50,7 +50,7 @@ export function DetailsStep({ formData, updateFormData }: DetailsStepProps) {
         <Label htmlFor="short-desc">Short Description * (Shown on product card)</Label>
         <Textarea
           id="short-desc"
-          value={formData.description?.substring(0, 200) || ""}
+          value={formData.description || ""}
           onChange={(e) => updateFormData({ description: e.target.value })}
           placeholder="Hand-trimmed indoor cultivation. This premium THCA flower represents the pinnacle of hemp genetics."
           maxLength={200}
@@ -58,7 +58,7 @@ export function DetailsStep({ formData, updateFormData }: DetailsStepProps) {
           className="mt-1.5"
         />
         <p className="text-xs text-muted-foreground mt-1">
-          Characters: {formData.description?.length || 0}/200
+          Characters: {(formData.description || "").length}/200
         </p>
       </div>
 
@@ -87,11 +87,11 @@ export function DetailsStep({ formData, updateFormData }: DetailsStepProps) {
           {EFFECTS.map((effect) => (
             <div key={effect} className="flex items-center space-x-2">
               <Checkbox
-                id={effect}
-                checked={formData.effects?.includes(effect)}
+                id={`effect-${effect}`}
+                checked={Array.isArray(formData.effects) && formData.effects.includes(effect)}
                 onCheckedChange={() => toggleEffect(effect)}
               />
-              <Label htmlFor={effect} className="font-normal cursor-pointer">
+              <Label htmlFor={`effect-${effect}`} className="font-normal cursor-pointer">
                 {effect}
               </Label>
             </div>
@@ -105,11 +105,11 @@ export function DetailsStep({ formData, updateFormData }: DetailsStepProps) {
           {FLAVORS.map((flavor) => (
             <div key={flavor} className="flex items-center space-x-2">
               <Checkbox
-                id={flavor}
-                checked={formData.flavors?.includes(flavor)}
+                id={`flavor-${flavor}`}
+                checked={Array.isArray(formData.flavors) && formData.flavors.includes(flavor)}
                 onCheckedChange={() => toggleFlavor(flavor)}
               />
-              <Label htmlFor={flavor} className="font-normal cursor-pointer">
+              <Label htmlFor={`flavor-${flavor}`} className="font-normal cursor-pointer">
                 {flavor}
               </Label>
             </div>

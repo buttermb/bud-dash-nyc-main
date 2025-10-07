@@ -23,7 +23,7 @@ export function BasicInfoStep({ formData, updateFormData }: BasicInfoStepProps) 
           <Label htmlFor="name">Product Name *</Label>
           <Input
             id="name"
-            value={formData.name}
+            value={formData.name || ""}
             onChange={(e) => updateFormData({ name: e.target.value })}
             placeholder="Example: Purple Haze THCA Flower"
             className="mt-1.5"
@@ -47,7 +47,7 @@ export function BasicInfoStep({ formData, updateFormData }: BasicInfoStepProps) 
         <div>
           <Label>Category *</Label>
           <RadioGroup
-            value={formData.category}
+            value={formData.category || ""}
             onValueChange={(value) => updateFormData({ category: value })}
             className="mt-3 space-y-2"
           >
@@ -98,9 +98,9 @@ export function BasicInfoStep({ formData, updateFormData }: BasicInfoStepProps) 
                 min="0"
                 max="100"
                 step="0.1"
-                value={formData.thca_percentage}
+                value={formData.thca_percentage || ""}
                 onChange={(e) =>
-                  updateFormData({ thca_percentage: parseFloat(e.target.value) })
+                  updateFormData({ thca_percentage: e.target.value === "" ? "" : parseFloat(e.target.value) })
                 }
                 placeholder="24.5"
               />
@@ -119,7 +119,7 @@ export function BasicInfoStep({ formData, updateFormData }: BasicInfoStepProps) 
                 step="0.1"
                 value={formData.cbd_content || ""}
                 onChange={(e) =>
-                  updateFormData({ cbd_content: parseFloat(e.target.value) })
+                  updateFormData({ cbd_content: e.target.value === "" ? "" : parseFloat(e.target.value) })
                 }
                 placeholder="0.5"
               />
@@ -137,7 +137,7 @@ export function BasicInfoStep({ formData, updateFormData }: BasicInfoStepProps) 
               step="0.1"
               value={formData.weight_grams || ""}
               onChange={(e) =>
-                updateFormData({ weight_grams: parseFloat(e.target.value) })
+                updateFormData({ weight_grams: e.target.value === "" ? "" : parseFloat(e.target.value) })
               }
               placeholder="3.5"
               className="flex-1"
