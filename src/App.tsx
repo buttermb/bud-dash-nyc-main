@@ -52,6 +52,10 @@ import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
 import AdminAgeVerification from "./pages/admin/AdminAgeVerification";
 import AdminCourierApplications from "./pages/admin/AdminCourierApplications";
 import AdminDeliverySafety from "./pages/admin/AdminDeliverySafety";
+import AdminProducts from "./pages/admin/AdminProducts";
+import ProductForm from "./pages/admin/ProductForm";
+import ProductAnalytics from "./pages/admin/ProductAnalytics";
+import InventoryManagement from "./pages/admin/InventoryManagement";
 
 const queryClient = new QueryClient();
 
@@ -143,6 +147,11 @@ const App = () => (
                 <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="audit-logs" element={<AdminAuditLogs />} />
                 <Route path="safety" element={<AdminDeliverySafety />} />
+                <Route path="products" element={<AdminProducts />} />
+                <Route path="products/new" element={<ProductForm />} />
+                <Route path="products/:id/:action" element={<ProductForm />} />
+                <Route path="product-analytics" element={<ProductAnalytics />} />
+                <Route path="inventory" element={<InventoryManagement />} />
               </Route>
 
               <Route

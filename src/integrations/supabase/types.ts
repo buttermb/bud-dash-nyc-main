@@ -1401,6 +1401,7 @@ export type Database = {
           coa_qr_code_url: string | null
           coa_url: string | null
           consumption_methods: string[] | null
+          cost_per_unit: number | null
           created_at: string | null
           description: string | null
           effects: string[] | null
@@ -1411,12 +1412,15 @@ export type Database = {
           in_stock: boolean | null
           is_concentrate: boolean | null
           lab_results_url: string | null
+          low_stock_alert: number | null
           medical_benefits: string[] | null
           merchant_id: string | null
           name: string
           price: number
           prices: Json | null
           review_count: number | null
+          sale_price: number | null
+          stock_quantity: number | null
           strain_info: string | null
           strain_lineage: string | null
           strain_type: string | null
@@ -1435,6 +1439,7 @@ export type Database = {
           coa_qr_code_url?: string | null
           coa_url?: string | null
           consumption_methods?: string[] | null
+          cost_per_unit?: number | null
           created_at?: string | null
           description?: string | null
           effects?: string[] | null
@@ -1445,12 +1450,15 @@ export type Database = {
           in_stock?: boolean | null
           is_concentrate?: boolean | null
           lab_results_url?: string | null
+          low_stock_alert?: number | null
           medical_benefits?: string[] | null
           merchant_id?: string | null
           name: string
           price: number
           prices?: Json | null
           review_count?: number | null
+          sale_price?: number | null
+          stock_quantity?: number | null
           strain_info?: string | null
           strain_lineage?: string | null
           strain_type?: string | null
@@ -1469,6 +1477,7 @@ export type Database = {
           coa_qr_code_url?: string | null
           coa_url?: string | null
           consumption_methods?: string[] | null
+          cost_per_unit?: number | null
           created_at?: string | null
           description?: string | null
           effects?: string[] | null
@@ -1479,12 +1488,15 @@ export type Database = {
           in_stock?: boolean | null
           is_concentrate?: boolean | null
           lab_results_url?: string | null
+          low_stock_alert?: number | null
           medical_benefits?: string[] | null
           merchant_id?: string | null
           name?: string
           price?: number
           prices?: Json | null
           review_count?: number | null
+          sale_price?: number | null
+          stock_quantity?: number | null
           strain_info?: string | null
           strain_lineage?: string | null
           strain_type?: string | null

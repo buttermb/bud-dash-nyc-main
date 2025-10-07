@@ -11,7 +11,9 @@ import {
   Clock,
   Truck,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  ShoppingBag,
+  Package
 } from "lucide-react";
 import {
   Sidebar,
@@ -31,6 +33,9 @@ import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { title: "Overview", url: "/admin/dashboard", icon: LayoutDashboard },
+  { title: "Products", url: "/admin/products", icon: ShoppingBag },
+  { title: "Inventory", url: "/admin/inventory", icon: Package },
+  { title: "Product Analytics", url: "/admin/product-analytics", icon: TrendingUp },
   { title: "Live Map", url: "/admin/live-map", icon: MapPin },
   { title: "Live Orders", url: "/admin/live-orders", icon: Clock },
   { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
