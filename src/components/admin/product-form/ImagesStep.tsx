@@ -33,6 +33,8 @@ export function ImagesStep({ formData, updateFormData }: ImagesStepProps) {
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `product-images/${fileName}`;
 
+      console.log("Uploading image:", { fileName, filePath, isMain });
+
       const { error: uploadError, data } = await supabase.storage
         .from("product-images")
         .upload(filePath, file);
@@ -43,15 +45,23 @@ export function ImagesStep({ formData, updateFormData }: ImagesStepProps) {
         .from("product-images")
         .getPublicUrl(filePath);
 
+      console.log("Image uploaded successfully:", { publicUrl, isMain });
+
+      // Update form data immediately and persistently
       if (isMain) {
-        updateFormData({ image_url: publicUrl });
+        const newData = { image_url: publicUrl };
+        console.log("Updating main image in form data:", newData);
+        updateFormData(newData);
       } else {
         const currentImages = formData.images || [];
-        updateFormData({ images: [...currentImages, publicUrl] });
+        const newImages = [...currentImages, publicUrl];
+        console.log("Updating additional images:", newImages);
+        updateFormData({ images: newImages });
       }
 
-      toast({ title: "Image uploaded successfully" });
+      toast({ title: "✓ Image uploaded successfully" });
     } catch (error: any) {
+      console.error("Image upload error:", error);
       toast({
         title: "Upload failed",
         description: error.message,

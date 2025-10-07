@@ -96,9 +96,14 @@ export default function ProductForm() {
     }
   }, [formData, storageKey, mode]);
 
-  // Load existing product data
+  // Load existing product data (disable refetching to prevent overwriting user changes)
   const { isLoading } = useQuery({
     queryKey: ["product", id],
+    enabled: !!id && mode !== "new",
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
     queryFn: async () => {
       if (!id || mode === "new") return null;
       
@@ -156,7 +161,6 @@ export default function ProductForm() {
       
       return data;
     },
-    enabled: !!id && mode !== "new",
   });
 
   const saveProduct = useMutation({
