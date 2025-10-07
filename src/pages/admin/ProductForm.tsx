@@ -98,16 +98,51 @@ export default function ProductForm() {
 
   const saveProduct = useMutation({
     mutationFn: async (data: any) => {
+      // Sanitize and format data before saving
+      const sanitizedData = {
+        name: data.name || "",
+        category: data.category || "",
+        strain_type: data.strain_type || null,
+        thca_percentage: parseFloat(data.thca_percentage) || 0,
+        cbd_content: data.cbd_content ? parseFloat(data.cbd_content) : null,
+        description: data.description || null,
+        price: parseFloat(data.price) || 0,
+        sale_price: data.sale_price ? parseFloat(data.sale_price) : null,
+        weight_grams: data.weight_grams ? parseFloat(data.weight_grams) : null,
+        vendor_name: data.vendor_name || null,
+        in_stock: data.in_stock !== undefined ? data.in_stock : true,
+        stock_quantity: data.stock_quantity ? parseInt(data.stock_quantity) : 0,
+        image_url: data.image_url || null,
+        images: Array.isArray(data.images) ? data.images : [],
+        coa_url: data.coa_url || null,
+        effects: Array.isArray(data.effects) ? data.effects : [],
+        flavors: Array.isArray(data.flavors) ? data.flavors : [],
+        prices: data.prices && typeof data.prices === 'object' ? data.prices : {},
+        strain_info: data.strain_info || null,
+        usage_tips: data.usage_tips || null,
+        lab_name: data.lab_name || null,
+        test_date: data.test_date || null,
+        batch_number: data.batch_number || null,
+        cost_per_unit: data.cost_per_unit ? parseFloat(data.cost_per_unit) : 0,
+      };
+
+      // Remove any undefined values
+      Object.keys(sanitizedData).forEach(key => {
+        if (sanitizedData[key] === undefined) {
+          delete sanitizedData[key];
+        }
+      });
+
       if (isEdit && id) {
         const { error } = await supabase
           .from("products")
-          .update(data)
+          .update(sanitizedData)
           .eq("id", id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("products")
-          .insert([data]);
+          .insert([sanitizedData]);
         if (error) throw error;
       }
     },
@@ -123,9 +158,10 @@ export default function ProductForm() {
       navigate("/admin/products");
     },
     onError: (error) => {
+      console.error("Save error:", error);
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Error saving product",
+        description: error.message || "Please check all required fields and try again",
         variant: "destructive",
       });
     },
@@ -144,10 +180,30 @@ export default function ProductForm() {
   };
 
   const handleSaveDraft = () => {
+    // Validate at least name is present for draft
+    if (!formData.name) {
+      toast({
+        title: "Product name required",
+        description: "Please enter a product name before saving",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     saveProduct.mutate({ ...formData, in_stock: false });
   };
 
   const handlePublish = () => {
+    // Validate required fields
+    if (!formData.name || !formData.category || !formData.thca_percentage) {
+      toast({
+        title: "Missing required fields",
+        description: "Please fill in Product Name, Category, and THCA Percentage",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     saveProduct.mutate({ ...formData, in_stock: true });
   };
 
