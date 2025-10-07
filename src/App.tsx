@@ -56,6 +56,10 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import ProductForm from "./pages/admin/ProductForm";
 import ProductAnalytics from "./pages/admin/ProductAnalytics";
 import InventoryManagement from "./pages/admin/InventoryManagement";
+import MediaLibrary from "./pages/admin/MediaLibrary";
+import ProductTemplates from "./pages/admin/ProductTemplates";
+import ImportExport from "./pages/admin/ImportExport";
+import COAManagement from "./pages/admin/COAManagement";
 
 const queryClient = new QueryClient();
 
@@ -152,6 +156,10 @@ const App = () => (
                 <Route path="products/:id/:action" element={<ProductForm />} />
                 <Route path="product-analytics" element={<ProductAnalytics />} />
                 <Route path="inventory" element={<InventoryManagement />} />
+                <Route path="media-library" element={<MediaLibrary />} />
+                <Route path="product-templates" element={<ProductTemplates />} />
+                <Route path="import-export" element={<ImportExport />} />
+                <Route path="coa-management" element={<COAManagement />} />
               </Route>
 
               <Route

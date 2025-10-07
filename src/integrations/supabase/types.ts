@@ -1395,6 +1395,7 @@ export type Database = {
       products: {
         Row: {
           average_rating: number | null
+          batch_number: string | null
           category: string
           cbd_content: number | null
           coa_pdf_url: string | null
@@ -1409,8 +1410,10 @@ export type Database = {
           growing_info: Json | null
           id: string
           image_url: string | null
+          images: string[] | null
           in_stock: boolean | null
           is_concentrate: boolean | null
+          lab_name: string | null
           lab_results_url: string | null
           low_stock_alert: number | null
           medical_benefits: string[] | null
@@ -1425,6 +1428,7 @@ export type Database = {
           strain_lineage: string | null
           strain_type: string | null
           terpenes: Json | null
+          test_date: string | null
           thc_content: number | null
           thca_percentage: number
           usage_tips: string | null
@@ -1433,6 +1437,7 @@ export type Database = {
         }
         Insert: {
           average_rating?: number | null
+          batch_number?: string | null
           category: string
           cbd_content?: number | null
           coa_pdf_url?: string | null
@@ -1447,8 +1452,10 @@ export type Database = {
           growing_info?: Json | null
           id?: string
           image_url?: string | null
+          images?: string[] | null
           in_stock?: boolean | null
           is_concentrate?: boolean | null
+          lab_name?: string | null
           lab_results_url?: string | null
           low_stock_alert?: number | null
           medical_benefits?: string[] | null
@@ -1463,6 +1470,7 @@ export type Database = {
           strain_lineage?: string | null
           strain_type?: string | null
           terpenes?: Json | null
+          test_date?: string | null
           thc_content?: number | null
           thca_percentage: number
           usage_tips?: string | null
@@ -1471,6 +1479,7 @@ export type Database = {
         }
         Update: {
           average_rating?: number | null
+          batch_number?: string | null
           category?: string
           cbd_content?: number | null
           coa_pdf_url?: string | null
@@ -1485,8 +1494,10 @@ export type Database = {
           growing_info?: Json | null
           id?: string
           image_url?: string | null
+          images?: string[] | null
           in_stock?: boolean | null
           is_concentrate?: boolean | null
+          lab_name?: string | null
           lab_results_url?: string | null
           low_stock_alert?: number | null
           medical_benefits?: string[] | null
@@ -1501,6 +1512,7 @@ export type Database = {
           strain_lineage?: string | null
           strain_type?: string | null
           terpenes?: Json | null
+          test_date?: string | null
           thc_content?: number | null
           thca_percentage?: number
           usage_tips?: string | null
