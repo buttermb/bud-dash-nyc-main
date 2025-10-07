@@ -72,7 +72,7 @@ export default function ProductForm() {
   }, [formData, storageKey]);
 
   // Load existing product data
-  useQuery({
+  const { isLoading } = useQuery({
     queryKey: ["product", id],
     queryFn: async () => {
       if (!id || mode === "new") return null;
@@ -81,14 +81,48 @@ export default function ProductForm() {
         .from("products")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error loading product:", error);
+        throw error;
+      }
+      
+      if (!data) {
+        toast({
+          title: "Product not found",
+          description: "The product you're trying to edit doesn't exist",
+          variant: "destructive",
+        });
+        navigate("/admin/products");
+        return null;
+      }
+      
+      // Parse strain_info if it's a string
+      let parsedStrainInfo: any = data.strain_info;
+      if (typeof data.strain_info === 'string') {
+        try {
+          parsedStrainInfo = JSON.parse(data.strain_info);
+        } catch (e) {
+          parsedStrainInfo = { description: data.strain_info };
+        }
+      } else if (!parsedStrainInfo) {
+        parsedStrainInfo = {};
+      }
+      
+      const loadedData = {
+        ...data,
+        strain_info: parsedStrainInfo,
+        effects: Array.isArray(data.effects) ? data.effects : [],
+        images: Array.isArray(data.images) ? data.images : [],
+        prices: data.prices || {},
+        flavors: [], // Not in DB, keeping for UI state
+      };
       
       if (isDuplicate) {
-        setFormData({ ...data, name: `${data.name} (Copy)`, id: undefined });
+        setFormData({ ...loadedData, name: `${loadedData.name} (Copy)`, id: undefined });
       } else {
-        setFormData(data);
+        setFormData(loadedData);
       }
       
       return data;
@@ -98,52 +132,82 @@ export default function ProductForm() {
 
   const saveProduct = useMutation({
     mutationFn: async (data: any) => {
+      console.log("Saving product with data:", data);
+      
       // Sanitize and format data before saving
-      const sanitizedData = {
-        name: data.name || "",
+      const sanitizedData: any = {
+        name: data.name?.trim() || "",
         category: data.category || "",
-        strain_type: data.strain_type || null,
-        thca_percentage: parseFloat(data.thca_percentage) || 0,
-        cbd_content: data.cbd_content ? parseFloat(data.cbd_content) : null,
-        description: data.description || null,
-        price: parseFloat(data.price) || 0,
-        sale_price: data.sale_price ? parseFloat(data.sale_price) : null,
-        weight_grams: data.weight_grams ? parseFloat(data.weight_grams) : null,
-        vendor_name: data.vendor_name || null,
+        thca_percentage: data.thca_percentage ? parseFloat(data.thca_percentage) : 0,
+        price: data.price ? parseFloat(data.price) : 0,
         in_stock: data.in_stock !== undefined ? data.in_stock : true,
-        stock_quantity: data.stock_quantity ? parseInt(data.stock_quantity) : 0,
-        image_url: data.image_url || null,
-        images: Array.isArray(data.images) ? data.images : [],
-        coa_url: data.coa_url || null,
-        effects: Array.isArray(data.effects) ? data.effects : [],
-        flavors: Array.isArray(data.flavors) ? data.flavors : [],
-        prices: data.prices && typeof data.prices === 'object' ? data.prices : {},
-        strain_info: data.strain_info || null,
-        usage_tips: data.usage_tips || null,
-        lab_name: data.lab_name || null,
-        test_date: data.test_date || null,
-        batch_number: data.batch_number || null,
-        cost_per_unit: data.cost_per_unit ? parseFloat(data.cost_per_unit) : 0,
       };
 
-      // Remove any undefined values
-      Object.keys(sanitizedData).forEach(key => {
-        if (sanitizedData[key] === undefined) {
-          delete sanitizedData[key];
+      // Optional fields
+      if (data.strain_type) sanitizedData.strain_type = data.strain_type.trim();
+      if (data.cbd_content) sanitizedData.cbd_content = parseFloat(data.cbd_content);
+      if (data.description) sanitizedData.description = data.description.trim();
+      if (data.weight_grams) sanitizedData.weight_grams = parseFloat(data.weight_grams);
+      if (data.vendor_name) sanitizedData.vendor_name = data.vendor_name.trim();
+      if (data.image_url) sanitizedData.image_url = data.image_url.trim();
+      if (data.coa_url) sanitizedData.coa_url = data.coa_url.trim();
+      if (data.usage_tips) sanitizedData.usage_tips = data.usage_tips.trim();
+      if (data.lab_name) sanitizedData.lab_name = data.lab_name.trim();
+      if (data.batch_number) sanitizedData.batch_number = data.batch_number.trim();
+      if (data.test_date) sanitizedData.test_date = data.test_date;
+      if (data.sale_price) sanitizedData.sale_price = parseFloat(data.sale_price);
+      if (data.cost_per_unit) sanitizedData.cost_per_unit = parseFloat(data.cost_per_unit);
+      if (data.stock_quantity) sanitizedData.stock_quantity = parseInt(data.stock_quantity);
+      
+      // Arrays
+      if (Array.isArray(data.images) && data.images.length > 0) {
+        sanitizedData.images = data.images;
+      }
+      if (Array.isArray(data.effects) && data.effects.length > 0) {
+        sanitizedData.effects = data.effects;
+      }
+      
+      // JSONB fields
+      if (data.prices && typeof data.prices === 'object' && Object.keys(data.prices).length > 0) {
+        sanitizedData.prices = data.prices;
+      }
+      
+      // Convert strain_info to string if it's an object
+      if (data.strain_info) {
+        if (typeof data.strain_info === 'object') {
+          sanitizedData.strain_info = JSON.stringify(data.strain_info);
+        } else {
+          sanitizedData.strain_info = data.strain_info;
         }
-      });
+      }
+
+      console.log("Sanitized data:", sanitizedData);
 
       if (isEdit && id) {
-        const { error } = await supabase
+        const { data: result, error } = await supabase
           .from("products")
           .update(sanitizedData)
-          .eq("id", id);
-        if (error) throw error;
+          .eq("id", id)
+          .select()
+          .single();
+        
+        if (error) {
+          console.error("Update error:", error);
+          throw error;
+        }
+        return result;
       } else {
-        const { error } = await supabase
+        const { data: result, error } = await supabase
           .from("products")
-          .insert([sanitizedData]);
-        if (error) throw error;
+          .insert([sanitizedData])
+          .select()
+          .single();
+        
+        if (error) {
+          console.error("Insert error:", error);
+          throw error;
+        }
+        return result;
       }
     },
     onSuccess: () => {
@@ -157,11 +221,22 @@ export default function ProductForm() {
       });
       navigate("/admin/products");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Save error:", error);
+      
+      let errorMessage = "Please check all required fields and try again";
+      
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      if (error.code === "23502") {
+        errorMessage = "Missing required fields. Please fill in Product Name, Category, THCA %, and Price.";
+      }
+      
       toast({
         title: "Error saving product",
-        description: error.message || "Please check all required fields and try again",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -195,12 +270,43 @@ export default function ProductForm() {
 
   const handlePublish = () => {
     // Validate required fields
-    if (!formData.name || !formData.category || !formData.thca_percentage) {
+    if (!formData.name?.trim()) {
       toast({
-        title: "Missing required fields",
-        description: "Please fill in Product Name, Category, and THCA Percentage",
+        title: "Product name required",
+        description: "Please enter a product name",
         variant: "destructive",
       });
+      setCurrentStep(1);
+      return;
+    }
+    
+    if (!formData.category) {
+      toast({
+        title: "Category required",
+        description: "Please select a product category",
+        variant: "destructive",
+      });
+      setCurrentStep(1);
+      return;
+    }
+    
+    if (!formData.thca_percentage || parseFloat(formData.thca_percentage) === 0) {
+      toast({
+        title: "THCA percentage required",
+        description: "Please enter the THCA percentage",
+        variant: "destructive",
+      });
+      setCurrentStep(1);
+      return;
+    }
+    
+    if (!formData.price || parseFloat(formData.price) === 0) {
+      toast({
+        title: "Price required",
+        description: "Please enter a product price",
+        variant: "destructive",
+      });
+      setCurrentStep(4);
       return;
     }
     
@@ -216,6 +322,17 @@ export default function ProductForm() {
 
   const CurrentStepComponent = STEPS[currentStep - 1].component;
   const progress = (currentStep / STEPS.length) * 100;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
