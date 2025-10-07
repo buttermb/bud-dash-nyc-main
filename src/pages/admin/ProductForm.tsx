@@ -132,110 +132,224 @@ export default function ProductForm() {
 
   const saveProduct = useMutation({
     mutationFn: async (data: any) => {
-      console.log("Saving product with data:", data);
+      console.log("=== SAVE PRODUCT START ===");
+      console.log("Raw form data:", data);
       
-      // Sanitize and format data before saving
+      // Validate and sanitize required fields
+      const name = data.name?.trim();
+      if (!name) {
+        throw new Error("Product name is required");
+      }
+      
+      const category = data.category;
+      if (!category) {
+        throw new Error("Category is required");
+      }
+      
+      const thca = parseFloat(data.thca_percentage);
+      if (isNaN(thca) || thca < 0) {
+        throw new Error("Valid THCA percentage is required (0-100)");
+      }
+      
+      const price = parseFloat(data.price);
+      if (isNaN(price) || price <= 0) {
+        throw new Error("Valid price is required (must be greater than 0)");
+      }
+      
+      // Build sanitized data object with only valid values
       const sanitizedData: any = {
-        name: data.name?.trim() || "",
-        category: data.category || "",
-        thca_percentage: data.thca_percentage ? parseFloat(data.thca_percentage) : 0,
-        price: data.price ? parseFloat(data.price) : 0,
-        in_stock: data.in_stock !== undefined ? data.in_stock : true,
+        name: name,
+        category: category,
+        thca_percentage: thca,
+        price: price,
+        in_stock: data.in_stock !== undefined ? Boolean(data.in_stock) : true,
+        stock_quantity: 0, // Default
       };
 
-      // Optional fields
-      if (data.strain_type) sanitizedData.strain_type = data.strain_type.trim();
-      if (data.cbd_content) sanitizedData.cbd_content = parseFloat(data.cbd_content);
-      if (data.description) sanitizedData.description = data.description.trim();
-      if (data.weight_grams) sanitizedData.weight_grams = parseFloat(data.weight_grams);
-      if (data.vendor_name) sanitizedData.vendor_name = data.vendor_name.trim();
-      if (data.image_url) sanitizedData.image_url = data.image_url.trim();
-      if (data.coa_url) sanitizedData.coa_url = data.coa_url.trim();
-      if (data.usage_tips) sanitizedData.usage_tips = data.usage_tips.trim();
-      if (data.lab_name) sanitizedData.lab_name = data.lab_name.trim();
-      if (data.batch_number) sanitizedData.batch_number = data.batch_number.trim();
-      if (data.test_date) sanitizedData.test_date = data.test_date;
-      if (data.sale_price) sanitizedData.sale_price = parseFloat(data.sale_price);
-      if (data.cost_per_unit) sanitizedData.cost_per_unit = parseFloat(data.cost_per_unit);
-      if (data.stock_quantity) sanitizedData.stock_quantity = parseInt(data.stock_quantity);
+      // Optional numeric fields - only add if valid
+      if (data.cbd_content) {
+        const cbd = parseFloat(data.cbd_content);
+        if (!isNaN(cbd)) sanitizedData.cbd_content = cbd;
+      }
       
-      // Arrays
+      if (data.weight_grams) {
+        const weight = parseFloat(data.weight_grams);
+        if (!isNaN(weight)) sanitizedData.weight_grams = weight;
+      }
+      
+      if (data.sale_price) {
+        const salePrice = parseFloat(data.sale_price);
+        if (!isNaN(salePrice) && salePrice > 0 && salePrice < price) {
+          sanitizedData.sale_price = salePrice;
+        }
+      }
+      
+      if (data.cost_per_unit) {
+        const cost = parseFloat(data.cost_per_unit);
+        if (!isNaN(cost) && cost >= 0) sanitizedData.cost_per_unit = cost;
+      }
+      
+      if (data.stock_quantity) {
+        const stock = parseInt(data.stock_quantity);
+        if (!isNaN(stock) && stock >= 0) sanitizedData.stock_quantity = stock;
+      }
+
+      // Optional text fields - only add if not empty
+      if (data.strain_type?.trim()) {
+        sanitizedData.strain_type = data.strain_type.trim();
+      }
+      
+      if (data.description?.trim()) {
+        sanitizedData.description = data.description.trim();
+      }
+      
+      if (data.vendor_name?.trim()) {
+        sanitizedData.vendor_name = data.vendor_name.trim();
+      }
+      
+      if (data.image_url?.trim()) {
+        sanitizedData.image_url = data.image_url.trim();
+      }
+      
+      if (data.coa_url?.trim()) {
+        sanitizedData.coa_url = data.coa_url.trim();
+      }
+      
+      if (data.usage_tips?.trim()) {
+        sanitizedData.usage_tips = data.usage_tips.trim();
+      }
+      
+      if (data.lab_name?.trim()) {
+        sanitizedData.lab_name = data.lab_name.trim();
+      }
+      
+      if (data.batch_number?.trim()) {
+        sanitizedData.batch_number = data.batch_number.trim();
+      }
+      
+      if (data.test_date) {
+        sanitizedData.test_date = data.test_date;
+      }
+      
+      // Arrays - only add if non-empty
       if (Array.isArray(data.images) && data.images.length > 0) {
-        sanitizedData.images = data.images;
+        sanitizedData.images = data.images.filter(img => img && typeof img === 'string');
       }
+      
       if (Array.isArray(data.effects) && data.effects.length > 0) {
-        sanitizedData.effects = data.effects;
+        sanitizedData.effects = data.effects.filter(e => e && typeof e === 'string');
       }
       
-      // JSONB fields
-      if (data.prices && typeof data.prices === 'object' && Object.keys(data.prices).length > 0) {
-        sanitizedData.prices = data.prices;
+      // JSONB fields - only add if non-empty objects
+      if (data.prices && typeof data.prices === 'object') {
+        const validPrices: any = {};
+        Object.entries(data.prices).forEach(([key, value]) => {
+          if (value && !isNaN(parseFloat(value as string))) {
+            validPrices[key] = parseFloat(value as string);
+          }
+        });
+        if (Object.keys(validPrices).length > 0) {
+          sanitizedData.prices = validPrices;
+        }
       }
       
-      // Convert strain_info to string if it's an object
+      // Convert strain_info to JSON string if it's an object
       if (data.strain_info) {
         if (typeof data.strain_info === 'object') {
-          sanitizedData.strain_info = JSON.stringify(data.strain_info);
-        } else {
-          sanitizedData.strain_info = data.strain_info;
+          const strainText = data.strain_info.description || JSON.stringify(data.strain_info);
+          if (strainText.trim()) {
+            sanitizedData.strain_info = strainText.trim();
+          }
+        } else if (typeof data.strain_info === 'string' && data.strain_info.trim()) {
+          sanitizedData.strain_info = data.strain_info.trim();
         }
       }
 
-      console.log("Sanitized data:", sanitizedData);
+      console.log("Sanitized data to save:", sanitizedData);
+      console.log("Is Edit:", isEdit, "Product ID:", id);
 
+      // Perform the database operation
       if (isEdit && id) {
+        console.log("Updating existing product...");
         const { data: result, error } = await supabase
           .from("products")
           .update(sanitizedData)
           .eq("id", id)
           .select()
-          .single();
+          .maybeSingle();
         
         if (error) {
           console.error("Update error:", error);
-          throw error;
+          throw new Error(error.message || "Failed to update product");
         }
+        
+        console.log("Update successful:", result);
         return result;
       } else {
+        console.log("Creating new product...");
         const { data: result, error } = await supabase
           .from("products")
           .insert([sanitizedData])
           .select()
-          .single();
+          .maybeSingle();
         
         if (error) {
           console.error("Insert error:", error);
-          throw error;
+          throw new Error(error.message || "Failed to create product");
         }
+        
+        console.log("Insert successful:", result);
         return result;
       }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log("=== SAVE SUCCESS ===", result);
+      
       // Clear the saved form data after successful save
       localStorage.removeItem(storageKey);
       
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       toast({
-        title: isEdit ? "Product updated" : "Product created",
+        title: isEdit ? "✓ Product updated" : "✓ Product created",
         description: "Your changes have been saved successfully",
       });
       navigate("/admin/products");
     },
     onError: (error: any) => {
-      console.error("Save error:", error);
+      console.error("=== SAVE ERROR ===");
+      console.error("Error object:", error);
+      console.error("Error message:", error.message);
+      console.error("Error code:", error.code);
       
-      let errorMessage = "Please check all required fields and try again";
+      let errorTitle = "Error saving product";
+      let errorMessage = "Please check all fields and try again";
       
       if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      if (error.code === "23502") {
-        errorMessage = "Missing required fields. Please fill in Product Name, Category, THCA %, and Price.";
+        if (error.message.includes("name")) {
+          errorTitle = "Product name required";
+          errorMessage = "Please enter a product name (3-200 characters)";
+        } else if (error.message.includes("category")) {
+          errorTitle = "Category required";
+          errorMessage = "Please select a product category";
+        } else if (error.message.includes("THCA")) {
+          errorTitle = "THCA percentage required";
+          errorMessage = "Please enter a valid THCA percentage (0-100)";
+        } else if (error.message.includes("price")) {
+          errorTitle = "Price required";
+          errorMessage = "Please enter a valid price greater than $0";
+        } else if (error.code === "23502") {
+          errorTitle = "Missing required field";
+          errorMessage = "Please fill in all required fields: Name, Category, THCA %, and Price";
+        } else if (error.code === "23514") {
+          errorTitle = "Invalid data";
+          errorMessage = "One or more fields contain invalid values. Please check numeric fields.";
+        } else {
+          errorMessage = error.message;
+        }
       }
       
       toast({
-        title: "Error saving product",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
       });

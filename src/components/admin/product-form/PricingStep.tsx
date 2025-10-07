@@ -57,7 +57,10 @@ export function PricingStep({ formData, updateFormData }: PricingStepProps) {
               min="0"
               step="0.01"
               value={formData.price || ""}
-              onChange={(e) => updateFormData({ price: parseFloat(e.target.value) })}
+              onChange={(e) => {
+                const value = e.target.value;
+                updateFormData({ price: value === "" ? "" : parseFloat(value) });
+              }}
               placeholder="45.00"
             />
           </div>
@@ -73,7 +76,10 @@ export function PricingStep({ formData, updateFormData }: PricingStepProps) {
               min="0"
               step="0.01"
               value={formData.sale_price || ""}
-              onChange={(e) => updateFormData({ sale_price: parseFloat(e.target.value) })}
+              onChange={(e) => {
+                const value = e.target.value;
+                updateFormData({ sale_price: value === "" ? "" : parseFloat(value) });
+              }}
               placeholder="35.00"
             />
           </div>
@@ -105,7 +111,10 @@ export function PricingStep({ formData, updateFormData }: PricingStepProps) {
             min="0"
             step="0.01"
             value={formData.cost_per_unit || ""}
-            onChange={(e) => updateFormData({ cost_per_unit: parseFloat(e.target.value) })}
+            onChange={(e) => {
+              const value = e.target.value;
+              updateFormData({ cost_per_unit: value === "" ? "" : parseFloat(value) });
+            }}
             placeholder="20.00"
           />
         </div>
@@ -135,7 +144,10 @@ export function PricingStep({ formData, updateFormData }: PricingStepProps) {
           type="number"
           min="0"
           value={formData.stock_quantity || ""}
-          onChange={(e) => updateFormData({ stock_quantity: parseInt(e.target.value) })}
+          onChange={(e) => {
+            const value = e.target.value;
+            updateFormData({ stock_quantity: value === "" ? "" : parseInt(value) });
+          }}
           placeholder="15"
           className="mt-1.5"
         />
