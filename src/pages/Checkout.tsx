@@ -221,12 +221,12 @@ const Checkout = () => {
     setLoading(true);
 
     try {
-      // First create/update address record if we have coordinates
+      // First create/update address record if we have coordinates (only for logged-in users)
       let addressId = null;
       let dropoffLat = addressLat;
       let dropoffLng = addressLng;
       
-      if (addressLat && addressLng) {
+      if (user && addressLat && addressLng) {
         const { data: addressData, error: addressError } = await supabase
           .from("addresses")
           .insert({
