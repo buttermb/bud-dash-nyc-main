@@ -7,8 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ShoppingCart, Star, ArrowLeft, FileText } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { useProductViewTracking } from "@/hooks/useProductViewTracking";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +19,14 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const { trackProductView } = useProductViewTracking();
+
+  // Track product view
+  useEffect(() => {
+    if (id) {
+      trackProductView(id);
+    }
+  }, [id, trackProductView]);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],

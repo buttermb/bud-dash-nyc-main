@@ -21,6 +21,8 @@ import MapboxAddressAutocomplete from "@/components/MapboxAddressAutocomplete";
 import CheckoutUpsells from "@/components/CheckoutUpsells";
 import CheckoutProgress from "@/components/CheckoutProgress";
 import GuestCheckoutOption from "@/components/GuestCheckoutOption";
+import HighValueCartNotice from "@/components/HighValueCartNotice";
+import { useCartValueTrigger } from "@/hooks/useCartValueTrigger";
 import { getNeighborhoodFromZip, getRiskColor, getRiskLabel, getRiskTextColor } from "@/utils/neighborhoods";
 
 const Checkout = () => {
@@ -352,8 +354,17 @@ const Checkout = () => {
         {/* Guest vs Signup Option - Only show if not logged in */}
         {!user && (
           <GuestCheckoutOption 
+            cartTotal={subtotal}
             onGuestCheckout={() => {}} 
             onSignup={() => navigate('/auth?mode=signup')}
+          />
+        )}
+
+        {/* High Value Cart Notice - Show for $75+ carts if not a member */}
+        {!user && useCartValueTrigger({ cartTotal: subtotal }).shouldShowOffer && (
+          <HighValueCartNotice 
+            cartTotal={subtotal}
+            onCreateAccount={() => navigate('/auth?mode=signup')}
           />
         )}
 

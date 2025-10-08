@@ -34,7 +34,10 @@ const Index = () => {
       <Navigation />
       <Hero />
       
-      {/* Address Check Section - CRITICAL: Before Products */}
+      {/* Trust-First Priority: Show value before asking for anything */}
+      <TrustBadges />
+      
+      {/* Address Check Section */}
       <section className="py-20 bg-gradient-to-b from-slate-900 to-slate-800">
         <div className="container px-4 mx-auto">
           <AddressCheck onAddressValidated={handleAddressValidated} />
@@ -44,11 +47,13 @@ const Index = () => {
       <div id="how-it-works">
         <HowItWorks />
       </div>
-      <TrustBadges />
+      
+      {/* Social Proof Before Products */}
+      <FeaturedReviews />
+      
       <div id="products">
         <ProductCatalog />
       </div>
-      <FeaturedReviews />
       <Features />
       <EmailCaptureSection />
       <CTA />

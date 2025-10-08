@@ -1,50 +1,30 @@
 import { useState, useEffect } from "react";
-import { X, Flame } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const LimitedTimeOfferBanner = () => {
   const [isVisible, setIsVisible] = useState(true);
-  const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
-    // Check cookie instead of sessionStorage
+    // Check cookie instead of sessionStorage - Premium approach: show once per 7 days
     const getCookie = (name: string) => {
       const value = `; ${document.cookie}`;
       const parts = value.split(`; ${name}=`);
       if (parts.length === 2) return parts.pop()?.split(';').shift();
+      return undefined;
     };
 
     const bannerDismissed = getCookie("offer_banner_dismissed");
     if (bannerDismissed) {
       setIsVisible(false);
-      return;
     }
-
-    // Calculate end of day
-    const updateTimer = () => {
-      const now = new Date();
-      const endOfDay = new Date(now);
-      endOfDay.setHours(23, 59, 59, 999);
-      
-      const diff = endOfDay.getTime() - now.getTime();
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      
-      setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-
-    return () => clearInterval(interval);
   }, []);
 
   const handleDismiss = () => {
     setIsVisible(false);
-    // Set cookie for 12 hours
-    const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
-    document.cookie = `offer_banner_dismissed=true; expires=${expires}; path=/`;
+    // Set cookie for 7 days
+    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `offer_banner_dismissed=true; expires=${expires}; path=/; SameSite=Lax`;
   };
 
   return (
@@ -54,38 +34,29 @@ const LimitedTimeOfferBanner = () => {
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0 }}
-          className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-black via-gray-900 to-black text-white shadow-2xl border-b border-white/10"
+          className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-b border-primary/20"
         >
-          <div className="container mx-auto px-4 py-3">
+          <div className="container mx-auto px-4 py-2">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 flex-1">
-                <Flame className="w-5 h-5 animate-pulse" />
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1">
-                  <span className="font-bold text-sm sm:text-base">
-                    🔥 FLASH SALE: 20% OFF ALL ORDERS TODAY!
+                <Sparkles className="w-4 h-4 text-primary hidden sm:block" />
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 flex-1">
+                  <span className="font-semibold text-sm">
+                    Member Exclusive: Free shipping on all orders
                   </span>
-                  <span className="text-xs sm:text-sm bg-white/20 px-3 py-1 rounded-full inline-block">
-                    Use code: <span className="font-bold">TODAY20</span>
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full inline-block w-fit">
+                    Join now
                   </span>
                 </div>
               </div>
               
-              <div className="flex items-center gap-4">
-                <div className="hidden sm:block text-sm font-semibold bg-white/20 px-4 py-2 rounded-lg">
-                  Ends in: {timeLeft}
-                </div>
-                <button
-                  onClick={handleDismiss}
-                  className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
-                  aria-label="Dismiss banner"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-            
-            <div className="sm:hidden text-center text-xs mt-2 font-semibold">
-              Ends in: {timeLeft}
+              <button
+                onClick={handleDismiss}
+                className="w-6 h-6 rounded-full hover:bg-muted flex items-center justify-center transition-colors flex-shrink-0"
+                aria-label="Dismiss banner"
+              >
+                <X className="w-3 h-3" />
+              </button>
             </div>
           </div>
         </motion.div>
