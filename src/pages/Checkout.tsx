@@ -851,7 +851,7 @@ const Checkout = () => {
                 {paymentMethod === "cash" && (
                   <div className="p-4 bg-muted/50 rounded-lg">
                     <p className="text-sm text-muted-foreground">
-                      💡 Please have exact change ready. Our couriers will verify your ID (must be 21+) before accepting payment.
+                      💡 Please have exact change ready. Our couriers will verify your ID (must be 21+) before completing delivery.
                     </p>
                   </div>
                 )}
@@ -1001,9 +1001,15 @@ const Checkout = () => {
                   {loading ? "Placing Order..." : "Place Order"}
                 </Button>
 
-                <p className="text-xs text-center text-muted-foreground">
-                  ID verification required at delivery • Must be 21+
-                </p>
+                {/* Prominent 21+ Age Verification Notice */}
+                <div className="p-4 bg-primary/5 rounded-lg border-2 border-primary/20">
+                  <p className="text-sm text-center font-semibold mb-1">
+                    🔞 Age Verification Required
+                  </p>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Must be 21+ • Valid ID required at delivery
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>

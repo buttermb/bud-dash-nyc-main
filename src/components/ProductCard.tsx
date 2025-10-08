@@ -184,22 +184,22 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
           </div>
         )}
 
-        {/* Badge Stack */}
+        {/* Badge Stack - Consistent & Color Coded */}
         <div className="absolute top-3 left-3 z-20 flex flex-col gap-2">
-          <Badge className={`${getCategoryColor()} uppercase text-xs font-bold`}>
+          <Badge className={`${getCategoryColor()} uppercase text-xs font-bold shadow-lg`}>
             {product.category}
           </Badge>
           {/* Lab Test Badge - Always Visible */}
-          <Badge className="bg-primary/90 text-primary-foreground flex items-center gap-1 backdrop-blur-sm">
+          <Badge className="bg-primary text-primary-foreground flex items-center gap-1 shadow-lg">
             <Award className="w-3 h-3" />
             Lab Tested
           </Badge>
         </div>
 
-        {/* Product Badge */}
+        {/* Product Badge - High Potency Color Coded */}
         {badge && (
           <div className="absolute top-3 right-3 z-20">
-            <Badge className={`${badge.className} flex items-center gap-1 backdrop-blur-sm`}>
+            <Badge className={`${badge.className} flex items-center gap-1 shadow-lg font-bold`}>
               <badge.icon className="w-3 h-3" />
               {badge.text}
             </Badge>

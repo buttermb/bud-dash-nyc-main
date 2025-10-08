@@ -309,44 +309,30 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
               </Button>
             </div>
 
-            {/* COA Download - Always Visible */}
-            <div className="mt-6 p-6 bg-gradient-primary/10 backdrop-blur-sm rounded-lg border-2 border-primary/30 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <span className="font-black text-lg uppercase tracking-wide">Certificate of Analysis</span>
-                    <p className="text-xs text-muted-foreground">Lab-tested for potency and purity</p>
-                  </div>
+            {/* COA Download - Prominent & Professional */}
+            <div className="mt-6 p-6 bg-primary/10 rounded-xl border-2 border-primary/30 space-y-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Award className="w-7 h-7 text-primary" />
                 </div>
-                <Award className="w-8 h-8 text-primary/50" />
+                <div className="flex-1">
+                  <span className="font-bold text-xl block">Certificate of Analysis</span>
+                  <p className="text-sm text-muted-foreground">Lab-tested for potency and purity • Secure checkout • No hidden fees</p>
+                </div>
               </div>
-              <div className="flex gap-3">
-                {(product.coa_pdf_url || product.coa_url || product.lab_results_url) ? (
-                  <>
-                    <Button variant="default" size="lg" asChild className="flex-1">
-                      <a href={product.coa_pdf_url || product.coa_url || product.lab_results_url} target="_blank" rel="noopener noreferrer">
-                        <Download className="w-5 h-5 mr-2" />
-                        Download COA
-                      </a>
-                    </Button>
-                    {product.lab_results_url && product.coa_url && (
-                      <Button variant="outline" size="lg" asChild>
-                        <a href={product.lab_results_url} target="_blank" rel="noopener noreferrer">
-                          View Online
-                        </a>
-                      </Button>
-                    )}
-                  </>
-                ) : (
-                  <div className="flex-1 text-center py-3 text-sm text-muted-foreground">
-                    <p className="font-semibold">COA Coming Soon</p>
-                    <p className="text-xs">Lab results will be available shortly</p>
-                  </div>
-                )}
-              </div>
+              {(product.coa_pdf_url || product.coa_url || product.lab_results_url) ? (
+                <Button variant="default" size="lg" asChild className="w-full">
+                  <a href={product.coa_pdf_url || product.coa_url || product.lab_results_url} target="_blank" rel="noopener noreferrer">
+                    <Download className="w-5 h-5 mr-2" />
+                    Download Certificate of Analysis
+                  </a>
+                </Button>
+              ) : (
+                <div className="text-center py-4 text-sm text-muted-foreground bg-muted/30 rounded-lg">
+                  <p className="font-semibold">COA Coming Soon</p>
+                  <p className="text-xs">Lab results will be available shortly</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -382,19 +368,38 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
               </div>
             )}
 
-            {product.usage_tips && (
-              <div>
-                <h3 className="text-xl font-bold mb-3">Why You'll Love It</h3>
-                <div className="space-y-2">
+            {/* Why You'll Love It - Prominent Section */}
+            <div className="p-6 bg-primary/5 rounded-xl border-2 border-primary/20">
+              <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <Heart className="w-6 h-6 text-primary" />
+                Why You'll Love It
+              </h3>
+              {product.usage_tips ? (
+                <div className="space-y-3">
                   {product.usage_tips.split('\n').filter((tip: string) => tip.trim()).map((tip: string, index: number) => (
-                    <div key={index} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                      <span className="text-primary mt-0.5">✓</span>
-                      <span>{tip}</span>
+                    <div key={index} className="flex items-start gap-3 p-3 bg-background rounded-lg">
+                      <span className="text-primary text-lg mt-0.5">✓</span>
+                      <span className="text-base">{tip}</span>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 p-3 bg-background rounded-lg">
+                    <span className="text-primary text-lg mt-0.5">✓</span>
+                    <span className="text-base">Lab-tested for potency and purity</span>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 bg-background rounded-lg">
+                    <span className="text-primary text-lg mt-0.5">✓</span>
+                    <span className="text-base">Premium quality hemp-derived THCA</span>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 bg-background rounded-lg">
+                    <span className="text-primary text-lg mt-0.5">✓</span>
+                    <span className="text-base">Fast 30-minute delivery in NYC</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="effects" className="space-y-6 mt-6">

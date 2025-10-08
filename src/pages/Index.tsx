@@ -13,15 +13,18 @@ const Index = () => {
       <RecentPurchaseNotification />
       <Navigation />
       
-      {/* Minimal hero - just headline and immediate products */}
+      {/* Minimal hero - clear value proposition */}
       <section className="bg-gradient-to-b from-background to-muted/20 pt-24 pb-12">
         <div className="container px-4 mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-8">
             <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-              Premium THCA Products
+              Trusted THCA Delivery in NYC
             </h1>
-            <p className="text-lg text-muted-foreground mb-6">
-              30-minute delivery • Lab tested • NYC's trusted source
+            <p className="text-lg text-muted-foreground mb-4">
+              30-minute delivery • Lab-tested products • Licensed NY hemp retailer
+            </p>
+            <p className="text-sm text-muted-foreground mb-6">
+              Premium hemp-derived THCA products from licensed NYC vendors
             </p>
           </div>
         </div>
