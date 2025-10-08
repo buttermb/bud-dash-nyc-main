@@ -45,11 +45,18 @@ export function QuickEditDialog({ product, open, onOpenChange }: QuickEditDialog
 
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-      toast({ title: "Product updated successfully" });
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ["admin-products"] });
+      toast({ title: "✓ Product updated successfully" });
       onOpenChange(false);
     },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update product",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   return (

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,29 @@ export default function AdminProducts() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Realtime subscription for instant updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-products-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'products'
+        },
+        (payload) => {
+          console.log('Product changed:', payload);
+          queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   const { data: products, isLoading } = useQuery({
     queryKey: ["admin-products"],
     queryFn: async () => {
@@ -51,10 +74,17 @@ export default function AdminProducts() {
       
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-      toast({ title: "Product status updated" });
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ["admin-products"] });
+      toast({ title: "✓ Product status updated" });
     },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update status",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   const deleteProduct = useMutation({
@@ -66,10 +96,17 @@ export default function AdminProducts() {
       
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-      toast({ title: "Product deleted" });
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ["admin-products"] });
+      toast({ title: "✓ Product deleted successfully" });
     },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to delete product",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   // Filter and sort products

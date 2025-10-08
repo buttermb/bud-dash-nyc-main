@@ -345,16 +345,16 @@ export default function ProductForm() {
         return result;
       }
     },
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       console.log("=== SAVE SUCCESS ===", result);
       
       // Clear the saved form data after successful save
       localStorage.removeItem(storageKey);
       
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      await queryClient.refetchQueries({ queryKey: ["admin-products"] });
       toast({
         title: isEdit ? "✓ Product updated" : "✓ Product created",
-        description: "Your changes have been saved successfully",
+        description: "Changes saved and visible on products page",
       });
       navigate("/admin/products");
     },

@@ -28,10 +28,17 @@ export function BulkActions({
       
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ["admin-products"] });
       onClearSelection();
     },
+    onError: (error: any) => {
+      toast({
+        title: "Bulk update failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   const bulkDelete = useMutation({
@@ -43,11 +50,18 @@ export function BulkActions({
       
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-      toast({ title: `${selectedCount} products deleted` });
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ["admin-products"] });
+      toast({ title: `✓ ${selectedCount} products deleted` });
       onClearSelection();
     },
+    onError: (error: any) => {
+      toast({
+        title: "Bulk delete failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   const handleSetActive = () => {
