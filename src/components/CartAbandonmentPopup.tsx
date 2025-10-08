@@ -15,45 +15,42 @@ const CartAbandonmentPopup = ({ cartItems, onCheckout }: CartAbandonmentPopupPro
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Premium approach: Only trigger after 60 seconds of inactivity on cart page
     if (cartItems.length === 0) return;
 
-    // Check cookie for exit intent (12-hour session)
     const getCookie = (name: string) => {
       const value = `; ${document.cookie}`;
       const parts = value.split(`; ${name}=`);
       if (parts.length === 2) return parts.pop()?.split(';').shift();
+      return undefined;
     };
 
     const exitIntentShown = getCookie("exit_intent_shown");
     if (exitIntentShown) return;
 
-    const handleMouseLeave = (e: MouseEvent) => {
-      if (e.clientY <= 0) {
-        setIsOpen(true);
-        const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
-        document.cookie = `exit_intent_shown=true; expires=${expires}; path=/`;
-      }
-    };
-
-    document.addEventListener("mouseleave", handleMouseLeave);
+    // Show after 60 seconds of inactivity (premium timing)
+    const timer = setTimeout(() => {
+      setIsOpen(true);
+      const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+      document.cookie = `exit_intent_shown=true; expires=${expires}; path=/; SameSite=Lax`;
+    }, 60000); // 60 seconds
 
     return () => {
-      document.removeEventListener("mouseleave", handleMouseLeave);
+      clearTimeout(timer);
     };
   }, [cartItems]);
 
   const handleCheckout = () => {
-    const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
-    document.cookie = `exit_intent_shown=true; expires=${expires}; path=/`;
+    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `exit_intent_shown=true; expires=${expires}; path=/; SameSite=Lax`;
     setIsOpen(false);
     onCheckout();
   };
 
   const handleClose = () => {
     setIsOpen(false);
-    // Set dismissal cookie when manually closed
-    const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
-    document.cookie = `exit_intent_shown=true; expires=${expires}; path=/`;
+    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `exit_intent_shown=true; expires=${expires}; path=/; SameSite=Lax`;
   };
 
   const handleCopyCode = () => {
