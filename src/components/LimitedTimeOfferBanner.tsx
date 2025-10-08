@@ -7,7 +7,14 @@ const LimitedTimeOfferBanner = () => {
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
-    const bannerDismissed = sessionStorage.getItem("offer_banner_dismissed");
+    // Check cookie instead of sessionStorage
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift();
+    };
+
+    const bannerDismissed = getCookie("offer_banner_dismissed");
     if (bannerDismissed) {
       setIsVisible(false);
       return;
@@ -35,7 +42,9 @@ const LimitedTimeOfferBanner = () => {
 
   const handleDismiss = () => {
     setIsVisible(false);
-    sessionStorage.setItem("offer_banner_dismissed", "true");
+    // Set cookie for 12 hours
+    const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `offer_banner_dismissed=true; expires=${expires}; path=/`;
   };
 
   return (
@@ -45,7 +54,7 @@ const LimitedTimeOfferBanner = () => {
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0 }}
-          className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-destructive via-primary to-destructive text-white shadow-lg"
+          className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-black via-gray-900 to-black text-white shadow-2xl border-b border-white/10"
         >
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between gap-4">

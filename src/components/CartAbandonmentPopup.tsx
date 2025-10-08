@@ -17,13 +17,21 @@ const CartAbandonmentPopup = ({ cartItems, onCheckout }: CartAbandonmentPopupPro
   useEffect(() => {
     if (cartItems.length === 0) return;
 
-    const exitIntentShown = sessionStorage.getItem("exit_intent_shown");
+    // Check cookie for exit intent (12-hour session)
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift();
+    };
+
+    const exitIntentShown = getCookie("exit_intent_shown");
     if (exitIntentShown) return;
 
     const handleMouseLeave = (e: MouseEvent) => {
       if (e.clientY <= 0) {
         setIsOpen(true);
-        sessionStorage.setItem("exit_intent_shown", "true");
+        const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
+        document.cookie = `exit_intent_shown=true; expires=${expires}; path=/`;
       }
     };
 

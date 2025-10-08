@@ -13,23 +13,31 @@ const FirstVisitorPopup = () => {
   const discountCode = "FIRST10FREE";
 
   useEffect(() => {
-    // Check eligibility
-    const popupShown = localStorage.getItem("discount_popup_shown");
-    const codeUsed = localStorage.getItem("discount_code_used");
-    const deviceUsed = localStorage.getItem("device_discount_used");
+    // Check cookies for 12-hour session tracking
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift();
+    };
+
+    const popupShown = getCookie("discount_popup_shown");
+    const codeUsed = getCookie("discount_code_used");
+    const deviceUsed = getCookie("device_discount_used");
 
     if (!popupShown && !codeUsed && !deviceUsed) {
       // Show after 8 seconds
       const timer = setTimeout(() => {
         setIsOpen(true);
-        localStorage.setItem("discount_popup_shown", "true");
+        const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
+        document.cookie = `discount_popup_shown=true; expires=${expires}; path=/`;
       }, 8000);
 
       // Exit intent detection
       const handleMouseLeave = (e: MouseEvent) => {
         if (e.clientY <= 0 && !popupShown) {
           setIsOpen(true);
-          localStorage.setItem("discount_popup_shown", "true");
+          const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
+          document.cookie = `discount_popup_shown=true; expires=${expires}; path=/`;
         }
       };
 
@@ -67,16 +75,28 @@ const FirstVisitorPopup = () => {
       return;
     }
 
-    const usedEmails = JSON.parse(localStorage.getItem("used_discount_emails") || "[]");
+    // Cookie-based email deduplication (30-day tracking)
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift();
+    };
+
+    const usedEmailsStr = getCookie("used_discount_emails") || "[]";
+    const usedEmails = JSON.parse(decodeURIComponent(usedEmailsStr));
+    
     if (usedEmails.includes(email)) {
       toast.error("This email has already been used for a discount");
       return;
     }
 
     usedEmails.push(email);
-    localStorage.setItem("used_discount_emails", JSON.stringify(usedEmails));
-    localStorage.setItem("discount_email_provided", email);
-    localStorage.setItem("device_discount_used", navigator.userAgent);
+    
+    // Set cookies with 30-day expiry
+    const expires30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `used_discount_emails=${encodeURIComponent(JSON.stringify(usedEmails))}; expires=${expires30Days}; path=/`;
+    document.cookie = `discount_email_provided=${encodeURIComponent(email)}; expires=${expires30Days}; path=/`;
+    document.cookie = `device_discount_used=${encodeURIComponent(navigator.userAgent)}; expires=${expires30Days}; path=/`;
 
     setShowCode(true);
     toast.success("Discount code revealed! Use at checkout");

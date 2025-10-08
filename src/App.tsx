@@ -8,6 +8,7 @@ import { AdminProvider } from "./contexts/AdminContext";
 import { CourierProvider } from "./contexts/CourierContext";
 import { CourierPinProvider } from "./contexts/CourierPinContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import TrustBanner from "./components/TrustBanner";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProtectedCourierRoute from "./components/ProtectedCourierRoute";
 import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
@@ -78,6 +79,7 @@ const App = () => (
               <CartAbandonmentWrapper />
               <Toaster />
               <Sonner />
+              <TrustBanner />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
