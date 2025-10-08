@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Minus, Plus, ShoppingCart, Loader2, Package, FileText, Download, QrCode, Shield, Award, Leaf, Clock, Activity, Heart, Star } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Minus, Plus, ShoppingCart, Loader2, Package, FileText, Download, QrCode, Shield, Award, Leaf, Clock, Activity, Heart, Star, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +31,9 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [selectedWeight, setSelectedWeight] = useState<string>("");
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -143,6 +147,54 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
   const medicalBenefits = product.medical_benefits || [];
   const consumptionMethods = product.consumption_methods || [];
 
+  const handleSubmitReview = async () => {
+    if (!user) {
+      onAuthRequired?.();
+      return;
+    }
+
+    if (reviewRating === 0) {
+      toast({
+        title: "Rating Required",
+        description: "Please select a star rating.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      const { error } = await supabase
+        .from("reviews")
+        .insert({
+          product_id: product.id,
+          user_id: user.id,
+          rating: reviewRating,
+          comment: reviewComment || null,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Review Submitted!",
+        description: "Thank you for your feedback.",
+      });
+
+      setReviewRating(0);
+      setReviewComment("");
+      queryClient.invalidateQueries({ queryKey: ["product-reviews", product.id] });
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      toast({
+        title: "Failed to Submit Review",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto p-0">
@@ -150,6 +202,16 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
         <DialogDescription className="sr-only">
           View detailed information about {product?.name}, including pricing, effects, and lab results
         </DialogDescription>
+        
+        {/* Mobile-Optimized Close Button */}
+        <button
+          onClick={() => onOpenChange(false)}
+          className="absolute right-2 top-2 z-50 rounded-full bg-background/95 p-3 shadow-lg ring-1 ring-border hover:bg-muted transition-colors md:hidden"
+          aria-label="Close"
+        >
+          <X className="h-6 w-6" />
+        </button>
+        
         {/* Header Section */}
         <div className="grid lg:grid-cols-2 gap-8 p-6">
           {/* Product Image Gallery */}
@@ -341,14 +403,18 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
           </div>
         </div>
 
-        {/* Detailed Information Tabs */}
-        <Tabs defaultValue="overview" className="px-6 pb-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="effects">Effects</TabsTrigger>
-            <TabsTrigger value="terpenes">Terpenes</TabsTrigger>
-            <TabsTrigger value="growing">Growing Info</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
+        {/* Detailed Information Tabs - Mobile Optimized */}
+        <Tabs defaultValue="overview" className="px-3 md:px-6 pb-6">
+          <TabsList className="grid w-full grid-cols-5 h-auto gap-1 bg-muted/50 p-1">
+            <TabsTrigger value="overview" className="text-xs md:text-sm py-2 md:py-2.5">Overview</TabsTrigger>
+            <TabsTrigger value="effects" className="text-xs md:text-sm py-2 md:py-2.5">Effects</TabsTrigger>
+            <TabsTrigger value="terpenes" className="text-xs md:text-sm py-2 md:py-2.5">Terpenes</TabsTrigger>
+            <TabsTrigger value="growing" className="text-xs md:text-sm py-2 md:py-2.5">Growing</TabsTrigger>
+            <TabsTrigger value="reviews" className="text-xs md:text-sm py-2 md:py-2.5">
+              <span className="hidden md:inline">Reviews</span>
+              <span className="md:hidden">({reviews.length})</span>
+              <span className="hidden md:inline"> ({reviews.length})</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6 mt-6">
@@ -544,31 +610,95 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
           </TabsContent>
 
           <TabsContent value="reviews" className="space-y-6 mt-6">
+            {/* Review Submission Form - Only for logged in users */}
+            {user && (
+              <Card className="border-2 border-primary/20">
+                <CardContent className="p-4 md:p-6">
+                  <h3 className="text-lg md:text-xl font-bold mb-4">Write a Review</h3>
+                  
+                  {/* Star Rating */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2">Your Rating</label>
+                    <div className="flex gap-2">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setReviewRating(i + 1)}
+                          className="transition-transform hover:scale-110 active:scale-95 touch-manipulation"
+                        >
+                          <Star
+                            className={`w-8 h-8 md:w-10 md:h-10 ${
+                              i < reviewRating
+                                ? "fill-primary text-primary"
+                                : "text-muted-foreground"
+                            }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Comment */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2">Your Review (Optional)</label>
+                    <Textarea
+                      placeholder="Share your experience with this product..."
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      rows={4}
+                      className="resize-none"
+                    />
+                  </div>
+
+                  {/* Submit Button */}
+                  <Button
+                    onClick={handleSubmitReview}
+                    disabled={reviewRating === 0 || submittingReview}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {submittingReview ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      "Submit Review"
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Existing Reviews */}
             {reviews.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">No reviews yet. Be the first to review this product!</p>
+                <p className="text-muted-foreground">
+                  {user ? "No reviews yet. Be the first to review this product!" : "No reviews yet. Sign in to leave the first review!"}
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {reviews.map((review) => (
                   <Card key={review.id}>
-                    <CardContent className="p-6">
+                    <CardContent className="p-4 md:p-6">
                       <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="font-semibold">Customer Review</p>
-                        <div className="flex items-center gap-1 mt-1">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${
-                                i < review.rating
-                                  ? "fill-primary text-primary"
-                                  : "text-muted-foreground"
-                              }`}
-                            />
-                          ))}
+                        <div>
+                          <p className="font-semibold">Customer Review</p>
+                          <div className="flex items-center gap-1 mt-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < review.rating
+                                    ? "fill-primary text-primary"
+                                    : "text-muted-foreground"
+                                }`}
+                              />
+                            ))}
+                          </div>
                         </div>
-                      </div>
                         <span className="text-sm text-muted-foreground">
                           {new Date(review.created_at).toLocaleDateString()}
                         </span>
