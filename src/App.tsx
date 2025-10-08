@@ -16,6 +16,7 @@ import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import OrderTracking from "./pages/OrderTracking";
 import MyOrders from "./pages/MyOrders";
+import Cart from "./pages/Cart";
 import FAQ from "./pages/FAQ";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
@@ -141,6 +142,14 @@ const App = () => (
                 <Route path="/admin/login" element={<AdminLogin />} />
 
                 {/* Protected User Routes */}
+                <Route
+                  path="/cart"
+                  element={
+                    <ProtectedRoute>
+                      <Cart />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/checkout"
                   element={

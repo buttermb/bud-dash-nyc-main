@@ -11,18 +11,18 @@ import {
 const steps = [
   {
     icon: ShoppingBag,
-    title: "Browse & Order",
-    description: "Shop THCA products from licensed NYC smoke shops. Real-time inventory, transparent pricing.",
+    title: "1. Browse & Order",
+    description: "Browse premium THCA products from licensed NYC retailers. Add items to your cart, select your preferred weights, and proceed to checkout with secure payment options.",
   },
   {
     icon: Store,
-    title: "Shop Prepares",
-    description: "Your order is accepted and prepared by a verified local shop. Quality guaranteed.",
+    title: "2. Order Processing",
+    description: "Your order is confirmed and prepared by a verified local shop. All products are lab-tested for quality and compliance. You'll receive real-time updates via SMS/email.",
   },
   {
     icon: Truck,
-    title: "Fast Delivery",
-    description: "Licensed courier delivers to your door with ID verification. Cash or crypto payment.",
+    title: "3. ID Check & Delivery",
+    description: "Licensed courier delivers to your door within 30-60 minutes. Valid government-issued ID required - must be 21+. Payment accepted at delivery: cash, card, or crypto. Signature required upon receipt.",
   },
 ];
 

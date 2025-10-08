@@ -86,7 +86,12 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
 
   const handleCheckout = () => {
     onOpenChange(false);
-    navigate("/checkout");
+    navigate("/cart");
+  };
+
+  const handleViewCart = () => {
+    onOpenChange(false);
+    navigate("/cart");
   };
 
   const freeShippingThreshold = 100;
@@ -217,14 +222,24 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
               <p className="text-sm text-muted-foreground">
                 Delivery fees calculated at checkout
               </p>
-              <Button 
-                variant="hero" 
-                className="w-full text-lg" 
-                size="lg"
-                onClick={handleCheckout}
-              >
-                Proceed to Checkout
-              </Button>
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  size="lg"
+                  onClick={handleViewCart}
+                >
+                  View Cart
+                </Button>
+                <Button 
+                  variant="hero" 
+                  className="w-full" 
+                  size="lg"
+                  onClick={handleCheckout}
+                >
+                  Checkout
+                </Button>
+              </div>
               <p className="text-xs text-center text-muted-foreground">
                 Valid ID required at delivery • Must be 21+
               </p>
