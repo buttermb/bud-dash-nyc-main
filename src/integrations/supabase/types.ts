@@ -504,6 +504,7 @@ export type Database = {
           courier_id: string | null
           heading: number | null
           id: string
+          is_mock_location: boolean | null
           lat: number
           lng: number
           order_id: string | null
@@ -515,6 +516,7 @@ export type Database = {
           courier_id?: string | null
           heading?: number | null
           id?: string
+          is_mock_location?: boolean | null
           lat: number
           lng: number
           order_id?: string | null
@@ -526,6 +528,7 @@ export type Database = {
           courier_id?: string | null
           heading?: number | null
           id?: string
+          is_mock_location?: boolean | null
           lat?: number
           lng?: number
           order_id?: string | null
@@ -897,6 +900,78 @@ export type Database = {
           },
         ]
       }
+      geofence_checks: {
+        Row: {
+          action_allowed: boolean
+          action_attempted: string | null
+          check_timestamp: string | null
+          created_at: string | null
+          customer_lat: number
+          customer_lng: number
+          distance_miles: number
+          driver_id: string | null
+          driver_lat: number
+          driver_lng: number
+          id: string
+          order_id: string | null
+          override_approved: boolean | null
+          override_reason: string | null
+          override_requested: boolean | null
+          within_geofence: boolean
+        }
+        Insert: {
+          action_allowed: boolean
+          action_attempted?: string | null
+          check_timestamp?: string | null
+          created_at?: string | null
+          customer_lat: number
+          customer_lng: number
+          distance_miles: number
+          driver_id?: string | null
+          driver_lat: number
+          driver_lng: number
+          id?: string
+          order_id?: string | null
+          override_approved?: boolean | null
+          override_reason?: string | null
+          override_requested?: boolean | null
+          within_geofence: boolean
+        }
+        Update: {
+          action_allowed?: boolean
+          action_attempted?: string | null
+          check_timestamp?: string | null
+          created_at?: string | null
+          customer_lat?: number
+          customer_lng?: number
+          distance_miles?: number
+          driver_id?: string | null
+          driver_lat?: number
+          driver_lng?: number
+          id?: string
+          order_id?: string | null
+          override_approved?: boolean | null
+          override_reason?: string | null
+          override_requested?: boolean | null
+          within_geofence?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geofence_checks_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "geofence_checks_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory: {
         Row: {
           id: string
@@ -1048,6 +1123,59 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      notifications_log: {
+        Row: {
+          created_at: string | null
+          delivered_at: string | null
+          error_message: string | null
+          id: string
+          message_content: string
+          notification_stage: number
+          notification_type: string
+          order_id: string | null
+          recipient_email: string | null
+          recipient_phone: string | null
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          message_content: string
+          notification_stage: number
+          notification_type: string
+          order_id?: string | null
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          message_content?: string
+          notification_stage?: number
+          notification_type?: string
+          order_id?: string | null
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_log_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_items: {
         Row: {
@@ -1204,7 +1332,16 @@ export type Database = {
           eta_minutes: number | null
           eta_updated_at: string | null
           id: string
+          last_notification_sent_at: string | null
           merchant_id: string | null
+          notification_sent_stage_1: boolean | null
+          notification_sent_stage_2: boolean | null
+          notification_sent_stage_3: boolean | null
+          notification_sent_stage_4: boolean | null
+          notification_sent_stage_5: boolean | null
+          notification_sent_stage_6: boolean | null
+          notification_sent_stage_7: boolean | null
+          notification_sent_stage_8: boolean | null
           order_number: string | null
           payment_method: string
           payment_status: string | null
@@ -1252,7 +1389,16 @@ export type Database = {
           eta_minutes?: number | null
           eta_updated_at?: string | null
           id?: string
+          last_notification_sent_at?: string | null
           merchant_id?: string | null
+          notification_sent_stage_1?: boolean | null
+          notification_sent_stage_2?: boolean | null
+          notification_sent_stage_3?: boolean | null
+          notification_sent_stage_4?: boolean | null
+          notification_sent_stage_5?: boolean | null
+          notification_sent_stage_6?: boolean | null
+          notification_sent_stage_7?: boolean | null
+          notification_sent_stage_8?: boolean | null
           order_number?: string | null
           payment_method: string
           payment_status?: string | null
@@ -1300,7 +1446,16 @@ export type Database = {
           eta_minutes?: number | null
           eta_updated_at?: string | null
           id?: string
+          last_notification_sent_at?: string | null
           merchant_id?: string | null
+          notification_sent_stage_1?: boolean | null
+          notification_sent_stage_2?: boolean | null
+          notification_sent_stage_3?: boolean | null
+          notification_sent_stage_4?: boolean | null
+          notification_sent_stage_5?: boolean | null
+          notification_sent_stage_6?: boolean | null
+          notification_sent_stage_7?: boolean | null
+          notification_sent_stage_8?: boolean | null
           order_number?: string | null
           payment_method?: string
           payment_status?: string | null

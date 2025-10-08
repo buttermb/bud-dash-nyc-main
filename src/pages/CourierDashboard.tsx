@@ -18,6 +18,7 @@ import TutorialModal from '@/components/courier/TutorialModal';
 import NotificationPermissionBanner from '@/components/courier/NotificationPermissionBanner';
 import OrderCountdownTimer from '@/components/courier/OrderCountdownTimer';
 import AgeVerificationScanner from '@/components/courier/AgeVerificationScanner';
+import { GeofenceStatus } from '@/components/courier/GeofenceStatus';
 import { 
   requestNotificationPermission, 
   notifyNewOrder, 
@@ -25,6 +26,7 @@ import {
   playOrderSound,
   vibrateDevice 
 } from '@/utils/courierNotifications';
+import { checkGeofence, calculateDistance } from '@/utils/geofenceHelper';
 
 interface OrderItem {
   product_name: string;
@@ -86,6 +88,8 @@ export default function CourierDashboard() {
   const [newOrderCount, setNewOrderCount] = useState(0);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [showAgeVerification, setShowAgeVerification] = useState(false);
+  const [distanceToCustomer, setDistanceToCustomer] = useState<number | null>(null);
+  const [geofenceCheckInterval, setGeofenceCheckInterval] = useState<NodeJS.Timeout | null>(null);
   const previousOrderCountRef = useRef(0);
 
   // Check for first-time user and location permission
@@ -444,6 +448,62 @@ export default function CourierDashboard() {
   const todayTips = parseFloat(stats?.tips_earned || '0');
   const todayDeliveries = stats?.deliveries_completed || 0;
 
+  // Geofence tracking for active order
+  useEffect(() => {
+    if (!activeOrder || !courier || !locationPermissionGranted) {
+      if (geofenceCheckInterval) {
+        clearInterval(geofenceCheckInterval);
+        setGeofenceCheckInterval(null);
+      }
+      setDistanceToCustomer(null);
+      return;
+    }
+
+    // Update location and check geofence every 10 seconds
+    const updateGeofence = async () => {
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+          });
+        });
+
+        const driverLat = position.coords.latitude;
+        const driverLng = position.coords.longitude;
+
+        // Calculate distance locally for immediate UI update
+        if (activeOrder.dropoff_lat && activeOrder.dropoff_lng) {
+          const distance = calculateDistance(
+            driverLat,
+            driverLng,
+            activeOrder.dropoff_lat,
+            activeOrder.dropoff_lng
+          );
+          setDistanceToCustomer(distance);
+        }
+
+        // Send to backend for geofence check and logging
+        await checkGeofence(activeOrder.id, driverLat, driverLng, 'location_update');
+
+      } catch (error) {
+        console.error('Geofence update error:', error);
+      }
+    };
+
+    // Initial check
+    updateGeofence();
+
+    // Set up interval
+    const interval = setInterval(updateGeofence, 10000);
+    setGeofenceCheckInterval(interval);
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [activeOrder, courier, locationPermissionGranted]);
+
   return (
     <div className="min-h-screen bg-[#0f172a] text-white pb-20">
       {/* Modals */}
@@ -698,6 +758,16 @@ export default function CourierDashboard() {
                   ))}
                 </div>
 
+                {/* Geofence Status */}
+                {orderStatus === 'delivering' && (
+                  <div className="mb-4">
+                    <GeofenceStatus 
+                      distance={distanceToCustomer}
+                      customerAddress={activeOrder.delivery_address}
+                    />
+                  </div>
+                )}
+
                 {/* Action Buttons */}
                 <div className="space-y-3">
                   {orderStatus === 'pickup' && (
@@ -739,12 +809,25 @@ export default function CourierDashboard() {
                   {orderStatus === 'arrived' && (
                     <>
                       <button 
-                        onClick={() => setShowAgeVerification(true)}
-                        className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 py-4 font-black text-lg transition flex items-center justify-center space-x-2"
+                        onClick={() => {
+                          if (distanceToCustomer !== null && distanceToCustomer > 0.5) {
+                            toast.error(`You're ${distanceToCustomer.toFixed(2)} miles away. Get within 0.5 miles to complete delivery.`);
+                            return;
+                          }
+                          setShowAgeVerification(true);
+                        }}
+                        disabled={distanceToCustomer !== null && distanceToCustomer > 0.5}
+                        className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 py-4 font-black text-lg transition flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <AlertCircle size={20} />
                         <span>VERIFY CUSTOMER ID (21+)</span>
                       </button>
+                      {distanceToCustomer !== null && distanceToCustomer > 0.5 && (
+                        <div className="bg-red-500/10 border border-red-500/30 p-3 text-sm text-center">
+                          <div className="font-bold text-red-500 mb-1">❌ NOT IN DELIVERY RANGE</div>
+                          Get within 0.5 miles to complete delivery
+                        </div>
+                      )}
                       <div className="bg-yellow-500/10 border border-yellow-500/30 p-3 text-sm text-center">
                         <div className="font-bold text-yellow-500 mb-1">⚠️ REQUIRED BY LAW</div>
                         Must verify customer is 21+ before delivery
