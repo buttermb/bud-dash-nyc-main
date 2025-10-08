@@ -51,12 +51,25 @@ export const CourierPinProvider = ({ children }: { children: ReactNode }) => {
 
       const { data, error } = await supabase
         .from('couriers')
-        .select('pin_hash')
+        .select('pin_hash, pin_set_at')
         .eq('user_id', user.id)
         .single();
 
       if (!error && data?.pin_hash) {
-        setHasPinSetup(true);
+        // Check if PIN has expired (5 days)
+        if (data.pin_set_at) {
+          const pinSetDate = new Date(data.pin_set_at);
+          const daysSinceSet = (Date.now() - pinSetDate.getTime()) / (1000 * 60 * 60 * 24);
+          
+          if (daysSinceSet > 5) {
+            // PIN expired, need to set new one
+            setHasPinSetup(false);
+          } else {
+            setHasPinSetup(true);
+          }
+        } else {
+          setHasPinSetup(true);
+        }
       }
     } catch (error) {
       console.error('Error checking PIN setup:', error);
@@ -74,7 +87,11 @@ export const CourierPinProvider = ({ children }: { children: ReactNode }) => {
 
     const { error } = await supabase
       .from('couriers')
-      .update({ pin_hash: pinHash })
+      .update({ 
+        pin_hash: pinHash,
+        pin_set_at: new Date().toISOString(),
+        pin_last_verified_at: new Date().toISOString()
+      })
       .eq('user_id', user.id);
 
     if (error) throw error;
@@ -89,12 +106,18 @@ export const CourierPinProvider = ({ children }: { children: ReactNode }) => {
 
     const { data } = await supabase
       .from('couriers')
-      .select('pin_hash')
+      .select('pin_hash, pin_set_at')
       .eq('user_id', user.id)
       .single();
 
     const pinHash = btoa(pin);
     if (data?.pin_hash === pinHash) {
+      // Update last verified timestamp
+      await supabase
+        .from('couriers')
+        .update({ pin_last_verified_at: new Date().toISOString() })
+        .eq('user_id', user.id);
+      
       setIsUnlocked(true);
       return true;
     }

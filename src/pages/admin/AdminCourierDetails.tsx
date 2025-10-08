@@ -229,6 +229,45 @@ export default function AdminCourierDetails() {
         </Card>
       </div>
 
+      {/* Courier PIN Status */}
+      {courier.pin_set_at && (
+        <Card className="p-4 bg-muted/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-sm font-semibold mb-1">Courier Security PIN</h4>
+              <p className="text-xs text-muted-foreground">
+                Set {new Date(courier.pin_set_at).toLocaleDateString()} at{' '}
+                {new Date(courier.pin_set_at).toLocaleTimeString()}
+              </p>
+              {courier.pin_last_verified_at && (
+                <p className="text-xs text-muted-foreground">
+                  Last used: {new Date(courier.pin_last_verified_at).toLocaleString()}
+                </p>
+              )}
+            </div>
+            <div>
+              {(() => {
+                const daysSinceSet = courier.pin_set_at 
+                  ? (Date.now() - new Date(courier.pin_set_at).getTime()) / (1000 * 60 * 60 * 24)
+                  : 0;
+                const daysRemaining = Math.max(0, 5 - Math.floor(daysSinceSet));
+                
+                return (
+                  <div className="text-right">
+                    <div className={`text-lg font-bold ${daysRemaining <= 1 ? 'text-destructive' : daysRemaining <= 2 ? 'text-orange-600' : 'text-green-600'}`}>
+                      {daysRemaining} days
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {daysRemaining === 0 ? 'Expired' : 'remaining'}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Action Buttons */}
       <div className="flex gap-3">
         <Button onClick={() => setShowCommissionDialog(true)}>

@@ -741,6 +741,8 @@ export type Database = {
           on_time_rate: number | null
           phone: string
           pin_hash: string | null
+          pin_last_verified_at: string | null
+          pin_set_at: string | null
           profile_photo_url: string | null
           rating: number | null
           total_deliveries: number | null
@@ -771,6 +773,8 @@ export type Database = {
           on_time_rate?: number | null
           phone: string
           pin_hash?: string | null
+          pin_last_verified_at?: string | null
+          pin_set_at?: string | null
           profile_photo_url?: string | null
           rating?: number | null
           total_deliveries?: number | null
@@ -801,6 +805,8 @@ export type Database = {
           on_time_rate?: number | null
           phone?: string
           pin_hash?: string | null
+          pin_last_verified_at?: string | null
+          pin_set_at?: string | null
           profile_photo_url?: string | null
           rating?: number | null
           total_deliveries?: number | null
