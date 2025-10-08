@@ -65,7 +65,7 @@ const Hero = () => {
             <Button 
               variant="hero" 
               size="lg" 
-              className="text-xl px-12 py-8 text-white hover:scale-105 transition-all duration-300"
+              className="text-xl px-12 py-8 hover:scale-105 transition-all duration-300"
               onClick={() => {
                 const productsSection = document.getElementById('products');
                 productsSection?.scrollIntoView({ behavior: 'smooth' });
