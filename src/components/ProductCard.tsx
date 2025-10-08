@@ -119,9 +119,13 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
         if (error) throw error;
       }
 
-      toast.success("Added to cart!");
+      // Success feedback with confetti effect
+      toast.success("🎉 Added to cart!", {
+        description: `${quantity}x ${product.name}`,
+        duration: 2000,
+      });
       setAdded(true);
-      setTimeout(() => setAdded(false), 2000);
+      setTimeout(() => setAdded(false), 2500);
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
       setQuantity(1);
@@ -161,7 +165,7 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
   return (
     <>
       <Card 
-        className="group overflow-hidden hover:ring-2 hover:ring-primary transition-all duration-300 cursor-pointer relative bg-card hover:shadow-elegant hover:-translate-y-2"
+        className="group overflow-hidden hover:ring-2 hover:ring-primary/50 hover:shadow-2xl transition-all duration-500 cursor-pointer relative bg-card hover:-translate-y-3 hover:brightness-105"
         onClick={handleCardClick}
       >
         {/* Out of Stock Overlay */}
@@ -280,9 +284,11 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
               handleAddToCart();
             }}
             disabled={loading || !product.in_stock || added}
-            className="w-full h-12 text-base font-bold"
+            className={`w-full h-12 text-base font-bold relative overflow-hidden ${
+              added ? 'animate-pulse bg-green-600 hover:bg-green-600' : ''
+            }`}
             size="lg"
-            variant={added ? "secondary" : "default"}
+            variant={added ? "secondary" : "hero"}
           >
             {loading ? (
               <>
@@ -291,12 +297,12 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
               </>
             ) : added ? (
               <>
-                <Check className="h-5 w-5 mr-2" />
-                <span className="truncate">Added to Cart</span>
+                <Check className="h-5 w-5 mr-2 animate-bounce" />
+                <span className="truncate animate-fade-in">✓ Added to Cart!</span>
               </>
             ) : (
               <>
-                <ShoppingCart className="h-5 w-5 mr-2" />
+                <ShoppingCart className="h-5 w-5 mr-2 group-hover:animate-bounce" />
                 <span className="truncate">Add to Cart</span>
               </>
             )}
@@ -304,7 +310,7 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
 
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full hover:bg-primary/10 hover:border-primary"
             onClick={(e) => {
               e.stopPropagation();
               handleCardClick();

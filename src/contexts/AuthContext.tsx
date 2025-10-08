@@ -19,29 +19,65 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted) {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    });
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+    // Initialize auth state
+    const initializeAuth = async () => {
+      try {
+        // Check for existing session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error getting session:", error);
+        }
+        
         if (mounted) {
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
         }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth event:", event);
+        
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          // Refresh session on focus to prevent auto-logout
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            setLoading(false);
+          }
+        }
       }
     );
+
+    // Auto-refresh session on window focus
+    const handleFocus = async () => {
+      if (mounted) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setSession(session);
+          setUser(session.user);
+        }
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      window.removeEventListener('focus', handleFocus);
     };
   }, []);
 

@@ -44,8 +44,10 @@ const QuickAddToCart = ({ productId, productName, size = "default" }: QuickAddTo
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
-      toast.success("Added to cart!", {
-        icon: <Check className="w-4 h-4" />,
+      toast.success("🎉 Added to cart!", {
+        icon: <Check className="w-4 h-4 animate-bounce" />,
+        description: productName,
+        duration: 2000,
       });
     },
   });
@@ -54,11 +56,21 @@ const QuickAddToCart = ({ productId, productName, size = "default" }: QuickAddTo
     <Button
       onClick={() => addToCart.mutate()}
       size={size}
-      className="w-full font-bold"
+      className="w-full font-bold hover:scale-105 transition-all"
       disabled={addToCart.isPending}
+      variant={addToCart.isSuccess ? "secondary" : "hero"}
     >
-      <ShoppingCart className="w-4 h-4 mr-2" />
-      {addToCart.isPending ? "Adding..." : "Quick Add"}
+      {addToCart.isSuccess ? (
+        <>
+          <Check className="w-4 h-4 mr-2 animate-bounce" />
+          Added!
+        </>
+      ) : (
+        <>
+          <ShoppingCart className="w-4 h-4 mr-2" />
+          {addToCart.isPending ? "Adding..." : "Quick Add"}
+        </>
+      )}
     </Button>
   );
 };
