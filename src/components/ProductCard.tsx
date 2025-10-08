@@ -204,7 +204,7 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
           </div>
         )}
 
-        <div className="relative h-64 overflow-hidden">
+        <div className="relative h-64 overflow-hidden" onClick={(e) => e.stopPropagation()}>
           <Carousel className="w-full h-full">
             <CarouselContent>
               {productImages.map((image, index) => (
@@ -219,8 +219,8 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
             </CarouselContent>
             {productImages.length > 1 && (
               <>
-                <CarouselPrevious className="left-2" />
-                <CarouselNext className="right-2" />
+                <CarouselPrevious className="left-2" onClick={(e) => e.stopPropagation()} />
+                <CarouselNext className="right-2" onClick={(e) => e.stopPropagation()} />
               </>
             )}
           </Carousel>

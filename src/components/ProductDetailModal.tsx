@@ -11,6 +11,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { sortProductWeights, getDefaultWeight, formatWeight } from "@/utils/productHelpers";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 interface ProductDetailModalProps {
   product: any;
@@ -144,12 +151,36 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
           {/* Product Image Gallery */}
           <div className="space-y-4">
             <div className="relative aspect-square rounded-xl overflow-hidden bg-muted">
-              <img
-                src={product.image_url || "/placeholder.svg"}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+              <Carousel className="w-full h-full">
+                <CarouselContent>
+                  {(product.images && product.images.length > 0 
+                    ? product.images 
+                    : [product.image_url || "/placeholder.svg"]
+                  ).map((image: string, index: number) => (
+                    <CarouselItem key={index}>
+                      <img
+                        src={image}
+                        alt={`${product.name} - Image ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                {(product.images && product.images.length > 1) && (
+                  <>
+                    <CarouselPrevious className="left-2" />
+                    <CarouselNext className="right-2" />
+                  </>
+                )}
+              </Carousel>
             </div>
+
+            {/* Image Counter */}
+            {product.images && product.images.length > 1 && (
+              <div className="text-center text-sm text-muted-foreground">
+                {product.images.length} photos
+              </div>
+            )}
 
             {/* Trust Badges */}
             <div className="grid grid-cols-3 gap-2">
