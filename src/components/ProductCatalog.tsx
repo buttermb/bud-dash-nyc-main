@@ -7,9 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ProductCard from "./ProductCard";
 import AuthModal from "./AuthModal";
-import { Loader2, Search, ShoppingBag, Leaf, Cookie, Droplets, Cigarette, Wind } from "lucide-react";
+import QuickFilters, { type QuickFilter } from "./QuickFilters";
+import { Loader2, Search, ShoppingBag, Leaf, Cookie, Droplets, Cigarette, Wind, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ProductCatalog = () => {
@@ -23,6 +25,8 @@ const ProductCatalog = () => {
   const [strainType, setStrainType] = useState<string>("all");
   const [potencyRange, setPotencyRange] = useState([0, 100]);
   const [selectedEffects, setSelectedEffects] = useState<string[]>([]);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [activeQuickFilter, setActiveQuickFilter] = useState<string>();
 
   // Realtime subscription for product updates
   useEffect(() => {
@@ -140,8 +144,10 @@ const ProductCatalog = () => {
         </div>
 
         {/* Search and Filters */}
-        <div className="max-w-6xl mx-auto mb-8 space-y-4">
+        <div className="max-w-6xl mx-auto mb-8 space-y-6">
           <h3 className="text-2xl font-bold text-center mb-4">Find Your Perfect THCA Product</h3>
+          
+          {/* Search Bar */}
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -166,53 +172,87 @@ const ProductCatalog = () => {
             </Select>
           </div>
 
-          {/* Advanced Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Strain Type Filter */}
-            <div className="bg-muted/50 rounded-lg p-4">
-              <Label className="text-sm font-medium mb-2 block">Strain Type</Label>
-              <Select value={strainType} onValueChange={setStrainType}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="indica">Indica</SelectItem>
-                  <SelectItem value="sativa">Sativa</SelectItem>
-                  <SelectItem value="hybrid">Hybrid</SelectItem>
-                  <SelectItem value="cbd">CBD</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Quick Filters */}
+          <QuickFilters 
+            onFilterSelect={(filter: QuickFilter) => {
+              setActiveQuickFilter(filter.id);
+              if (filter.priceRange) {
+                setPriceRange(filter.priceRange);
+              }
+              if (filter.potencyRange) {
+                setPotencyRange(filter.potencyRange);
+              }
+              if (filter.category) {
+                setCategory(filter.category);
+              }
+              if (filter.id === "top-rated") {
+                setSortBy("rating");
+              }
+            }}
+            activeFilter={activeQuickFilter}
+          />
 
-            {/* Price Range Filter */}
-            <div className="bg-muted/50 rounded-lg p-4">
-              <Label className="text-sm font-medium mb-2 block">
-                Price: ${priceRange[0]} - ${priceRange[1]}
-              </Label>
-              <Slider
-                value={priceRange}
-                onValueChange={setPriceRange}
-                max={100}
-                step={5}
-                className="w-full"
-              />
-            </div>
+          {/* Collapsible Advanced Filters */}
+          <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="w-full gap-2">
+                <SlidersHorizontal className="w-4 h-4" />
+                Advanced Filters
+                <ChevronDown className={cn(
+                  "w-4 h-4 transition-transform",
+                  isFiltersOpen && "rotate-180"
+                )} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Strain Type Filter */}
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <Label className="text-sm font-medium mb-2 block">Strain Type</Label>
+                  <Select value={strainType} onValueChange={setStrainType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="indica">Indica</SelectItem>
+                      <SelectItem value="sativa">Sativa</SelectItem>
+                      <SelectItem value="hybrid">Hybrid</SelectItem>
+                      <SelectItem value="cbd">CBD</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Potency Range Filter */}
-            <div className="bg-muted/50 rounded-lg p-4">
-              <Label className="text-sm font-medium mb-2 block">
-                THCA Potency: {potencyRange[0]}% - {potencyRange[1]}%
-              </Label>
-              <Slider
-                value={potencyRange}
-                onValueChange={setPotencyRange}
-                max={100}
-                step={1}
-                className="w-full"
-              />
-            </div>
-          </div>
+                {/* Price Range Filter */}
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <Label className="text-sm font-medium mb-2 block">
+                    Price: ${priceRange[0]} - ${priceRange[1]}
+                  </Label>
+                  <Slider
+                    value={priceRange}
+                    onValueChange={setPriceRange}
+                    max={100}
+                    step={5}
+                    className="w-full"
+                  />
+                </div>
+
+                {/* Potency Range Filter */}
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <Label className="text-sm font-medium mb-2 block">
+                    THCA Potency: {potencyRange[0]}% - {potencyRange[1]}%
+                  </Label>
+                  <Slider
+                    value={potencyRange}
+                    onValueChange={setPotencyRange}
+                    max={100}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* Effects Filter */}
           <div className="bg-muted/50 rounded-lg p-4">

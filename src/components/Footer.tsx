@@ -71,19 +71,25 @@ const Footer = () => {
               <li><a href="/about" className="hover:text-primary transition-colors">About Us</a></li>
               <li><a href="/partner-shops" className="hover:text-primary transition-colors">Partner Shops</a></li>
               <li><a href="/become-courier" className="hover:text-primary transition-colors">Become a Courier</a></li>
-              <li><a href="/support" className="hover:text-primary transition-colors">Contact</a></li>
+              <li><a href="/support" className="hover:text-primary transition-colors">Support</a></li>
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Support & Contact */}
           <div>
-            <h3 className="font-black mb-4 uppercase tracking-wide">Legal</h3>
+            <h3 className="font-black mb-4 uppercase tracking-wide">Support</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><a href="/faq" className="hover:text-primary transition-colors">FAQ</a></li>
-              <li><a href="/support" className="hover:text-primary transition-colors">Contact Support</a></li>
+              <li><a href="/track-order" className="hover:text-primary transition-colors">Track Order</a></li>
               <li><a href="/terms" className="hover:text-primary transition-colors">Terms of Service</a></li>
               <li><a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a></li>
             </ul>
+            <div className="mt-4 pt-4 border-t border-border space-y-1">
+              <p className="font-semibold text-foreground">Contact Us</p>
+              <p className="text-xs">📞 (212) 555-THCA</p>
+              <p className="text-xs">📧 support@nymthca.com</p>
+              <p className="text-xs">🕐 9 AM - 11 PM Daily</p>
+            </div>
           </div>
         </div>
 
