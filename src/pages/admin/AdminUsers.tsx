@@ -459,7 +459,9 @@ const AdminUsers = () => {
                                     {user.recent_orders.map((order, idx) => (
                                       <div key={idx} className="flex justify-between items-center p-2 rounded bg-card border text-sm">
                                         <div>
-                                          <div className="font-medium">#{order.order_number || order.id.substring(0, 8)}</div>
+                                          <div className="font-medium">
+                                            #{order.order_number || (order.id ? order.id.substring(0, 8) : 'N/A')}
+                                          </div>
                                           <div className="text-xs text-muted-foreground">
                                             {new Date(order.created_at).toLocaleDateString()}
                                           </div>
@@ -714,7 +716,7 @@ const AdminUsers = () => {
                             <div className="flex justify-between items-start">
                               <div className="space-y-1">
                                 <div className="font-semibold">
-                                  Order #{order.order_number || order.id.substring(0, 8).toUpperCase()}
+                                  Order #{order.order_number || (order.id ? order.id.substring(0, 8).toUpperCase() : 'N/A')}
                                 </div>
                                 <div className="text-sm text-muted-foreground">
                                   {new Date(order.created_at).toLocaleDateString('en-US', {
@@ -733,9 +735,9 @@ const AdminUsers = () => {
                                 )}
                               </div>
                               <div className="text-right space-y-1">
-                                <div className="font-bold text-lg">${Number(order.total_amount).toFixed(2)}</div>
+                                <div className="font-bold text-lg">${Number(order.total_amount || 0).toFixed(2)}</div>
                                 <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
-                                  {order.status.replace('_', ' ')}
+                                  {order.status ? order.status.replace('_', ' ') : 'Unknown'}
                                 </Badge>
                               </div>
                             </div>
