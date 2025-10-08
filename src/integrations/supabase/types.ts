@@ -1436,6 +1436,9 @@ export type Database = {
           estimated_delivery: string | null
           eta_minutes: number | null
           eta_updated_at: string | null
+          flagged_at: string | null
+          flagged_by: string | null
+          flagged_reason: string | null
           id: string
           last_notification_sent_at: string | null
           merchant_id: string | null
@@ -1493,6 +1496,9 @@ export type Database = {
           estimated_delivery?: string | null
           eta_minutes?: number | null
           eta_updated_at?: string | null
+          flagged_at?: string | null
+          flagged_by?: string | null
+          flagged_reason?: string | null
           id?: string
           last_notification_sent_at?: string | null
           merchant_id?: string | null
@@ -1550,6 +1556,9 @@ export type Database = {
           estimated_delivery?: string | null
           eta_minutes?: number | null
           eta_updated_at?: string | null
+          flagged_at?: string | null
+          flagged_by?: string | null
+          flagged_reason?: string | null
           id?: string
           last_notification_sent_at?: string | null
           merchant_id?: string | null
