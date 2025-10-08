@@ -1,22 +1,47 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Upload, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Download, Upload, FileText, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 
 export default function ImportExport() {
   const [csvData, setCsvData] = useState("");
   const [importing, setImporting] = useState(false);
   const [importSuccess, setImportSuccess] = useState(false);
   const [importedCount, setImportedCount] = useState(0);
+  const [importProgress, setImportProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Setup realtime subscription for products
+  useEffect(() => {
+    const channel = supabase
+      .channel('products-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'products'
+        },
+        (payload) => {
+          console.log('Products updated:', payload);
+          queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: products } = useQuery({
     queryKey: ["admin-products"],
@@ -29,44 +54,69 @@ export default function ImportExport() {
 
   const exportToCSV = () => {
     if (!products || products.length === 0) {
-      toast({ title: "No products to export", variant: "destructive" });
+      toast({ 
+        title: "No products to export", 
+        description: "Add some products first before exporting",
+        variant: "destructive" 
+      });
       return;
     }
 
-    const headers = [
-      "ID",
-      "Name",
-      "Category",
-      "Price",
-      "Stock",
-      "THCA%",
-      "Description",
-      "In Stock",
-      "Image URL",
-    ];
+    try {
+      // Match import format exactly
+      const headers = [
+        "Name",
+        "Category",
+        "Price",
+        "Stock",
+        "THCA%",
+        "CBD%",
+        "Strain Type",
+        "Description",
+        "In Stock",
+        "Image URL",
+      ];
 
-    const rows = products.map((p) => [
-      p.id,
-      p.name,
-      p.category,
-      p.price || 0,
-      p.stock_quantity || 0,
-      p.thca_percentage || 0,
-      `"${(p.description || "").replace(/"/g, '""')}"`,
-      p.in_stock ? "Yes" : "No",
-      p.image_url || "",
-    ]);
+      const rows = products.map((p) => {
+        const description = (p.description || "").replace(/"/g, '""');
+        return [
+          `"${p.name}"`,
+          p.category || "",
+          p.price || 0,
+          p.stock_quantity || 0,
+          p.thca_percentage || 0,
+          p.cbd_content || "",
+          p.strain_type || "",
+          `"${description}"`,
+          p.in_stock ? "Yes" : "No",
+          p.image_url || "",
+        ];
+      });
 
-    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+      const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `products-export-${new Date().toISOString().split("T")[0]}.csv`;
-    link.click();
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `products-export-${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
-    toast({ title: "Products exported successfully" });
+      toast({ 
+        title: "✓ Export successful",
+        description: `${products.length} products exported to CSV` 
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      toast({ 
+        title: "Export failed",
+        description: "Unable to export products. Please try again.",
+        variant: "destructive" 
+      });
+    }
   };
 
   const parseCSVLine = (line: string): string[] => {
@@ -221,38 +271,69 @@ export default function ImportExport() {
         throw new Error("No valid products found to import");
       }
 
-      // Insert products in batches of 100
-      const batchSize = 100;
+      // Insert products in batches of 50 with progress tracking
+      const batchSize = 50;
+      const totalBatches = Math.ceil(products.length / batchSize);
+      
       for (let i = 0; i < products.length; i += batchSize) {
         const batch = products.slice(i, i + batchSize);
+        const currentBatch = Math.floor(i / batchSize) + 1;
+        
+        // Update progress
+        const progress = (currentBatch / totalBatches) * 100;
+        setImportProgress(progress);
+        
         const { error } = await supabase.from("products").insert(batch);
-        if (error) throw error;
+        if (error) {
+          console.error("Batch insert error:", error);
+          throw new Error(`Failed to import batch ${currentBatch}: ${error.message}`);
+        }
+        
+        // Small delay between batches to prevent rate limiting
+        if (i + batchSize < products.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
       }
 
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      // Immediately refetch to show new products
+      await queryClient.refetchQueries({ queryKey: ["admin-products"] });
+      
+      setImportProgress(100);
       setImportSuccess(true);
       setImportedCount(products.length);
+      
       toast({
         title: "✓ Import successful",
-        description: `${products.length} products imported successfully`,
+        description: `${products.length} products imported and visible on the products page`,
       });
       
       // Clear form after successful import
       setTimeout(() => {
         setCsvData("");
         setImportSuccess(false);
+        setImportProgress(0);
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
       }, 3000);
     } catch (error: any) {
       console.error("Import error:", error);
+      
+      // More detailed error messages
+      let errorMessage = error.message || "Failed to import products. Please check your CSV format.";
+      if (error.code === "23505") {
+        errorMessage = "Duplicate product detected. Some products may already exist in the database.";
+      } else if (error.code === "23502") {
+        errorMessage = "Missing required field. Ensure all products have Name, Category, Price, and THCA%.";
+      }
+      
       toast({
         title: "Import failed",
-        description: error.message || "Failed to import products. Please check your CSV format.",
+        description: errorMessage,
         variant: "destructive",
       });
       setImportSuccess(false);
+      setImportProgress(0);
     } finally {
       setImporting(false);
     }
@@ -344,7 +425,19 @@ export default function ImportExport() {
           <Alert className="mb-4 border-green-500 bg-green-50 dark:bg-green-950">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800 dark:text-green-200">
-              Successfully imported {importedCount} products! Form will clear in 3 seconds...
+              Successfully imported {importedCount} products! Products are now visible on the main page. Form will clear in 3 seconds...
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {importing && (
+          <Alert className="mb-4 border-blue-500 bg-blue-50 dark:bg-blue-950">
+            <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
+            <AlertDescription className="text-blue-800 dark:text-blue-200">
+              <div className="space-y-2">
+                <p>Importing products... {Math.round(importProgress)}% complete</p>
+                <Progress value={importProgress} className="h-2" />
+              </div>
             </AlertDescription>
           </Alert>
         )}
@@ -391,8 +484,8 @@ export default function ImportExport() {
             >
               {importing ? (
                 <>
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Importing...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Importing {Math.round(importProgress)}%
                 </>
               ) : (
                 <>
