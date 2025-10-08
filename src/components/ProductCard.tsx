@@ -175,23 +175,23 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
         )}
 
         {/* Badge Stack - Consistent & Color Coded */}
-        <div className="absolute top-3 left-3 z-20 flex flex-col gap-2">
-          <Badge className={`${getCategoryColor()} uppercase text-xs font-bold shadow-lg`}>
+        <div className="absolute top-2 md:top-3 left-2 md:left-3 z-20 flex flex-col gap-1.5 md:gap-2 max-w-[45%]">
+          <Badge className={`${getCategoryColor()} uppercase text-xs font-bold shadow-lg truncate`}>
             {product.category}
           </Badge>
           {/* Lab Test Badge - Always Visible */}
-          <Badge className="bg-primary text-primary-foreground flex items-center gap-1 shadow-lg">
-            <Award className="w-3 h-3" />
-            Lab Tested
+          <Badge className="bg-primary text-primary-foreground flex items-center gap-1 shadow-lg text-xs truncate">
+            <Award className="w-3 h-3 flex-shrink-0" />
+            <span className="truncate">Lab Tested</span>
           </Badge>
         </div>
 
         {/* Product Badge - High Potency Color Coded */}
         {badge && (
-          <div className="absolute top-3 right-3 z-20">
-            <Badge className={`${badge.className} flex items-center gap-1 shadow-lg font-bold`}>
-              <badge.icon className="w-3 h-3" />
-              {badge.text}
+          <div className="absolute top-2 md:top-3 right-2 md:right-3 z-20 max-w-[45%]">
+            <Badge className={`${badge.className} flex items-center gap-1 shadow-lg font-bold text-xs truncate`}>
+              <badge.icon className="w-3 h-3 flex-shrink-0" />
+              <span className="truncate">{badge.text}</span>
             </Badge>
           </div>
         )}
