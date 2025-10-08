@@ -496,13 +496,6 @@ export type Database = {
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "courier_earnings_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "public_order_tracking"
-            referencedColumns: ["id"]
-          },
         ]
       }
       courier_location_history: {
@@ -554,13 +547,6 @@ export type Database = {
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "courier_location_history_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "public_order_tracking"
-            referencedColumns: ["id"]
-          },
         ]
       }
       courier_messages: {
@@ -604,13 +590,6 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "courier_messages_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "public_order_tracking"
             referencedColumns: ["id"]
           },
         ]
@@ -910,13 +889,6 @@ export type Database = {
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "deliveries_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: true
-            referencedRelation: "public_order_tracking"
-            referencedColumns: ["id"]
-          },
         ]
       }
       inventory: {
@@ -1018,13 +990,6 @@ export type Database = {
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "loyalty_transactions_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "public_order_tracking"
-            referencedColumns: ["id"]
-          },
         ]
       }
       merchants: {
@@ -1115,13 +1080,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "order_items_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "public_order_tracking"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "order_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -1169,13 +1127,6 @@ export type Database = {
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "order_status_history_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "public_order_tracking"
-            referencedColumns: ["id"]
-          },
         ]
       }
       order_tracking: {
@@ -1212,13 +1163,6 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_tracking_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "public_order_tracking"
             referencedColumns: ["id"]
           },
         ]
@@ -1673,13 +1617,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "reviews_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "public_order_tracking"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "reviews_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -1741,27 +1678,7 @@ export type Database = {
       }
     }
     Views: {
-      public_order_tracking: {
-        Row: {
-          courier_lat: number | null
-          courier_lng: number | null
-          courier_name: string | null
-          courier_vehicle: string | null
-          created_at: string | null
-          delivered_at: string | null
-          delivery_address: string | null
-          delivery_borough: string | null
-          estimated_delivery: string | null
-          id: string | null
-          merchant_address: string | null
-          merchant_name: string | null
-          order_number: string | null
-          status: string | null
-          total_amount: number | null
-          tracking_code: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       check_is_admin: {
@@ -1787,6 +1704,27 @@ export type Database = {
       get_order_by_tracking_code: {
         Args: { code: string }
         Returns: Json
+      }
+      get_order_tracking_by_code: {
+        Args: { tracking_code_param: string }
+        Returns: {
+          courier_lat: number
+          courier_lng: number
+          courier_name: string
+          courier_vehicle: string
+          created_at: string
+          delivered_at: string
+          delivery_address: string
+          delivery_borough: string
+          estimated_delivery: string
+          id: string
+          merchant_address: string
+          merchant_name: string
+          order_number: string
+          status: string
+          total_amount: number
+          tracking_code: string
+        }[]
       }
       has_role: {
         Args: {
