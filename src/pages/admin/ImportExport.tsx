@@ -1,16 +1,20 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Upload, FileText } from "lucide-react";
+import { Download, Upload, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function ImportExport() {
   const [csvData, setCsvData] = useState("");
   const [importing, setImporting] = useState(false);
+  const [importSuccess, setImportSuccess] = useState(false);
+  const [importedCount, setImportedCount] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -65,81 +69,237 @@ export default function ImportExport() {
     toast({ title: "Products exported successfully" });
   };
 
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+      
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  };
+
   const importFromCSV = async () => {
     try {
       setImporting(true);
+      setImportSuccess(false);
 
-      const lines = csvData.trim().split("\n");
-      if (lines.length < 2) {
-        throw new Error("CSV must have at least a header and one data row");
+      if (!csvData.trim()) {
+        throw new Error("Please paste or upload CSV data first");
       }
 
-      const headers = lines[0].split(",");
+      const lines = csvData.trim().split("\n").filter(line => line.trim());
+      if (lines.length < 2) {
+        throw new Error("CSV must have at least a header row and one data row");
+      }
+
+      const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+      
+      // Validate required headers
+      if (!headers.includes("name")) {
+        throw new Error("CSV must have a 'Name' column");
+      }
+      if (!headers.includes("category")) {
+        throw new Error("CSV must have a 'Category' column");
+      }
+
       const dataLines = lines.slice(1);
+      const products: any[] = [];
+      const errors: string[] = [];
 
-      const products = dataLines.map((line) => {
-        const values = line.split(",");
-        const product: any = {};
+      dataLines.forEach((line, index) => {
+        try {
+          const values = parseCSVLine(line);
+          const product: any = {};
 
-        headers.forEach((header, index) => {
-          const cleanHeader = header.trim().toLowerCase();
-          const value = values[index]?.trim().replace(/^"|"$/g, "");
+          headers.forEach((header, idx) => {
+            const value = values[idx]?.replace(/^"|"$/g, "").trim();
+            if (!value) return;
 
-          switch (cleanHeader) {
-            case "name":
-              product.name = value;
-              break;
-            case "category":
-              product.category = value;
-              break;
-            case "price":
-              product.price = parseFloat(value) || 0;
-              break;
-            case "stock":
-            case "stock quantity":
-              product.stock_quantity = parseInt(value) || 0;
-              break;
-            case "thca%":
-            case "thca":
-              product.thca_percentage = parseFloat(value) || 0;
-              break;
-            case "description":
-              product.description = value;
-              break;
-            case "in stock":
-            case "active":
-              product.in_stock = value.toLowerCase() === "yes" || value === "true";
-              break;
-            case "image url":
-            case "image":
-              product.image_url = value;
-              break;
+            switch (header) {
+              case "name":
+                product.name = value;
+                break;
+              case "category":
+                const validCategories = ["flower", "pre-rolls", "edibles", "vapes", "concentrates"];
+                if (validCategories.includes(value.toLowerCase())) {
+                  product.category = value.toLowerCase();
+                } else {
+                  throw new Error(`Invalid category: ${value}. Must be one of: ${validCategories.join(", ")}`);
+                }
+                break;
+              case "price":
+                const price = parseFloat(value);
+                if (isNaN(price) || price <= 0) {
+                  throw new Error("Price must be a positive number");
+                }
+                product.price = price;
+                break;
+              case "stock":
+              case "stock quantity":
+                product.stock_quantity = Math.max(0, parseInt(value) || 0);
+                break;
+              case "thca%":
+              case "thca":
+                const thca = parseFloat(value);
+                if (isNaN(thca) || thca < 0 || thca > 100) {
+                  throw new Error("THCA% must be between 0 and 100");
+                }
+                product.thca_percentage = thca;
+                break;
+              case "cbd%":
+              case "cbd":
+                const cbd = parseFloat(value);
+                if (!isNaN(cbd) && cbd >= 0) {
+                  product.cbd_content = cbd;
+                }
+                break;
+              case "strain type":
+                const validStrains = ["indica", "sativa", "hybrid", "cbd"];
+                if (validStrains.includes(value.toLowerCase())) {
+                  product.strain_type = value.toLowerCase();
+                }
+                break;
+              case "description":
+                product.description = value;
+                break;
+              case "in stock":
+              case "active":
+                product.in_stock = value.toLowerCase() === "yes" || value.toLowerCase() === "true";
+                break;
+              case "image url":
+              case "image":
+                if (value.startsWith("http")) {
+                  product.image_url = value;
+                }
+                break;
+            }
+          });
+
+          // Validate required fields
+          if (!product.name) {
+            throw new Error("Name is required");
           }
-        });
+          if (!product.category) {
+            throw new Error("Category is required");
+          }
+          if (!product.price) {
+            throw new Error("Price is required");
+          }
+          if (product.thca_percentage === undefined) {
+            product.thca_percentage = 0;
+          }
 
-        return product;
+          products.push(product);
+        } catch (error: any) {
+          errors.push(`Line ${index + 2}: ${error.message}`);
+        }
       });
 
-      // Insert products
-      const { error } = await supabase.from("products").insert(products);
+      if (errors.length > 0) {
+        throw new Error(`Import errors:\n${errors.slice(0, 5).join("\n")}${errors.length > 5 ? `\n...and ${errors.length - 5} more errors` : ""}`);
+      }
 
-      if (error) throw error;
+      if (products.length === 0) {
+        throw new Error("No valid products found to import");
+      }
+
+      // Insert products in batches of 100
+      const batchSize = 100;
+      for (let i = 0; i < products.length; i += batchSize) {
+        const batch = products.slice(i, i + batchSize);
+        const { error } = await supabase.from("products").insert(batch);
+        if (error) throw error;
+      }
 
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      setImportSuccess(true);
+      setImportedCount(products.length);
       toast({
-        title: "Import successful",
-        description: `${products.length} products imported`,
+        title: "✓ Import successful",
+        description: `${products.length} products imported successfully`,
       });
-      setCsvData("");
+      
+      // Clear form after successful import
+      setTimeout(() => {
+        setCsvData("");
+        setImportSuccess(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }, 3000);
     } catch (error: any) {
+      console.error("Import error:", error);
       toast({
         title: "Import failed",
-        description: error.message,
+        description: error.message || "Failed to import products. Please check your CSV format.",
         variant: "destructive",
       });
+      setImportSuccess(false);
     } finally {
       setImporting(false);
     }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.name.endsWith(".csv")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a CSV file (.csv)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast({
+        title: "File too large",
+        description: "Please upload a file smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      setCsvData(text);
+      toast({
+        title: "File loaded",
+        description: "CSV file loaded successfully. Review and click Import.",
+      });
+    };
+    reader.onerror = () => {
+      toast({
+        title: "Failed to read file",
+        description: "Please try again or paste the CSV data manually",
+        variant: "destructive",
+      });
+    };
+    reader.readAsText(file);
   };
 
   return (
@@ -177,78 +337,144 @@ export default function ImportExport() {
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Import Products</h2>
         <p className="text-muted-foreground mb-4">
-          Upload a CSV file to create or update products
+          Upload a CSV file to bulk create products. All fields will be validated before import.
         </p>
+
+        {importSuccess && (
+          <Alert className="mb-4 border-green-500 bg-green-50 dark:bg-green-950">
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800 dark:text-green-200">
+              Successfully imported {importedCount} products! Form will clear in 3 seconds...
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="space-y-4">
           <div>
-            <Label>CSV Data</Label>
+            <Label htmlFor="csv-data">CSV Data</Label>
             <Textarea
+              id="csv-data"
               value={csvData}
               onChange={(e) => setCsvData(e.target.value)}
-              placeholder="Paste CSV data here or upload a file..."
+              placeholder="Paste CSV data here or use the upload button below...&#10;&#10;Example:&#10;Name,Category,Price,Stock,THCA%,Description,In Stock&#10;Purple Haze,flower,45,15,24.5,Premium indoor flower,Yes"
               rows={12}
               className="mt-1.5 font-mono text-sm"
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              {csvData.trim() ? `${csvData.trim().split("\n").length - 1} rows loaded` : "No data loaded"}
+            </p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <label htmlFor="csv-file">
-              <Button variant="outline" asChild>
-                <span>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload CSV File
-                </span>
-              </Button>
-            </label>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importing}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Upload CSV File
+            </Button>
             <input
+              ref={fileInputRef}
               id="csv-file"
               type="file"
-              accept=".csv"
+              accept=".csv,text/csv"
               className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = (event) => {
-                    setCsvData(event.target?.result as string);
-                  };
-                  reader.readAsText(file);
-                }
-              }}
+              onChange={handleFileUpload}
             />
+            
             <Button
               onClick={importFromCSV}
-              disabled={!csvData || importing}
+              disabled={!csvData.trim() || importing}
+              size="lg"
+              className="sm:ml-auto"
             >
-              {importing ? "Importing..." : "Import Products"}
+              {importing ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Import Products
+                </>
+              )}
             </Button>
+            
+            {csvData && !importing && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setCsvData("");
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+              >
+                Clear
+              </Button>
+            )}
           </div>
 
-          <Card className="p-4 bg-muted">
-            <h3 className="font-semibold mb-2 flex items-center gap-2">
+          <Card className="p-4 bg-muted/50">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
               <FileText className="h-4 w-4" />
               CSV Format Example
             </h3>
-            <pre className="text-xs overflow-x-auto">
-              {`Name,Category,Price,Stock,THCA%,Description,In Stock,Image URL
-Purple Haze,flower,45,15,24.5,"Premium indoor flower",Yes,https://...
-Gelato Pre-Rolls,pre-rolls,35,28,22.8,"Hand-rolled joints",Yes,https://...`}
+            <pre className="text-xs overflow-x-auto p-3 bg-background rounded border">
+{`Name,Category,Price,Stock,THCA%,CBD%,Strain Type,Description,In Stock,Image URL
+Purple Haze,flower,45,15,24.5,0.5,sativa,"Premium indoor flower",Yes,https://example.com/img1.jpg
+Gelato Pre-Rolls,pre-rolls,35,28,22.8,0.3,hybrid,"Hand-rolled joints",Yes,https://example.com/img2.jpg
+Blue Dream Vape,vapes,55,42,28.2,0.1,sativa,"Premium distillate",Yes,https://example.com/img3.jpg`}
             </pre>
           </Card>
+
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Required columns:</strong> Name, Category, Price, THCA%<br/>
+              <strong>Valid categories:</strong> flower, pre-rolls, edibles, vapes, concentrates<br/>
+              <strong>Valid strain types:</strong> indica, sativa, hybrid, cbd
+            </AlertDescription>
+          </Alert>
         </div>
       </Card>
 
       {/* Tips */}
-      <Card className="p-6 bg-blue-50 dark:bg-blue-950">
-        <h3 className="font-semibold mb-2">Tips for Importing</h3>
-        <ul className="text-sm space-y-1">
-          <li>• First row must be headers</li>
-          <li>• Name and Category are required</li>
-          <li>• Use "Yes" or "No" for In Stock column</li>
-          <li>• Wrap descriptions with commas in quotes</li>
-          <li>• Existing products (by ID) will be updated</li>
-        </ul>
+      <Card className="p-6 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+        <h3 className="font-semibold mb-3 flex items-center gap-2">
+          <FileText className="h-4 w-4" />
+          Import Tips & Guidelines
+        </h3>
+        <div className="grid gap-3 text-sm">
+          <div>
+            <strong className="text-blue-900 dark:text-blue-100">Required Fields:</strong>
+            <ul className="mt-1 space-y-1 text-blue-800 dark:text-blue-200">
+              <li>• <strong>Name:</strong> Product name (3-200 characters)</li>
+              <li>• <strong>Category:</strong> Must be one of: flower, pre-rolls, edibles, vapes, concentrates</li>
+              <li>• <strong>Price:</strong> Must be a positive number (e.g., 45.99)</li>
+              <li>• <strong>THCA%:</strong> Number between 0-100</li>
+            </ul>
+          </div>
+          <div>
+            <strong className="text-blue-900 dark:text-blue-100">Formatting Rules:</strong>
+            <ul className="mt-1 space-y-1 text-blue-800 dark:text-blue-200">
+              <li>• First row must contain column headers</li>
+              <li>• Wrap text with commas in double quotes: "Description, with commas"</li>
+              <li>• Use "Yes"/"No" or "true"/"false" for In Stock column</li>
+              <li>• Image URLs must start with http:// or https://</li>
+              <li>• Maximum file size: 5MB</li>
+            </ul>
+          </div>
+          <div>
+            <strong className="text-blue-900 dark:text-blue-100">Validation:</strong>
+            <ul className="mt-1 space-y-1 text-blue-800 dark:text-blue-200">
+              <li>• All products are validated before import</li>
+              <li>• Invalid rows will be skipped with error messages</li>
+              <li>• Import processes in batches of 100 products</li>
+            </ul>
+          </div>
+        </div>
       </Card>
     </div>
   );
