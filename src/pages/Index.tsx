@@ -14,7 +14,7 @@ import AddressCheck from "@/components/AddressCheck";
 import FirstVisitorPopup from "@/components/FirstVisitorPopup";
 import FeaturedReviews from "@/components/FeaturedReviews";
 import EmailCaptureSection from "@/components/EmailCaptureSection";
-import LimitedTimeOfferBanner from "@/components/LimitedTimeOfferBanner";
+
 
 const Index = () => {
   const [addressValidated, setAddressValidated] = useState(false);
@@ -30,7 +30,7 @@ const Index = () => {
       <AgeVerificationModal />
       <RecentPurchaseNotification />
       <FirstVisitorPopup />
-      <LimitedTimeOfferBanner />
+      
       <Navigation />
       <Hero />
       
