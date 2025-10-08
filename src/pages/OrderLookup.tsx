@@ -33,14 +33,14 @@ const OrderLookup = () => {
     try {
       const { data, error } = await supabase
         .from("orders")
-        .select("id, user_id")
+        .select("id, user_id, tracking_code")
         .eq("id", orderId.trim())
         .maybeSingle();
 
       if (error) throw error;
 
       if (data) {
-        navigate(`/order-tracking/${data.id}`);
+        navigate(`/track/${data.tracking_code || data.id}`);
       } else {
         toast({
           title: "Order Not Found",
@@ -106,7 +106,7 @@ const OrderLookup = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   Check your email confirmation or log in to view your order history.
                 </p>
-                <Button variant="outline" onClick={() => navigate("/orders")} className="w-full">
+                <Button variant="outline" onClick={() => navigate("/my-orders")} className="w-full">
                   View My Orders
                 </Button>
               </Card>

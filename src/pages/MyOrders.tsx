@@ -171,7 +171,7 @@ export default function MyOrders() {
                         <div className="flex items-end justify-end">
                           <Button
                             variant="outline"
-                            onClick={() => navigate(`/orders/${order.id}`)}
+                            onClick={() => navigate(`/track/${order.tracking_code || order.id}`)}
                           >
                             View Details
                           </Button>

@@ -3,11 +3,27 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import NYMLogo from "./NYMLogo";
 
 const Footer = () => {
   const [legalOpen, setLegalOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleScrollToSection = (sectionId: string) => {
+    // If we're already on the home page, just scroll
+    if (window.location.pathname === '/') {
+      const element = document.getElementById(sectionId);
+      element?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // Navigate to home first, then scroll
+      navigate('/');
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        element?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  };
   
   return (
     <footer className="bg-[hsl(222_47%_8%)] border-t border-border py-8 md:py-12">
@@ -63,10 +79,38 @@ const Footer = () => {
           <div>
             <h3 className="font-black mb-4 uppercase tracking-wide">Shop</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/#products" className="hover:text-primary transition-colors">THCA Flower</Link></li>
-              <li><Link to="/#products" className="hover:text-primary transition-colors">THCA Pre-Rolls</Link></li>
-              <li><Link to="/#products" className="hover:text-primary transition-colors">THCA Vapes</Link></li>
-              <li><Link to="/#products" className="hover:text-primary transition-colors">THCA Concentrates</Link></li>
+              <li>
+                <button 
+                  onClick={() => handleScrollToSection('products')} 
+                  className="hover:text-primary transition-colors text-left"
+                >
+                  THCA Flower
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => handleScrollToSection('products')} 
+                  className="hover:text-primary transition-colors text-left"
+                >
+                  THCA Pre-Rolls
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => handleScrollToSection('products')} 
+                  className="hover:text-primary transition-colors text-left"
+                >
+                  THCA Vapes
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => handleScrollToSection('products')} 
+                  className="hover:text-primary transition-colors text-left"
+                >
+                  THCA Concentrates
+                </button>
+              </li>
             </ul>
           </div>
 
