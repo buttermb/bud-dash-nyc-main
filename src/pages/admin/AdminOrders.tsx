@@ -66,8 +66,29 @@ export default function AdminOrders() {
   useEffect(() => {
     fetchOrders();
 
+    // Realtime subscription for instant updates
+    const channel = supabase
+      .channel('admin-orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          console.log('Order changed:', payload);
+          fetchOrders();
+        }
+      )
+      .subscribe();
+
     const interval = setInterval(fetchOrders, 30000);
-    return () => clearInterval(interval);
+    
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+    };
   }, [statusFilter]);
 
   const fetchOrders = async () => {
@@ -124,18 +145,20 @@ export default function AdminOrders() {
       if (error) throw error;
 
       toast({
-        title: 'Status updated',
+        title: '✓ Status updated',
         description: `Order status changed to ${newStatus.replace('_', ' ')}`
       });
 
+      // Immediate refetch to show changes
       await fetchOrders();
+      
       if (selectedOrder?.id === orderId) {
         setShowDetailModal(false);
         setSelectedOrder(null);
       }
     } catch (error: any) {
       toast({
-        title: 'Error updating status',
+        title: 'Failed to update status',
         description: error.message,
         variant: 'destructive'
       });

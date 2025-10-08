@@ -94,16 +94,17 @@ const AdminLiveOrders = () => {
       if (error) throw error;
 
       toast({
-        title: "Success",
+        title: "✓ Success",
         description: `Order status updated to ${newStatus}`,
       });
 
-      fetchLiveOrders();
+      // Immediate refetch to show changes
+      await fetchLiveOrders();
     } catch (error) {
       console.error("Failed to update status:", error);
       toast({
         variant: "destructive",
-        title: "Error",
+        title: "Failed to update",
         description: "Failed to update order status",
       });
     }
