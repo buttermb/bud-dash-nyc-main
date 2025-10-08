@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/contexts/AdminContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { 
   Shield, 
   ShieldOff, 
@@ -21,7 +33,15 @@ import {
   Phone,
   Calendar,
   CheckCircle2,
-  XCircle
+  XCircle,
+  ChevronDown,
+  ChevronUp,
+  User,
+  MapPin,
+  ShoppingBag,
+  DollarSign,
+  Eye,
+  TrendingUp
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -38,10 +58,14 @@ interface UserProfile {
   user_id: string;
   age_verified: boolean;
   phone: string | null;
+  full_name: string | null;
   created_at: string;
   email?: string;
   order_count?: number;
   total_spent?: number;
+  last_order_date?: string;
+  addresses?: any[];
+  recent_orders?: any[];
 }
 
 const AdminUsers = () => {
@@ -51,6 +75,9 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterVerified, setFilterVerified] = useState<string>("all");
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -94,7 +121,20 @@ const AdminUsers = () => {
       // Get order statistics for each user
       const { data: orders } = await supabase
         .from("orders")
-        .select("user_id, total_amount");
+        .select(`
+          user_id, 
+          total_amount, 
+          created_at,
+          status,
+          order_number,
+          delivery_address
+        `)
+        .order("created_at", { ascending: false });
+
+      // Get addresses
+      const { data: addresses } = await supabase
+        .from("addresses")
+        .select("*");
 
       // Try to get auth users (may fail if not sufficient permissions)
       let authUsers: any[] = [];
@@ -109,12 +149,18 @@ const AdminUsers = () => {
       const enrichedUsers = profiles?.map(profile => {
         const authUser = authUsers?.find((u: any) => u.id === profile.user_id);
         const userOrders = orders?.filter(o => o.user_id === profile.user_id) || [];
+        const userAddresses = addresses?.filter(a => a.user_id === profile.user_id) || [];
+        const recentOrders = userOrders.slice(0, 5);
+        const lastOrder = userOrders[0];
         
         return {
           ...profile,
-          email: authUser?.email,
+          email: authUser?.email || "Not provided",
           order_count: userOrders.length,
-          total_spent: userOrders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0)
+          total_spent: userOrders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0),
+          last_order_date: lastOrder?.created_at,
+          addresses: userAddresses,
+          recent_orders: recentOrders
         };
       }) || [];
 
@@ -155,10 +201,26 @@ const AdminUsers = () => {
     }
   };
 
+  const toggleRow = (userId: string) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(userId)) {
+      newExpanded.delete(userId);
+    } else {
+      newExpanded.add(userId);
+    }
+    setExpandedRows(newExpanded);
+  };
+
+  const openUserDetails = (user: UserProfile) => {
+    setSelectedUser(user);
+    setShowDetailsModal(true);
+  };
+
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.user_id.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesFilter = 
@@ -251,79 +313,223 @@ const AdminUsers = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Orders</TableHead>
-                <TableHead>Total Spent</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">{user.email || "N/A"}</span>
-                  </TableCell>
-                  <TableCell>
-                    {user.phone ? (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        {user.phone}
-                      </div>
-                    ) : (
-                      "N/A"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {user.age_verified ? (
-                      <Badge className="bg-green-600">
-                        <CheckCircle2 className="h-3 w-3 mr-1" />
-                        Verified
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">
-                        <XCircle className="h-3 w-3 mr-1" />
-                        Unverified
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>{user.order_count || 0}</TableCell>
-                  <TableCell>${(user.total_spent || 0).toFixed(2)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toggleVerification(user.user_id, user.age_verified)}
-                    >
-                      {user.age_verified ? (
-                        <>
-                          <ShieldOff className="h-4 w-4 mr-1" />
-                          Unverify
-                        </>
-                      ) : (
-                        <>
-                          <Shield className="h-4 w-4 mr-1" />
-                          Verify
-                        </>
-                      )}
-                    </Button>
-                  </TableCell>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12"></TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Orders</TableHead>
+                  <TableHead>Total Spent</TableHead>
+                  <TableHead>Last Order</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user) => (
+                  <>
+                    <TableRow 
+                      key={user.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                    >
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleRow(user.user_id)}
+                        >
+                          {expandedRows.has(user.user_id) ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </TableCell>
+                      <TableCell onClick={() => openUserDetails(user)}>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                            <User className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <div className="font-medium">
+                              {user.full_name || "Customer"}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {user.email}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {user.phone ? (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Phone className="h-3 w-3 text-muted-foreground" />
+                            {user.phone}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">No phone</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {user.age_verified ? (
+                          <Badge className="bg-green-600">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            Verified
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Unverified
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{user.order_count || 0}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2 font-semibold text-green-600">
+                          <DollarSign className="h-4 w-4" />
+                          {(user.total_spent || 0).toFixed(2)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {user.last_order_date ? (
+                          <div className="text-sm text-muted-foreground">
+                            {new Date(user.last_order_date).toLocaleDateString()}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">No orders</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openUserDetails(user);
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                          <Button
+                            variant={user.age_verified ? "outline" : "default"}
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleVerification(user.user_id, user.age_verified);
+                            }}
+                          >
+                            {user.age_verified ? (
+                              <>
+                                <ShieldOff className="h-4 w-4 mr-1" />
+                                Unverify
+                              </>
+                            ) : (
+                              <>
+                                <Shield className="h-4 w-4 mr-1" />
+                                Verify
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    
+                    {expandedRows.has(user.user_id) && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="bg-muted/30 p-0">
+                          <div className="p-6 space-y-4">
+                            <div className="grid md:grid-cols-2 gap-6">
+                              {/* Recent Orders */}
+                              <div>
+                                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                  <ShoppingBag className="h-4 w-4" />
+                                  Recent Orders ({user.recent_orders?.length || 0})
+                                </h4>
+                                {user.recent_orders && user.recent_orders.length > 0 ? (
+                                  <div className="space-y-2">
+                                    {user.recent_orders.map((order, idx) => (
+                                      <div key={idx} className="flex justify-between items-center p-2 rounded bg-card border text-sm">
+                                        <div>
+                                          <div className="font-medium">#{order.order_number || order.id.substring(0, 8)}</div>
+                                          <div className="text-xs text-muted-foreground">
+                                            {new Date(order.created_at).toLocaleDateString()}
+                                          </div>
+                                        </div>
+                                        <div className="text-right">
+                                          <div className="font-semibold">${Number(order.total_amount).toFixed(2)}</div>
+                                          <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'} className="text-xs">
+                                            {order.status}
+                                          </Badge>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">No orders yet</p>
+                                )}
+                              </div>
+
+                              {/* Addresses */}
+                              <div>
+                                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                  <MapPin className="h-4 w-4" />
+                                  Saved Addresses ({user.addresses?.length || 0})
+                                </h4>
+                                {user.addresses && user.addresses.length > 0 ? (
+                                  <div className="space-y-2">
+                                    {user.addresses.map((address, idx) => (
+                                      <div key={idx} className="p-2 rounded bg-card border text-sm">
+                                        <div className="font-medium">{address.street}</div>
+                                        <div className="text-xs text-muted-foreground">
+                                          {address.city}, {address.state} {address.zip_code}
+                                        </div>
+                                        {address.is_default && (
+                                          <Badge variant="outline" className="mt-1 text-xs">Default</Badge>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">No saved addresses</p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Customer Stats */}
+                            <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                              <div className="text-center">
+                                <div className="text-2xl font-bold">{user.order_count || 0}</div>
+                                <div className="text-xs text-muted-foreground">Total Orders</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-green-600">${(user.total_spent || 0).toFixed(2)}</div>
+                                <div className="text-xs text-muted-foreground">Lifetime Value</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-2xl font-bold">
+                                  ${user.order_count ? ((user.total_spent || 0) / user.order_count).toFixed(2) : '0.00'}
+                                </div>
+                                <div className="text-xs text-muted-foreground">Avg Order Value</div>
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
           
           {filteredUsers.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
@@ -332,6 +538,250 @@ const AdminUsers = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* User Details Modal */}
+      <Dialog open={showDetailsModal} onOpenChange={setShowDetailsModal}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {selectedUser && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                    <User className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-2xl">
+                      {selectedUser.full_name || "Customer"}
+                    </DialogTitle>
+                    <DialogDescription className="text-base">
+                      {selectedUser.email}
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="space-y-6 mt-6">
+                {/* Status & Stats Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription className="text-xs">Status</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {selectedUser.age_verified ? (
+                        <Badge className="bg-green-600">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Verified
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Unverified
+                        </Badge>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription className="text-xs flex items-center gap-1">
+                        <ShoppingBag className="h-3 w-3" />
+                        Orders
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{selectedUser.order_count || 0}</div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription className="text-xs flex items-center gap-1">
+                        <DollarSign className="h-3 w-3" />
+                        Total Spent
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-green-600">
+                        ${(selectedUser.total_spent || 0).toFixed(2)}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription className="text-xs flex items-center gap-1">
+                        <TrendingUp className="h-3 w-3" />
+                        Avg Order
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        ${selectedUser.order_count ? ((selectedUser.total_spent || 0) / selectedUser.order_count).toFixed(2) : '0.00'}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Contact Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Contact Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <div className="text-sm text-muted-foreground">Email</div>
+                        <div className="font-medium">{selectedUser.email}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <div className="text-sm text-muted-foreground">Phone</div>
+                        <div className="font-medium">{selectedUser.phone || "Not provided"}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <div className="text-sm text-muted-foreground">Member Since</div>
+                        <div className="font-medium">
+                          {new Date(selectedUser.created_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Addresses */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <MapPin className="h-5 w-5" />
+                      Saved Addresses ({selectedUser.addresses?.length || 0})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedUser.addresses && selectedUser.addresses.length > 0 ? (
+                      <div className="space-y-3">
+                        {selectedUser.addresses.map((address, idx) => (
+                          <div key={idx} className="p-3 rounded-lg border bg-muted/30">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="font-semibold">{address.street}</div>
+                                {address.apartment && (
+                                  <div className="text-sm text-muted-foreground">{address.apartment}</div>
+                                )}
+                                <div className="text-sm text-muted-foreground">
+                                  {address.city}, {address.state} {address.zip_code}
+                                </div>
+                                <div className="text-sm text-muted-foreground capitalize">
+                                  {address.borough}
+                                </div>
+                              </div>
+                              {address.is_default && (
+                                <Badge variant="outline">Default</Badge>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No saved addresses</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Recent Orders */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <ShoppingBag className="h-5 w-5" />
+                      Recent Orders ({selectedUser.recent_orders?.length || 0})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedUser.recent_orders && selectedUser.recent_orders.length > 0 ? (
+                      <div className="space-y-3">
+                        {selectedUser.recent_orders.map((order, idx) => (
+                          <div key={idx} className="p-3 rounded-lg border bg-muted/30">
+                            <div className="flex justify-between items-start">
+                              <div className="space-y-1">
+                                <div className="font-semibold">
+                                  Order #{order.order_number || order.id.substring(0, 8).toUpperCase()}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {new Date(order.created_at).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </div>
+                                {order.delivery_address && (
+                                  <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                    <MapPin className="h-3 w-3" />
+                                    {order.delivery_address}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-right space-y-1">
+                                <div className="font-bold text-lg">${Number(order.total_amount).toFixed(2)}</div>
+                                <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
+                                  {order.status.replace('_', ' ')}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No orders yet</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-4 border-t">
+                  <Button
+                    variant={selectedUser.age_verified ? "outline" : "default"}
+                    className="flex-1"
+                    onClick={() => {
+                      toggleVerification(selectedUser.user_id, selectedUser.age_verified);
+                      setShowDetailsModal(false);
+                    }}
+                  >
+                    {selectedUser.age_verified ? (
+                      <>
+                        <ShieldOff className="h-4 w-4 mr-2" />
+                        Remove Verification
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="h-4 w-4 mr-2" />
+                        Verify User
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowDetailsModal(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
