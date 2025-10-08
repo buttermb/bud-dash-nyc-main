@@ -51,6 +51,39 @@ const AdminAuditLogs = () => {
   useEffect(() => {
     if (session) {
       fetchAuditLogs();
+
+      // Realtime subscription for audit logs
+      const channel = supabase
+        .channel('admin-audit-logs-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'audit_logs'
+          },
+          (payload) => {
+            console.log('New audit log:', payload);
+            fetchAuditLogs();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'admin_audit_logs'
+          },
+          (payload) => {
+            console.log('New admin audit log:', payload);
+            fetchAuditLogs();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [session]);
 

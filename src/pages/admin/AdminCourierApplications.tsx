@@ -54,6 +54,27 @@ const AdminCourierApplications = () => {
 
   useEffect(() => {
     fetchApplications();
+
+    // Realtime subscription for courier applications
+    const channel = supabase
+      .channel('admin-courier-apps-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'courier_applications'
+        },
+        (payload) => {
+          console.log('Courier application updated:', payload);
+          fetchApplications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchApplications = async () => {
@@ -92,18 +113,18 @@ const AdminCourierApplications = () => {
       if (error) throw error;
 
       toast({
-        title: "Application Updated",
+        title: "✓ Application Updated",
         description: `Application has been ${newStatus}`,
       });
 
       setSelectedApp(null);
       setAdminNotes("");
-      fetchApplications();
-    } catch (error) {
+      await fetchApplications();
+    } catch (error: any) {
       console.error('Error updating application:', error);
       toast({
         title: "Error",
-        description: "Failed to update application",
+        description: error.message || "Failed to update application",
         variant: "destructive",
       });
     } finally {
