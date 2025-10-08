@@ -127,7 +127,9 @@ const Navigation = () => {
                 <Link
                   key={link.label}
                   to={link.href}
-                  onClick={() => window.scrollTo(0, 0)}
+                  onClick={() => {
+                    setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0);
+                  }}
                   className="text-sm font-medium transition-colors hover:text-primary cursor-pointer"
                 >
                   {link.label}
@@ -249,7 +251,7 @@ const Navigation = () => {
                         key={link.label}
                         to={link.href}
                         onClick={() => {
-                          window.scrollTo(0, 0);
+                          setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0);
                           const closeButton = document.querySelector('[aria-label="Close"]') as HTMLButtonElement;
                           closeButton?.click();
                         }}

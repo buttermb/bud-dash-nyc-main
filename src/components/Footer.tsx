@@ -118,10 +118,10 @@ const Footer = () => {
           <div>
             <h3 className="font-black mb-4 uppercase tracking-wide">Company</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/about" onClick={() => window.scrollTo(0, 0)} className="hover:text-primary transition-colors">About Us</Link></li>
-              <li><Link to="/partner-shops" onClick={() => window.scrollTo(0, 0)} className="hover:text-primary transition-colors">Partner Shops</Link></li>
-              <li><Link to="/become-courier" onClick={() => window.scrollTo(0, 0)} className="hover:text-primary transition-colors">Become a Courier</Link></li>
-              <li><Link to="/support" onClick={() => window.scrollTo(0, 0)} className="hover:text-primary transition-colors">Support</Link></li>
+              <li><Link to="/about" onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0)} className="hover:text-primary transition-colors">About Us</Link></li>
+              <li><Link to="/partner-shops" onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0)} className="hover:text-primary transition-colors">Partner Shops</Link></li>
+              <li><Link to="/become-courier" onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0)} className="hover:text-primary transition-colors">Become a Courier</Link></li>
+              <li><Link to="/support" onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0)} className="hover:text-primary transition-colors">Support</Link></li>
             </ul>
           </div>
 
@@ -129,10 +129,10 @@ const Footer = () => {
           <div>
             <h3 className="font-black mb-4 uppercase tracking-wide">Support</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/faq" onClick={() => window.scrollTo(0, 0)} className="hover:text-primary transition-colors">FAQ</Link></li>
-              <li><Link to="/track-order" onClick={() => window.scrollTo(0, 0)} className="hover:text-primary transition-colors">Track Order</Link></li>
-              <li><Link to="/terms" onClick={() => window.scrollTo(0, 0)} className="hover:text-primary transition-colors">Terms of Service</Link></li>
-              <li><Link to="/privacy" onClick={() => window.scrollTo(0, 0)} className="hover:text-primary transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/faq" onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0)} className="hover:text-primary transition-colors">FAQ</Link></li>
+              <li><Link to="/track-order" onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0)} className="hover:text-primary transition-colors">Track Order</Link></li>
+              <li><Link to="/terms" onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0)} className="hover:text-primary transition-colors">Terms of Service</Link></li>
+              <li><Link to="/privacy" onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0)} className="hover:text-primary transition-colors">Privacy Policy</Link></li>
             </ul>
             <div className="mt-4 pt-4 border-t border-border space-y-1">
               <p className="font-semibold text-foreground">Contact Us</p>
