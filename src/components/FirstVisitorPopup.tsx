@@ -107,11 +107,18 @@ const FirstVisitorPopup = () => {
     toast.success("Code copied to clipboard!");
   };
 
+  const handleClose = () => {
+    setIsOpen(false);
+    // Set dismissal cookie when manually closed
+    const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `discount_popup_shown=true; expires=${expires}; path=/`;
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
         <button
-          onClick={() => setIsOpen(false)}
+          onClick={handleClose}
           className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center transition-all hover:rotate-90"
         >
           <X className="w-4 h-4" />

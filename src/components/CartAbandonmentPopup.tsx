@@ -43,8 +43,17 @@ const CartAbandonmentPopup = ({ cartItems, onCheckout }: CartAbandonmentPopupPro
   }, [cartItems]);
 
   const handleCheckout = () => {
+    const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `exit_intent_shown=true; expires=${expires}; path=/`;
     setIsOpen(false);
     onCheckout();
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    // Set dismissal cookie when manually closed
+    const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `exit_intent_shown=true; expires=${expires}; path=/`;
   };
 
   const handleCopyCode = () => {
@@ -58,10 +67,10 @@ const CartAbandonmentPopup = ({ cartItems, onCheckout }: CartAbandonmentPopupPro
   }, 0);
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
         <button
-          onClick={() => setIsOpen(false)}
+          onClick={handleClose}
           className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center transition-all hover:rotate-90"
         >
           <X className="w-4 h-4" />
@@ -111,7 +120,7 @@ const CartAbandonmentPopup = ({ cartItems, onCheckout }: CartAbandonmentPopupPro
             <Button onClick={handleCheckout} variant="hero" className="w-full h-12 text-lg font-bold">
               Complete My Order
             </Button>
-            <Button onClick={() => setIsOpen(false)} variant="ghost" className="w-full">
+            <Button onClick={handleClose} variant="ghost" className="w-full">
               Continue Shopping
             </Button>
           </div>
