@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ProductCard from "./ProductCard";
 import AuthModal from "./AuthModal";
-import { Loader2, Search, Leaf, Cookie, Droplets, Cigarette, Wind, ChevronRight } from "lucide-react";
+import { Loader2, Search, Leaf, Cookie, Droplets, Cigarette, Wind, ChevronRight, ChevronLeft } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 const ProductCatalog = () => {
   const queryClient = useQueryClient();
@@ -77,6 +78,17 @@ const ProductCatalog = () => {
     { key: "concentrates", label: "Concentrates", icon: Droplets, desc: "High-potency extracts" },
     { key: "vapes", label: "Vapes", icon: Wind, desc: "Smooth vapor experience" },
   ];
+
+  // Scroll helper
+  const scrollContainerRef = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  const scroll = (categoryKey: string, direction: 'left' | 'right') => {
+    const container = scrollContainerRef.current[categoryKey];
+    if (!container) return;
+    
+    const scrollAmount = direction === 'left' ? -400 : 400;
+    container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  };
 
   return (
     <section id="products" className="py-16 md:py-32 bg-gradient-subtle">
@@ -157,23 +169,65 @@ const ProductCatalog = () => {
                         <p className="text-sm text-muted-foreground">{category.desc}</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="gap-1">
-                      View All
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full hidden md:flex"
+                        onClick={() => scroll(category.key, 'left')}
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full hidden md:flex"
+                        onClick={() => scroll(category.key, 'right')}
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Horizontal Scrollable Product Row */}
-                  <ScrollArea className="w-full whitespace-nowrap">
-                    <div className="flex gap-4 md:gap-6 pb-4">
+                  <div className="relative group">
+                    {/* Desktop scroll buttons */}
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background/95 backdrop-blur-sm shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex"
+                      onClick={() => scroll(category.key, 'left')}
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background/95 backdrop-blur-sm shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex"
+                      onClick={() => scroll(category.key, 'right')}
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </Button>
+
+                    <div 
+                      ref={(el) => scrollContainerRef.current[category.key] = el}
+                      className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4 snap-x snap-mandatory"
+                      style={{ 
+                        scrollbarWidth: 'none',
+                        msOverflowStyle: 'none',
+                        WebkitOverflowScrolling: 'touch'
+                      }}
+                    >
                       {products.map((product) => (
-                        <div key={product.id} className="w-[280px] md:w-[320px] flex-shrink-0">
+                        <div 
+                          key={product.id} 
+                          className="w-[280px] md:w-[320px] flex-shrink-0 snap-start snap-always"
+                        >
                           <ProductCard product={product} />
                         </div>
                       ))}
                     </div>
-                    <ScrollBar orientation="horizontal" />
-                  </ScrollArea>
+                  </div>
                 </div>
               );
             })}
