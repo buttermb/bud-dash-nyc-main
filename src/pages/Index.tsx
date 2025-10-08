@@ -11,6 +11,7 @@ import Navigation from "@/components/Navigation";
 import AgeVerificationModal from "@/components/AgeVerificationModal";
 import RecentPurchaseNotification from "@/components/RecentPurchaseNotification";
 import AddressCheck from "@/components/AddressCheck";
+import FirstVisitorPopup from "@/components/FirstVisitorPopup";
 
 const Index = () => {
   const [addressValidated, setAddressValidated] = useState(false);
@@ -25,6 +26,7 @@ const Index = () => {
     <div className="min-h-screen">
       <AgeVerificationModal />
       <RecentPurchaseNotification />
+      <FirstVisitorPopup />
       <Navigation />
       <Hero />
       
