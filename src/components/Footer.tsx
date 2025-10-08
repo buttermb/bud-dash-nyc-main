@@ -81,7 +81,7 @@ const Footer = () => {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <button 
-                  onClick={() => handleScrollToSection('products')} 
+                  onClick={() => handleScrollToSection('flower')} 
                   className="hover:text-primary transition-colors text-left"
                 >
                   THCA Flower
@@ -89,7 +89,7 @@ const Footer = () => {
               </li>
               <li>
                 <button 
-                  onClick={() => handleScrollToSection('products')} 
+                  onClick={() => handleScrollToSection('pre-rolls')} 
                   className="hover:text-primary transition-colors text-left"
                 >
                   THCA Pre-Rolls
@@ -97,7 +97,7 @@ const Footer = () => {
               </li>
               <li>
                 <button 
-                  onClick={() => handleScrollToSection('products')} 
+                  onClick={() => handleScrollToSection('vapes')} 
                   className="hover:text-primary transition-colors text-left"
                 >
                   THCA Vapes
@@ -105,7 +105,7 @@ const Footer = () => {
               </li>
               <li>
                 <button 
-                  onClick={() => handleScrollToSection('products')} 
+                  onClick={() => handleScrollToSection('concentrates')} 
                   className="hover:text-primary transition-colors text-left"
                 >
                   THCA Concentrates

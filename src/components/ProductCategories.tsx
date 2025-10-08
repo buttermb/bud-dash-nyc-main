@@ -8,24 +8,28 @@ const categories = [
     name: "THCA Flower",
     description: "Premium strains, lab-tested",
     popular: true,
+    sectionId: "flower",
   },
   {
     icon: Candy,
     name: "Edibles",
     description: "Gummies, chocolates, more",
     popular: false,
+    sectionId: "edibles",
   },
   {
     icon: Wind,
     name: "Vapes",
     description: "Cartridges and disposables",
     popular: true,
+    sectionId: "vapes",
   },
   {
     icon: Droplet,
     name: "Concentrates",
     description: "Wax, shatter, diamonds",
     popular: false,
+    sectionId: "concentrates",
   },
 ];
 
@@ -48,8 +52,14 @@ const ProductCategories = () => {
                 key={index} 
                 className="relative border-2 hover:border-primary transition-all duration-300 cursor-pointer hover:shadow-elegant hover:-translate-y-2 group"
                 onClick={() => {
-                  const productsSection = document.getElementById('products');
-                  productsSection?.scrollIntoView({ behavior: 'smooth' });
+                  const categorySection = document.getElementById(category.sectionId);
+                  if (categorySection) {
+                    categorySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  } else {
+                    // Fallback to products section if category not found
+                    const productsSection = document.getElementById('products');
+                    productsSection?.scrollIntoView({ behavior: 'smooth' });
+                  }
                 }}
               >
                 {category.popular && (

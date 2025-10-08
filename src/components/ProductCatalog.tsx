@@ -157,7 +157,7 @@ const ProductCatalog = () => {
               const Icon = category.icon;
 
               return (
-                <div key={category.key} className="space-y-4 md:space-y-6">
+                <div key={category.key} id={category.key} className="space-y-4 md:space-y-6 scroll-mt-24">
                   {/* Category Header */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
