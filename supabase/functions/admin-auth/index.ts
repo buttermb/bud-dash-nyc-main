@@ -32,19 +32,34 @@ serve(async (req) => {
         );
       }
 
-      // Check if user is an admin
+      // Check if user has admin role in user_roles table (consolidated system)
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", authData.user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (roleError || !roleData) {
+        await supabase.auth.signOut();
+        return new Response(
+          JSON.stringify({ error: "Unauthorized - admin access required" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Get admin details from admin_users table
       const { data: adminUser, error: adminError } = await supabase
         .from("admin_users")
         .select("*")
         .eq("user_id", authData.user.id)
         .eq("is_active", true)
-        .single();
+        .maybeSingle();
 
       if (adminError || !adminUser) {
-        // Sign out the user since they're not an admin
         await supabase.auth.signOut();
         return new Response(
-          JSON.stringify({ error: "Unauthorized - admin access required" }),
+          JSON.stringify({ error: "Admin account not active" }),
           { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -67,13 +82,20 @@ serve(async (req) => {
         user_agent: req.headers.get("user-agent") || "unknown",
       });
 
-      // Log admin login
+      // Log admin login to both audit logs
       await supabase.from("admin_audit_logs").insert({
         admin_id: adminUser.id,
         action: "ADMIN_LOGIN",
         details: { email: adminUser.email },
         ip_address: req.headers.get("x-forwarded-for") || "unknown",
         user_agent: req.headers.get("user-agent") || "unknown",
+      });
+
+      await supabase.from("security_events").insert({
+        event_type: "admin_login",
+        user_id: authData.user.id,
+        details: { email: adminUser.email, timestamp: new Date().toISOString() },
+        ip_address: req.headers.get("x-forwarded-for") || "unknown",
       });
 
       return new Response(
@@ -103,16 +125,32 @@ serve(async (req) => {
         );
       }
 
+      // Check admin role in user_roles (consolidated system)
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (roleError || !roleData) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized - admin access required" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Get admin details
       const { data: adminUser, error: adminError } = await supabase
         .from("admin_users")
         .select("*")
         .eq("user_id", user.id)
         .eq("is_active", true)
-        .single();
+        .maybeSingle();
 
       if (adminError || !adminUser) {
         return new Response(
-          JSON.stringify({ error: "Unauthorized - admin access required" }),
+          JSON.stringify({ error: "Admin account not active" }),
           { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -143,12 +181,19 @@ serve(async (req) => {
           .single();
 
         if (adminUser) {
-          // Log admin logout
+          // Log admin logout to both audit systems
           await supabase.from("admin_audit_logs").insert({
             admin_id: adminUser.id,
             action: "ADMIN_LOGOUT",
             ip_address: req.headers.get("x-forwarded-for") || "unknown",
             user_agent: req.headers.get("user-agent") || "unknown",
+          });
+
+          await supabase.from("security_events").insert({
+            event_type: "admin_logout",
+            user_id: user.id,
+            details: { timestamp: new Date().toISOString() },
+            ip_address: req.headers.get("x-forwarded-for") || "unknown",
           });
 
           // Delete admin session

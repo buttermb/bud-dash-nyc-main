@@ -28,18 +28,40 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
   const verifyAdmin = async (currentSession: Session) => {
     try {
-      const { data, error } = await supabase.functions.invoke("admin-auth", {
-        body: { action: "verify" },
-        headers: {
-          Authorization: `Bearer ${currentSession.access_token}`,
-        },
-      });
+      // Check if user has admin role using user_roles table
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", currentSession.user.id)
+        .eq("role", "admin")
+        .maybeSingle();
 
-      if (error) throw error;
+      if (roleError) throw roleError;
       
-      if (data?.admin) {
-        setAdmin(data.admin);
-        setSession(currentSession);
+      if (roleData) {
+        // User has admin role, get admin details
+        const { data: adminData, error: adminError } = await supabase
+          .from("admin_users")
+          .select("*")
+          .eq("user_id", currentSession.user.id)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (adminError) throw adminError;
+
+        if (adminData) {
+          setAdmin({
+            id: adminData.id,
+            email: adminData.email,
+            full_name: adminData.full_name,
+            role: adminData.role
+          });
+          setSession(currentSession);
+        } else {
+          setAdmin(null);
+          setSession(null);
+          await supabase.auth.signOut();
+        }
       } else {
         setAdmin(null);
         setSession(null);
@@ -82,29 +104,56 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke("admin-auth", {
-        body: { action: "login", email, password },
+      // Standard auth sign in
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
+      if (!authData.session) throw new Error("No session returned");
 
-      if (data?.session && data?.admin) {
-        setSession(data.session);
-        setAdmin(data.admin);
-        
-        // Set the session in Supabase client
-        await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        });
+      // Check if user has admin role
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", authData.user.id)
+        .eq("role", "admin")
+        .maybeSingle();
 
-        toast({
-          title: "Welcome back!",
-          description: `Logged in as ${data.admin.full_name}`,
-        });
-      } else {
-        throw new Error("Invalid credentials");
-      }
+      if (roleError) throw roleError;
+      if (!roleData) throw new Error("You don't have admin access");
+
+      // Get admin details
+      const { data: adminData, error: adminError } = await supabase
+        .from("admin_users")
+        .select("*")
+        .eq("user_id", authData.user.id)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (adminError) throw adminError;
+      if (!adminData) throw new Error("Admin account is not active");
+
+      setSession(authData.session);
+      setAdmin({
+        id: adminData.id,
+        email: adminData.email,
+        full_name: adminData.full_name,
+        role: adminData.role
+      });
+
+      // Log admin login to security events
+      await supabase.from("security_events").insert({
+        event_type: "admin_login",
+        user_id: authData.user.id,
+        details: { email, timestamp: new Date().toISOString() }
+      });
+
+      toast({
+        title: "Welcome back!",
+        description: `Logged in as ${adminData.full_name}`,
+      });
     } catch (error: any) {
       console.error("Admin sign in error:", error);
       toast({
@@ -118,12 +167,12 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
-      if (session) {
-        await supabase.functions.invoke("admin-auth", {
-          body: { action: "logout" },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
+      // Log admin logout to security events
+      if (session?.user?.id) {
+        await supabase.from("security_events").insert({
+          event_type: "admin_logout",
+          user_id: session.user.id,
+          details: { timestamp: new Date().toISOString() }
         });
       }
       

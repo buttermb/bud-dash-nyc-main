@@ -16,6 +16,16 @@ export default function CourierPinManagement({ courierId, currentPin, courierNam
   const [pin, setPin] = useState(currentPin || '');
   const [loading, setLoading] = useState(false);
 
+  // Simple hash function for client-side PIN hashing  
+  const hashPin = async (pin: string): Promise<string> => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pin);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return `$sha256$${hashHex}`;
+  };
+
   const generatePin = async () => {
     setLoading(true);
     try {
@@ -24,7 +34,7 @@ export default function CourierPinManagement({ courierId, currentPin, courierNam
       if (error) throw error;
       
       setPin(data);
-      toast.success('PIN generated');
+      toast.success('PIN generated - remember to save it!');
     } catch (error) {
       toast.error('Failed to generate PIN');
       console.error(error);
@@ -41,14 +51,32 @@ export default function CourierPinManagement({ courierId, currentPin, courierNam
 
     setLoading(true);
     try {
+      // Hash the PIN before saving for security
+      const hashedPin = await hashPin(pin);
+      
       const { error } = await supabase
         .from('couriers')
-        .update({ admin_pin: pin, admin_pin_verified: false })
+        .update({ 
+          admin_pin: hashedPin, 
+          admin_pin_verified: false,
+          pin_set_at: new Date().toISOString()
+        })
         .eq('id', courierId);
 
       if (error) throw error;
 
-      toast.success(`Admin PIN set for ${courierName}`);
+      // Log security event
+      await supabase.from('security_events').insert({
+        event_type: 'courier_pin_updated',
+        details: { 
+          courier_id: courierId,
+          courier_name: courierName,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      toast.success(`Admin PIN securely set for ${courierName}`);
+      setPin(''); // Clear PIN after saving
     } catch (error) {
       toast.error('Failed to save PIN');
       console.error(error);
@@ -108,7 +136,7 @@ export default function CourierPinManagement({ courierId, currentPin, courierNam
         </Button>
 
         <p className="text-xs text-muted-foreground">
-          This PIN must be provided to the courier on their first login. Keep it secure.
+          This PIN must be provided to the courier on their first login. PINs are securely hashed before storage. Keep it secure.
         </p>
       </div>
     </Card>

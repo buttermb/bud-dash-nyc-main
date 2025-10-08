@@ -157,7 +157,7 @@ export type Database = {
           last_login_at: string | null
           role: Database["public"]["Enums"]["admin_role"]
           updated_at: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string | null
@@ -168,7 +168,7 @@ export type Database = {
           last_login_at?: string | null
           role?: Database["public"]["Enums"]["admin_role"]
           updated_at?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string | null
@@ -179,7 +179,7 @@ export type Database = {
           last_login_at?: string | null
           role?: Database["public"]["Enums"]["admin_role"]
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1465,7 +1465,7 @@ export type Database = {
           total_amount: number
           tracking_code: string | null
           tracking_url: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           accepted_at?: string | null
@@ -1525,7 +1525,7 @@ export type Database = {
           total_amount: number
           tracking_code?: string | null
           tracking_url?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           accepted_at?: string | null
@@ -1585,7 +1585,7 @@ export type Database = {
           total_amount?: number
           tracking_code?: string | null
           tracking_url?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -2091,6 +2091,10 @@ export type Database = {
       }
       log_document_access: {
         Args: { _access_type: string; _verification_id: string }
+        Returns: undefined
+      }
+      log_pin_verification: {
+        Args: { courier_user_id: string; success: boolean }
         Returns: undefined
       }
       log_security_event: {
