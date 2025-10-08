@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { X, Sparkles } from "lucide-react";
+import { X, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const LimitedTimeOfferBanner = () => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    // Check cookie instead of sessionStorage - Premium approach: show once per 7 days
     const getCookie = (name: string) => {
       const value = `; ${document.cookie}`;
       const parts = value.split(`; ${name}=`);
@@ -22,7 +21,6 @@ const LimitedTimeOfferBanner = () => {
 
   const handleDismiss = () => {
     setIsVisible(false);
-    // Set cookie for 7 days
     const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString();
     document.cookie = `offer_banner_dismissed=true; expires=${expires}; path=/; SameSite=Lax`;
   };
@@ -31,29 +29,21 @@ const LimitedTimeOfferBanner = () => {
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ y: -100, opacity: 0 }}
+          initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -100, opacity: 0 }}
-          className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-b border-primary/20"
+          exit={{ y: -50, opacity: 0 }}
+          className="bg-gradient-to-r from-primary/10 to-primary/5 border-b border-primary/10"
         >
           <div className="container mx-auto px-4 py-2">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 flex-1">
-                <Sparkles className="w-4 h-4 text-primary hidden sm:block" />
-                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 flex-1">
-                  <span className="font-semibold text-sm">
-                    Member Exclusive: Free shipping on all orders
-                  </span>
-                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full inline-block w-fit">
-                    Join now
-                  </span>
-                </div>
-              </div>
-              
+            <div className="flex items-center justify-center gap-2 relative">
+              <Truck className="w-3.5 h-3.5 text-primary hidden sm:block" />
+              <span className="text-sm font-medium text-center">
+                Free shipping for members
+              </span>
               <button
                 onClick={handleDismiss}
-                className="w-6 h-6 rounded-full hover:bg-muted flex items-center justify-center transition-colors flex-shrink-0"
-                aria-label="Dismiss banner"
+                className="absolute right-0 w-5 h-5 rounded-full hover:bg-muted flex items-center justify-center transition-colors"
+                aria-label="Dismiss"
               >
                 <X className="w-3 h-3" />
               </button>
