@@ -1,11 +1,16 @@
-import { Shield, Award, Lock } from "lucide-react";
+import { Shield, Award, Lock, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import NYMLogo from "./NYMLogo";
 
 const Footer = () => {
+  const [legalOpen, setLegalOpen] = useState(false);
+  
   return (
-    <footer className="bg-[hsl(222_47%_8%)] border-t border-border py-12">
+    <footer className="bg-[hsl(222_47%_8%)] border-t border-border py-8 md:py-12">
       <div className="container px-4 mx-auto">
         {/* Compliance Badges Section */}
         <div className="mb-8 pb-8 border-b">
@@ -94,24 +99,38 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t pt-8 space-y-4">
-          {/* Legal Compliance Notice */}
-          <div className="bg-muted/50 border border-border rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <Badge variant="outline" className="mt-1 flex-shrink-0">21+</Badge>
-              <div className="text-xs text-muted-foreground space-y-2">
-                <p className="font-semibold text-foreground">THCA Legal Notice:</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li><strong>Licensed NY Cannabinoid Hemp Retailer:</strong> All operations comply with NY State hemp laws.</li>
-                  <li><strong>Hemp-Derived THCA Products:</strong> All products contain ≤0.3% Delta-9 THC and are federally legal.</li>
-                  <li><strong>THCA is Non-Psychoactive:</strong> THCA does not produce psychoactive effects in its raw form.</li>
-                  <li><strong>21+ Age Verification:</strong> Must be 21+ with valid ID. Age verified at delivery.</li>
-                  <li><strong>Lab-Tested:</strong> All products tested for potency and purity by third-party laboratories.</li>
-                  <li><strong>Discreet Delivery:</strong> Private packaging with no product identification on exterior.</li>
-                </ul>
+        <div className="border-t pt-6 md:pt-8 space-y-4">
+          {/* Legal Compliance Notice - Collapsible on Mobile */}
+          <Collapsible open={legalOpen} onOpenChange={setLegalOpen}>
+            <CollapsibleTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center justify-between md:hidden"
+              >
+                <span className="text-sm font-semibold">Legal Information</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${legalOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+            
+            <CollapsibleContent className="md:!block">
+              <div className="bg-muted/50 border border-border rounded-lg p-4 mt-4 md:mt-0">
+                <div className="flex items-start gap-3">
+                  <Badge variant="outline" className="mt-1 flex-shrink-0">21+</Badge>
+                  <div className="text-xs text-muted-foreground space-y-2">
+                    <p className="font-semibold text-foreground">THCA Legal Notice:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li><strong>Licensed NY Cannabinoid Hemp Retailer:</strong> All operations comply with NY State hemp laws.</li>
+                      <li><strong>Hemp-Derived THCA Products:</strong> All products contain ≤0.3% Delta-9 THC and are federally legal.</li>
+                      <li><strong>THCA is Non-Psychoactive:</strong> THCA does not produce psychoactive effects in its raw form.</li>
+                      <li><strong>21+ Age Verification:</strong> Must be 21+ with valid ID. Age verified at delivery.</li>
+                      <li><strong>Lab-Tested:</strong> All products tested for potency and purity by third-party laboratories.</li>
+                      <li><strong>Discreet Delivery:</strong> Private packaging with no product identification on exterior.</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* Copyright */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-2 text-sm text-muted-foreground">

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ProductCard from "./ProductCard";
 import AuthModal from "./AuthModal";
@@ -134,66 +135,155 @@ const ProductCatalog = () => {
   ];
 
   return (
-    <section id="products" className="py-32 bg-gradient-subtle">
+    <section id="products" className="py-16 md:py-32 bg-gradient-subtle">
       <div className="container px-4 mx-auto">
-        <div className="text-center space-y-6 mb-20">
-          <h2 className="text-6xl md:text-7xl font-black uppercase tracking-wider">Shop THCA Products</h2>
-          <p className="text-2xl text-muted-foreground max-w-3xl mx-auto font-medium">
+        <div className="text-center space-y-4 md:space-y-6 mb-12 md:mb-20">
+          <h2 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-wider">Shop THCA Products</h2>
+          <p className="text-lg md:text-2xl text-muted-foreground max-w-3xl mx-auto font-medium">
             Premium hemp-derived THCA products from licensed NYC vendors
           </p>
         </div>
 
         {/* Search and Filters */}
-        <div className="max-w-6xl mx-auto mb-8 space-y-6">
-          <h3 className="text-2xl font-bold text-center mb-4">Find Your Perfect THCA Product</h3>
+        <div className="max-w-6xl mx-auto mb-6 md:mb-8 space-y-4 md:space-y-6">
           
-          {/* Search Bar */}
-          <div className="flex flex-col md:flex-row gap-4">
+          {/* Search Bar + Mobile Filter Button */}
+          <div className="flex gap-2 md:gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search products, vendors..."
+                placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name">Name (A-Z)</SelectItem>
-                <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                <SelectItem value="potency">Potency (High to Low)</SelectItem>
-                <SelectItem value="rating">Rating (High to Low)</SelectItem>
-              </SelectContent>
-            </Select>
+
+            {/* Mobile Filter Sheet */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="md:hidden flex-shrink-0">
+                  <SlidersHorizontal className="w-4 h-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Filters</SheetTitle>
+                </SheetHeader>
+                <div className="space-y-6 py-6">
+                  {/* Strain Type */}
+                  <div>
+                    <Label className="mb-2 block">Strain Type</Label>
+                    <Select value={strainType} onValueChange={setStrainType}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="indica">Indica</SelectItem>
+                        <SelectItem value="sativa">Sativa</SelectItem>
+                        <SelectItem value="hybrid">Hybrid</SelectItem>
+                        <SelectItem value="cbd">CBD</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Price Range */}
+                  <div>
+                    <Label className="mb-2 block">
+                      Price: ${priceRange[0]} - ${priceRange[1]}
+                    </Label>
+                    <Slider
+                      value={priceRange}
+                      onValueChange={setPriceRange}
+                      max={100}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Potency Range */}
+                  <div>
+                    <Label className="mb-2 block">
+                      THCA: {potencyRange[0]}% - {potencyRange[1]}%
+                    </Label>
+                    <Slider
+                      value={potencyRange}
+                      onValueChange={setPotencyRange}
+                      max={100}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Effects */}
+                  <div>
+                    <Label className="mb-3 block">Effects</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {['relaxing', 'uplifting', 'creative', 'focused'].map((effect) => (
+                        <Button
+                          key={effect}
+                          variant={selectedEffects.includes(effect) ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => {
+                            setSelectedEffects(prev =>
+                              prev.includes(effect)
+                                ? prev.filter(e => e !== effect)
+                                : [...prev, effect]
+                            );
+                          }}
+                          className="capitalize"
+                        >
+                          {effect}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            {/* Desktop Sort */}
+            <div className="hidden md:block">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">Name (A-Z)</SelectItem>
+                  <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                  <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                  <SelectItem value="potency">Potency (High to Low)</SelectItem>
+                  <SelectItem value="rating">Rating (High to Low)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          {/* Quick Filters */}
-          <QuickFilters 
-            onFilterSelect={(filter: QuickFilter) => {
-              setActiveQuickFilter(filter.id);
-              if (filter.priceRange) {
-                setPriceRange(filter.priceRange);
-              }
-              if (filter.potencyRange) {
-                setPotencyRange(filter.potencyRange);
-              }
-              if (filter.category) {
-                setCategory(filter.category);
-              }
-              if (filter.id === "top-rated") {
-                setSortBy("rating");
-              }
-            }}
-            activeFilter={activeQuickFilter}
-          />
+          {/* Quick Filters - Horizontal Scroll on Mobile */}
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <QuickFilters 
+              onFilterSelect={(filter: QuickFilter) => {
+                setActiveQuickFilter(filter.id);
+                if (filter.priceRange) {
+                  setPriceRange(filter.priceRange);
+                }
+                if (filter.potencyRange) {
+                  setPotencyRange(filter.potencyRange);
+                }
+                if (filter.category) {
+                  setCategory(filter.category);
+                }
+                if (filter.id === "top-rated") {
+                  setSortBy("rating");
+                }
+              }}
+              activeFilter={activeQuickFilter}
+            />
+          </div>
 
-          {/* Collapsible Advanced Filters */}
-          <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+          {/* Desktop Advanced Filters - Hidden on Mobile */}
+          <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen} className="hidden md:block">
             <CollapsibleTrigger asChild>
               <Button variant="outline" className="w-full gap-2">
                 <SlidersHorizontal className="w-4 h-4" />
@@ -254,8 +344,8 @@ const ProductCatalog = () => {
             </CollapsibleContent>
           </Collapsible>
 
-          {/* Effects Filter */}
-          <div className="bg-muted/50 rounded-lg p-4">
+          {/* Effects Filter - Hidden on Mobile */}
+          <div className="hidden md:block bg-muted/50 rounded-lg p-4">
             <Label className="text-sm font-medium mb-3 block">Effects</Label>
             <div className="flex flex-wrap gap-2">
               {['relaxing', 'uplifting', 'creative', 'focused', 'energizing', 'sleepy', 'happy', 'euphoric'].map((effect) => (
@@ -289,9 +379,9 @@ const ProductCatalog = () => {
           </div>
         </div>
 
-        {/* Category Filter Buttons */}
-        <div className="mb-12">
-          <div className="flex justify-center gap-4 flex-wrap">
+        {/* Category Filter Buttons - Horizontal Scroll on Mobile */}
+        <div className="mb-8 md:mb-12">
+          <div className="flex md:justify-center gap-3 md:gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap">
             {categories.map((cat) => {
               const Icon = cat.icon;
               const isActive = category === cat.value;
@@ -300,14 +390,14 @@ const ProductCatalog = () => {
                   key={cat.value}
                   onClick={() => setCategory(cat.value)}
                   className={cn(
-                    "px-8 py-3 rounded-full font-semibold transition-all flex items-center gap-2",
+                    "px-6 md:px-8 py-2 md:py-3 rounded-full font-semibold transition-all flex items-center gap-2 flex-shrink-0 min-h-[44px]",
                     isActive
                       ? "bg-primary text-primary-foreground shadow-lg"
                       : "bg-card text-muted-foreground hover:bg-muted border border-border"
                   )}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span>{cat.label}</span>
+                  <Icon className="w-4 md:w-5 h-4 md:h-5" />
+                  <span className="text-sm md:text-base">{cat.label}</span>
                 </button>
               );
             })}

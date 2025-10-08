@@ -1,5 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingBag, Store, Truck } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const steps = [
   {
@@ -21,16 +28,47 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-32 bg-muted/30">
+    <section id="how-it-works" className="py-16 md:py-32 bg-muted/30">
       <div className="container px-4 mx-auto">
-        <div className="text-center space-y-6 mb-24">
-          <h2 className="text-6xl md:text-7xl font-black uppercase tracking-wider">How It Works</h2>
-          <p className="text-2xl text-muted-foreground max-w-3xl mx-auto font-medium">
-            Three simple steps to get premium THCA delivered to your door
+        <div className="text-center space-y-4 md:space-y-6 mb-12 md:mb-24">
+          <h2 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-wider">How It Works</h2>
+          <p className="text-lg md:text-2xl text-muted-foreground max-w-3xl mx-auto font-medium">
+            Three simple steps to get premium THCA delivered
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-6xl mx-auto">
+        {/* Mobile: Swipeable Carousel */}
+        <div className="md:hidden">
+          <Carousel className="w-full max-w-sm mx-auto">
+            <CarouselContent>
+              {steps.map((step, index) => {
+                const Icon = step.icon;
+                return (
+                  <CarouselItem key={index}>
+                    <Card className="border-2 bg-card/50 backdrop-blur-sm">
+                      <CardContent className="pt-12 pb-8 text-center space-y-4">
+                        <div className="w-16 h-16 mx-auto rounded-full bg-gradient-primary flex items-center justify-center">
+                          <Icon className="w-8 h-8 text-primary-foreground" />
+                        </div>
+                        <div className="w-10 h-10 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="text-lg font-black text-primary">{index + 1}</span>
+                        </div>
+                        <h3 className="text-2xl font-black uppercase tracking-wide">{step.title}</h3>
+                        <p className="text-muted-foreground text-base">{step.description}</p>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                );
+              })}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+          <p className="text-center text-sm text-muted-foreground mt-4">Swipe to see steps</p>
+        </div>
+
+        {/* Desktop: Grid */}
+        <div className="hidden md:grid grid-cols-3 gap-12 max-w-6xl mx-auto">
           {steps.map((step, index) => {
             const Icon = step.icon;
             return (
