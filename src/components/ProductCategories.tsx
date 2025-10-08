@@ -46,16 +46,20 @@ const ProductCategories = () => {
             return (
               <Card 
                 key={index} 
-                className="relative border-2 hover:border-primary transition-all duration-300 cursor-pointer hover:shadow-strong hover:-translate-y-1"
+                className="relative border-2 hover:border-primary transition-all duration-300 cursor-pointer hover:shadow-elegant hover:-translate-y-2 group"
+                onClick={() => {
+                  const productsSection = document.getElementById('products');
+                  productsSection?.scrollIntoView({ behavior: 'smooth' });
+                }}
               >
                 {category.popular && (
-                  <div className="absolute -top-3 -right-3 px-3 py-1 bg-secondary text-secondary-foreground text-xs font-bold rounded-full">
+                  <div className="absolute -top-3 -right-3 px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full shadow-strong">
                     Popular
                   </div>
                 )}
                 <CardHeader className="text-center">
-                  <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <Icon className="w-8 h-8 text-primary" />
+                  <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                    <Icon className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
                   </div>
                   <CardTitle className="text-xl">{category.name}</CardTitle>
                 </CardHeader>
@@ -68,7 +72,15 @@ const ProductCategories = () => {
         </div>
 
         <div className="text-center">
-          <Button variant="hero" size="lg">
+          <Button 
+            variant="hero" 
+            size="lg"
+            className="shadow-strong"
+            onClick={() => {
+              const productsSection = document.getElementById('products');
+              productsSection?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
             View All Products
           </Button>
         </div>
