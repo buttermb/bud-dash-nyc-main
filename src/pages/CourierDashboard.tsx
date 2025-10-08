@@ -415,30 +415,7 @@ export default function CourierDashboard() {
     window.open(url, '_blank');
   };
 
-  if (courierLoading || !courier) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!hasPinSetup) {
-    return (
-      <div className="min-h-screen bg-background">
-        <PinSetupModal open={true} onPinSet={setupPin} />
-      </div>
-    );
-  }
-
-  if (!isUnlocked) {
-    return (
-      <div className="min-h-screen bg-background">
-        <PinUnlockModal open={true} onUnlock={verifyPin} />
-      </div>
-    );
-  }
-
+  // Compute derived values (safe to do before early returns)
   const myOrders = myOrdersData?.orders || [];
   const availableOrders = availableOrdersData?.orders || [];
   const completedOrders = completedOrdersData?.orders || [];
@@ -448,7 +425,7 @@ export default function CourierDashboard() {
   const todayTips = parseFloat(stats?.tips_earned || '0');
   const todayDeliveries = stats?.deliveries_completed || 0;
 
-  // Geofence tracking for active order
+  // Geofence tracking for active order - MUST be before early returns
   useEffect(() => {
     if (!activeOrder || !courier || !locationPermissionGranted) {
       if (geofenceCheckInterval) {
@@ -503,6 +480,31 @@ export default function CourierDashboard() {
       if (interval) clearInterval(interval);
     };
   }, [activeOrder, courier, locationPermissionGranted]);
+
+  // Early returns AFTER all hooks
+  if (courierLoading || !courier) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!hasPinSetup) {
+    return (
+      <div className="min-h-screen bg-background">
+        <PinSetupModal open={true} onPinSet={setupPin} />
+      </div>
+    );
+  }
+
+  if (!isUnlocked) {
+    return (
+      <div className="min-h-screen bg-background">
+        <PinUnlockModal open={true} onUnlock={verifyPin} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white pb-20">
