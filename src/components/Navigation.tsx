@@ -184,7 +184,7 @@ const Navigation = () => {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate("/orders")}>
+                    <DropdownMenuItem onClick={() => navigate("/my-orders")}>
                       My Orders
                     </DropdownMenuItem>
                     <DropdownMenuItem>Profile Settings</DropdownMenuItem>
@@ -234,12 +234,24 @@ const Navigation = () => {
                     </a>
                   ))}
                   {user ? (
-                    <Button variant="outline" onClick={async () => {
-                      await signOut();
-                      navigate("/");
-                    }}>
-                      Sign Out
-                    </Button>
+                    <>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          navigate("/my-orders");
+                          const closeButton = document.querySelector('[aria-label="Close"]') as HTMLButtonElement;
+                          closeButton?.click();
+                        }}
+                      >
+                        My Orders
+                      </Button>
+                      <Button variant="outline" onClick={async () => {
+                        await signOut();
+                        navigate("/");
+                      }}>
+                        Sign Out
+                      </Button>
+                    </>
                   ) : (
                     <>
                       <Button variant="outline" onClick={() => openAuth("signin")}>
