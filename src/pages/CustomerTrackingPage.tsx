@@ -191,11 +191,14 @@ export default function CustomerTrackingPage() {
   if (!order) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="p-8 text-center max-w-md">
-          <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-2xl font-bold mb-2">Order Not Found</h2>
-          <p className="text-muted-foreground">
-            We couldn't find an order with tracking code: {code}
+        <Card className="p-6 md:p-8 text-center max-w-md w-full">
+          <Package className="h-12 w-12 md:h-16 md:w-16 mx-auto mb-4 text-muted-foreground" />
+          <h2 className="text-xl md:text-2xl font-bold mb-2">Order Not Found</h2>
+          <p className="text-sm md:text-base text-muted-foreground mb-4">
+            We couldn't find an order with tracking code: <span className="font-mono font-semibold">{code}</span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Please check your tracking code and try again, or contact support for assistance.
           </p>
         </Card>
       </div>
@@ -231,21 +234,21 @@ export default function CustomerTrackingPage() {
 
       <div className="max-w-4xl mx-auto p-4 space-y-6 mt-6">
         {/* Status Progress */}
-        <Card className="p-6">
-          <div className="space-y-6">
+        <Card className="p-4 md:p-6">
+          <div className="space-y-4 md:space-y-6">
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-xl font-bold">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                <h2 className="text-lg md:text-xl font-bold">
                   {STATUS_STEPS[currentStep]?.icon} {STATUS_STEPS[currentStep]?.label}
                 </h2>
                 {!isDelivered && !isCancelled && order.eta_minutes && (
-                  <Badge variant="secondary" className="text-lg px-4 py-1">
+                  <Badge variant="secondary" className="text-base md:text-lg px-3 md:px-4 py-1 w-fit">
                     <Clock className="h-4 w-4 mr-2" />
                     ETA: {order.eta_minutes} min
                   </Badge>
                 )}
               </div>
-              <p className="text-muted-foreground">{getStatusMessage()}</p>
+              <p className="text-sm md:text-base text-muted-foreground">{getStatusMessage()}</p>
             </div>
 
             {/* Progress Bar */}
@@ -254,7 +257,7 @@ export default function CustomerTrackingPage() {
                 {STATUS_STEPS.map((step, idx) => (
                   <div key={step.key} className="flex flex-col items-center flex-1">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-xl mb-1 transition-all ${
+                      className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-base md:text-xl mb-1 transition-all ${
                         idx <= currentStep
                           ? step.color + " text-white shadow-lg scale-110"
                           : "bg-muted text-muted-foreground"
@@ -262,7 +265,7 @@ export default function CustomerTrackingPage() {
                     >
                       {step.icon}
                     </div>
-                    <span className="text-xs text-center hidden sm:block">{step.label}</span>
+                    <span className="text-[10px] md:text-xs text-center max-w-[60px] md:max-w-none leading-tight">{step.label}</span>
                   </div>
                 ))}
               </div>
@@ -278,19 +281,19 @@ export default function CustomerTrackingPage() {
 
         {/* Courier Info */}
         {order.courier && !isDelivered && (
-          <Card className="p-6">
-            <h3 className="font-semibold mb-4 flex items-center">
+          <Card className="p-4 md:p-6">
+            <h3 className="font-semibold mb-4 flex items-center text-base md:text-lg">
               <NavigationIcon className="h-5 w-5 mr-2" />
               Your Driver
             </h3>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center space-x-3 md:space-x-4 flex-1">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <span className="text-xl">🚗</span>
                 </div>
-                <div>
-                  <p className="font-semibold">{order.courier.full_name}</p>
-                  <p className="text-sm text-muted-foreground">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate">{order.courier.full_name}</p>
+                  <p className="text-sm text-muted-foreground truncate">
                     {order.courier.vehicle_make} {order.courier.vehicle_model}
                   </p>
                   <div className="flex items-center text-sm text-yellow-600">
@@ -299,7 +302,7 @@ export default function CustomerTrackingPage() {
                   </div>
                 </div>
               </div>
-              <Button asChild>
+              <Button asChild className="w-full sm:w-auto flex-shrink-0">
                 <a href={`tel:${order.courier.phone}`}>
                   <Phone className="h-4 w-4 mr-2" />
                   Call Driver
@@ -310,41 +313,41 @@ export default function CustomerTrackingPage() {
         )}
 
         {/* Delivery Address */}
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4 flex items-center">
+        <Card className="p-4 md:p-6">
+          <h3 className="font-semibold mb-3 md:mb-4 flex items-center text-base md:text-lg">
             <MapPin className="h-5 w-5 mr-2" />
             Delivery Address
           </h3>
-          <p className="text-sm">{order.delivery_address}</p>
-          <p className="text-sm text-muted-foreground">{order.delivery_borough}</p>
+          <p className="text-sm md:text-base break-words">{order.delivery_address}</p>
+          <p className="text-sm text-muted-foreground capitalize">{order.delivery_borough}</p>
         </Card>
 
         {/* Order Details */}
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4 flex items-center">
+        <Card className="p-4 md:p-6">
+          <h3 className="font-semibold mb-3 md:mb-4 flex items-center text-base md:text-lg">
             <Package className="h-5 w-5 mr-2" />
             Order Details
           </h3>
           <div className="space-y-3">
             {order.order_items.map((item) => (
-              <div key={item.id} className="flex justify-between items-center">
-                <div className="flex items-center space-x-3">
+              <div key={item.id} className="flex justify-between items-center gap-3">
+                <div className="flex items-center space-x-3 flex-1 min-w-0">
                   {item.product.image_url && (
                     <img
                       src={item.product.image_url}
                       alt={item.product.name}
-                      className="w-12 h-12 object-cover rounded"
+                      className="w-10 h-10 md:w-12 md:h-12 object-cover rounded flex-shrink-0"
                     />
                   )}
-                  <div>
-                    <p className="font-medium">{item.product.name}</p>
-                    <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm md:text-base truncate">{item.product.name}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Qty: {item.quantity}</p>
                   </div>
                 </div>
-                <p className="font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
+                <p className="font-semibold text-sm md:text-base flex-shrink-0">${(item.price * item.quantity).toFixed(2)}</p>
               </div>
             ))}
-            <div className="border-t pt-3 flex justify-between font-bold text-lg">
+            <div className="border-t pt-3 flex justify-between font-bold text-base md:text-lg">
               <span>Total</span>
               <span>${order.total_amount.toFixed(2)}</span>
             </div>
@@ -358,15 +361,15 @@ export default function CustomerTrackingPage() {
 
         {/* Rate Driver (after delivery) */}
         {isDelivered && order.courier && (
-          <Card className="p-6 bg-gradient-to-br from-primary/5 to-primary/10">
-            <h3 className="font-semibold mb-4 text-center">How was your experience?</h3>
-            <div className="flex justify-center space-x-2 mb-4">
+          <Card className="p-4 md:p-6 bg-gradient-to-br from-primary/5 to-primary/10">
+            <h3 className="font-semibold mb-4 text-center text-base md:text-lg">How was your experience?</h3>
+            <div className="flex justify-center gap-2 md:space-x-2 mb-4">
               {[1, 2, 3, 4, 5].map((rating) => (
                 <button
                   key={rating}
-                  className="w-12 h-12 rounded-full bg-background hover:bg-primary hover:text-primary-foreground transition-colors flex items-center justify-center"
+                  className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-background hover:bg-primary hover:text-primary-foreground transition-colors flex items-center justify-center"
                 >
-                  <Star className="h-6 w-6" />
+                  <Star className="h-5 w-5 md:h-6 md:w-6" />
                 </button>
               ))}
             </div>
@@ -375,12 +378,12 @@ export default function CustomerTrackingPage() {
         )}
 
         {/* Help */}
-        <Card className="p-6 text-center">
+        <Card className="p-4 md:p-6 text-center">
           <p className="text-sm text-muted-foreground mb-4">Need help with your order?</p>
-          <div className="flex gap-2 justify-center">
-            <Button variant="outline">Contact Support</Button>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            <Button variant="outline" className="flex-1 sm:flex-initial">Contact Support</Button>
             {order.courier && (
-              <Button asChild>
+              <Button asChild className="flex-1 sm:flex-initial">
                 <a href={`tel:${order.courier.phone}`}>
                   <Phone className="h-4 w-4 mr-2" />
                   Call Driver
