@@ -14,7 +14,7 @@ import { Menu, ShoppingCart, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import AuthModal from "./AuthModal";
 import CartDrawer from "./CartDrawer";
 import ThemeToggle from "./ThemeToggle";
@@ -103,13 +103,13 @@ const Navigation = () => {
 
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/98 backdrop-blur-lg supports-[backdrop-filter]:bg-background/95 shadow-soft">
         <div className="container flex h-20 items-center justify-between px-4">
-          <a href="/" className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3">
             <NYMLogo size={60} />
             <div className="flex flex-col">
               <span className="font-black text-xl tracking-wider">NEW YORK MINUTE</span>
               <span className="text-xs text-muted-foreground tracking-widest">THCA DELIVERY. ELEVATED.</span>
             </div>
-          </a>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">

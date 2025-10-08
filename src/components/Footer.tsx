@@ -1,5 +1,6 @@
 import { Shield, Award, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 import NYMLogo from "./NYMLogo";
 
 const Footer = () => {
@@ -57,10 +58,10 @@ const Footer = () => {
           <div>
             <h3 className="font-black mb-4 uppercase tracking-wide">Shop</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="/#products" className="hover:text-primary transition-colors">THCA Flower</a></li>
-              <li><a href="/#products" className="hover:text-primary transition-colors">THCA Pre-Rolls</a></li>
-              <li><a href="/#products" className="hover:text-primary transition-colors">THCA Vapes</a></li>
-              <li><a href="/#products" className="hover:text-primary transition-colors">THCA Concentrates</a></li>
+              <li><Link to="/#products" className="hover:text-primary transition-colors">THCA Flower</Link></li>
+              <li><Link to="/#products" className="hover:text-primary transition-colors">THCA Pre-Rolls</Link></li>
+              <li><Link to="/#products" className="hover:text-primary transition-colors">THCA Vapes</Link></li>
+              <li><Link to="/#products" className="hover:text-primary transition-colors">THCA Concentrates</Link></li>
             </ul>
           </div>
 
@@ -68,10 +69,10 @@ const Footer = () => {
           <div>
             <h3 className="font-black mb-4 uppercase tracking-wide">Company</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="/about" className="hover:text-primary transition-colors">About Us</a></li>
-              <li><a href="/partner-shops" className="hover:text-primary transition-colors">Partner Shops</a></li>
-              <li><a href="/become-courier" className="hover:text-primary transition-colors">Become a Courier</a></li>
-              <li><a href="/support" className="hover:text-primary transition-colors">Support</a></li>
+              <li><Link to="/about" className="hover:text-primary transition-colors">About Us</Link></li>
+              <li><Link to="/partner-shops" className="hover:text-primary transition-colors">Partner Shops</Link></li>
+              <li><Link to="/become-courier" className="hover:text-primary transition-colors">Become a Courier</Link></li>
+              <li><Link to="/support" className="hover:text-primary transition-colors">Support</Link></li>
             </ul>
           </div>
 
@@ -79,10 +80,10 @@ const Footer = () => {
           <div>
             <h3 className="font-black mb-4 uppercase tracking-wide">Support</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="/faq" className="hover:text-primary transition-colors">FAQ</a></li>
-              <li><a href="/track-order" className="hover:text-primary transition-colors">Track Order</a></li>
-              <li><a href="/terms" className="hover:text-primary transition-colors">Terms of Service</a></li>
-              <li><a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a></li>
+              <li><Link to="/faq" className="hover:text-primary transition-colors">FAQ</Link></li>
+              <li><Link to="/track-order" className="hover:text-primary transition-colors">Track Order</Link></li>
+              <li><Link to="/terms" className="hover:text-primary transition-colors">Terms of Service</Link></li>
+              <li><Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
             </ul>
             <div className="mt-4 pt-4 border-t border-border space-y-1">
               <p className="font-semibold text-foreground">Contact Us</p>
