@@ -31,7 +31,15 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader! } }
     });
 
-    const { orderId, driverLat, driverLng, action } = await req.json();
+    const { 
+      orderId, 
+      driverLat, 
+      driverLng, 
+      action,
+      accuracy,
+      speed,
+      isMockLocation 
+    } = await req.json();
 
     if (!orderId || !driverLat || !driverLng) {
       return new Response(
@@ -91,6 +99,54 @@ serve(async (req) => {
       console.error("Error logging geofence check:", logError);
     }
 
+    // GPS Validation & Anomaly Detection
+    const gpsAnomalies = [];
+    
+    // Check for mock location
+    if (isMockLocation === true) {
+      gpsAnomalies.push({
+        courier_id: order.courier_id,
+        order_id: orderId,
+        anomaly_type: "mock_location",
+        lat: driverLat,
+        lng: driverLng,
+        accuracy_meters: accuracy,
+        admin_notified: false
+      });
+    }
+    
+    // Check for low accuracy (> 100 meters)
+    if (accuracy && accuracy > 100) {
+      gpsAnomalies.push({
+        courier_id: order.courier_id,
+        order_id: orderId,
+        anomaly_type: "low_accuracy",
+        lat: driverLat,
+        lng: driverLng,
+        accuracy_meters: accuracy,
+        admin_notified: false
+      });
+    }
+    
+    // Check for impossible speed (> 100 mph)
+    if (speed && speed > 100) {
+      gpsAnomalies.push({
+        courier_id: order.courier_id,
+        order_id: orderId,
+        anomaly_type: "impossible_speed",
+        lat: driverLat,
+        lng: driverLng,
+        speed_mph: speed,
+        admin_notified: false
+      });
+    }
+    
+    // Log GPS anomalies
+    if (gpsAnomalies.length > 0) {
+      await supabase.from("gps_anomalies").insert(gpsAnomalies);
+      console.warn("GPS anomalies detected:", gpsAnomalies);
+    }
+
     // Update courier location
     await supabase.from("couriers").update({
       current_lat: driverLat,
@@ -104,8 +160,9 @@ serve(async (req) => {
       order_id: orderId,
       lat: driverLat,
       lng: driverLng,
-      accuracy: 50, // Default accuracy
-      is_mock_location: false
+      accuracy: accuracy || 50,
+      speed: speed || null,
+      is_mock_location: isMockLocation || false
     });
 
     return new Response(

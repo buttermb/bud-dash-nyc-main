@@ -972,6 +972,63 @@ export type Database = {
           },
         ]
       }
+      gps_anomalies: {
+        Row: {
+          accuracy_meters: number | null
+          admin_notified: boolean | null
+          anomaly_type: string
+          courier_id: string
+          detected_at: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          order_id: string | null
+          resolved: boolean | null
+          speed_mph: number | null
+        }
+        Insert: {
+          accuracy_meters?: number | null
+          admin_notified?: boolean | null
+          anomaly_type: string
+          courier_id: string
+          detected_at?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          order_id?: string | null
+          resolved?: boolean | null
+          speed_mph?: number | null
+        }
+        Update: {
+          accuracy_meters?: number | null
+          admin_notified?: boolean | null
+          anomaly_type?: string
+          courier_id?: string
+          detected_at?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          order_id?: string | null
+          resolved?: boolean | null
+          speed_mph?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_anomalies_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_anomalies_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory: {
         Row: {
           id: string
@@ -1121,6 +1178,54 @@ export type Database = {
           phone?: string
           service_radius?: number | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          created_at: string | null
+          email_all_updates: boolean | null
+          email_confirmation_only: boolean | null
+          email_enabled: boolean | null
+          id: string
+          push_all_updates: boolean | null
+          push_critical_only: boolean | null
+          push_enabled: boolean | null
+          sms_all_updates: boolean | null
+          sms_critical_only: boolean | null
+          sms_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email_all_updates?: boolean | null
+          email_confirmation_only?: boolean | null
+          email_enabled?: boolean | null
+          id?: string
+          push_all_updates?: boolean | null
+          push_critical_only?: boolean | null
+          push_enabled?: boolean | null
+          sms_all_updates?: boolean | null
+          sms_critical_only?: boolean | null
+          sms_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email_all_updates?: boolean | null
+          email_confirmation_only?: boolean | null
+          email_enabled?: boolean | null
+          id?: string
+          push_all_updates?: boolean | null
+          push_critical_only?: boolean | null
+          push_enabled?: boolean | null
+          sms_all_updates?: boolean | null
+          sms_critical_only?: boolean | null
+          sms_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1493,6 +1598,79 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      override_requests: {
+        Row: {
+          admin_notes: string | null
+          courier_id: string
+          created_at: string | null
+          current_distance_miles: number
+          customer_location_lat: number
+          customer_location_lng: number
+          driver_location_lat: number
+          driver_location_lng: number
+          id: string
+          order_id: string
+          reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          courier_id: string
+          created_at?: string | null
+          current_distance_miles: number
+          customer_location_lat: number
+          customer_location_lng: number
+          driver_location_lat: number
+          driver_location_lng: number
+          id?: string
+          order_id: string
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          courier_id?: string
+          created_at?: string | null
+          current_distance_miles?: number
+          customer_location_lat?: number
+          customer_location_lng?: number
+          driver_location_lat?: number
+          driver_location_lng?: number
+          id?: string
+          order_id?: string
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "override_requests_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "override_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "override_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
             referencedColumns: ["id"]
           },
         ]

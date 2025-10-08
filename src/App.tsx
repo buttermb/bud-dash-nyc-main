@@ -39,6 +39,7 @@ import TrackOrderLive from "./pages/TrackOrderLive";
 import CustomerTrackingPage from "./pages/CustomerTrackingPage";
 import MerchantDashboard from "./pages/MerchantDashboard";
 import AdminLogin from "./pages/AdminLogin";
+import { NotificationPreferences } from "./components/NotificationPreferences";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
