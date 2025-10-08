@@ -47,9 +47,9 @@ const menuGroups = [
     items: [
       { title: "Products", url: "/admin/products", icon: ShoppingBag },
       { title: "Inventory", url: "/admin/inventory", icon: Package },
-      { title: "Product Analytics", url: "/admin/product-analytics", icon: TrendingUp },
-      { title: "Media Library", url: "/admin/media-library", icon: Image },
-      { title: "Templates", url: "/admin/product-templates", icon: FileText },
+      { title: "Product Analytics", url: "/admin/products/analytics", icon: TrendingUp },
+      { title: "Media Library", url: "/admin/media", icon: Image },
+      { title: "Templates", url: "/admin/templates", icon: FileText },
       { title: "Import/Export", url: "/admin/import-export", icon: FileUp },
       { title: "COA Management", url: "/admin/coa-management", icon: Shield },
     ]
@@ -62,7 +62,7 @@ const menuGroups = [
       { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
       { title: "Couriers", url: "/admin/couriers", icon: Truck },
       { title: "Applications", url: "/admin/courier-applications", icon: FileText },
-      { title: "Safety", url: "/admin/safety", icon: AlertTriangle },
+      { title: "Safety", url: "/admin/delivery-safety", icon: AlertTriangle },
     ]
   },
   {
