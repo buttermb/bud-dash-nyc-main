@@ -351,21 +351,33 @@ const Checkout = () => {
         
         <CheckoutProgress currentStep={2} />
 
-        {/* Guest vs Signup Option - Only show if not logged in */}
-        {!user && (
-          <GuestCheckoutOption 
-            cartTotal={subtotal}
-            onGuestCheckout={() => {}} 
-            onSignup={() => navigate('/auth?mode=signup')}
-          />
-        )}
-
-        {/* High Value Cart Notice - Show for $75+ carts if not a member */}
-        {!user && useCartValueTrigger({ cartTotal: subtotal }).shouldShowOffer && (
-          <HighValueCartNotice 
-            cartTotal={subtotal}
-            onCreateAccount={() => navigate('/auth?mode=signup')}
-          />
+        {/* Natural Account Creation at Checkout - No aggressive popups */}
+        {!user && subtotal > 0 && (
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background mb-6">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Badge className="bg-primary text-primary-foreground">
+                    10%
+                  </Badge>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg mb-2">Save ${(subtotal * 0.1).toFixed(2)} on this order</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Create an account to get 10% off this order + free shipping forever
+                  </p>
+                  <div className="flex gap-2">
+                    <Button onClick={() => navigate('/auth?mode=signup')} variant="default">
+                      Create Account & Save
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-xs">
+                      Continue as guest
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import Navigation from "@/components/Navigation";
 import AgeVerificationModal from "@/components/AgeVerificationModal";
 import RecentPurchaseNotification from "@/components/RecentPurchaseNotification";
+import ProductTrustElements from "@/components/ProductTrustElements";
 
 
 const Index = () => {
@@ -30,6 +31,9 @@ const Index = () => {
       <div id="products" className="bg-background">
         <ProductCatalog />
       </div>
+
+      {/* Trust elements AFTER products - earn trust through product quality */}
+      <ProductTrustElements />
       
       <Footer />
     </div>

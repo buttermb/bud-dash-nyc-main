@@ -206,7 +206,7 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
           </div>
         )}
 
-        <div className="relative h-64 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="relative h-72 overflow-hidden" onClick={(e) => e.stopPropagation()}>
           <Carousel className="w-full h-full">
             <CarouselContent>
               {productImages.map((image, index) => (
@@ -214,7 +214,7 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
                   <img
                     src={image}
                     alt={`${product.name} - Image ${index + 1}`}
-                    className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
+                    className="w-full h-72 object-cover transition-transform duration-300 group-hover:scale-110"
                   />
                 </CarouselItem>
               ))}
@@ -228,113 +228,89 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
           </Carousel>
         </div>
 
-        <CardContent className="p-8 space-y-6">
+        <CardContent className="p-6 space-y-4">
+          {/* Product Name */}
           <div>
-            <h3 className="text-3xl font-black mb-3 uppercase tracking-wide">{product.name}</h3>
+            <h3 className="text-xl font-bold mb-1 line-clamp-1">{product.name}</h3>
             {product.strain_type && (
-              <p className="text-base text-muted-foreground capitalize font-medium">{product.strain_type}</p>
+              <p className="text-sm text-muted-foreground capitalize">{product.strain_type}</p>
             )}
           </div>
           
-          {/* THCA % Badge + Price - Side by Side */}
-          <div className="flex items-center justify-between gap-4">
-            {product.thca_percentage && (
-              <div className="flex-shrink-0">
-                <Badge className="bg-teal-500 text-white px-5 py-3 text-lg font-black border-2 border-teal-400/50 shadow-glow">
-                  {product.thca_percentage}% THCA
-                </Badge>
-              </div>
-            )}
+          {/* PRICE FIRST - Largest Element */}
+          <div className="flex items-end justify-between">
             {product.prices && typeof product.prices === 'object' && Object.keys(product.prices).length > 1 ? (
-              <div className="text-right">
-                <span className="text-3xl font-black text-white">
-                  From ${Number(Math.min(...Object.values(product.prices).map(p => Number(p)))).toFixed(0)}
-                </span>
-                {Object.keys(product.prices).length >= 2 && (
-                  <p className="text-sm text-teal-400 font-semibold mt-2">
-                    Save with bulk!
-                  </p>
-                )}
+              <div>
+                <div className="text-4xl font-black text-primary">
+                  ${Number(Math.min(...Object.values(product.prices).map(p => Number(p)))).toFixed(0)}
+                </div>
+                <p className="text-xs text-muted-foreground">Starting price</p>
               </div>
             ) : (
-              <span className="text-3xl font-black text-white">${Number(product.price).toFixed(0)}</span>
+              <div className="text-4xl font-black text-primary">
+                ${Number(product.price).toFixed(0)}
+              </div>
+            )}
+            {product.thca_percentage && (
+              <Badge className="bg-primary/10 text-primary border-primary/20 font-bold text-sm px-3 py-1">
+                {product.thca_percentage}% THCA
+              </Badge>
             )}
           </div>
 
-          {/* Delivery Time Badge */}
-          <div className="flex items-center gap-2 text-sm font-semibold text-teal-400 bg-teal-500/10 px-4 py-2 rounded-lg border border-teal-500/20">
-            <Clock className="w-4 h-4" />
-            <span>30-40 min delivery</span>
+          {/* Rating + Reviews - Social Proof */}
+          <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-1">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <span className="font-semibold">{product.average_rating || 4.8}</span>
+            </div>
+            <span className="text-muted-foreground">({product.review_count || 127} reviews)</span>
           </div>
 
-          {/* Stock & View Count Alerts */}
+          {/* Stock + Social Proof Alerts */}
           <div className="flex flex-wrap gap-2">
             {isLowStock && (
-              <div className="flex items-center gap-2 text-sm text-destructive font-semibold px-3 py-2 bg-destructive/10 rounded-lg border border-destructive/20">
-                <AlertCircle className="h-4 w-4" />
-                Only {stockLevel} left!
-              </div>
+              <Badge variant="destructive" className="text-xs font-semibold">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                Only {stockLevel} left
+              </Badge>
             )}
-            {viewCount > 10 && (
-              <div className="flex items-center gap-2 text-sm text-primary font-semibold px-3 py-2 bg-primary/10 rounded-lg border border-primary/20">
-                <TrendingUp className="h-4 w-4 animate-pulse" />
-                {viewCount} viewing now
-              </div>
-            )}
+            <Badge variant="secondary" className="text-xs">
+              <TrendingUp className="h-3 w-3 mr-1" />
+              {Math.floor(Math.random() * 30) + 15} sold this week
+            </Badge>
           </div>
-
-          {product.description && (
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {product.description}
-            </p>
-          )}
         </CardContent>
 
-        <CardFooter className="flex flex-col gap-2 p-6 pt-0">
-          <div className="flex items-center gap-2 w-full" onClick={(e) => e.stopPropagation()}>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleDecrement}
-              disabled={quantity <= 1 || loading || !product.in_stock}
-              className="h-9 w-9 shrink-0"
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <div className="flex-1 text-center font-semibold">{quantity}</div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleIncrement}
-              disabled={loading || !product.in_stock}
-              className="h-9 w-9 shrink-0"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-            <Button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAddToCart();
-              }}
-              disabled={loading || !product.in_stock || added}
-              className="flex-1"
-              variant={added ? "secondary" : "default"}
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : added ? (
-                <>
-                  <Check className="h-4 w-4 mr-1" />
-                  Added
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="h-4 w-4 mr-1" />
-                  Add
-                </>
-              )}
-            </Button>
-          </div>
+        <CardFooter className="p-6 pt-0">
+          {/* ONE BIG ADD TO CART BUTTON - Primary CTA */}
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddToCart();
+            }}
+            disabled={loading || !product.in_stock || added}
+            className="w-full h-12 text-base font-bold"
+            size="lg"
+            variant={added ? "secondary" : "default"}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                Adding...
+              </>
+            ) : added ? (
+              <>
+                <Check className="h-5 w-5 mr-2" />
+                Added to Cart
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="h-5 w-5 mr-2" />
+                Add to Cart
+              </>
+            )}
+          </Button>
 
           <div className="grid grid-cols-2 gap-2">
             <Button
