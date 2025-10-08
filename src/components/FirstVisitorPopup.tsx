@@ -18,36 +18,46 @@ const FirstVisitorPopup = () => {
       const value = `; ${document.cookie}`;
       const parts = value.split(`; ${name}=`);
       if (parts.length === 2) return parts.pop()?.split(';').shift();
+      return undefined;
     };
 
     const popupShown = getCookie("discount_popup_shown");
     const codeUsed = getCookie("discount_code_used");
     const deviceUsed = getCookie("device_discount_used");
 
-    if (!popupShown && !codeUsed && !deviceUsed) {
-      // Show after 8 seconds
-      const timer = setTimeout(() => {
+    console.log("🍪 Cookie check:", { popupShown, codeUsed, deviceUsed });
+
+    if (popupShown || codeUsed || deviceUsed) {
+      console.log("✋ Popup blocked - cookie found");
+      return;
+    }
+
+    // Show after 8 seconds
+    const timer = setTimeout(() => {
+      console.log("⏰ Timer triggered - showing popup");
+      setIsOpen(true);
+      const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
+      document.cookie = `discount_popup_shown=true; expires=${expires}; path=/; SameSite=Lax`;
+      console.log("🍪 Set cookie on timer:", document.cookie);
+    }, 8000);
+
+    // Exit intent detection
+    const handleMouseLeave = (e: MouseEvent) => {
+      if (e.clientY <= 0 && !popupShown) {
+        console.log("👋 Exit intent - showing popup");
         setIsOpen(true);
         const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
-        document.cookie = `discount_popup_shown=true; expires=${expires}; path=/`;
-      }, 8000);
+        document.cookie = `discount_popup_shown=true; expires=${expires}; path=/; SameSite=Lax`;
+        console.log("🍪 Set cookie on exit intent:", document.cookie);
+      }
+    };
 
-      // Exit intent detection
-      const handleMouseLeave = (e: MouseEvent) => {
-        if (e.clientY <= 0 && !popupShown) {
-          setIsOpen(true);
-          const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
-          document.cookie = `discount_popup_shown=true; expires=${expires}; path=/`;
-        }
-      };
+    document.addEventListener("mouseleave", handleMouseLeave);
 
-      document.addEventListener("mouseleave", handleMouseLeave);
-
-      return () => {
-        clearTimeout(timer);
-        document.removeEventListener("mouseleave", handleMouseLeave);
-      };
-    }
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+    };
   }, []);
 
   useEffect(() => {
@@ -108,10 +118,12 @@ const FirstVisitorPopup = () => {
   };
 
   const handleClose = () => {
+    console.log("❌ Closing popup manually");
     setIsOpen(false);
     // Set dismissal cookie when manually closed
     const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
-    document.cookie = `discount_popup_shown=true; expires=${expires}; path=/`;
+    document.cookie = `discount_popup_shown=true; expires=${expires}; path=/; SameSite=Lax`;
+    console.log("🍪 Set cookie on close:", document.cookie);
   };
 
   return (
