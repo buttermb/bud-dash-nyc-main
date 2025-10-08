@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Upload, Trash2, Download, Search, Image as ImageIcon } from "lucide-react";
+import { Upload, Trash2, Download, Search, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -20,8 +20,32 @@ export default function MediaLibrary() {
   const [filter, setFilter] = useState("all");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Setup realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('products-media-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'products'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+          queryClient.invalidateQueries({ queryKey: ["media-library"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // Get all product images
   const { data: products } = useQuery({
@@ -64,20 +88,41 @@ export default function MediaLibrary() {
   });
 
   const uploadImage = async (file: File) => {
+    const uploadId = crypto.randomUUID();
     try {
       setUploading(true);
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      setUploadProgress(prev => ({ ...prev, [uploadId]: 0 }));
+      
+      // Validate file
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Please upload an image file');
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('Image must be less than 10MB');
+      }
+
+      const fileExt = file.name.split(".").pop()?.toLowerCase();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `product-images/${fileName}`;
+
+      setUploadProgress(prev => ({ ...prev, [uploadId]: 50 }));
 
       const { error } = await supabase.storage
         .from("product-images")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: ["media-library"] });
-      toast({ title: "Image uploaded successfully" });
+      setUploadProgress(prev => ({ ...prev, [uploadId]: 100 }));
+
+      await queryClient.refetchQueries({ queryKey: ["media-library"] });
+      toast({ 
+        title: "✓ Image uploaded",
+        description: file.name 
+      });
     } catch (error: any) {
       toast({
         title: "Upload failed",
@@ -86,6 +131,13 @@ export default function MediaLibrary() {
       });
     } finally {
       setUploading(false);
+      setTimeout(() => {
+        setUploadProgress(prev => {
+          const newProgress = { ...prev };
+          delete newProgress[uploadId];
+          return newProgress;
+        });
+      }, 1000);
     }
   };
 
@@ -137,8 +189,17 @@ export default function MediaLibrary() {
         <label htmlFor="upload-images">
           <Button disabled={uploading} asChild>
             <span>
-              <Upload className="mr-2 h-4 w-4" />
-              {uploading ? "Uploading..." : "Upload Images"}
+              {uploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload Images
+                </>
+              )}
             </span>
           </Button>
         </label>

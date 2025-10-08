@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Package, TrendingDown } from "lucide-react";
+import { AlertTriangle, Package, TrendingDown, RefreshCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -21,6 +21,29 @@ export default function InventoryManagement() {
   const [adjustReason, setAdjustReason] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Setup realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('inventory-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'products'
+        },
+        (payload) => {
+          console.log('Inventory updated:', payload);
+          queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: products } = useQuery({
     queryKey: ["admin-products"],
@@ -37,21 +60,37 @@ export default function InventoryManagement() {
 
   const adjustStock = useMutation({
     mutationFn: async () => {
-      const newStock = (selectedProduct.stock_quantity || 0) + adjustAmount;
+      if (!selectedProduct) return;
+      
+      const newStock = Math.max(0, (selectedProduct.stock_quantity || 0) + adjustAmount);
       const { error } = await supabase
         .from("products")
-        .update({ stock_quantity: newStock })
+        .update({ 
+          stock_quantity: newStock,
+          in_stock: newStock > 0 
+        })
         .eq("id", selectedProduct.id);
 
       if (error) throw error;
+      return { newStock };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-      toast({ title: "Stock updated successfully" });
+    onSuccess: async (data) => {
+      await queryClient.refetchQueries({ queryKey: ["admin-products"] });
+      toast({ 
+        title: "✓ Stock updated",
+        description: `New stock level: ${data?.newStock || 0} units` 
+      });
       setSelectedProduct(null);
       setAdjustAmount(0);
       setAdjustReason("");
     },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to update stock",
+        description: error.message,
+        variant: "destructive" 
+      });
+    }
   });
 
   const lowStockProducts = products?.filter((p) => (p.stock_quantity || 0) < 10) || [];
@@ -60,9 +99,19 @@ export default function InventoryManagement() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Inventory Management</h1>
-        <p className="text-muted-foreground">Track and manage product stock levels</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Inventory Management</h1>
+          <p className="text-muted-foreground">Track and manage product stock levels</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => queryClient.refetchQueries({ queryKey: ["admin-products"] })}
+        >
+          <RefreshCcw className="mr-2 h-4 w-4" />
+          Refresh
+        </Button>
       </div>
 
       {/* Overview Cards */}
@@ -205,13 +254,21 @@ export default function InventoryManagement() {
                 id="adjust"
                 type="number"
                 value={adjustAmount}
-                onChange={(e) => setAdjustAmount(parseInt(e.target.value))}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value) || 0;
+                  setAdjustAmount(val);
+                }}
                 placeholder="Enter positive to add, negative to remove"
                 className="mt-1.5"
               />
-              <p className="text-sm text-muted-foreground mt-1">
-                New stock: {(selectedProduct?.stock_quantity || 0) + adjustAmount} units
-              </p>
+              {adjustAmount !== 0 && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  New stock: {Math.max(0, (selectedProduct?.stock_quantity || 0) + adjustAmount)} units
+                  {(selectedProduct?.stock_quantity || 0) + adjustAmount < 0 && (
+                    <span className="text-red-600"> (Cannot go below 0)</span>
+                  )}
+                </p>
+              )}
             </div>
 
             <div>
@@ -233,8 +290,12 @@ export default function InventoryManagement() {
               >
                 Cancel
               </Button>
-              <Button onClick={() => adjustStock.mutate()} className="flex-1">
-                Save Changes
+              <Button 
+                onClick={() => adjustStock.mutate()} 
+                className="flex-1"
+                disabled={adjustStock.isPending || adjustAmount === 0 || (selectedProduct?.stock_quantity || 0) + adjustAmount < 0}
+              >
+                {adjustStock.isPending ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           </div>
