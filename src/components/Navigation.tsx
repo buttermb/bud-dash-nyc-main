@@ -114,14 +114,24 @@ const Navigation = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                onClick={handleNavClick(link.href, link.scroll)}
-                className="text-sm font-medium transition-colors hover:text-primary cursor-pointer"
-              >
-                {link.label}
-              </a>
+              link.scroll ? (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  onClick={handleNavClick(link.href, link.scroll)}
+                  className="text-sm font-medium transition-colors hover:text-primary cursor-pointer"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.label}
+                  to={link.href}
+                  className="text-sm font-medium transition-colors hover:text-primary cursor-pointer"
+                >
+                  {link.label}
+                </Link>
+              )
             ))}
           </nav>
 
@@ -221,17 +231,31 @@ const Navigation = () => {
               <SheetContent>
                 <nav className="flex flex-col gap-4 mt-8">
                   {navLinks.map((link) => (
-                    <a
-                      key={link.label}
-                      href={link.href}
-                      onClick={handleNavClick(link.href, link.scroll, () => {
-                        const closeButton = document.querySelector('[aria-label="Close"]') as HTMLButtonElement;
-                        closeButton?.click();
-                      })}
-                      className="text-lg font-medium transition-colors hover:text-primary cursor-pointer"
-                    >
-                      {link.label}
-                    </a>
+                    link.scroll ? (
+                      <a
+                        key={link.label}
+                        href={link.href}
+                        onClick={handleNavClick(link.href, link.scroll, () => {
+                          const closeButton = document.querySelector('[aria-label="Close"]') as HTMLButtonElement;
+                          closeButton?.click();
+                        })}
+                        className="text-lg font-medium transition-colors hover:text-primary cursor-pointer"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        key={link.label}
+                        to={link.href}
+                        onClick={() => {
+                          const closeButton = document.querySelector('[aria-label="Close"]') as HTMLButtonElement;
+                          closeButton?.click();
+                        }}
+                        className="text-lg font-medium transition-colors hover:text-primary cursor-pointer"
+                      >
+                        {link.label}
+                      </Link>
+                    )
                   ))}
                   {user ? (
                     <>
