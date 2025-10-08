@@ -36,6 +36,7 @@ import CourierHistory from "./pages/CourierHistory";
 import CourierProfile from "./pages/CourierProfile";
 import TrackOrder from "./pages/TrackOrder";
 import TrackOrderLive from "./pages/TrackOrderLive";
+import CustomerTrackingPage from "./pages/CustomerTrackingPage";
 import MerchantDashboard from "./pages/MerchantDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -88,9 +89,12 @@ const App = () => (
                 <Route path="/partner-shops" element={<PartnerShops />} />
                 <Route path="/track-order" element={<OrderLookup />} />
                 
-                {/* Public Order Tracking */}
+                {/* Public Order Tracking - New Beautiful Page */}
+                <Route path="/track/:code" element={<CustomerTrackingPage />} />
+                
+                {/* Legacy tracking pages */}
                 <Route path="/track" element={<TrackOrder />} />
-                <Route path="/track/:code" element={<TrackOrderLive />} />
+                <Route path="/track-live/:code" element={<TrackOrderLive />} />
                 
                 {/* Courier Routes */}
                 <Route path="/courier/login" element={<CourierLogin />} />
