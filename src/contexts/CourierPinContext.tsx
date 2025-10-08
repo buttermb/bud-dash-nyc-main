@@ -59,7 +59,7 @@ export const CourierPinProvider = ({ children }: { children: ReactNode }) => {
         .from('couriers')
         .select('pin_hash, pin_set_at')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (!error && data?.pin_hash) {
         // Check if PIN needs to be reset (30 days since last set)
@@ -115,7 +115,7 @@ export const CourierPinProvider = ({ children }: { children: ReactNode }) => {
       .from('couriers')
       .select('pin_hash, pin_set_at')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     const pinHash = btoa(pin);
     if (data?.pin_hash === pinHash) {
