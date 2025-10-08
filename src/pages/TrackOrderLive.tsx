@@ -45,11 +45,27 @@ export default function TrackOrderLive() {
     if (code) {
       fetchOrderTracking();
       
-      const interval = setInterval(() => {
-        fetchOrderTracking(true);
-      }, 15000);
+      // Realtime subscription
+      const channel = supabase
+        .channel(`tracking-${code}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'orders',
+            filter: `tracking_code=eq.${code}`
+          },
+          (payload) => {
+            console.log('Order updated:', payload);
+            fetchOrderTracking(true);
+          }
+        )
+        .subscribe();
 
-      return () => clearInterval(interval);
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [code]);
 

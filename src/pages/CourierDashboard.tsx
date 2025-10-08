@@ -252,7 +252,7 @@ export default function CourierDashboard() {
   });
 
   // Fetch active orders
-  const { data: myOrdersData } = useQuery({
+  const { data: myOrdersData, refetch: refetchMyOrders } = useQuery({
     queryKey: ['courier-my-orders'],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('courier-app', {
@@ -264,6 +264,31 @@ export default function CourierDashboard() {
     refetchInterval: 15000,
     enabled: !!courier
   });
+
+  // Realtime subscription for my orders updates
+  useEffect(() => {
+    if (!courier) return;
+
+    const channel = supabase
+      .channel('my-orders-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          console.log('Order updated:', payload);
+          refetchMyOrders();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [courier, refetchMyOrders]);
 
   // Fetch available orders
   const { data: availableOrdersData } = useQuery({
@@ -326,7 +351,7 @@ export default function CourierDashboard() {
       if (error) throw error;
       return { success: true };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       const messages: Record<string, string> = {
         'out_for_delivery': '🚗 Order picked up - en route!',
         'delivered': '🎉 Delivery completed!',
@@ -334,16 +359,18 @@ export default function CourierDashboard() {
       
       toast.success(messages[variables.newStatus] || "Status updated");
       
-      queryClient.invalidateQueries({ queryKey: ['courier-my-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['courier-today-stats'] });
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['courier-my-orders'] }),
+        queryClient.refetchQueries({ queryKey: ['courier-today-stats'] })
+      ]);
       
       if (variables.newStatus === 'delivered') {
         setOrderStatus('pickup');
         setCurrentView('completed');
       }
     },
-    onError: () => {
-      toast.error("Error updating status");
+    onError: (error: any) => {
+      toast.error(error.message || "Error updating status");
     }
   });
 
