@@ -55,6 +55,27 @@ const AdminUsers = () => {
   useEffect(() => {
     if (session) {
       fetchUsers();
+
+      // Realtime subscription for profiles updates
+      const channel = supabase
+        .channel('admin-users-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'profiles'
+          },
+          (payload) => {
+            console.log('Profile updated:', payload);
+            fetchUsers();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [session]);
 
@@ -120,11 +141,11 @@ const AdminUsers = () => {
       if (error) throw error;
 
       toast({
-        title: "Verification status updated",
+        title: "✓ Verification status updated",
         description: `User ${!currentStatus ? 'verified' : 'unverified'} successfully`,
       });
 
-      fetchUsers();
+      await fetchUsers();
     } catch (error: any) {
       toast({
         title: "Error updating verification",

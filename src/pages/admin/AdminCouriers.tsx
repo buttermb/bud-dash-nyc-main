@@ -101,15 +101,15 @@ export default function AdminCouriers() {
       if (error) throw error;
 
       toast({
-        title: "Status updated",
+        title: "✓ Status updated",
         description: `Courier ${!currentStatus ? 'activated' : 'deactivated'}`
       });
 
-      fetchCouriers();
-    } catch (error) {
+      await fetchCouriers();
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update courier status",
+        description: error.message || "Failed to update courier status",
         variant: "destructive"
       });
     }

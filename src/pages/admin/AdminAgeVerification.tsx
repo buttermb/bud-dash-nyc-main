@@ -30,6 +30,27 @@ const AdminAgeVerification = () => {
   useEffect(() => {
     if (admin) {
       fetchVerificationRequests();
+
+      // Realtime subscription for age verifications
+      const channel = supabase
+        .channel('admin-verifications-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'age_verifications'
+          },
+          (payload) => {
+            console.log('Verification updated:', payload);
+            fetchVerificationRequests();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [admin]);
 
@@ -105,11 +126,11 @@ const AdminAgeVerification = () => {
         details: { verification_id: verificationId, admin_id: admin?.id }
       });
 
-      toast.success("Age verification approved");
-      fetchVerificationRequests();
-    } catch (error) {
+      toast.success("✓ Age verification approved");
+      await fetchVerificationRequests();
+    } catch (error: any) {
       console.error("Error approving verification:", error);
-      toast.error("Failed to approve verification");
+      toast.error(error.message || "Failed to approve verification");
     }
   };
 
@@ -158,11 +179,11 @@ const AdminAgeVerification = () => {
         }
       });
 
-      toast.success("Age verification rejected");
-      fetchVerificationRequests();
-    } catch (error) {
+      toast.success("✓ Age verification rejected");
+      await fetchVerificationRequests();
+    } catch (error: any) {
       console.error("Error rejecting verification:", error);
-      toast.error("Failed to reject verification");
+      toast.error(error.message || "Failed to reject verification");
     }
   };
 
