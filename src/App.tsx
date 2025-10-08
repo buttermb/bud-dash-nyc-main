@@ -8,7 +8,6 @@ import { AdminProvider } from "./contexts/AdminContext";
 import { CourierProvider } from "./contexts/CourierContext";
 import { CourierPinProvider } from "./contexts/CourierPinContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import TrustBanner from "./components/TrustBanner";
 import SubtleTopBar from "./components/SubtleTopBar";
 import FloatingDiscountWidget from "./components/FloatingDiscountWidget";
 import ProductViewTrigger from "./components/ProductViewTrigger";
@@ -83,7 +82,6 @@ const App = () => (
               <Toaster />
               <Sonner />
               <SubtleTopBar />
-              <TrustBanner />
               <FloatingDiscountWidget />
               <ProductViewTrigger onJoinNow={() => window.location.href = '/auth?mode=signup'} />
               <Routes>
