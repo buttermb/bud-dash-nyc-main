@@ -19,7 +19,13 @@ export const CourierPinProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     checkPinSetup();
     
-    // Auto-lock after 5 minutes of inactivity
+    // Check if session is already unlocked
+    const sessionUnlocked = sessionStorage.getItem('courier_session_unlocked');
+    if (sessionUnlocked === 'true') {
+      setIsUnlocked(true);
+    }
+    
+    // Auto-lock after 30 minutes of inactivity
     let inactivityTimer: NodeJS.Timeout;
     
     const resetTimer = () => {
@@ -27,7 +33,7 @@ export const CourierPinProvider = ({ children }: { children: ReactNode }) => {
       if (isUnlocked) {
         inactivityTimer = setTimeout(() => {
           lockSession();
-        }, 5 * 60 * 1000); // 5 minutes
+        }, 30 * 60 * 1000); // 30 minutes
       }
     };
 
@@ -56,13 +62,13 @@ export const CourierPinProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (!error && data?.pin_hash) {
-        // Check if PIN has expired (5 days)
+        // Check if PIN needs to be reset (30 days since last set)
         if (data.pin_set_at) {
           const pinSetDate = new Date(data.pin_set_at);
           const daysSinceSet = (Date.now() - pinSetDate.getTime()) / (1000 * 60 * 60 * 24);
           
-          if (daysSinceSet > 5) {
-            // PIN expired, need to set new one
+          if (daysSinceSet > 30) {
+            // PIN expired after 30 days, need to set new one
             setHasPinSetup(false);
           } else {
             setHasPinSetup(true);
@@ -98,6 +104,7 @@ export const CourierPinProvider = ({ children }: { children: ReactNode }) => {
 
     setHasPinSetup(true);
     setIsUnlocked(true);
+    sessionStorage.setItem('courier_session_unlocked', 'true');
   };
 
   const verifyPin = async (pin: string): Promise<boolean> => {
@@ -119,6 +126,7 @@ export const CourierPinProvider = ({ children }: { children: ReactNode }) => {
         .eq('user_id', user.id);
       
       setIsUnlocked(true);
+      sessionStorage.setItem('courier_session_unlocked', 'true');
       return true;
     }
     return false;
@@ -126,6 +134,7 @@ export const CourierPinProvider = ({ children }: { children: ReactNode }) => {
 
   const lockSession = () => {
     setIsUnlocked(false);
+    sessionStorage.removeItem('courier_session_unlocked');
   };
 
   if (loading) {
