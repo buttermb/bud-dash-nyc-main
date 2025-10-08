@@ -721,7 +721,7 @@ const Checkout = () => {
                       {selectedDate && (
                         <div className="space-y-2 animate-in fade-in-50 duration-300">
                           <Label>Select Time Slot</Label>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {timeSlots.map((slot) => (
                               <Button
                                 key={slot.value}
