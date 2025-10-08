@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { Loader2, Search, ShoppingBag, Leaf, Cookie, Droplets, Cigarette, Wind }
 import { cn } from "@/lib/utils";
 
 const ProductCatalog = () => {
+  const queryClient = useQueryClient();
   const [category, setCategory] = useState<string>("all");
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
@@ -22,6 +23,29 @@ const ProductCatalog = () => {
   const [strainType, setStrainType] = useState<string>("all");
   const [potencyRange, setPotencyRange] = useState([0, 100]);
   const [selectedEffects, setSelectedEffects] = useState<string[]>([]);
+
+  // Realtime subscription for product updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('product-catalog-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'products'
+        },
+        (payload) => {
+          console.log('Product updated:', payload);
+          queryClient.invalidateQueries({ queryKey: ["products"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: allProducts = [], isLoading, error } = useQuery({
     queryKey: ["products"],
