@@ -85,7 +85,7 @@ const Index = () => {
               <Button 
                 variant="hero" 
                 size="lg" 
-                className="text-xl px-12 py-8 text-white hover:scale-105 transition-all duration-300 shadow-strong"
+                className="text-xl px-12 py-8 hover:scale-105 transition-all duration-300"
                 onClick={() => {
                   const productsSection = document.getElementById('products');
                   productsSection?.scrollIntoView({ behavior: 'smooth' });
@@ -96,7 +96,7 @@ const Index = () => {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="text-xl px-12 py-8 hover:scale-105 transition-all duration-300 border-2"
+                className="text-xl px-12 py-8 hover:scale-105 transition-all duration-300"
                 onClick={() => {
                   const howItWorksSection = document.getElementById('how-it-works');
                   howItWorksSection?.scrollIntoView({ behavior: 'smooth' });
