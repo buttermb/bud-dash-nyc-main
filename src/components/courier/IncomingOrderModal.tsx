@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { MapPin, Clock, Package, Navigation } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,6 +50,10 @@ export default function IncomingOrderModal({ order, open, onAccept, onReject }: 
   return (
     <Dialog open={open}>
       <DialogContent className="sm:max-w-2xl p-0 gap-0" onInteractOutside={(e) => e.preventDefault()}>
+        <DialogTitle className="sr-only">New Delivery Request</DialogTitle>
+        <DialogDescription className="sr-only">
+          Review delivery details and accept or decline this order. You have {timeLeft} seconds to respond.
+        </DialogDescription>
         {/* Map Preview */}
         <div className="h-48 bg-muted relative">
           <div className="absolute inset-0 flex items-center justify-center">

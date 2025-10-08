@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -146,6 +146,10 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto p-0">
+        <DialogTitle className="sr-only">{product?.name || "Product Details"}</DialogTitle>
+        <DialogDescription className="sr-only">
+          View detailed information about {product?.name}, including pricing, effects, and lab results
+        </DialogDescription>
         {/* Header Section */}
         <div className="grid lg:grid-cols-2 gap-8 p-6">
           {/* Product Image Gallery */}

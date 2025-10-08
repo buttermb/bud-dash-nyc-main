@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, ShoppingCart, Percent } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -66,6 +66,8 @@ const CartAbandonmentPopup = ({ cartItems, onCheckout }: CartAbandonmentPopupPro
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
+        <DialogTitle className="sr-only">Special Discount Offer</DialogTitle>
+        <DialogDescription className="sr-only">Complete your order now with an exclusive 5% discount</DialogDescription>
         <button
           onClick={handleClose}
           className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center transition-all hover:rotate-90"
