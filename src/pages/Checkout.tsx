@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import Navigation from "@/components/Navigation";
 import MapboxAddressAutocomplete from "@/components/MapboxAddressAutocomplete";
 import CheckoutUpsells from "@/components/CheckoutUpsells";
+import CheckoutProgress from "@/components/CheckoutProgress";
 import { getNeighborhoodFromZip, getRiskColor, getRiskLabel, getRiskTextColor } from "@/utils/neighborhoods";
 
 const Checkout = () => {
@@ -343,7 +344,9 @@ const Checkout = () => {
             Back to Shop
           </Button>
 
-        <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+        <h1 className="text-3xl font-bold mb-2">Checkout</h1>
+        
+        <CheckoutProgress currentStep={2} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
