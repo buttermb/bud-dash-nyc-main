@@ -10,6 +10,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ProductDetailModal } from "./ProductDetailModal";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { getDefaultWeight } from "@/utils/productHelpers";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 interface ProductCardProps {
   product: any;
@@ -155,6 +162,10 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
     }
   };
 
+  const productImages = product.images && product.images.length > 0 
+    ? product.images 
+    : [product.image_url || "/placeholder.svg"];
+
   return (
     <>
       <Card 
@@ -194,11 +205,25 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
         )}
 
         <div className="relative h-64 overflow-hidden">
-          <img
-            src={product.image_url || "/placeholder.svg"}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-          />
+          <Carousel className="w-full h-full">
+            <CarouselContent>
+              {productImages.map((image, index) => (
+                <CarouselItem key={index}>
+                  <img
+                    src={image}
+                    alt={`${product.name} - Image ${index + 1}`}
+                    className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            {productImages.length > 1 && (
+              <>
+                <CarouselPrevious className="left-2" />
+                <CarouselNext className="right-2" />
+              </>
+            )}
+          </Carousel>
         </div>
 
         <CardContent className="p-8 space-y-6">
