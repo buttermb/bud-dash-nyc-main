@@ -62,6 +62,7 @@ import MediaLibrary from "./pages/admin/MediaLibrary";
 import ProductTemplates from "./pages/admin/ProductTemplates";
 import ImportExport from "./pages/admin/ImportExport";
 import COAManagement from "./pages/admin/COAManagement";
+import CartAbandonmentWrapper from "./components/CartAbandonmentWrapper";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +75,7 @@ const App = () => (
             <CourierPinProvider>
               <TooltipProvider>
             <BrowserRouter>
+              <CartAbandonmentWrapper />
               <Toaster />
               <Sonner />
               <Routes>
@@ -131,87 +133,94 @@ const App = () => (
                     </ProtectedCourierRoute>
                   }
                 />
-                
-                {/* Admin Routes */}
-                <Route path="/admin/login" element={<AdminLogin />} />
-              <Route
-                path="/admin"
-                element={
-                  <AdminProtectedRoute>
-                    <AdminLayout />
-                  </AdminProtectedRoute>
-                }
-              >
-                <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="live-map" element={<AdminLiveMap />} />
-                <Route path="live-orders" element={<AdminLiveOrders />} />
-                <Route path="orders" element={<AdminOrders />} />
-                <Route path="couriers" element={<AdminCouriers />} />
-                <Route path="couriers/:id" element={<AdminCourierDetails />} />
-                <Route path="courier-applications" element={<AdminCourierApplications />} />
-                <Route path="users" element={<AdminUsers />} />
-                <Route path="age-verification" element={<AdminAgeVerification />} />
-                <Route path="compliance" element={<AdminCompliance />} />
-                <Route path="analytics" element={<AdminAnalytics />} />
-                <Route path="audit-logs" element={<AdminAuditLogs />} />
-                <Route path="safety" element={<AdminDeliverySafety />} />
-                <Route path="products" element={<AdminProducts />} />
-                <Route path="products/new" element={<ProductForm />} />
-                <Route path="products/:id/:action" element={<ProductForm />} />
-                <Route path="product-analytics" element={<ProductAnalytics />} />
-                <Route path="inventory" element={<InventoryManagement />} />
-                <Route path="media-library" element={<MediaLibrary />} />
-                <Route path="product-templates" element={<ProductTemplates />} />
-                <Route path="import-export" element={<ImportExport />} />
-                <Route path="coa-management" element={<COAManagement />} />
-              </Route>
 
-              <Route
-                path="/merchant"
-                element={
-                  <ProtectedRoute>
-                    <MerchantDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/checkout"
-                element={
-                  <ProtectedRoute>
-                    <Checkout />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/order-confirmation"
-                element={
-                  <ProtectedRoute>
-                    <OrderConfirmation />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/orders/:orderId"
-                element={
-                  <ProtectedRoute>
-                    <OrderTracking />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/orders"
-                element={
-                  <ProtectedRoute>
-                    <MyOrders />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-              </TooltipProvider>
+                {/* Merchant Dashboard (currently same as admin, can be customized later) */}
+                <Route path="/merchant/dashboard" element={<MerchantDashboard />} />
+
+                {/* Admin Login */}
+                <Route path="/admin/login" element={<AdminLogin />} />
+
+                {/* Protected User Routes */}
+                <Route
+                  path="/checkout"
+                  element={
+                    <ProtectedRoute>
+                      <Checkout />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/order-confirmation"
+                  element={
+                    <ProtectedRoute>
+                      <OrderConfirmation />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/order-tracking"
+                  element={
+                    <ProtectedRoute>
+                      <OrderTracking />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/my-orders"
+                  element={
+                    <ProtectedRoute>
+                      <MyOrders />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/settings/notifications"
+                  element={
+                    <ProtectedRoute>
+                      <NotificationPreferences />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Admin Routes */}
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminProtectedRoute>
+                      <AdminLayout />
+                    </AdminProtectedRoute>
+                  }
+                >
+                  <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="orders" element={<AdminOrders />} />
+                  <Route path="live-map" element={<AdminLiveMap />} />
+                  <Route path="live-orders" element={<AdminLiveOrders />} />
+                  <Route path="couriers" element={<AdminCouriers />} />
+                  <Route path="couriers/:id" element={<AdminCourierDetails />} />
+                  <Route path="compliance" element={<AdminCompliance />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="analytics" element={<AdminAnalytics />} />
+                  <Route path="audit-logs" element={<AdminAuditLogs />} />
+                  <Route path="age-verification" element={<AdminAgeVerification />} />
+                  <Route path="courier-applications" element={<AdminCourierApplications />} />
+                  <Route path="delivery-safety" element={<AdminDeliverySafety />} />
+                  <Route path="products" element={<AdminProducts />} />
+                  <Route path="products/new" element={<ProductForm />} />
+                  <Route path="products/edit/:id" element={<ProductForm />} />
+                  <Route path="products/analytics" element={<ProductAnalytics />} />
+                  <Route path="inventory" element={<InventoryManagement />} />
+                  <Route path="media" element={<MediaLibrary />} />
+                  <Route path="templates" element={<ProductTemplates />} />
+                  <Route path="import-export" element={<ImportExport />} />
+                  <Route path="coa-management" element={<COAManagement />} />
+                </Route>
+
+                {/* 404 Page */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+            </TooltipProvider>
             </CourierPinProvider>
           </CourierProvider>
         </AdminProvider>

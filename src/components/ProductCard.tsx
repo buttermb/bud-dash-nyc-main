@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Plus, Minus, Check, Star, Flame, Sparkles, Loader2, AlertCircle, Award, Download, Clock } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Check, Star, Flame, Sparkles, Loader2, AlertCircle, Award, Download, Clock, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ProductDetailModal } from "./ProductDetailModal";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { getDefaultWeight } from "@/utils/productHelpers";
+import { useProductViewCount } from "@/hooks/useProductViewCount";
 import {
   Carousel,
   CarouselContent,
@@ -26,6 +27,7 @@ interface ProductCardProps {
 const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
   const { user } = useAuth();
   const { addToRecentlyViewed } = useRecentlyViewed();
+  const viewCount = useProductViewCount(product.id);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [added, setAdded] = useState(false);
@@ -265,13 +267,21 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
             <span>30-40 min delivery</span>
           </div>
 
-          {/* Low Stock Alert */}
-          {isLowStock && (
-            <div className="flex items-center gap-2 text-sm text-destructive font-semibold px-4 py-2 bg-destructive/10 rounded-lg">
-              <AlertCircle className="h-4 w-4" />
-              Only {stockLevel} left in stock!
-            </div>
-          )}
+          {/* Stock & View Count Alerts */}
+          <div className="flex flex-wrap gap-2">
+            {isLowStock && (
+              <div className="flex items-center gap-2 text-sm text-destructive font-semibold px-3 py-2 bg-destructive/10 rounded-lg border border-destructive/20">
+                <AlertCircle className="h-4 w-4" />
+                Only {stockLevel} left!
+              </div>
+            )}
+            {viewCount > 10 && (
+              <div className="flex items-center gap-2 text-sm text-primary font-semibold px-3 py-2 bg-primary/10 rounded-lg border border-primary/20">
+                <TrendingUp className="h-4 w-4 animate-pulse" />
+                {viewCount} viewing now
+              </div>
+            )}
+          </div>
 
           {product.description && (
             <p className="text-sm text-muted-foreground line-clamp-2">
