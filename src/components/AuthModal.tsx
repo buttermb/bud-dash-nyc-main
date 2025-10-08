@@ -138,12 +138,20 @@ const AuthModal = ({ open, onOpenChange, mode, onModeChange }: AuthModalProps) =
         setPhone("");
         setAgeConfirmed(false);
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Sign in error:", error);
+          throw error;
+        }
+        
+        if (!data.session) {
+          throw new Error("Failed to create session");
+        }
+
         toast.success("Signed in successfully!");
         onOpenChange(false);
         setEmail("");

@@ -18,21 +18,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    let isInitialized = false;
 
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log("Auth event:", event);
-        
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-        }
-      }
-    );
-
-    // THEN initialize auth state
+    // Initialize auth state immediately
     const initializeAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -41,10 +29,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           console.error("Error getting session:", error);
         }
         
-        if (mounted) {
+        if (mounted && !isInitialized) {
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
+          isInitialized = true;
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
@@ -54,6 +43,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log("Auth event:", event);
+        
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          // Only set loading to false after initialization
+          if (isInitialized) {
+            setLoading(false);
+          }
+        }
+      }
+    );
+
+    // Initialize immediately
     initializeAuth();
 
     return () => {
