@@ -25,6 +25,7 @@ const AuthModal = ({ open, onOpenChange, mode, onModeChange }: AuthModalProps) =
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [ageConfirmed, setAgeConfirmed] = useState(false);
@@ -58,13 +59,22 @@ const AuthModal = ({ open, onOpenChange, mode, onModeChange }: AuthModalProps) =
     }
 
     if (mode === "signup") {
+      // Full name validation
+      if (!fullName || fullName.trim().length === 0) {
+        newErrors.fullName = "Full name is required";
+      } else if (fullName.trim().length > 100) {
+        newErrors.fullName = "Full name must be less than 100 characters";
+      }
+
       // Confirm password
       if (password !== confirmPassword) {
         newErrors.confirmPassword = "Passwords do not match";
       }
 
-      // Phone validation (optional but if provided should be valid)
-      if (phone) {
+      // Phone validation (required for signup)
+      if (!phone) {
+        newErrors.phone = "Phone number is required";
+      } else {
         const phoneRegex = /^\d{10}$/;
         if (!phoneRegex.test(phone.replace(/\D/g, ""))) {
           newErrors.phone = "Phone must be 10 digits";
@@ -92,21 +102,39 @@ const AuthModal = ({ open, onOpenChange, mode, onModeChange }: AuthModalProps) =
 
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        // Sign up the user
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { phone },
             emailRedirectTo: `${window.location.origin}/`,
           },
         });
 
-        if (error) throw error;
-        toast.success("Account created successfully!");
+        if (signUpError) throw signUpError;
+
+        // Create profile with all user info
+        if (authData.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: authData.user.id,
+              full_name: fullName.trim(),
+              phone: phone.replace(/\D/g, ''),
+            });
+
+          if (profileError) {
+            console.error('Profile creation error:', profileError);
+            // Don't throw - user is created, profile can be updated later
+          }
+        }
+
+        toast.success("Account created successfully! Please check your email to confirm.");
         onOpenChange(false);
         setEmail("");
         setPassword("");
         setConfirmPassword("");
+        setFullName("");
         setPhone("");
         setAgeConfirmed(false);
       } else {
@@ -162,23 +190,43 @@ const AuthModal = ({ open, onOpenChange, mode, onModeChange }: AuthModalProps) =
           </div>
 
           {mode === "signup" && (
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone (Optional)</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="1234567890"
-                value={phone}
-                onChange={(e) => {
-                  setPhone(e.target.value);
-                  setErrors({ ...errors, phone: "" });
-                }}
-                className={errors.phone ? "border-destructive" : ""}
-              />
-              {errors.phone && (
-                <p className="text-sm text-destructive">{errors.phone}</p>
-              )}
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="John Doe"
+                  value={fullName}
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                    setErrors({ ...errors, fullName: "" });
+                  }}
+                  className={errors.fullName ? "border-destructive" : ""}
+                />
+                {errors.fullName && (
+                  <p className="text-sm text-destructive">{errors.fullName}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="1234567890"
+                  value={phone}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                    setErrors({ ...errors, phone: "" });
+                  }}
+                  className={errors.phone ? "border-destructive" : ""}
+                />
+                {errors.phone && (
+                  <p className="text-sm text-destructive">{errors.phone}</p>
+                )}
+              </div>
+            </>
           )}
 
           <div className="space-y-2">
