@@ -272,7 +272,7 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
           </div>
         </CardContent>
 
-        <CardFooter className="p-6 pt-0">
+        <CardFooter className="p-6 pt-0 flex flex-col gap-3">
           {/* ONE BIG ADD TO CART BUTTON - Primary CTA */}
           <Button
             onClick={(e) => {
@@ -287,17 +287,17 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
             {loading ? (
               <>
                 <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                Adding...
+                <span className="truncate">Adding...</span>
               </>
             ) : added ? (
               <>
                 <Check className="h-5 w-5 mr-2" />
-                Added to Cart
+                <span className="truncate">Added to Cart</span>
               </>
             ) : (
               <>
                 <ShoppingCart className="h-5 w-5 mr-2" />
-                Add to Cart
+                <span className="truncate">Add to Cart</span>
               </>
             )}
           </Button>
@@ -310,7 +310,7 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
               handleCardClick();
             }}
           >
-            View Details
+            <span className="truncate">View Details</span>
           </Button>
         </CardFooter>
       </Card>
