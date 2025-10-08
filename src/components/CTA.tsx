@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Smartphone } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CTA = () => {
+  const navigate = useNavigate();
+  
   return (
     <section className="py-20">
       <div className="container px-4 mx-auto">
@@ -21,11 +24,24 @@ const CTA = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Button variant="hero" size="lg" className="text-lg">
-                Download App
+              <Button 
+                variant="hero" 
+                size="lg" 
+                className="text-lg"
+                onClick={() => {
+                  const productsSection = document.getElementById('products');
+                  productsSection?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                Shop Now
               </Button>
-              <Button variant="outline" size="lg" className="text-lg">
-                Browse as Guest
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="text-lg"
+                onClick={() => navigate('/support')}
+              >
+                Get Help
               </Button>
             </div>
 
