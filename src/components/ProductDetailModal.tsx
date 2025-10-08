@@ -203,13 +203,13 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
           View detailed information about {product?.name}, including pricing, effects, and lab results
         </DialogDescription>
         
-        {/* Mobile-Optimized Close Button */}
+        {/* Mobile-Optimized Close Button - Higher z-index to appear above images */}
         <button
           onClick={() => onOpenChange(false)}
-          className="absolute right-2 top-2 z-50 rounded-full bg-background/95 p-3 shadow-lg ring-1 ring-border hover:bg-muted transition-colors md:hidden"
+          className="absolute right-3 top-3 z-[100] rounded-full bg-background p-4 shadow-xl ring-2 ring-border hover:bg-muted transition-colors md:hidden touch-manipulation"
           aria-label="Close"
         >
-          <X className="h-6 w-6" />
+          <X className="h-7 w-7" />
         </button>
         
         {/* Header Section */}
@@ -300,17 +300,18 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
               )}
             </div>
 
-            {/* Weight Selection */}
+            {/* Weight Selection - Larger touch targets for mobile */}
             {weights.length > 1 && (
               <div className="mb-6">
                 <label className="block text-sm font-semibold mb-3">Select Weight:</label>
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {weights.map((weight) => (
                     <Button
                       key={weight}
                       variant={selectedWeight === weight ? "default" : "outline"}
                       onClick={() => setSelectedWeight(weight)}
-                      className="font-semibold uppercase"
+                      className="font-semibold uppercase h-12 text-base touch-manipulation"
+                      size="lg"
                     >
                       {formatWeight(weight)}
                     </Button>
@@ -403,17 +404,40 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
           </div>
         </div>
 
-        {/* Detailed Information Tabs - Mobile Optimized */}
+        {/* Detailed Information Tabs - Mobile Optimized with larger touch targets */}
         <Tabs defaultValue="overview" className="px-3 md:px-6 pb-6">
-          <TabsList className="grid w-full grid-cols-5 h-auto gap-1 bg-muted/50 p-1">
-            <TabsTrigger value="overview" className="text-xs md:text-sm py-2 md:py-2.5">Overview</TabsTrigger>
-            <TabsTrigger value="effects" className="text-xs md:text-sm py-2 md:py-2.5">Effects</TabsTrigger>
-            <TabsTrigger value="terpenes" className="text-xs md:text-sm py-2 md:py-2.5">Terpenes</TabsTrigger>
-            <TabsTrigger value="growing" className="text-xs md:text-sm py-2 md:py-2.5">Growing</TabsTrigger>
-            <TabsTrigger value="reviews" className="text-xs md:text-sm py-2 md:py-2.5">
-              <span className="hidden md:inline">Reviews</span>
-              <span className="md:hidden">({reviews.length})</span>
-              <span className="hidden md:inline"> ({reviews.length})</span>
+          <TabsList className="grid w-full grid-cols-5 h-auto gap-1 bg-muted/50 p-1.5">
+            <TabsTrigger 
+              value="overview" 
+              className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger 
+              value="effects" 
+              className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
+            >
+              Effects
+            </TabsTrigger>
+            <TabsTrigger 
+              value="terpenes" 
+              className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
+            >
+              Terpenes
+            </TabsTrigger>
+            <TabsTrigger 
+              value="growing" 
+              className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
+            >
+              <span className="hidden sm:inline">Growing</span>
+              <span className="sm:hidden">Info</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="reviews" 
+              className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
+            >
+              <span className="hidden sm:inline">Reviews ({reviews.length})</span>
+              <span className="sm:hidden">({reviews.length})</span>
             </TabsTrigger>
           </TabsList>
 
