@@ -91,44 +91,27 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
         return;
       }
 
-      // Authenticated user - use database
-      const { data: existing } = await supabase
-        .from("cart_items")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("product_id", product.id)
-        .eq("selected_weight", defaultWeight)
-        .maybeSingle();
+      // Optimistically update UI
+      setAdded(true);
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
 
-      if (existing) {
-        const { error } = await supabase
-          .from("cart_items")
-          .update({ quantity: existing.quantity + quantity })
-          .eq("id", existing.id);
-        
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("cart_items")
-          .insert({
-            user_id: user.id,
-            product_id: product.id,
-            quantity: quantity,
-            selected_weight: defaultWeight,
-          });
-        
-        if (error) throw error;
-      }
+      // Authenticated user - use database with upsert for instant response
+      const { error } = await supabase.rpc('add_to_cart', {
+        p_user_id: user.id,
+        p_product_id: product.id,
+        p_quantity: quantity,
+        p_selected_weight: defaultWeight
+      });
+      
+      if (error) throw error;
 
       // Success feedback with confetti effect
       toast.success("🎉 Added to cart!", {
         description: `${quantity}x ${product.name}`,
         duration: 2000,
       });
-      setAdded(true);
       setTimeout(() => setAdded(false), 2500);
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-      queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
       setQuantity(1);
     } catch (error: any) {
       toast.error(error.message || "Failed to add to cart");

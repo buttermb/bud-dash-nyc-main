@@ -23,25 +23,15 @@ const QuickAddToCart = ({ productId, productName, size = "default" }: QuickAddTo
         return;
       }
 
-      const { data: existing } = await supabase
-        .from("cart_items")
-        .select()
-        .eq("user_id", user.id)
-        .eq("product_id", productId)
-        .single();
-
-      if (existing) {
-        await supabase
-          .from("cart_items")
-          .update({ quantity: existing.quantity + 1 })
-          .eq("id", existing.id);
-      } else {
-        await supabase.from("cart_items").insert({
-          user_id: user.id,
-          product_id: productId,
-          quantity: 1,
-        });
-      }
+      // Use RPC function for instant cart updates
+      const { error } = await supabase.rpc('add_to_cart', {
+        p_user_id: user.id,
+        p_product_id: productId,
+        p_quantity: 1,
+        p_selected_weight: '3.5g'
+      });
+      
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });

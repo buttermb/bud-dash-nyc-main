@@ -2029,6 +2029,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_to_cart: {
+        Args: {
+          p_product_id: string
+          p_quantity: number
+          p_selected_weight: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       check_is_admin: {
         Args: { _user_id: string }
         Returns: boolean
