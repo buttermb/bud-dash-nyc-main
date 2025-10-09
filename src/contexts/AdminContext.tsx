@@ -28,31 +28,32 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
   const verifyAdmin = async (currentSession: Session) => {
     try {
-      // Single query with JOIN to get admin details if they have admin role
-      const { data: adminData, error } = await supabase
-        .from("admin_users")
-        .select(`
-          id,
-          email,
-          full_name,
-          role,
-          user_roles!inner(role)
-        `)
-        .eq("user_id", currentSession.user.id)
-        .eq("user_roles.role", "admin")
-        .eq("is_active", true)
-        .maybeSingle();
+      // Check if user has admin role - use RPC function for efficiency
+      const isAdmin = await has_role(currentSession.user.id, 'admin');
+      
+      if (isAdmin) {
+        // Get admin details
+        const { data: adminData, error: adminError } = await supabase
+          .from("admin_users")
+          .select("id, email, full_name, role")
+          .eq("user_id", currentSession.user.id)
+          .eq("is_active", true)
+          .maybeSingle();
 
-      if (error) throw error;
+        if (adminError) throw adminError;
 
-      if (adminData) {
-        setAdmin({
-          id: adminData.id,
-          email: adminData.email,
-          full_name: adminData.full_name,
-          role: adminData.role
-        });
-        setSession(currentSession);
+        if (adminData) {
+          setAdmin({
+            id: adminData.id,
+            email: adminData.email,
+            full_name: adminData.full_name,
+            role: adminData.role
+          });
+          setSession(currentSession);
+        } else {
+          setAdmin(null);
+          setSession(null);
+        }
       } else {
         setAdmin(null);
         setSession(null);
@@ -64,6 +65,15 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to check admin role using RPC
+  const has_role = async (userId: string, role: string): Promise<boolean> => {
+    const { data, error } = await supabase.rpc('has_role', {
+      _user_id: userId,
+      _role: role as 'admin' | 'courier' | 'user'
+    });
+    return !error && data === true;
   };
 
   useEffect(() => {
@@ -102,23 +112,20 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
       if (authError) throw authError;
       if (!authData.session) throw new Error("No session returned");
 
-      // Single query with JOIN to verify admin access
+      // Check admin role using RPC function
+      const isAdmin = await has_role(authData.user.id, 'admin');
+      if (!isAdmin) throw new Error("You don't have admin access");
+
+      // Get admin details
       const { data: adminData, error: adminError } = await supabase
         .from("admin_users")
-        .select(`
-          id,
-          email,
-          full_name,
-          role,
-          user_roles!inner(role)
-        `)
+        .select("id, email, full_name, role")
         .eq("user_id", authData.user.id)
-        .eq("user_roles.role", "admin")
         .eq("is_active", true)
         .maybeSingle();
 
       if (adminError) throw adminError;
-      if (!adminData) throw new Error("You don't have admin access or your account is inactive");
+      if (!adminData) throw new Error("Admin account is not active");
 
       setSession(authData.session);
       setAdmin({

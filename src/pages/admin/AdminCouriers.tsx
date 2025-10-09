@@ -55,24 +55,31 @@ export default function AdminCouriers() {
 
   const fetchCouriers = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
-      
+      // Fetch couriers
       const { data, error } = await supabase
         .from('couriers')
-        .select(`
-          *,
-          courier_earnings!left(total_earned)
-        `)
-        .gte('courier_earnings.created_at', today)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
+      // Fetch today's earnings separately
+      const today = new Date().toISOString().split('T')[0];
+      const { data: earningsData } = await supabase
+        .from('courier_earnings')
+        .select('courier_id, total_earned')
+        .gte('created_at', today);
+
+      // Map earnings to couriers
+      const earningsMap = new Map();
+      earningsData?.forEach(e => {
+        const current = earningsMap.get(e.courier_id) || 0;
+        earningsMap.set(e.courier_id, current + parseFloat(e.total_earned.toString()));
+      });
+
       const couriersWithEarnings = data?.map(courier => ({
         ...courier,
-        today_earnings: courier.courier_earnings?.reduce(
-          (sum: number, e: any) => sum + parseFloat(e.total_earned || 0), 0
-        ) || 0
+        today_earnings: earningsMap.get(courier.id) || 0
       })) as unknown as Courier[];
 
       setCouriers(couriersWithEarnings || []);
