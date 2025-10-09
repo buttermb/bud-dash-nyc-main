@@ -21,25 +21,12 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
   const { guestCart, updateGuestCartItem, removeFromGuestCart } = useGuestCart();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
   }, []);
-
-  // Listen for cart updates
-  useEffect(() => {
-    const handleCartUpdate = () => {
-      console.log('Cart update event received in CartDrawer');
-      setRefreshTrigger(prev => prev + 1);
-      queryClient.invalidateQueries({ queryKey: ["guest-cart-products"] });
-    };
-    
-    window.addEventListener('cartUpdated', handleCartUpdate);
-    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
-  }, [queryClient]);
 
   const { data: dbCartItems = [] } = useQuery({
     queryKey: ["cart", user?.id],
@@ -57,17 +44,15 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
 
   // Fetch product details for guest cart items
   const { data: guestProducts = [] } = useQuery({
-    queryKey: ["guest-cart-products", guestCart.map(i => i.product_id).join(","), refreshTrigger],
+    queryKey: ["guest-cart-products", guestCart.map(i => i.product_id).sort().join(",")],
     queryFn: async () => {
       if (guestCart.length === 0) return [];
       const productIds = guestCart.map(item => item.product_id);
-      console.log('Fetching guest products for IDs:', productIds);
       const { data, error } = await supabase
         .from("products")
         .select("*")
         .in("id", productIds);
       if (error) throw error;
-      console.log('Guest products fetched:', data?.length);
       return data;
     },
     enabled: !user && guestCart.length > 0,
@@ -79,8 +64,6 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
     id: `${item.product_id}-${item.selected_weight}`,
     products: guestProducts.find(p => p.id === item.product_id)
   })).filter(item => item.products);
-
-  console.log('CartDrawer - User:', !!user, 'Guest cart:', guestCart.length, 'Guest items with products:', guestCartItems.length);
 
   const cartItems = user ? dbCartItems : guestCartItems;
 

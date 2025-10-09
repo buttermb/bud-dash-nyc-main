@@ -29,22 +29,19 @@ const Navigation = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [showCart, setShowCart] = useState(false);
+  const [cartUpdateKey, setCartUpdateKey] = useState(0);
 
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  // Listen for cart updates
+  // Force re-render when cart updates
   useEffect(() => {
     const handleCartUpdate = () => {
-      console.log('Cart updated event received in Navigation');
-      setRefreshKey(prev => prev + 1);
+      setCartUpdateKey(prev => prev + 1);
     };
-    
     window.addEventListener('cartUpdated', handleCartUpdate);
     return () => window.removeEventListener('cartUpdated', handleCartUpdate);
   }, []);
 
   const { data: cartItems = [] } = useQuery({
-    queryKey: ["cart", user?.id, refreshKey],
+    queryKey: ["cart", user?.id],
     queryFn: async () => {
       if (!user) return [];
       const { data, error } = await supabase
@@ -60,8 +57,6 @@ const Navigation = () => {
   const dbCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const guestCartCount = user ? 0 : getGuestCartCount();
   const cartCount = user ? dbCartCount : guestCartCount;
-  
-  console.log('Navigation cart count:', cartCount, 'User:', !!user, 'Guest count:', guestCartCount);
   
   const getItemPrice = (item: any) => {
     const product = item.products;

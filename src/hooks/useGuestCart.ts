@@ -12,17 +12,37 @@ const GUEST_CART_KEY = 'guest_cart';
 export const useGuestCart = () => {
   const [guestCart, setGuestCart] = useState<GuestCartItem[]>([]);
 
-  // Load cart from localStorage on mount
-  useEffect(() => {
+  // Load cart from localStorage
+  const loadCart = () => {
     const savedCart = localStorage.getItem(GUEST_CART_KEY);
     if (savedCart) {
       try {
-        setGuestCart(JSON.parse(savedCart));
+        const parsed = JSON.parse(savedCart);
+        setGuestCart(parsed);
+        return parsed;
       } catch (e) {
         console.error('Failed to parse guest cart:', e);
         localStorage.removeItem(GUEST_CART_KEY);
+        setGuestCart([]);
+        return [];
       }
     }
+    return [];
+  };
+
+  // Load cart on mount
+  useEffect(() => {
+    loadCart();
+  }, []);
+
+  // Listen for cart updates from other components
+  useEffect(() => {
+    const handleCartUpdate = () => {
+      loadCart();
+    };
+    
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
   }, []);
 
   // Save to localStorage whenever cart changes
@@ -32,44 +52,52 @@ export const useGuestCart = () => {
   };
 
   const addToGuestCart = (productId: string, quantity: number, selectedWeight: string) => {
-    console.log('Adding to guest cart:', { productId, quantity, selectedWeight });
+    // Always read fresh data from localStorage
+    const savedCart = localStorage.getItem(GUEST_CART_KEY);
+    const currentCart = savedCart ? JSON.parse(savedCart) : [];
     
-    const existingIndex = guestCart.findIndex(
-      item => item.product_id === productId && item.selected_weight === selectedWeight
+    const existingIndex = currentCart.findIndex(
+      (item: GuestCartItem) => item.product_id === productId && item.selected_weight === selectedWeight
     );
 
     let newCart: GuestCartItem[];
     if (existingIndex >= 0) {
-      newCart = [...guestCart];
+      newCart = [...currentCart];
       newCart[existingIndex].quantity += quantity;
-      console.log('Updated existing item, new quantity:', newCart[existingIndex].quantity);
     } else {
-      newCart = [...guestCart, { product_id: productId, quantity, selected_weight: selectedWeight }];
-      console.log('Added new item to cart');
+      newCart = [...currentCart, { product_id: productId, quantity, selected_weight: selectedWeight }];
     }
 
     saveCart(newCart);
     
     // Trigger custom event for cart update
     window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart: newCart } }));
-    
-    console.log('Guest cart after add:', newCart);
   };
 
   const updateGuestCartItem = (productId: string, selectedWeight: string, quantity: number) => {
-    const newCart = guestCart.map(item =>
+    // Read fresh data from localStorage
+    const savedCart = localStorage.getItem(GUEST_CART_KEY);
+    const currentCart = savedCart ? JSON.parse(savedCart) : [];
+    
+    const newCart = currentCart.map((item: GuestCartItem) =>
       item.product_id === productId && item.selected_weight === selectedWeight
         ? { ...item, quantity }
         : item
     );
     saveCart(newCart);
+    window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart: newCart } }));
   };
 
   const removeFromGuestCart = (productId: string, selectedWeight: string) => {
-    const newCart = guestCart.filter(
-      item => !(item.product_id === productId && item.selected_weight === selectedWeight)
+    // Read fresh data from localStorage
+    const savedCart = localStorage.getItem(GUEST_CART_KEY);
+    const currentCart = savedCart ? JSON.parse(savedCart) : [];
+    
+    const newCart = currentCart.filter(
+      (item: GuestCartItem) => !(item.product_id === productId && item.selected_weight === selectedWeight)
     );
     saveCart(newCart);
+    window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart: newCart } }));
   };
 
   const clearGuestCart = () => {
@@ -78,7 +106,10 @@ export const useGuestCart = () => {
   };
 
   const getGuestCartCount = () => {
-    return guestCart.reduce((sum, item) => sum + item.quantity, 0);
+    // Always read fresh data from localStorage
+    const savedCart = localStorage.getItem(GUEST_CART_KEY);
+    const currentCart = savedCart ? JSON.parse(savedCart) : [];
+    return currentCart.reduce((sum: number, item: GuestCartItem) => sum + item.quantity, 0);
   };
 
   return {
