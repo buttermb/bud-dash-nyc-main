@@ -493,6 +493,17 @@ const Checkout = () => {
           </Card>
         )}
 
+        {/* Guest Checkout Choice - Prominent at Top */}
+        {!user && !hasSeenPopup && (
+          <GuestCheckoutOption
+            cartTotal={subtotal}
+            onGuestCheckout={handleContinueAsGuest}
+            onSignup={() => {
+              setShowSignUpPopup(true);
+            }}
+          />
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8 w-full">
           <div className="lg:col-span-2 space-y-4 md:space-y-6 w-full min-w-0">
             {/* Guest Checkout Info */}

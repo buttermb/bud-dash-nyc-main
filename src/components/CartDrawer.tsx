@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useGuestCart } from "@/hooks/useGuestCart";
 
 interface CartDrawerProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface CartDrawerProps {
 
 const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
   const [user, setUser] = useState<any>(null);
+  const { guestCart, updateGuestCartItem, removeFromGuestCart } = useGuestCart();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -26,7 +28,7 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
     });
   }, []);
 
-  const { data: cartItems = [] } = useQuery({
+  const { data: dbCartItems = [] } = useQuery({
     queryKey: ["cart", user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -39,6 +41,31 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
     },
     enabled: !!user,
   });
+
+  // Fetch product details for guest cart items
+  const { data: guestProducts = [] } = useQuery({
+    queryKey: ["guest-cart-products", guestCart.map(i => i.product_id).join(",")],
+    queryFn: async () => {
+      if (guestCart.length === 0) return [];
+      const productIds = guestCart.map(item => item.product_id);
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .in("id", productIds);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !user && guestCart.length > 0,
+  });
+
+  // Combine guest cart items with product data
+  const guestCartItems = user ? [] : guestCart.map(item => ({
+    ...item,
+    id: `${item.product_id}-${item.selected_weight}`,
+    products: guestProducts.find(p => p.id === item.product_id)
+  })).filter(item => item.products);
+
+  const cartItems = user ? dbCartItems : guestCartItems;
 
   const getItemPrice = (item: any) => {
     const product = item.products;
@@ -55,7 +82,15 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
     0
   );
 
-  const updateQuantity = async (itemId: string, newQuantity: number) => {
+  const updateQuantity = async (itemId: string, productId: string, selectedWeight: string, newQuantity: number) => {
+    if (!user) {
+      // Guest cart - update localStorage
+      updateGuestCartItem(productId, selectedWeight, newQuantity);
+      queryClient.invalidateQueries({ queryKey: ["guest-cart-products"] });
+      return;
+    }
+
+    // Authenticated user - update database
     try {
       const { error } = await supabase
         .from("cart_items")
@@ -69,7 +104,16 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
     }
   };
 
-  const removeItem = async (itemId: string) => {
+  const removeItem = async (itemId: string, productId: string, selectedWeight: string) => {
+    if (!user) {
+      // Guest cart - remove from localStorage
+      removeFromGuestCart(productId, selectedWeight);
+      toast.success("Item removed from cart");
+      queryClient.invalidateQueries({ queryKey: ["guest-cart-products"] });
+      return;
+    }
+
+    // Authenticated user - remove from database
     try {
       const { error } = await supabase
         .from("cart_items")
@@ -158,7 +202,7 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
                           size="icon"
                           className="h-7 w-7"
                           onClick={() =>
-                            updateQuantity(item.id, Math.max(1, item.quantity - 1))
+                            updateQuantity(item.id, item.product_id, selectedWeight, Math.max(1, item.quantity - 1))
                           }
                           disabled={item.quantity <= 1}
                         >
@@ -171,7 +215,7 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
                           variant="outline"
                           size="icon"
                           className="h-7 w-7"
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.id, item.product_id, selectedWeight, item.quantity + 1)}
                         >
                           <Plus className="w-3 h-3" />
                         </Button>
@@ -179,7 +223,7 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 ml-auto"
-                          onClick={() => removeItem(item.id)}
+                          onClick={() => removeItem(item.id, item.product_id, selectedWeight)}
                         >
                           <Trash2 className="w-3 h-3 text-destructive" />
                         </Button>
