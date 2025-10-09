@@ -58,14 +58,14 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
           });
           setSession(currentSession);
         } else {
+          // Admin record exists but not active - just clear admin state
           setAdmin(null);
           setSession(null);
-          await supabase.auth.signOut();
         }
       } else {
+        // User is not an admin - just clear admin state, DON'T sign them out
         setAdmin(null);
         setSession(null);
-        await supabase.auth.signOut();
       }
     } catch (error) {
       console.error("Admin verification failed:", error);
