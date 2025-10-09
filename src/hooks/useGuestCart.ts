@@ -32,6 +32,8 @@ export const useGuestCart = () => {
   };
 
   const addToGuestCart = (productId: string, quantity: number, selectedWeight: string) => {
+    console.log('Adding to guest cart:', { productId, quantity, selectedWeight });
+    
     const existingIndex = guestCart.findIndex(
       item => item.product_id === productId && item.selected_weight === selectedWeight
     );
@@ -40,11 +42,18 @@ export const useGuestCart = () => {
     if (existingIndex >= 0) {
       newCart = [...guestCart];
       newCart[existingIndex].quantity += quantity;
+      console.log('Updated existing item, new quantity:', newCart[existingIndex].quantity);
     } else {
       newCart = [...guestCart, { product_id: productId, quantity, selected_weight: selectedWeight }];
+      console.log('Added new item to cart');
     }
 
     saveCart(newCart);
+    
+    // Trigger custom event for cart update
+    window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart: newCart } }));
+    
+    console.log('Guest cart after add:', newCart);
   };
 
   const updateGuestCartItem = (productId: string, selectedWeight: string, quantity: number) => {

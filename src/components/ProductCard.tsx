@@ -74,11 +74,19 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
 
       if (!user) {
         // Guest cart - use localStorage
+        console.log('Guest user detected, adding to guest cart');
         addToGuestCart(product.id, quantity, defaultWeight);
-        toast.success("Added to cart!");
+        
+        // Success feedback
+        toast.success("🎉 Added to cart!", {
+          description: `${quantity}x ${product.name}`,
+          duration: 3000,
+        });
+        
         setAdded(true);
-        setTimeout(() => setAdded(false), 2000);
+        setTimeout(() => setAdded(false), 2500);
         queryClient.invalidateQueries({ queryKey: ["cart"] });
+        queryClient.invalidateQueries({ queryKey: ["guest-cart-products"] });
         setLoading(false);
         return;
       }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -30,8 +30,21 @@ const Navigation = () => {
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [showCart, setShowCart] = useState(false);
 
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Listen for cart updates
+  useEffect(() => {
+    const handleCartUpdate = () => {
+      console.log('Cart updated event received in Navigation');
+      setRefreshKey(prev => prev + 1);
+    };
+    
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+  }, []);
+
   const { data: cartItems = [] } = useQuery({
-    queryKey: ["cart", user?.id],
+    queryKey: ["cart", user?.id, refreshKey],
     queryFn: async () => {
       if (!user) return [];
       const { data, error } = await supabase
@@ -47,6 +60,8 @@ const Navigation = () => {
   const dbCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const guestCartCount = user ? 0 : getGuestCartCount();
   const cartCount = user ? dbCartCount : guestCartCount;
+  
+  console.log('Navigation cart count:', cartCount, 'User:', !!user, 'Guest count:', guestCartCount);
   
   const getItemPrice = (item: any) => {
     const product = item.products;
