@@ -23,8 +23,6 @@ import CheckoutProgress from "@/components/CheckoutProgress";
 import GuestCheckoutOption from "@/components/GuestCheckoutOption";
 import HighValueCartNotice from "@/components/HighValueCartNotice";
 import ExpressCheckoutButtons from "@/components/ExpressCheckoutButtons";
-import SignUpIncentivePopup from "@/components/SignUpIncentivePopup";
-import CheckoutReminderBanner from "@/components/CheckoutReminderBanner";
 import LowCartValueUpsell from "@/components/LowCartValueUpsell";
 import { useCartValueTrigger } from "@/hooks/useCartValueTrigger";
 import { getNeighborhoodFromZip, getRiskColor, getRiskLabel, getRiskTextColor } from "@/utils/neighborhoods";
@@ -54,9 +52,6 @@ const Checkout = () => {
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
-  const [showSignUpPopup, setShowSignUpPopup] = useState(false);
-  const [hasSeenPopup, setHasSeenPopup] = useState(false);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const timeSlots = [
     { value: "09:00-12:00", label: "Morning", time: "9:00 AM - 12:00 PM", icon: "🌅" },
@@ -131,21 +126,7 @@ const Checkout = () => {
     0
   );
 
-  // Check if user should see signup popup (must be after subtotal calculation)
-  useEffect(() => {
-    const popupSeen = localStorage.getItem('signup_popup_seen');
-    const popupDeclined = localStorage.getItem('signup_popup_declined');
-    
-    if (!user && !popupSeen && !popupDeclined && subtotal >= 25) {
-      // Show popup after a short delay to not be intrusive
-      const timer = setTimeout(() => {
-        if (isCheckingOut) {
-          setShowSignUpPopup(true);
-        }
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [user, subtotal, isCheckingOut]);
+  // Guest checkout is now always available - no popup blocking
 
   // Fetch courier availability for dynamic pricing
   const { data: courierAvailability } = useQuery({
@@ -241,48 +222,9 @@ const Checkout = () => {
     }
   };
 
-  const handleSignUpFromPopup = async (email: string) => {
-    setGuestEmail(email);
-    localStorage.setItem('signup_popup_seen', 'true');
-    setShowSignUpPopup(false);
-    setHasSeenPopup(true);
-    
-    // Apply discount
-    const discount = subtotal * 0.1;
-    setPromoCode('SIGNUP10');
-    setPromoDiscount(discount);
-    
-    // Track signup event
-    analytics.trackPopupSignup(email, subtotal, discount + (subtotal >= 100 ? 0 : 5.99));
-    
-    toast.success(`✓ Discount applied! You're saving $${discount.toFixed(2)}`);
-  };
-
-  const handleContinueAsGuest = () => {
-    localStorage.setItem('signup_popup_declined', 'true');
-    setShowSignUpPopup(false);
-    setHasSeenPopup(true);
-    
-    // Track guest checkout decision
-    const savings = subtotal * 0.1 + (subtotal >= 100 ? 0 : 5.99);
-    analytics.trackPopupGuestCheckout(subtotal, savings);
-  };
-
   const handlePlaceOrder = async () => {
     // Track checkout started
     analytics.trackCheckoutStarted(subtotal, cartItems.length, !user);
-    
-    // Show popup on first checkout attempt if not seen
-    if (!user && !hasSeenPopup && subtotal >= 25) {
-      const popupSeen = localStorage.getItem('signup_popup_seen');
-      const popupDeclined = localStorage.getItem('signup_popup_declined');
-      
-      if (!popupSeen && !popupDeclined) {
-        setIsCheckingOut(true);
-        setShowSignUpPopup(true);
-        return;
-      }
-    }
 
     if (cartItems.length === 0) {
       toast.error("Your cart is empty");
@@ -439,13 +381,6 @@ const Checkout = () => {
   return (
     <>
       <Navigation />
-      <SignUpIncentivePopup
-        cartTotal={subtotal}
-        onSignUp={handleSignUpFromPopup}
-        onContinueAsGuest={handleContinueAsGuest}
-        onClose={() => setShowSignUpPopup(false)}
-        isVisible={showSignUpPopup}
-      />
       <div className="min-h-screen bg-background py-4 md:py-8 pb-24 md:pb-8">
         <div className="container max-w-4xl mx-auto px-4 md:px-6 w-full overflow-x-hidden">
           <Button
@@ -461,45 +396,21 @@ const Checkout = () => {
         
         <CheckoutProgress currentStep={2} />
 
-        {/* Low cart value upsell - encourage adding more for signup benefits */}
+        {/* Low cart value upsell - encourage adding more */}
         {!user && subtotal < 25 && (
           <LowCartValueUpsell currentTotal={subtotal} targetAmount={25} />
         )}
 
-        {/* Checkout reminder banner - subtle reminder if guest hasn't signed up */}
-        {!user && subtotal >= 25 && !hasSeenPopup && !promoDiscount && (
-          <CheckoutReminderBanner 
-            savings={subtotal * 0.1 + (subtotal >= 100 ? 0 : 5.99)}
-            onSignUpClick={() => setShowSignUpPopup(true)}
-          />
-        )}
-
-        {/* Subtle discount reminder if user got discount from popup */}
-        {!user && promoDiscount > 0 && hasSeenPopup && (
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background mb-4 md:mb-6">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  🎉
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-base md:text-lg">You're saving ${promoDiscount.toFixed(2)}!</h3>
-                  <p className="text-xs md:text-sm text-muted-foreground">
-                    Your 10% discount has been applied
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Guest Checkout Choice - Prominent at Top */}
-        {!user && !hasSeenPopup && (
+        {!user && (
           <GuestCheckoutOption
             cartTotal={subtotal}
-            onGuestCheckout={handleContinueAsGuest}
+            onGuestCheckout={() => {
+              // User chose guest checkout, continue with form
+            }}
             onSignup={() => {
-              setShowSignUpPopup(true);
+              // This can redirect to a signup page or show auth modal
+              toast.info("Create an account to unlock rewards and faster checkouts!");
             }}
           />
         )}
