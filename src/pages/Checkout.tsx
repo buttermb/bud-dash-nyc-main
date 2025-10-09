@@ -271,106 +271,47 @@ const Checkout = () => {
     setLoading(true);
 
     try {
-      // First create/update address record if we have coordinates (only for logged-in users)
-      let addressId = null;
-      let dropoffLat = addressLat;
-      let dropoffLng = addressLng;
-      
-      if (user && addressLat && addressLng) {
-        const { data: addressData, error: addressError } = await supabase
-          .from("addresses")
-          .insert({
-            user_id: user.id,
-            street: address,
-            borough: borough,
-            city: "New York",
-            state: "NY",
-            zip_code: "00000",
-            latitude: addressLat,
-            longitude: addressLng,
-            is_default: false,
-          })
-          .select()
-          .single();
+      // Prepare order data for edge function
+      const orderData = {
+        userId: user?.id,
+        deliveryAddress: address,
+        deliveryBorough: borough,
+        paymentMethod,
+        deliveryFee,
+        subtotal,
+        totalAmount: total,
+        scheduledDeliveryTime: getScheduledDateTime(),
+        deliveryNotes: notes || undefined,
+        dropoffLat: addressLat,
+        dropoffLng: addressLng,
+        customerName: user ? undefined : guestName,
+        customerPhone: user ? undefined : guestPhone,
+        customerEmail: user ? undefined : guestEmail,
+        cartItems: cartItems.map(item => ({
+          productId: item.product_id,
+          quantity: item.quantity,
+          price: getItemPrice(item),
+          productName: item.products?.name || "",
+          selectedWeight: item.selected_weight || "unit"
+        }))
+      };
 
-        if (addressError) {
-          console.error("Address creation error:", addressError);
-        } else {
-          addressId = addressData.id;
-        }
-      }
+      // Call optimized edge function
+      const { data, error } = await supabase.functions.invoke('create-order', {
+        body: orderData
+      });
 
-      // Get merchant data for pickup location (use first product's merchant)
-      const firstItem = cartItems[0];
-      const { data: product } = await supabase
-        .from("products")
-        .select("merchant_id, merchants(id, business_name, address, latitude, longitude)")
-        .eq("id", firstItem.product_id)
-        .single();
-
-      const merchant = product?.merchants;
-      const pickupLat = merchant?.latitude;
-      const pickupLng = merchant?.longitude;
-
-      // Extract ZIP code from address or use a placeholder
-      const zipMatch = address.match(/\b\d{5}\b/);
-      const zipcode = zipMatch ? zipMatch[0] : "00000";
-
-      // Create order with all location data and guest info if applicable
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          user_id: user?.id || null,
-          merchant_id: merchant?.id,
-          delivery_address: address,
-          delivery_borough: borough,
-          address_id: addressId,
-          payment_method: paymentMethod,
-          delivery_fee: deliveryFee,
-          subtotal: subtotal,
-          total_amount: total,
-          scheduled_delivery_time: getScheduledDateTime(),
-          delivery_notes: notes || null,
-          status: 'pending',
-          pickup_lat: pickupLat,
-          pickup_lng: pickupLng,
-          dropoff_lat: dropoffLat,
-          dropoff_lng: dropoffLng,
-          customer_name: user ? null : guestName,
-          customer_phone: user ? null : guestPhone,
-        })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      // Insert order items
-      const orderItems = cartItems.map((item) => ({
-        order_id: order.id,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price: getItemPrice(item),
-        product_name: item.products?.name || "",
-      }));
-
-      const { error: itemsError } = await supabase
-        .from("order_items")
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
 
       // Clear cart
       if (user) {
-        // Authenticated user - clear DB cart
-        const { error: clearError } = await supabase
-          .from("cart_items")
-          .delete()
-          .eq("user_id", user.id);
-
-        if (clearError) throw clearError;
+        // Authenticated user - edge function handles DB clear in background
+        queryClient.invalidateQueries({ queryKey: ["cart"] });
       } else {
         // Guest - clear localStorage cart
         clearGuestCart();
+        queryClient.invalidateQueries({ queryKey: ["guest-cart-products"] });
       }
 
       toast.success("Order placed successfully!");
@@ -378,10 +319,9 @@ const Checkout = () => {
       // Track order completion
       analytics.trackOrderCompleted(total, promoDiscount, !user);
       
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-      queryClient.invalidateQueries({ queryKey: ["guest-cart-products"] });
-      navigate(`/order-confirmation?orderId=${order.id}`);
+      navigate(`/order-confirmation?orderId=${data.orderId}`);
     } catch (error: any) {
+      console.error('Order error:', error);
       toast.error(error.message || "Failed to place order");
     } finally {
       setLoading(false);
