@@ -414,7 +414,7 @@ const Checkout = () => {
         isVisible={showSignUpPopup}
       />
       <div className="min-h-screen bg-background py-4 md:py-8 pb-24 md:pb-8">
-        <div className="container max-w-4xl mx-auto px-3 md:px-4">
+        <div className="container max-w-4xl mx-auto px-4 md:px-6 w-full overflow-x-hidden">
           <Button
             variant="ghost"
             onClick={() => navigate("/")}
@@ -460,8 +460,8 @@ const Checkout = () => {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
-          <div className="lg:col-span-2 space-y-4 md:space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8 w-full">
+          <div className="lg:col-span-2 space-y-4 md:space-y-6 w-full min-w-0">
             {/* Guest Checkout Info */}
             {!user && (
               <Card className="border-primary/20 bg-primary/5">
@@ -474,7 +474,7 @@ const Checkout = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 md:space-y-4">
-                  <div className="space-y-2">
+                  <div className="space-y-2 w-full">
                     <Label htmlFor="guest-name" className="text-sm">Full Name *</Label>
                     <Input
                       id="guest-name"
@@ -483,7 +483,7 @@ const Checkout = () => {
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
                       placeholder="John Doe"
-                      className="h-12 md:h-14 text-base touch-target"
+                      className="w-full h-12 md:h-14 text-base touch-target"
                       required
                     />
                   </div>
