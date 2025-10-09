@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import ProductCard from "./ProductCard";
-import AuthModal from "./AuthModal";
 import MobileSearch from "./MobileSearch";
 import { Loader2, Leaf, Cookie, Droplets, Cigarette, Wind, ChevronRight, ChevronLeft, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,8 +13,6 @@ const INITIAL_CATEGORIES_TO_SHOW = 2;
 
 const ProductCatalog = () => {
   const queryClient = useQueryClient();
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [searchQuery, setSearchQuery] = useState("");
   const [showAllCategories, setShowAllCategories] = useState(false);
   const isMobile = useIsMobile();
@@ -240,13 +237,6 @@ const ProductCatalog = () => {
           </div>
         )}
       </div>
-
-      <AuthModal
-        open={showAuthModal}
-        onOpenChange={setShowAuthModal}
-        mode={authMode}
-        onModeChange={setAuthMode}
-      />
     </section>
   );
 };
