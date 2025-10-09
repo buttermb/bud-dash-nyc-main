@@ -122,9 +122,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Product Categories */}
-      <ProductCategories />
-
       {/* Trending Products Carousel */}
       <TrendingProducts />
 
@@ -137,9 +134,6 @@ const Index = () => {
       <div id="how-it-works">
         <HowItWorks />
       </div>
-
-      {/* Customer Reviews */}
-      <FeaturedReviews />
 
       {/* Trust Elements */}
       <ProductTrustElements />

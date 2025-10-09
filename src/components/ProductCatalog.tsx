@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import ProductCard from "./ProductCard";
 import AuthModal from "./AuthModal";
 import { Loader2, Search, Leaf, Cookie, Droplets, Cigarette, Wind, ChevronRight, ChevronLeft } from "lucide-react";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { useInventoryBatch } from "@/hooks/useInventoryBatch";
 
 const INITIAL_CATEGORIES_TO_SHOW = 2;
 
@@ -41,6 +41,7 @@ const ProductCatalog = () => {
     };
   }, [queryClient]);
 
+  // Fetch all products with batch inventory
   const { data: allProducts = [], isLoading, error } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
@@ -52,6 +53,10 @@ const ProductCatalog = () => {
       return data;
     },
   });
+
+  // Batch fetch inventory for all products
+  const productIds = allProducts.map(p => p.id);
+  const { data: inventoryMap = {} } = useInventoryBatch(productIds);
 
   // Filter products by search
   const filteredProducts = searchQuery
@@ -228,7 +233,7 @@ const ProductCatalog = () => {
                           key={product.id} 
                           className="w-[280px] md:w-[320px] flex-shrink-0 snap-start snap-always"
                         >
-                          <ProductCard product={product} />
+                          <ProductCard product={product} stockLevel={inventoryMap[product.id]} />
                         </div>
                       ))}
                     </div>

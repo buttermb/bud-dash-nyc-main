@@ -22,9 +22,10 @@ import {
 interface ProductCardProps {
   product: any;
   onAuthRequired?: () => void;
+  stockLevel?: number;
 }
 
-const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
+const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) => {
   const { user } = useAuth();
   const { addToRecentlyViewed } = useRecentlyViewed();
   const viewCount = useProductViewCount(product.id);
@@ -34,22 +35,9 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const queryClient = useQueryClient();
 
-  // Fetch inventory to check stock levels
-  const { data: inventory } = useQuery({
-    queryKey: ["inventory", product.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("inventory")
-        .select("stock")
-        .eq("product_id", product.id)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const stockLevel = inventory?.stock || 0;
-  const isLowStock = stockLevel > 0 && stockLevel <= 5;
+  // Use provided stockLevel instead of making individual API call
+  const actualStockLevel = stockLevel !== undefined ? stockLevel : 0;
+  const isLowStock = actualStockLevel > 0 && actualStockLevel <= 5;
 
   const handleCardClick = () => {
     addToRecentlyViewed(product.id);
@@ -269,7 +257,7 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
             {isLowStock && (
               <Badge variant="destructive" className="text-xs font-semibold">
                 <AlertCircle className="h-3 w-3 mr-1" />
-                Only {stockLevel} left
+                Only {actualStockLevel} left
               </Badge>
             )}
             <Badge variant="secondary" className="text-xs">

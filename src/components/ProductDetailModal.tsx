@@ -252,20 +252,13 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
               </div>
             )}
 
-            {/* Trust Badges */}
-            <div className="grid grid-cols-3 gap-2">
-              <div className="flex flex-col items-center gap-1 p-3 bg-muted/50 rounded-lg">
-                <Award className="w-6 h-6 text-primary" />
-                <span className="text-xs font-medium text-center">Lab Tested</span>
-              </div>
-              <div className="flex flex-col items-center gap-1 p-3 bg-muted/50 rounded-lg">
-                <Shield className="w-6 h-6 text-primary" />
-                <span className="text-xs font-medium text-center">Quality Assured</span>
-              </div>
-              <div className="flex flex-col items-center gap-1 p-3 bg-muted/50 rounded-lg">
-                <Leaf className="w-6 h-6 text-primary" />
-                <span className="text-xs font-medium text-center">USA Grown</span>
-              </div>
+            {/* Trust Badges - Simplified */}
+            <div className="flex gap-2 text-xs text-muted-foreground justify-center">
+              <span className="flex items-center gap-1"><Award className="w-4 h-4" />Lab Tested</span>
+              <span>•</span>
+              <span className="flex items-center gap-1"><Shield className="w-4 h-4" />Quality</span>
+              <span>•</span>
+              <span className="flex items-center gap-1"><Leaf className="w-4 h-4" />USA Grown</span>
             </div>
           </div>
 
@@ -408,9 +401,9 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
           </div>
         </div>
 
-        {/* Detailed Information Tabs - Mobile Optimized with larger touch targets */}
+        {/* Detailed Information Tabs - Simplified for mobile */}
         <Tabs defaultValue="overview" className="px-3 md:px-6 pb-6">
-          <TabsList className="grid w-full grid-cols-5 h-auto gap-1 bg-muted/50 p-1.5">
+          <TabsList className="grid w-full grid-cols-3 h-auto gap-1 bg-muted/50 p-1.5">
             <TabsTrigger 
               value="overview" 
               className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
@@ -424,24 +417,10 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
               Effects
             </TabsTrigger>
             <TabsTrigger 
-              value="terpenes" 
-              className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
-            >
-              Terpenes
-            </TabsTrigger>
-            <TabsTrigger 
-              value="growing" 
-              className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
-            >
-              <span className="hidden sm:inline">Growing</span>
-              <span className="sm:hidden">Info</span>
-            </TabsTrigger>
-            <TabsTrigger 
               value="reviews" 
               className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
             >
-              <span className="hidden sm:inline">Reviews ({reviews.length})</span>
-              <span className="sm:hidden">({reviews.length})</span>
+              Reviews ({reviews.length})
             </TabsTrigger>
           </TabsList>
 
