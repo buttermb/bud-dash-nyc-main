@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import Navigation from "@/components/Navigation";
+import AuthModal from "@/components/AuthModal";
 import MapboxAddressAutocomplete from "@/components/MapboxAddressAutocomplete";
 import CheckoutUpsells from "@/components/CheckoutUpsells";
 import CheckoutProgress from "@/components/CheckoutProgress";
@@ -52,6 +53,10 @@ const Checkout = () => {
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
+  
+  // Auth modal state
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<"signin" | "signup">("signup");
 
   const timeSlots = [
     { value: "09:00-12:00", label: "Morning", time: "9:00 AM - 12:00 PM", icon: "🌅" },
@@ -406,11 +411,17 @@ const Checkout = () => {
           <GuestCheckoutOption
             cartTotal={subtotal}
             onGuestCheckout={() => {
-              // User chose guest checkout, continue with form
+              // Scroll to guest information form
+              const guestInfoCard = document.getElementById('guest-info-form');
+              if (guestInfoCard) {
+                guestInfoCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                toast.success("Continue filling out your information below");
+              }
             }}
             onSignup={() => {
-              // This can redirect to a signup page or show auth modal
-              toast.info("Create an account to unlock rewards and faster checkouts!");
+              // Open signup modal
+              setAuthMode("signup");
+              setShowAuthModal(true);
             }}
           />
         )}
@@ -419,7 +430,7 @@ const Checkout = () => {
           <div className="lg:col-span-2 space-y-4 md:space-y-6 w-full min-w-0">
             {/* Guest Checkout Info */}
             {!user && (
-              <Card className="border-primary/20 bg-primary/5">
+              <Card id="guest-info-form" className="border-primary/20 bg-primary/5 scroll-mt-24">
                 <CardHeader className="pb-3 md:pb-6">
                   <CardTitle className="text-base md:text-lg flex items-center gap-2">
                     <span className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs md:text-sm">
@@ -1068,6 +1079,13 @@ const Checkout = () => {
         </div>
         </div>
       </div>
+      
+      <AuthModal
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        mode={authMode}
+        onModeChange={setAuthMode}
+      />
     </>
   );
 };
