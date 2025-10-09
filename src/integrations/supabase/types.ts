@@ -1465,7 +1465,7 @@ export type Database = {
           total_amount: number
           tracking_code: string | null
           tracking_url: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           accepted_at?: string | null
@@ -1525,7 +1525,7 @@ export type Database = {
           total_amount: number
           tracking_code?: string | null
           tracking_url?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           accepted_at?: string | null
@@ -1585,7 +1585,7 @@ export type Database = {
           total_amount?: number
           tracking_code?: string | null
           tracking_url?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
