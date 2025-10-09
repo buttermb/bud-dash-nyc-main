@@ -17,24 +17,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up listener FIRST to catch all events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth event:', event, 'Session:', !!session);
+    // Get initial session synchronously
+    let mounted = true;
+    
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted) {
+        console.log('Initial session:', !!session);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
       }
-    );
-
-    // Then get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
     });
 
+    // Listen for auth changes (sign in, sign out, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth event:', event, 'Session:', !!session);
+        
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
+      }
+    );
+
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
