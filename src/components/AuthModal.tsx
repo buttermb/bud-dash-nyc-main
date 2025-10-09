@@ -144,7 +144,6 @@ const AuthModal = ({ open, onOpenChange, mode, onModeChange }: AuthModalProps) =
         });
 
         if (error) {
-          console.error("Sign in error:", error);
           throw error;
         }
         
@@ -152,10 +151,13 @@ const AuthModal = ({ open, onOpenChange, mode, onModeChange }: AuthModalProps) =
           throw new Error("Failed to create session");
         }
 
+        // Wait a brief moment to ensure session is persisted
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         toast.success("Signed in successfully!");
-        onOpenChange(false);
         setEmail("");
         setPassword("");
+        onOpenChange(false);
       }
     } catch (error: any) {
       toast.error(error.message || "An error occurred");
