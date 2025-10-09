@@ -11,22 +11,17 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Minus, Plus, Trash2, ShoppingBag, Truck, ArrowRight } from "lucide-react";
+import { useGuestCart } from "@/hooks/useGuestCart";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Cart = () => {
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAuth();
+  const { guestCart, updateGuestCartItem, removeFromGuestCart } = useGuestCart();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (!session?.user) {
-        navigate("/");
-      }
-    });
-  }, [navigate]);
-
-  const { data: cartItems = [] } = useQuery({
+  // Fetch authenticated user's cart
+  const { data: dbCartItems = [] } = useQuery({
     queryKey: ["cart", user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -39,6 +34,31 @@ const Cart = () => {
     },
     enabled: !!user,
   });
+
+  // Fetch product details for guest cart items
+  const { data: guestProducts = [] } = useQuery({
+    queryKey: ["guest-cart-products", guestCart.map(i => i.product_id).join(",")],
+    queryFn: async () => {
+      if (guestCart.length === 0) return [];
+      const productIds = guestCart.map(item => item.product_id);
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .in("id", productIds);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !user && guestCart.length > 0,
+  });
+
+  // Combine guest cart items with product data
+  const guestCartItems = user ? [] : guestCart.map(item => ({
+    ...item,
+    id: `${item.product_id}-${item.selected_weight}`, // Unique key for rendering
+    products: guestProducts.find(p => p.id === item.product_id)
+  })).filter(item => item.products); // Only show items with loaded products
+
+  const cartItems = user ? dbCartItems : guestCartItems;
 
   const getItemPrice = (item: any) => {
     const product = item.products;
@@ -55,8 +75,19 @@ const Cart = () => {
     0
   );
 
-  const updateQuantity = async (itemId: string, newQuantity: number) => {
+  const updateQuantity = async (itemId: string, productId: string, selectedWeight: string, newQuantity: number) => {
+    if (newQuantity < 1) return;
+    
     try {
+      if (!user) {
+        // Guest cart
+        updateGuestCartItem(productId, selectedWeight, newQuantity);
+        queryClient.invalidateQueries({ queryKey: ["guest-cart-products"] });
+        toast.success("Cart updated");
+        return;
+      }
+
+      // Authenticated user
       const { error } = await supabase
         .from("cart_items")
         .update({ quantity: newQuantity })
@@ -70,8 +101,17 @@ const Cart = () => {
     }
   };
 
-  const removeItem = async (itemId: string) => {
+  const removeItem = async (itemId: string, productId: string, selectedWeight: string) => {
     try {
+      if (!user) {
+        // Guest cart
+        removeFromGuestCart(productId, selectedWeight);
+        queryClient.invalidateQueries({ queryKey: ["guest-cart-products"] });
+        toast.success("Item removed");
+        return;
+      }
+
+      // Authenticated user
       const { error } = await supabase
         .from("cart_items")
         .delete()
@@ -157,13 +197,13 @@ const Cart = () => {
                           </div>
                           
                           <div className="flex items-center justify-between">
-                           <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3">
                               <Button
                                 variant="outline"
                                 size="icon"
                                 className="h-10 w-10 md:h-11 md:w-11"
                                 onClick={() =>
-                                  updateQuantity(item.id, Math.max(1, item.quantity - 1))
+                                  updateQuantity(item.id, item.product_id, selectedWeight, Math.max(1, item.quantity - 1))
                                 }
                                 disabled={item.quantity <= 1}
                               >
@@ -176,7 +216,7 @@ const Cart = () => {
                                 variant="outline"
                                 size="icon"
                                 className="h-10 w-10 md:h-11 md:w-11"
-                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                onClick={() => updateQuantity(item.id, item.product_id, selectedWeight, item.quantity + 1)}
                               >
                                 <Plus className="w-4 h-4" />
                               </Button>
@@ -189,7 +229,7 @@ const Cart = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => removeItem(item.id)}
+                                onClick={() => removeItem(item.id, item.product_id, selectedWeight)}
                               >
                                 <Trash2 className="w-5 h-5 text-destructive" />
                               </Button>

@@ -29,10 +29,12 @@ import LowCartValueUpsell from "@/components/LowCartValueUpsell";
 import { useCartValueTrigger } from "@/hooks/useCartValueTrigger";
 import { getNeighborhoodFromZip, getRiskColor, getRiskLabel, getRiskTextColor } from "@/utils/neighborhoods";
 import { analytics } from "@/utils/analytics";
+import { useGuestCart } from "@/hooks/useGuestCart";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { guestCart, clearGuestCart } = useGuestCart();
   const queryClient = useQueryClient();
   const [address, setAddress] = useState("");
   const [addressLat, setAddressLat] = useState<number>();
@@ -74,7 +76,8 @@ const Checkout = () => {
     return dateTime.toISOString();
   };
 
-  const { data: cartItems = [] } = useQuery({
+  // Fetch authenticated user's cart
+  const { data: dbCartItems = [] } = useQuery({
     queryKey: ["cart", user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -87,6 +90,31 @@ const Checkout = () => {
     },
     enabled: !!user,
   });
+
+  // Fetch product details for guest cart items
+  const { data: guestProducts = [] } = useQuery({
+    queryKey: ["guest-cart-products", guestCart.map(i => i.product_id).join(",")],
+    queryFn: async () => {
+      if (guestCart.length === 0) return [];
+      const productIds = guestCart.map(item => item.product_id);
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .in("id", productIds);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !user && guestCart.length > 0,
+  });
+
+  // Combine guest cart items with product data
+  const guestCartItems = user ? [] : guestCart.map(item => ({
+    ...item,
+    id: `${item.product_id}-${item.selected_weight}`,
+    products: guestProducts.find(p => p.id === item.product_id)
+  })).filter(item => item.products);
+
+  const cartItems = user ? dbCartItems : guestCartItems;
 
   const getItemPrice = (item: any) => {
     const product = item.products;
@@ -379,14 +407,18 @@ const Checkout = () => {
 
       if (itemsError) throw itemsError;
 
-      // Clear cart (only if user is authenticated)
+      // Clear cart
       if (user) {
+        // Authenticated user - clear DB cart
         const { error: clearError } = await supabase
           .from("cart_items")
           .delete()
           .eq("user_id", user.id);
 
         if (clearError) throw clearError;
+      } else {
+        // Guest - clear localStorage cart
+        clearGuestCart();
       }
 
       toast.success("Order placed successfully!");
@@ -395,6 +427,7 @@ const Checkout = () => {
       analytics.trackOrderCompleted(total, promoDiscount, !user);
       
       queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: ["guest-cart-products"] });
       navigate(`/order-confirmation?orderId=${order.id}`);
     } catch (error: any) {
       toast.error(error.message || "Failed to place order");

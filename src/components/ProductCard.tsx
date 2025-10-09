@@ -11,6 +11,7 @@ import { ProductDetailModal } from "./ProductDetailModal";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { getDefaultWeight } from "@/utils/productHelpers";
 import { useProductViewCount } from "@/hooks/useProductViewCount";
+import { useGuestCart } from "@/hooks/useGuestCart";
 import {
   Carousel,
   CarouselContent,
@@ -28,6 +29,7 @@ interface ProductCardProps {
 const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) => {
   const { user } = useAuth();
   const { addToRecentlyViewed } = useRecentlyViewed();
+  const { addToGuestCart } = useGuestCart();
   const viewCount = useProductViewCount(product.id);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -60,15 +62,6 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
   const badge = getProductBadge();
 
   const handleAddToCart = async () => {
-    if (!user) {
-      if (onAuthRequired) {
-        onAuthRequired();
-      } else {
-        toast.error("Please sign in to add items to cart");
-      }
-      return;
-    }
-
     if (!product.in_stock) {
       toast.error("This product is out of stock");
       return;
@@ -79,6 +72,18 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
       // Get default weight for products with weight options (always starts at 3.5g)
       const defaultWeight = getDefaultWeight(product.prices);
 
+      if (!user) {
+        // Guest cart - use localStorage
+        addToGuestCart(product.id, quantity, defaultWeight);
+        toast.success("Added to cart!");
+        setAdded(true);
+        setTimeout(() => setAdded(false), 2000);
+        queryClient.invalidateQueries({ queryKey: ["cart"] });
+        setLoading(false);
+        return;
+      }
+
+      // Authenticated user - use database
       const { data: existing } = await supabase
         .from("cart_items")
         .select("*")

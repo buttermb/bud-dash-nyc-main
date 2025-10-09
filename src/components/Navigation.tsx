@@ -20,9 +20,11 @@ import CartDrawer from "./CartDrawer";
 import ThemeToggle from "./ThemeToggle";
 import NYMLogo from "./NYMLogo";
 import MobileBottomNav from "./MobileBottomNav";
+import { useGuestCart } from "@/hooks/useGuestCart";
 
 const Navigation = () => {
   const { user, signOut } = useAuth();
+  const { getGuestCartCount } = useGuestCart();
   const navigate = useNavigate();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
@@ -42,7 +44,9 @@ const Navigation = () => {
     enabled: !!user,
   });
 
-  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const dbCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const guestCartCount = user ? 0 : getGuestCartCount();
+  const cartCount = user ? dbCartCount : guestCartCount;
   
   const getItemPrice = (item: any) => {
     const product = item.products;
