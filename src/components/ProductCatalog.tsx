@@ -9,11 +9,14 @@ import { Loader2, Search, Leaf, Cookie, Droplets, Cigarette, Wind, ChevronRight,
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
+const INITIAL_CATEGORIES_TO_SHOW = 2;
+
 const ProductCatalog = () => {
   const queryClient = useQueryClient();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   // Realtime subscription for product updates
   useEffect(() => {
@@ -150,7 +153,9 @@ const ProductCatalog = () => {
           </div>
         ) : (
           <div className="space-y-12 md:space-y-16">
-            {categories.map((category) => {
+            {categories
+              .slice(0, showAllCategories ? categories.length : INITIAL_CATEGORIES_TO_SHOW)
+              .map((category) => {
               const products = productsByCategory[category.key as keyof typeof productsByCategory];
               if (products.length === 0) return null;
 
@@ -231,6 +236,18 @@ const ProductCatalog = () => {
                 </div>
               );
             })}
+            
+            {!showAllCategories && categories.length > INITIAL_CATEGORIES_TO_SHOW && (
+              <div className="flex justify-center pt-8">
+                <Button 
+                  size="lg"
+                  onClick={() => setShowAllCategories(true)}
+                  className="px-8"
+                >
+                  Show More Categories
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
