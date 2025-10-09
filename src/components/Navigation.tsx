@@ -19,6 +19,7 @@ import AuthModal from "./AuthModal";
 import CartDrawer from "./CartDrawer";
 import ThemeToggle from "./ThemeToggle";
 import NYMLogo from "./NYMLogo";
+import MobileBottomNav from "./MobileBottomNav";
 
 const Navigation = () => {
   const { user, signOut } = useAuth();
@@ -305,6 +306,11 @@ const Navigation = () => {
       />
 
       <CartDrawer open={showCart} onOpenChange={setShowCart} />
+      
+      <MobileBottomNav 
+        onCartClick={() => user ? setShowCart(true) : openAuth("signin")}
+        onAuthClick={() => openAuth("signin")}
+      />
     </>
   );
 };

@@ -94,7 +94,7 @@ const Cart = () => {
   const amountToFreeShipping = Math.max(freeShippingThreshold - subtotal, 0);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Navigation />
       
       <main className="container mx-auto px-4 py-12">
@@ -157,10 +157,11 @@ const Cart = () => {
                           </div>
                           
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
+                           <div className="flex items-center gap-3">
                               <Button
                                 variant="outline"
                                 size="icon"
+                                className="h-10 w-10 md:h-11 md:w-11"
                                 onClick={() =>
                                   updateQuantity(item.id, Math.max(1, item.quantity - 1))
                                 }
@@ -174,6 +175,7 @@ const Cart = () => {
                               <Button
                                 variant="outline"
                                 size="icon"
+                                className="h-10 w-10 md:h-11 md:w-11"
                                 onClick={() => updateQuantity(item.id, item.quantity + 1)}
                               >
                                 <Plus className="w-4 h-4" />
@@ -254,7 +256,7 @@ const Cart = () => {
 
                   <Button 
                     variant="hero" 
-                    className="w-full text-lg" 
+                    className="w-full text-lg h-14" 
                     size="lg"
                     onClick={handleCheckout}
                   >

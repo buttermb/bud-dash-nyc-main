@@ -15,7 +15,7 @@ import { ShieldCheck, Truck, Award } from "lucide-react";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-20 md:pb-0">
       <AgeVerificationModal />
       <RecentPurchaseNotification />
       <Navigation />

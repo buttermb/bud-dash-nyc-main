@@ -22,6 +22,7 @@ import CheckoutUpsells from "@/components/CheckoutUpsells";
 import CheckoutProgress from "@/components/CheckoutProgress";
 import GuestCheckoutOption from "@/components/GuestCheckoutOption";
 import HighValueCartNotice from "@/components/HighValueCartNotice";
+import ExpressCheckoutButtons from "@/components/ExpressCheckoutButtons";
 import { useCartValueTrigger } from "@/hooks/useCartValueTrigger";
 import { getNeighborhoodFromZip, getRiskColor, getRiskLabel, getRiskTextColor } from "@/utils/neighborhoods";
 
@@ -336,7 +337,7 @@ const Checkout = () => {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-background py-8">
+      <div className="min-h-screen bg-background py-8 pb-24 md:pb-8">
         <div className="container max-w-4xl mx-auto px-4">
           <Button
             variant="ghost"
@@ -398,9 +399,12 @@ const Checkout = () => {
                     <Label htmlFor="guest-name">Full Name *</Label>
                     <Input
                       id="guest-name"
+                      name="name"
+                      autoComplete="name"
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
                       placeholder="John Doe"
+                      className="h-12 text-base"
                       required
                     />
                   </div>
@@ -408,10 +412,14 @@ const Checkout = () => {
                     <Label htmlFor="guest-phone">Phone Number *</Label>
                     <Input
                       id="guest-phone"
+                      name="tel"
                       type="tel"
+                      autoComplete="tel"
+                      inputMode="numeric"
                       value={guestPhone}
                       onChange={(e) => setGuestPhone(e.target.value)}
                       placeholder="(555) 123-4567"
+                      className="h-12 text-base"
                       required
                     />
                     <p className="text-xs text-muted-foreground">
@@ -422,10 +430,14 @@ const Checkout = () => {
                     <Label htmlFor="guest-email">Email Address *</Label>
                     <Input
                       id="guest-email"
+                      name="email"
                       type="email"
+                      autoComplete="email"
+                      inputMode="email"
                       value={guestEmail}
                       onChange={(e) => setGuestEmail(e.target.value)}
                       placeholder="john@example.com"
+                      className="h-12 text-base"
                       required
                     />
                     <p className="text-xs text-muted-foreground">
@@ -808,7 +820,13 @@ const Checkout = () => {
                   Payment Method
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
+                {/* Express Checkout Options */}
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-muted-foreground">Express Checkout</p>
+                  <ExpressCheckoutButtons />
+                </div>
+
                 <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
                   <div className="flex items-center space-x-2 p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
                     <RadioGroupItem value="cash" id="cash" />
@@ -993,7 +1011,7 @@ const Checkout = () => {
 
                 <Button
                   variant="hero"
-                  className="w-full"
+                  className="w-full h-14 text-lg"
                   size="lg"
                   onClick={handlePlaceOrder}
                   disabled={!address || !borough || loading}

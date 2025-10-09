@@ -25,7 +25,7 @@ const Support = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pb-20 md:pb-0">
       <Navigation />
       
       <main className="flex-1 py-20">

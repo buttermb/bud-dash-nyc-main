@@ -61,7 +61,7 @@ const OrderLookup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Navigation />
       <main className="container mx-auto px-4 py-16">
         <div className="max-w-2xl mx-auto">
