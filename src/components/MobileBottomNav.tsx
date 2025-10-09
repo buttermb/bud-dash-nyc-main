@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useScrollDirection } from '@/hooks/useScrollDirection';
 import { haptics } from '@/utils/haptics';
+import { useGuestCart } from '@/hooks/useGuestCart';
 
 interface MobileBottomNavProps {
   onCartClick: () => void;
@@ -24,6 +25,7 @@ interface NavItem {
 const MobileBottomNav = ({ onCartClick, onAuthClick }: MobileBottomNavProps) => {
   const location = useLocation();
   const { user } = useAuth();
+  const { getGuestCartCount } = useGuestCart();
   const isMobile = useIsMobile();
   const scrollDirection = useScrollDirection();
 
@@ -41,7 +43,9 @@ const MobileBottomNav = ({ onCartClick, onAuthClick }: MobileBottomNavProps) => 
     enabled: !!user,
   });
 
-  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const dbCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const guestCartCount = user ? 0 : getGuestCartCount();
+  const cartCount = user ? dbCartCount : guestCartCount;
 
   const handleProductsClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -56,7 +60,7 @@ const MobileBottomNav = ({ onCartClick, onAuthClick }: MobileBottomNavProps) => 
   const navItems: NavItem[] = [
     { icon: Home, label: 'Home', path: '/', onClick: null },
     { icon: Search, label: 'Menu', path: '/#products', onClick: handleProductsClick },
-    { icon: ShoppingCart, label: 'Cart', path: '/cart', onClick: user ? onCartClick : onAuthClick, badge: cartCount },
+    { icon: ShoppingCart, label: 'Cart', path: '/cart', onClick: null, badge: cartCount }, // Allow guests to access cart
     { icon: User, label: 'Account', path: user ? '/my-orders' : '#', onClick: user ? null : onAuthClick },
   ];
 

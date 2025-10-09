@@ -72,10 +72,11 @@ const Navigation = () => {
     return product?.price || 0;
   };
 
-  const cartTotal = cartItems.reduce(
+  // Cart total only for authenticated users (guest total not shown in nav to simplify)
+  const cartTotal = user ? cartItems.reduce(
     (sum, item) => sum + getItemPrice(item) * item.quantity,
     0
-  );
+  ) : 0;
 
 
   const openAuth = (mode: "signin" | "signup") => {
@@ -164,7 +165,7 @@ const Navigation = () => {
             <Button
               variant="outline"
               className="relative gap-2 hidden sm:flex"
-              onClick={() => user ? setShowCart(true) : openAuth("signin")}
+              onClick={() => setShowCart(true)}
             >
               <ShoppingCart className="w-5 h-5" />
               <div className="flex flex-col items-start">
@@ -189,7 +190,7 @@ const Navigation = () => {
               variant="ghost"
               size="icon"
               className="relative sm:hidden"
-              onClick={() => user ? setShowCart(true) : openAuth("signin")}
+              onClick={() => setShowCart(true)}
             >
               <ShoppingCart className="w-5 h-5" />
               {cartCount > 0 && (
@@ -327,7 +328,7 @@ const Navigation = () => {
       <CartDrawer open={showCart} onOpenChange={setShowCart} />
       
       <MobileBottomNav 
-        onCartClick={() => user ? setShowCart(true) : openAuth("signin")}
+        onCartClick={() => setShowCart(true)}
         onAuthClick={() => openAuth("signin")}
       />
     </>
