@@ -32,9 +32,29 @@ const TrendingProducts = () => {
     return (
       <section className="py-12 bg-muted/30">
         <div className="container px-4 mx-auto">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-muted rounded w-1/3"></div>
-            <div className="h-48 bg-muted rounded"></div>
+          {/* Reserve exact space to prevent layout shift */}
+          <div className="flex items-center justify-between mb-8" style={{ height: '60px' }}>
+            <div className="animate-pulse flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-muted"></div>
+              <div>
+                <div className="h-8 bg-muted rounded w-40 mb-2"></div>
+                <div className="h-4 bg-muted rounded w-48"></div>
+              </div>
+            </div>
+            <div className="h-8 bg-muted rounded w-24"></div>
+          </div>
+          {/* Reserve space for carousel - matches aspect-square cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="animate-pulse">
+                <div className="aspect-square bg-muted rounded-t-lg"></div>
+                <div className="p-4 space-y-3 bg-card rounded-b-lg">
+                  <div className="h-6 bg-muted rounded w-3/4"></div>
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                  <div className="h-8 bg-muted rounded w-1/3"></div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
