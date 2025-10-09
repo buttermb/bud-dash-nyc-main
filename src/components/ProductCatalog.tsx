@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import ProductCard from "./ProductCard";
 import AuthModal from "./AuthModal";
 import MobileSearch from "./MobileSearch";
-import { Loader2, Leaf, Cookie, Droplets, Cigarette, Wind, ChevronRight, ChevronLeft } from "lucide-react";
+import { Loader2, Leaf, Cookie, Droplets, Cigarette, Wind, ChevronRight, ChevronLeft, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useInventoryBatch } from "@/hooks/useInventoryBatch";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -126,34 +126,19 @@ const ProductCatalog = () => {
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-4 bg-muted/30 rounded-lg p-8">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-              <Loader2 className="w-8 h-8 text-primary" />
+            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-2">
+              <AlertTriangle className="w-8 h-8 text-destructive" />
             </div>
-            <h3 className="text-2xl font-semibold text-center">Sign In Required</h3>
+            <h3 className="text-2xl font-semibold text-center">Unable to Load Products</h3>
             <p className="text-muted-foreground text-center max-w-md">
-              You must be signed in with an age-verified account to view our THCA product catalog.
+              We're having trouble loading our product catalog. Please try refreshing the page.
             </p>
-            <div className="flex gap-3 pt-4">
-              <Button
-                size="lg"
-                onClick={() => {
-                  setAuthMode("signin");
-                  setShowAuthModal(true);
-                }}
-              >
-                Sign In
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => {
-                  setAuthMode("signup");
-                  setShowAuthModal(true);
-                }}
-              >
-                Create Account
-              </Button>
-            </div>
+            <Button
+              size="lg"
+              onClick={() => window.location.reload()}
+            >
+              Refresh Page
+            </Button>
           </div>
         ) : (
           <div className="space-y-12 md:space-y-16">
