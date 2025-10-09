@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import CheckoutProgress from "@/components/CheckoutProgress";
 import GuestCheckoutOption from "@/components/GuestCheckoutOption";
 import HighValueCartNotice from "@/components/HighValueCartNotice";
 import ExpressCheckoutButtons from "@/components/ExpressCheckoutButtons";
+import SignUpIncentivePopup from "@/components/SignUpIncentivePopup";
 import { useCartValueTrigger } from "@/hooks/useCartValueTrigger";
 import { getNeighborhoodFromZip, getRiskColor, getRiskLabel, getRiskTextColor } from "@/utils/neighborhoods";
 
@@ -48,6 +49,9 @@ const Checkout = () => {
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
+  const [showSignUpPopup, setShowSignUpPopup] = useState(false);
+  const [hasSeenPopup, setHasSeenPopup] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const timeSlots = [
     { value: "09:00-12:00", label: "Morning", time: "9:00 AM - 12:00 PM", icon: "🌅" },
@@ -95,6 +99,22 @@ const Checkout = () => {
     (sum, item) => sum + getItemPrice(item) * item.quantity,
     0
   );
+
+  // Check if user should see signup popup (must be after subtotal calculation)
+  useEffect(() => {
+    const popupSeen = localStorage.getItem('signup_popup_seen');
+    const popupDeclined = localStorage.getItem('signup_popup_declined');
+    
+    if (!user && !popupSeen && !popupDeclined && subtotal >= 25) {
+      // Show popup after a short delay to not be intrusive
+      const timer = setTimeout(() => {
+        if (isCheckingOut) {
+          setShowSignUpPopup(true);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [user, subtotal, isCheckingOut]);
 
   // Fetch courier availability for dynamic pricing
   const { data: courierAvailability } = useQuery({
@@ -190,7 +210,39 @@ const Checkout = () => {
     }
   };
 
+  const handleSignUpFromPopup = async (email: string) => {
+    setGuestEmail(email);
+    localStorage.setItem('signup_popup_seen', 'true');
+    setShowSignUpPopup(false);
+    setHasSeenPopup(true);
+    
+    // Apply discount
+    const discount = subtotal * 0.1;
+    setPromoCode('SIGNUP10');
+    setPromoDiscount(discount);
+    
+    toast.success(`✓ Discount applied! You're saving $${discount.toFixed(2)}`);
+  };
+
+  const handleContinueAsGuest = () => {
+    localStorage.setItem('signup_popup_declined', 'true');
+    setShowSignUpPopup(false);
+    setHasSeenPopup(true);
+  };
+
   const handlePlaceOrder = async () => {
+    // Show popup on first checkout attempt if not seen
+    if (!user && !hasSeenPopup && subtotal >= 25) {
+      const popupSeen = localStorage.getItem('signup_popup_seen');
+      const popupDeclined = localStorage.getItem('signup_popup_declined');
+      
+      if (!popupSeen && !popupDeclined) {
+        setIsCheckingOut(true);
+        setShowSignUpPopup(true);
+        return;
+      }
+    }
+
     if (cartItems.length === 0) {
       toast.error("Your cart is empty");
       navigate("/");
@@ -337,8 +389,15 @@ const Checkout = () => {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-background py-8 pb-24 md:pb-8">
-        <div className="container max-w-4xl mx-auto px-4">
+      <SignUpIncentivePopup
+        cartTotal={subtotal}
+        onSignUp={handleSignUpFromPopup}
+        onContinueAsGuest={handleContinueAsGuest}
+        onClose={() => setShowSignUpPopup(false)}
+        isVisible={showSignUpPopup}
+      />
+      <div className="min-h-screen bg-background py-4 md:py-8 pb-24 md:pb-8">
+        <div className="container max-w-4xl mx-auto px-3 md:px-4">
           <Button
             variant="ghost"
             onClick={() => navigate("/")}
@@ -348,55 +407,45 @@ const Checkout = () => {
             Back to Shop
           </Button>
 
-        <h1 className="text-3xl font-bold mb-2">Checkout</h1>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">Checkout</h1>
         
         <CheckoutProgress currentStep={2} />
 
-        {/* Natural Account Creation at Checkout - No aggressive popups */}
-        {!user && subtotal > 0 && (
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background mb-6">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Badge className="bg-primary text-primary-foreground">
-                    10%
-                  </Badge>
+        {/* Subtle discount reminder if user got discount from popup */}
+        {!user && promoDiscount > 0 && hasSeenPopup && (
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background mb-4 md:mb-6">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  🎉
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2">Save ${(subtotal * 0.1).toFixed(2)} on this order</h3>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Create an account to get 10% off this order + free shipping forever
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-base md:text-lg">You're saving ${promoDiscount.toFixed(2)}!</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">
+                    Your 10% discount has been applied
                   </p>
-                  <div className="flex gap-2">
-                    <Button onClick={() => navigate('/auth?mode=signup')} variant="default">
-                      Create Account & Save
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-xs">
-                      Continue as guest
-                    </Button>
-                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+          <div className="lg:col-span-2 space-y-4 md:space-y-6">
             {/* Guest Checkout Info */}
             {!user && (
               <Card className="border-primary/20 bg-primary/5">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
+                <CardHeader className="pb-3 md:pb-6">
+                  <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                    <span className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs md:text-sm">
                       ℹ️
                     </span>
-                    Your Information (Guest Checkout)
+                    <span className="text-sm md:text-base">Your Information</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3 md:space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="guest-name">Full Name *</Label>
+                    <Label htmlFor="guest-name" className="text-sm">Full Name *</Label>
                     <Input
                       id="guest-name"
                       name="name"
@@ -404,12 +453,12 @@ const Checkout = () => {
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
                       placeholder="John Doe"
-                      className="h-12 text-base"
+                      className="h-12 md:h-14 text-base touch-target"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="guest-phone">Phone Number *</Label>
+                    <Label htmlFor="guest-phone" className="text-sm">Phone Number *</Label>
                     <Input
                       id="guest-phone"
                       name="tel"
@@ -419,15 +468,15 @@ const Checkout = () => {
                       value={guestPhone}
                       onChange={(e) => setGuestPhone(e.target.value)}
                       placeholder="(555) 123-4567"
-                      className="h-12 text-base"
+                      className="h-12 md:h-14 text-base touch-target"
                       required
                     />
                     <p className="text-xs text-muted-foreground">
-                      Required for delivery updates and courier contact
+                      For delivery updates
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="guest-email">Email Address *</Label>
+                    <Label htmlFor="guest-email" className="text-sm">Email Address *</Label>
                     <Input
                       id="guest-email"
                       name="email"
@@ -437,11 +486,11 @@ const Checkout = () => {
                       value={guestEmail}
                       onChange={(e) => setGuestEmail(e.target.value)}
                       placeholder="john@example.com"
-                      className="h-12 text-base"
+                      className="h-12 md:h-14 text-base touch-target"
                       required
                     />
                     <p className="text-xs text-muted-foreground">
-                      Order confirmation will be sent here
+                      Order confirmation sent here
                     </p>
                   </div>
                 </CardContent>
@@ -450,15 +499,15 @@ const Checkout = () => {
 
             {/* Step 1: Delivery Address */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
+              <CardHeader className="pb-3 md:pb-6">
+                <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                  <span className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs md:text-sm">
                     1
                   </span>
-                  Delivery Address
+                  <span className="text-sm md:text-base">Delivery Address</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 md:space-y-4">
                 <MapboxAddressAutocomplete
                   value={address}
                   onChange={handleAddressChange}
