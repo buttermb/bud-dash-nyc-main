@@ -29,22 +29,9 @@ export default defineConfig(({ mode }) => ({
           'charts': ['recharts'],
           'maps': ['leaflet', 'react-leaflet', 'mapbox-gl'],
         },
-        assetFileNames: (assetInfo) => {
-          // Ensure CSS files are named consistently for preloading
-          if (assetInfo.name && assetInfo.name.endsWith('.css')) {
-            return 'assets/[name]-[hash][extname]';
-          }
-          return 'assets/[name]-[hash][extname]';
-        },
       },
     },
     chunkSizeWarningLimit: 1000,
     cssCodeSplit: true,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-      },
-    },
   },
 }));
