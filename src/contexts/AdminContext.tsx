@@ -28,42 +28,32 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
   const verifyAdmin = async (currentSession: Session) => {
     try {
-      // Check if user has admin role using user_roles table
-      const { data: roleData, error: roleError } = await supabase
-        .from("user_roles")
-        .select("role")
+      // Single query with JOIN to get admin details if they have admin role
+      const { data: adminData, error } = await supabase
+        .from("admin_users")
+        .select(`
+          id,
+          email,
+          full_name,
+          role,
+          user_roles!inner(role)
+        `)
         .eq("user_id", currentSession.user.id)
-        .eq("role", "admin")
+        .eq("user_roles.role", "admin")
+        .eq("is_active", true)
         .maybeSingle();
 
-      if (roleError) throw roleError;
-      
-      if (roleData) {
-        // User has admin role, get admin details
-        const { data: adminData, error: adminError } = await supabase
-          .from("admin_users")
-          .select("*")
-          .eq("user_id", currentSession.user.id)
-          .eq("is_active", true)
-          .maybeSingle();
+      if (error) throw error;
 
-        if (adminError) throw adminError;
-
-        if (adminData) {
-          setAdmin({
-            id: adminData.id,
-            email: adminData.email,
-            full_name: adminData.full_name,
-            role: adminData.role
-          });
-          setSession(currentSession);
-        } else {
-          // Admin record exists but not active - just clear admin state
-          setAdmin(null);
-          setSession(null);
-        }
+      if (adminData) {
+        setAdmin({
+          id: adminData.id,
+          email: adminData.email,
+          full_name: adminData.full_name,
+          role: adminData.role
+        });
+        setSession(currentSession);
       } else {
-        // User is not an admin - just clear admin state, DON'T sign them out
         setAdmin(null);
         setSession(null);
       }
@@ -104,7 +94,6 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      // Standard auth sign in
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -113,27 +102,23 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
       if (authError) throw authError;
       if (!authData.session) throw new Error("No session returned");
 
-      // Check if user has admin role
-      const { data: roleData, error: roleError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", authData.user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-
-      if (roleError) throw roleError;
-      if (!roleData) throw new Error("You don't have admin access");
-
-      // Get admin details
+      // Single query with JOIN to verify admin access
       const { data: adminData, error: adminError } = await supabase
         .from("admin_users")
-        .select("*")
+        .select(`
+          id,
+          email,
+          full_name,
+          role,
+          user_roles!inner(role)
+        `)
         .eq("user_id", authData.user.id)
+        .eq("user_roles.role", "admin")
         .eq("is_active", true)
         .maybeSingle();
 
       if (adminError) throw adminError;
-      if (!adminData) throw new Error("Admin account is not active");
+      if (!adminData) throw new Error("You don't have admin access or your account is inactive");
 
       setSession(authData.session);
       setAdmin({
@@ -143,8 +128,8 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         role: adminData.role
       });
 
-      // Log admin login to security events
-      await supabase.from("security_events").insert({
+      // Log admin login (fire and forget, don't await)
+      supabase.from("security_events").insert({
         event_type: "admin_login",
         user_id: authData.user.id,
         details: { email, timestamp: new Date().toISOString() }

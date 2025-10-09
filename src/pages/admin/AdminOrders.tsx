@@ -66,7 +66,7 @@ export default function AdminOrders() {
   useEffect(() => {
     fetchOrders();
 
-    // Realtime subscription for instant updates
+    // Realtime subscription for instant updates - removed polling since realtime handles it
     const channel = supabase
       .channel('admin-orders-changes')
       .on(
@@ -76,18 +76,14 @@ export default function AdminOrders() {
           schema: 'public',
           table: 'orders'
         },
-        (payload) => {
-          console.log('Order changed:', payload);
+        () => {
           fetchOrders();
         }
       )
       .subscribe();
-
-    const interval = setInterval(fetchOrders, 30000);
     
     return () => {
       supabase.removeChannel(channel);
-      clearInterval(interval);
     };
   }, [statusFilter]);
 
