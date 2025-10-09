@@ -208,6 +208,9 @@ const ProductCard = ({ product, onAuthRequired }: ProductCardProps) => {
                   <img
                     src={image}
                     alt={`${product.name} - Image ${index + 1}`}
+                    loading="lazy"
+                    width="330"
+                    height="288"
                     className="w-full h-72 object-cover transition-transform duration-300 group-hover:scale-110"
                   />
                 </CarouselItem>

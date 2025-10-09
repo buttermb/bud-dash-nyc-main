@@ -228,6 +228,9 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
                       <img
                         src={image}
                         alt={`${product.name} - Image ${index + 1}`}
+                        loading="lazy"
+                        width="600"
+                        height="600"
                         className="w-full h-full object-cover"
                       />
                     </CarouselItem>

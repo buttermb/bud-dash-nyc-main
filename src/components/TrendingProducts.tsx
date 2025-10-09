@@ -97,6 +97,9 @@ const TrendingProducts = () => {
                     <img
                       src={product.image_url || "/placeholder.svg"}
                       alt={product.name}
+                      loading="lazy"
+                      width="278"
+                      height="288"
                       className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-3 right-3">
