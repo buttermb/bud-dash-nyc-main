@@ -62,51 +62,32 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
   const badge = getProductBadge();
 
   const handleAddToCart = async () => {
-    console.log('🛒 ===== ADD TO CART CLICKED =====');
-    console.log('Product name:', product.name);
-    console.log('Product ID:', product.id);
-    console.log('Product in_stock:', product.in_stock);
-    console.log('Quantity:', quantity);
-    console.log('User status:', user ? 'authenticated' : 'guest');
-    console.log('Loading state:', loading);
-    console.log('Added state:', added);
-    
     if (!product.in_stock) {
-      console.error('❌ Product not in stock');
       toast.error("This product is out of stock");
       return;
     }
 
-    console.log('✓ Product in stock, proceeding...');
     setLoading(true);
     
     try {
       // Get default weight for products with weight options (always starts at 3.5g)
       const defaultWeight = getDefaultWeight(product.prices);
-      console.log('Default weight selected:', defaultWeight);
 
       if (!user) {
         // Guest cart - use localStorage
-        console.log('🔓 Guest user detected, adding to guest cart');
-        console.log('Calling addToGuestCart with:', { productId: product.id, quantity, defaultWeight });
-        
         addToGuestCart(product.id, quantity, defaultWeight);
         
-        console.log('✅ addToGuestCart called successfully');
-        
         // Success feedback
-        toast.success("🎉 Added to cart!", {
-          description: `${quantity}x ${product.name} (${defaultWeight})`,
-          duration: 3000,
+        toast.success("Added to cart!", {
+          description: `${quantity}x ${product.name}`,
+          duration: 2000,
         });
         
         setAdded(true);
-        setTimeout(() => setAdded(false), 2500);
+        setTimeout(() => setAdded(false), 2000);
         queryClient.invalidateQueries({ queryKey: ["cart"] });
         queryClient.invalidateQueries({ queryKey: ["guest-cart-products"] });
         setLoading(false);
-        
-        console.log('🎉 Guest cart add complete!');
         return;
       }
 
@@ -302,10 +283,9 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
         <CardFooter className="p-6 pt-0 flex flex-col gap-3">
           {/* ONE BIG ADD TO CART BUTTON - Primary CTA */}
           <Button
+            type="button"
             onClick={(e) => {
-              console.log('🖱️ Add to Cart button clicked!');
-              console.log('Button disabled?', loading || !product.in_stock || added);
-              console.log('Loading:', loading, 'In stock:', product.in_stock, 'Added:', added);
+              e.preventDefault();
               e.stopPropagation();
               handleAddToCart();
             }}
@@ -335,9 +315,11 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
           </Button>
 
           <Button
+            type="button"
             variant="outline"
             className="w-full hover:bg-primary/10 hover:border-primary"
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               handleCardClick();
             }}
