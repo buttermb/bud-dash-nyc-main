@@ -143,17 +143,12 @@ const AuthModal = ({ open, onOpenChange, mode, onModeChange }: AuthModalProps) =
           password,
         });
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
         
         if (!data.session) {
           throw new Error("Failed to create session");
         }
 
-        // Wait a brief moment to ensure session is persisted
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
         toast.success("Signed in successfully!");
         setEmail("");
         setPassword("");

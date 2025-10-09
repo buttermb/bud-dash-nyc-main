@@ -24,16 +24,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
 
-    // Listen for auth changes
+    // Listen for ALL auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-          setSession(session);
-          setUser(session?.user ?? null);
-        } else if (event === 'SIGNED_OUT') {
-          setSession(null);
-          setUser(null);
-        }
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
         setLoading(false);
       }
     );
