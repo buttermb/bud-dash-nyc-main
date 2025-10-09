@@ -26,10 +26,7 @@ const AdminLiveOrders = () => {
     if (session) {
       fetchLiveOrders();
       
-      // Auto-refresh every 10 seconds
-      const interval = setInterval(fetchLiveOrders, 10000);
-      
-      // Set up real-time subscription
+      // Set up real-time subscription (no polling needed)
       const channel = supabase
         .channel("live-orders-updates")
         .on(
@@ -49,7 +46,6 @@ const AdminLiveOrders = () => {
         .subscribe();
       
       return () => {
-        clearInterval(interval);
         supabase.removeChannel(channel);
       };
     }
@@ -57,21 +53,16 @@ const AdminLiveOrders = () => {
 
   const fetchLiveOrders = async () => {
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/admin-dashboard?endpoint=orders&status=accepted,confirmed,preparing,out_for_delivery&limit=100`,
-        {
-          headers: {
-            Authorization: `Bearer ${session?.access_token}`,
-            "Content-Type": "application/json",
-          },
+      const { data, error } = await supabase.functions.invoke("admin-dashboard", {
+        body: { 
+          endpoint: "orders",
+          status: "accepted,confirmed,preparing,out_for_delivery",
+          limit: 100
         }
-      );
+      });
 
-      if (response.ok) {
-        const data = await response.json();
-        setLiveOrders(data.orders || []);
-      }
+      if (error) throw error;
+      setLiveOrders(data.orders || []);
     } catch (error) {
       console.error("Failed to fetch live orders:", error);
       toast({

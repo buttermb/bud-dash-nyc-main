@@ -17,9 +17,10 @@ const BlogPost = () => {
         .select("*")
         .eq("slug", slug)
         .eq("published", true)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) throw new Error("Blog post not found");
       return data;
     },
   });

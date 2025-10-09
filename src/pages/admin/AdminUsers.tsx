@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/contexts/AdminContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -110,59 +110,52 @@ const AdminUsers = () => {
     try {
       setLoading(true);
       
-      // Fetch profiles with user data
-      const { data: profiles, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
+      // Parallel fetch all data at once
+      const [profilesResponse, ordersResponse, addressesResponse, authUsersResponse] = await Promise.all([
+        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+        supabase.from("orders").select("user_id, total_amount, created_at, status, order_number, delivery_address").order("created_at", { ascending: false }),
+        supabase.from("addresses").select("*"),
+        supabase.auth.admin.listUsers().catch(() => ({ data: { users: [] } }))
+      ]);
 
-      if (profileError) throw profileError;
+      if (profilesResponse.error) throw profilesResponse.error;
 
-      // Get order statistics for each user
-      const { data: orders } = await supabase
-        .from("orders")
-        .select(`
-          user_id, 
-          total_amount, 
-          created_at,
-          status,
-          order_number,
-          delivery_address
-        `)
-        .order("created_at", { ascending: false });
+      const profiles = profilesResponse.data || [];
+      const orders = ordersResponse.data || [];
+      const addresses = addressesResponse.data || [];
+      const authUsers = authUsersResponse?.data?.users || [];
 
-      // Get addresses
-      const { data: addresses } = await supabase
-        .from("addresses")
-        .select("*");
+      // Create lookup maps for O(1) access
+      const authUserMap = new Map(authUsers.map((u: any) => [u.id, u]));
+      const ordersByUser = new Map<string, any[]>();
+      const addressesByUser = new Map<string, any[]>();
 
-      // Try to get auth users (may fail if not sufficient permissions)
-      let authUsers: any[] = [];
-      try {
-        const { data } = await supabase.auth.admin.listUsers();
-        authUsers = data?.users || [];
-      } catch (err) {
-        console.log("Could not fetch auth users:", err);
-      }
+      orders.forEach(order => {
+        if (!ordersByUser.has(order.user_id)) ordersByUser.set(order.user_id, []);
+        ordersByUser.get(order.user_id)!.push(order);
+      });
 
-      // Combine data
-      const enrichedUsers = profiles?.map(profile => {
-        const authUser = authUsers?.find((u: any) => u.id === profile.user_id);
-        const userOrders = orders?.filter(o => o.user_id === profile.user_id) || [];
-        const userAddresses = addresses?.filter(a => a.user_id === profile.user_id) || [];
-        const recentOrders = userOrders.slice(0, 5);
-        const lastOrder = userOrders[0];
+      addresses.forEach(addr => {
+        if (!addressesByUser.has(addr.user_id)) addressesByUser.set(addr.user_id, []);
+        addressesByUser.get(addr.user_id)!.push(addr);
+      });
+
+      // Combine data efficiently
+      const enrichedUsers = profiles.map(profile => {
+        const authUser = authUserMap.get(profile.user_id);
+        const userOrders = ordersByUser.get(profile.user_id) || [];
+        const userAddresses = addressesByUser.get(profile.user_id) || [];
         
         return {
           ...profile,
           email: authUser?.email || "Not provided",
           order_count: userOrders.length,
           total_spent: userOrders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0),
-          last_order_date: lastOrder?.created_at,
+          last_order_date: userOrders[0]?.created_at,
           addresses: userAddresses,
-          recent_orders: recentOrders
+          recent_orders: userOrders.slice(0, 5)
         };
-      }) || [];
+      });
 
       setUsers(enrichedUsers);
     } catch (error: any) {
@@ -329,9 +322,8 @@ const AdminUsers = () => {
               </TableHeader>
               <TableBody>
                 {filteredUsers.map((user) => (
-                  <>
+                  <React.Fragment key={user.id}>
                     <TableRow 
-                      key={user.id}
                       className="cursor-pointer hover:bg-muted/50"
                     >
                       <TableCell>
@@ -444,7 +436,7 @@ const AdminUsers = () => {
                     </TableRow>
                     
                     {expandedRows.has(user.user_id) && (
-                      <TableRow>
+                      <TableRow key={`expanded-${user.id}`}>
                         <TableCell colSpan={8} className="bg-muted/30 p-0">
                           <div className="p-6 space-y-4">
                             <div className="grid md:grid-cols-2 gap-6">
@@ -527,7 +519,7 @@ const AdminUsers = () => {
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </React.Fragment>
                 ))}
               </TableBody>
             </Table>

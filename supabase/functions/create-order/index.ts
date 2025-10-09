@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
         .from('products')
         .select('merchant_id, merchants(id, latitude, longitude)')
         .eq('id', orderData.cartItems[0].productId)
-        .single()
+        .maybeSingle()
 
       if (productError) {
         console.error('Error fetching merchant:', productError)

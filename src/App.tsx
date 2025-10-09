@@ -69,7 +69,16 @@ const ProductTemplates = lazy(() => import("./pages/admin/ProductTemplates"));
 const ImportExport = lazy(() => import("./pages/admin/ImportExport"));
 const COAManagement = lazy(() => import("./pages/admin/COAManagement"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30000, // Data stays fresh for 30s
+      gcTime: 5 * 60 * 1000, // Cache for 5 minutes
+      refetchOnWindowFocus: false, // Don't refetch on window focus for better UX
+      retry: 1, // Only retry once on failure
+    },
+  },
+});
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center">

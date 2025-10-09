@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/contexts/AdminContext";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   TrendingUp, 
@@ -47,6 +48,7 @@ const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 const AdminAnalytics = () => {
   const { session } = useAdmin();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
   const [salesData, setSalesData] = useState<SalesData[]>([]);
@@ -76,24 +78,35 @@ const AdminAnalytics = () => {
       const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
       startDate.setDate(startDate.getDate() - days);
 
-      // Fetch orders
-      const { data: orders, error: ordersError } = await supabase
-        .from("orders")
-        .select("*")
-        .gte("created_at", startDate.toISOString())
-        .lte("created_at", endDate.toISOString());
+      // Parallel fetch - orders with items and products
+      const [ordersResponse, productsResponse] = await Promise.all([
+        supabase
+          .from("orders")
+          .select(`
+            *,
+            order_items(product_id, quantity, price)
+          `)
+          .gte("created_at", startDate.toISOString())
+          .lte("created_at", endDate.toISOString()),
+        supabase
+          .from("products")
+          .select("id, category")
+      ]);
 
-      if (ordersError) throw ordersError;
+      if (ordersResponse.error) throw ordersResponse.error;
+      const orders = ordersResponse.data || [];
 
       // Calculate metrics
-      const totalRevenue = orders?.reduce((sum, o) => sum + Number(o.total_amount || 0), 0) || 0;
-      const totalOrders = orders?.length || 0;
-      const uniqueUsers = new Set(orders?.map(o => o.user_id)).size;
+      const totalRevenue = orders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+      const totalOrders = orders.length;
+      const uniqueUsers = new Set(orders.map(o => o.user_id).filter(Boolean)).size;
       
       // Get repeat customers
       const userOrderCounts: { [key: string]: number } = {};
-      orders?.forEach(o => {
-        userOrderCounts[o.user_id] = (userOrderCounts[o.user_id] || 0) + 1;
+      orders.forEach(o => {
+        if (o.user_id) {
+          userOrderCounts[o.user_id] = (userOrderCounts[o.user_id] || 0) + 1;
+        }
       });
       const repeatCustomers = Object.values(userOrderCounts).filter(count => count > 1).length;
 
@@ -102,13 +115,13 @@ const AdminAnalytics = () => {
         totalOrders,
         averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
         customerCount: uniqueUsers,
-        conversionRate: 0, // Would need session tracking
+        conversionRate: 0,
         repeatCustomerRate: uniqueUsers > 0 ? (repeatCustomers / uniqueUsers) * 100 : 0
       });
 
       // Process daily sales data
       const dailySales: { [key: string]: { revenue: number; orders: number } } = {};
-      orders?.forEach(order => {
+      orders.forEach(order => {
         const date = new Date(order.created_at).toLocaleDateString();
         if (!dailySales[date]) {
           dailySales[date] = { revenue: 0, orders: 0 };
@@ -127,25 +140,18 @@ const AdminAnalytics = () => {
 
       setSalesData(salesChartData);
 
-      // Fetch order items for category analysis
-      const { data: orderItems } = await supabase
-        .from("order_items")
-        .select("product_id, quantity, price")
-        .in("order_id", orders?.map(o => o.id) || []);
-
-      // Get products to determine categories
-      const { data: products } = await supabase
-        .from("products")
-        .select("id, category");
-
       // Calculate category revenue
+      const products = productsResponse.data || [];
       const categoryRevenue: { [key: string]: number } = {};
-      orderItems?.forEach(item => {
-        const product = products?.find(p => p.id === item.product_id);
-        if (product) {
-          const category = product.category;
-          categoryRevenue[category] = (categoryRevenue[category] || 0) + (item.quantity * Number(item.price));
-        }
+      
+      orders.forEach(order => {
+        order.order_items?.forEach((item: any) => {
+          const product = products.find(p => p.id === item.product_id);
+          if (product) {
+            categoryRevenue[product.category] = (categoryRevenue[product.category] || 0) + 
+              (item.quantity * Number(item.price));
+          }
+        });
       });
 
       const categoryChartData = Object.entries(categoryRevenue).map(([name, value]) => ({
@@ -157,6 +163,11 @@ const AdminAnalytics = () => {
 
     } catch (error: any) {
       console.error("Failed to fetch analytics:", error);
+      toast({
+        variant: "destructive",
+        title: "Error loading analytics",
+        description: error.message
+      });
     } finally {
       setLoading(false);
     }

@@ -28,9 +28,9 @@ const OrderConfirmation = () => {
         .from("orders")
         .select("*, order_items(*)")
         .eq("id", orderId)
-        .single();
+        .maybeSingle();
 
-      if (error) {
+      if (error || !data) {
         console.error("Error fetching order:", error);
         navigate("/");
         return;

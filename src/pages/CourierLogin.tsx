@@ -44,9 +44,10 @@ export default function CourierLogin() {
         .from('couriers')
         .select('*')
         .eq('user_id', authData.user.id)
-        .single();
+        .maybeSingle();
 
-      if (courierError || !courierData) {
+      if (courierError) throw courierError;
+      if (!courierData) {
         await supabase.auth.signOut();
         throw new Error('Courier account not found');
       }

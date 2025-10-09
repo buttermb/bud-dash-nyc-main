@@ -49,12 +49,13 @@ export default function AdminCourierDetails() {
     setLoading(true);
     try {
       const [courierRes, earningsRes, ordersRes] = await Promise.all([
-        supabase.from('couriers').select('*').eq('id', id).single(),
+        supabase.from('couriers').select('*').eq('id', id).maybeSingle(),
         supabase.from('courier_earnings').select('*').eq('courier_id', id).order('created_at', { ascending: false }),
         supabase.from('orders').select('*, merchants(*), addresses(*)').eq('courier_id', id).order('created_at', { ascending: false })
       ]);
 
       if (courierRes.error) throw courierRes.error;
+      if (!courierRes.data) throw new Error("Courier not found");
       
       setCourier(courierRes.data);
       setEarnings(earningsRes.data || []);
