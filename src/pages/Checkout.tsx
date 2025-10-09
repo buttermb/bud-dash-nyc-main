@@ -149,45 +149,50 @@ const Checkout = () => {
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
-  const calculateDeliveryFee = () => {
+  // Check if this is user's first order
+  const { data: orderCount = 0 } = useQuery({
+    queryKey: ["order-count", user?.id],
+    queryFn: async () => {
+      if (!user) return 0;
+      const { count, error } = await supabase
+        .from("orders")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!user,
+  });
+
+  const isFirstOrder = user && orderCount === 0;
+
+  const calculateDeliveryFee = (isGuest = !user) => {
     if (!borough) return 0;
     
-    // Free delivery (including express) for orders over $500
-    if (subtotal >= 500) return 0;
+    // Free delivery for orders $100+ (both member and guest)
+    if (subtotal >= 100) return 0;
     
-    // Free standard/economy delivery for orders over $100 (but NOT express)
-    if (subtotal >= 100 && deliveryType !== "express") return 0;
-    
-    let baseFee = 5;
-    
-    // Dynamic pricing based on courier availability
-    const totalCouriers = courierAvailability || 0;
-    let demandMultiplier = 1;
-    
-    if (totalCouriers < 3) {
-      demandMultiplier = 2; // High demand - double the fee
-    } else if (totalCouriers < 5) {
-      demandMultiplier = 1.5; // Medium demand - 50% increase
+    // Brooklyn/Queens pricing
+    if (borough === "brooklyn" || borough === "queens") {
+      return isGuest ? 5.50 : 5.00;
     }
     
-    // Borough-specific pricing
+    // Manhattan pricing (includes $5 city surcharge)
     if (borough === "manhattan") {
-      baseFee += 5; // Manhattan surcharge
-    } else if (borough === "queens") {
-      baseFee += 2; // Queens slight surcharge
+      return isGuest ? 11.00 : 10.00;
     }
     
-    // Delivery speed multiplier
-    if (deliveryType === "express") {
-      baseFee = baseFee * 1.3; // +30% for express (45 min or under)
-    }
-    // standard and economy use base fee
-    
-    return Math.round(baseFee * demandMultiplier);
+    return 0;
   };
 
   const deliveryFee = calculateDeliveryFee();
-  const total = subtotal + deliveryFee - promoDiscount;
+  const guestDeliveryFee = calculateDeliveryFee(true);
+  
+  // First order discount for members only (10% off subtotal)
+  const firstOrderDiscount = isFirstOrder ? subtotal * 0.10 : 0;
+  
+  const total = subtotal + deliveryFee - firstOrderDiscount - promoDiscount;
+  const guestTotal = subtotal + guestDeliveryFee;
 
   const handleApplyPromo = () => {
     const validCodes: Record<string, number> = {
@@ -410,6 +415,9 @@ const Checkout = () => {
         {!user && (
           <GuestCheckoutOption
             cartTotal={subtotal}
+            borough={borough}
+            memberDeliveryFee={calculateDeliveryFee(false)}
+            guestDeliveryFee={calculateDeliveryFee(true)}
             onGuestCheckout={() => {
               // Scroll to guest information form
               const guestInfoCard = document.getElementById('guest-info-form');
@@ -536,7 +544,10 @@ const Checkout = () => {
                         )}
                       </div>
                       <h4 className="font-semibold mb-1">Brooklyn</h4>
-                      <p className="text-xs text-muted-foreground">Base delivery fee</p>
+                      <div className="text-xs space-y-0.5">
+                        <p className="text-muted-foreground">Member: <span className="font-semibold text-foreground">$5</span></p>
+                        <p className="text-muted-foreground">Guest: <span className="font-semibold text-foreground">$5.50</span></p>
+                      </div>
                     </button>
 
                     <button
@@ -559,7 +570,10 @@ const Checkout = () => {
                         )}
                       </div>
                       <h4 className="font-semibold mb-1">Queens</h4>
-                      <p className="text-xs text-muted-foreground">+$2 delivery fee</p>
+                      <div className="text-xs space-y-0.5">
+                        <p className="text-muted-foreground">Member: <span className="font-semibold text-foreground">$5</span></p>
+                        <p className="text-muted-foreground">Guest: <span className="font-semibold text-foreground">$5.50</span></p>
+                      </div>
                     </button>
 
                     <button
@@ -582,18 +596,17 @@ const Checkout = () => {
                         )}
                       </div>
                       <h4 className="font-semibold mb-1">Manhattan</h4>
-                      <p className="text-xs text-muted-foreground">+$5 delivery fee</p>
+                      <div className="text-xs space-y-0.5">
+                        <p className="text-muted-foreground">Member: <span className="font-semibold text-foreground">$10</span></p>
+                        <p className="text-muted-foreground">Guest: <span className="font-semibold text-foreground">$11</span></p>
+                        <p className="text-orange-600 dark:text-orange-400 font-medium">(+$5 city surcharge)</p>
+                      </div>
                     </button>
                   </div>
-                  <div className="p-3 bg-muted/50 rounded-lg space-y-1">
-                    <p className="text-xs text-muted-foreground flex items-center gap-2">
-                      💡 Address auto-detection available above
+                  <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                    <p className="text-xs font-medium text-primary flex items-center gap-1.5">
+                      💡 FREE delivery on all orders $100+
                     </p>
-                    {courierAvailability !== undefined && courierAvailability < 5 && (
-                      <p className="text-xs font-medium text-orange-600 dark:text-orange-400 flex items-center gap-2">
-                        ⚡ High demand: {courierAvailability} courier{courierAvailability !== 1 ? 's' : ''} available • Delivery fees adjusted
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -601,7 +614,7 @@ const Checkout = () => {
                 {subtotal < 100 && (
                   <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium text-primary">🎉 Free Delivery Progress</span>
+                      <span className="font-medium text-primary">🚚 Free Delivery Progress</span>
                       <span className="font-semibold text-primary">${(100 - subtotal).toFixed(2)} away!</span>
                     </div>
                     <div className="relative w-full h-3 bg-muted rounded-full overflow-hidden">
@@ -611,29 +624,18 @@ const Checkout = () => {
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Add ${(100 - subtotal).toFixed(2)} more to qualify for free standard delivery!
+                      Add ${(100 - subtotal).toFixed(2)} more to qualify for FREE delivery!
                     </p>
                   </div>
                 )}
 
-                {subtotal >= 100 && subtotal < 500 && (
-                  <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg space-y-2">
+                {subtotal >= 100 && (
+                  <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
                     <p className="text-sm font-semibold text-primary flex items-center gap-2">
-                      ✓ Free standard delivery unlocked! 🎉
+                      ✓ FREE delivery unlocked! 🎉
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      Add ${(500 - subtotal).toFixed(2)} more for FREE express delivery too!
-                    </p>
-                  </div>
-                )}
-
-                {subtotal >= 500 && (
-                  <div className="p-4 bg-gradient-to-r from-primary to-primary/80 border border-primary rounded-lg">
-                    <p className="text-sm font-bold text-primary-foreground flex items-center gap-2">
-                      ⚡ FREE EXPRESS DELIVERY! 🎉
-                    </p>
-                    <p className="text-xs text-primary-foreground/80">
-                      All delivery speeds are free on your order!
+                    <p className="text-xs text-primary/80 mt-1">
+                      No delivery fee on this order
                     </p>
                   </div>
                 )}
@@ -979,42 +981,36 @@ const Checkout = () => {
                   <div className="flex justify-between text-sm">
                     <span className="flex items-center gap-2">
                       Delivery Fee
-                      {subtotal >= 100 ? (
+                      {subtotal >= 100 && (
                         <span className="text-xs px-1.5 py-0.5 bg-primary/20 text-primary rounded font-semibold">
-                          FREE
+                          FREE ✓
                         </span>
-                      ) : courierAvailability !== undefined && courierAvailability < 5 ? (
-                        <span className="text-xs px-1.5 py-0.5 bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded">
-                          High Demand
+                      )}
+                      {!user && (
+                        <span className="text-xs px-1.5 py-0.5 bg-muted rounded">
+                          Guest
                         </span>
-                      ) : null}
+                      )}
                     </span>
-                    <span className={cn(
-                      "font-semibold",
-                      subtotal >= 100 && "text-primary line-through"
-                    )}>
+                    <span className={subtotal >= 100 ? "line-through text-muted-foreground" : ""}>
                       ${deliveryFee.toFixed(2)}
                     </span>
                   </div>
-                  {borough && subtotal < 100 && (
-                    <div className="text-xs text-muted-foreground space-y-0.5">
-                      {deliveryType === "express" && (
-                        <p className="text-primary">• Express delivery: +30% fee</p>
-                      )}
-                      {borough === "manhattan" && (
-                        <p>• Manhattan: +$5 base surcharge</p>
-                      )}
-                      {borough === "queens" && (
-                        <p>• Queens: +$2 base surcharge</p>
-                      )}
-                      {borough === "brooklyn" && (
-                        <p>• Brooklyn: Base delivery fee</p>
-                      )}
-                      {courierAvailability !== undefined && courierAvailability < 5 && (
-                        <p className="text-orange-600 dark:text-orange-400">
-                          • High demand: {courierAvailability < 3 ? '2x' : '1.5x'} multiplier ({courierAvailability} courier{courierAvailability !== 1 ? 's' : ''} available)
-                        </p>
-                      )}
+                  {borough === "manhattan" && deliveryFee > 0 && (
+                    <div className="text-xs text-muted-foreground pl-4">
+                      <div>Base fee: ${user ? "5.00" : "5.50"}</div>
+                      <div>City surcharge: ${user ? "5.00" : "5.50"}</div>
+                    </div>
+                  )}
+                  {isFirstOrder && (
+                    <div className="flex justify-between text-sm text-primary">
+                      <span className="flex items-center gap-2">
+                        First Order Discount (10%)
+                        <span className="text-xs px-1.5 py-0.5 bg-primary/20 rounded font-semibold">
+                          NEW
+                        </span>
+                      </span>
+                      <span>-${firstOrderDiscount.toFixed(2)}</span>
                     </div>
                   )}
                   {promoDiscount > 0 && (
@@ -1037,7 +1033,36 @@ const Checkout = () => {
                       value={promoCode}
                       onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                     />
-                    <Button
+                {isFirstOrder && (
+                  <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg space-y-2">
+                    <p className="text-sm font-semibold text-primary flex items-center gap-2">
+                      🎉 You're saving ${(firstOrderDiscount + (guestDeliveryFee - deliveryFee)).toFixed(2)} today!
+                    </p>
+                    <div className="text-xs text-primary/80 space-y-1">
+                      <div>• ${firstOrderDiscount.toFixed(2)} first order discount</div>
+                      <div>• ${(guestDeliveryFee - deliveryFee).toFixed(2)} member delivery rate</div>
+                    </div>
+                  </div>
+                )}
+
+                {!user && subtotal < 100 && (
+                  <div className="p-4 bg-muted rounded-lg space-y-2">
+                    <p className="text-sm font-medium">💰 Create account to save ${((subtotal * 0.1) + (guestDeliveryFee - calculateDeliveryFee(false))).toFixed(2)}</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        setAuthMode("signup");
+                        setShowAuthModal(true);
+                      }}
+                      className="w-full"
+                    >
+                      Switch to Member Checkout
+                    </Button>
+                  </div>
+                )}
+
+                <Button
                       type="button"
                       variant="outline"
                       onClick={handleApplyPromo}

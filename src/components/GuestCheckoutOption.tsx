@@ -6,10 +6,28 @@ interface GuestCheckoutOptionProps {
   onGuestCheckout: () => void;
   onSignup: () => void;
   cartTotal?: number;
+  borough?: string;
+  memberDeliveryFee?: number;
+  guestDeliveryFee?: number;
 }
 
-const GuestCheckoutOption = ({ onGuestCheckout, onSignup, cartTotal = 0 }: GuestCheckoutOptionProps) => {
-  const savings = cartTotal * 0.1;
+const GuestCheckoutOption = ({ 
+  onGuestCheckout, 
+  onSignup, 
+  cartTotal = 0,
+  borough = "",
+  memberDeliveryFee = 0,
+  guestDeliveryFee = 0 
+}: GuestCheckoutOptionProps) => {
+  // Calculate accurate savings
+  const firstOrderDiscount = cartTotal * 0.1; // 10% off subtotal
+  const deliveryFeeSavings = guestDeliveryFee - memberDeliveryFee; // Difference in delivery fees
+  const totalSavings = firstOrderDiscount + deliveryFeeSavings;
+  
+  const memberTotal = cartTotal + memberDeliveryFee - firstOrderDiscount;
+  const guestTotal = cartTotal + guestDeliveryFee;
+  
+  const boroughName = borough ? borough.charAt(0).toUpperCase() + borough.slice(1) : "";
 
   return (
     <div className="grid md:grid-cols-2 gap-6 mb-8">
@@ -25,8 +43,8 @@ const GuestCheckoutOption = ({ onGuestCheckout, onSignup, cartTotal = 0 }: Guest
             </div>
             <div>
               <h3 className="font-bold text-xl">Become a Member</h3>
-              {cartTotal > 0 && (
-                <p className="text-lg font-bold text-primary">Save ${savings.toFixed(2)} today</p>
+              {cartTotal > 0 && totalSavings > 0 && (
+                <p className="text-lg font-bold text-primary">Save ${totalSavings.toFixed(2)} today</p>
               )}
             </div>
           </div>
@@ -34,28 +52,41 @@ const GuestCheckoutOption = ({ onGuestCheckout, onSignup, cartTotal = 0 }: Guest
           <ul className="space-y-2.5 text-sm">
             <li className="flex items-start gap-2.5">
               <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-              <span><strong>10% off</strong> this order and all future purchases</span>
+              <span><strong>10% off</strong> THIS order (${firstOrderDiscount.toFixed(2)} discount)</span>
             </li>
             <li className="flex items-start gap-2.5">
               <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-              <span><strong>Free shipping</strong> on every order, always</span>
+              <span><strong>Lower delivery fee</strong> (${memberDeliveryFee.toFixed(2)} vs ${guestDeliveryFee.toFixed(2)})</span>
             </li>
             <li className="flex items-start gap-2.5">
               <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-              <span><strong>Track orders</strong> in real-time with live updates</span>
+              <span><strong>FREE delivery</strong> on orders $100+</span>
             </li>
             <li className="flex items-start gap-2.5">
               <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-              <span><strong>Priority support</strong> and faster checkout</span>
+              <span><strong>Track orders</strong> in real-time</span>
             </li>
             <li className="flex items-start gap-2.5">
               <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-              <span><strong>Exclusive offers</strong> and early product access</span>
+              <span><strong>Faster checkout</strong> next time</span>
             </li>
           </ul>
 
+          {cartTotal > 0 && totalSavings > 0 && (
+            <div className="p-3 bg-primary/10 rounded-lg space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span>Your Total Today:</span>
+                <span className="font-bold text-primary">${memberTotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Guest Price:</span>
+                <span className="line-through">${guestTotal.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+
           <Button onClick={onSignup} className="w-full h-12 text-base font-bold" size="lg">
-            Create Account & Save {cartTotal > 0 ? `$${savings.toFixed(2)}` : '10%'}
+            Create Account & Save {totalSavings > 0 ? `$${totalSavings.toFixed(2)}` : '10%'}
           </Button>
           
           <p className="text-xs text-center text-muted-foreground">
