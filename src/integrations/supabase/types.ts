@@ -2054,9 +2054,46 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_admin_dashboard_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_admin_orders: {
+        Args: { limit_count?: number; offset_count?: number }
+        Returns: {
+          courier_name: string
+          courier_phone: string
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          delivery_address: string
+          delivery_borough: string
+          id: string
+          merchant_name: string
+          order_number: string
+          status: string
+          total_amount: number
+        }[]
+      }
       get_admin_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["admin_role"]
+      }
+      get_couriers_with_daily_earnings: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          is_online: boolean
+          phone: string
+          rating: number
+          today_earnings: number
+          total_deliveries: number
+          vehicle_type: string
+        }[]
       }
       get_order_by_tracking_code: {
         Args: { code: string }

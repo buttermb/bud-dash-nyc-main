@@ -39,15 +39,11 @@ const AdminDashboard = () => {
 
   const fetchDashboardMetrics = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke("admin-dashboard", {
-        body: { endpoint: "overview" },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-      });
+      // Use optimized RPC function for instant metrics
+      const { data, error } = await supabase.rpc('get_admin_dashboard_metrics');
 
       if (error) throw error;
-      setMetrics(data.metrics);
+      setMetrics(data as unknown as DashboardMetrics);
     } catch (error) {
       console.error("Failed to fetch dashboard metrics:", error);
     } finally {

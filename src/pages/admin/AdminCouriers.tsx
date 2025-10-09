@@ -55,34 +55,12 @@ export default function AdminCouriers() {
 
   const fetchCouriers = async () => {
     try {
-      // Fetch couriers
-      const { data, error } = await supabase
-        .from('couriers')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Use optimized RPC function for instant fetch with today's earnings
+      const { data, error } = await supabase.rpc('get_couriers_with_daily_earnings');
 
       if (error) throw error;
 
-      // Fetch today's earnings separately
-      const today = new Date().toISOString().split('T')[0];
-      const { data: earningsData } = await supabase
-        .from('courier_earnings')
-        .select('courier_id, total_earned')
-        .gte('created_at', today);
-
-      // Map earnings to couriers
-      const earningsMap = new Map();
-      earningsData?.forEach(e => {
-        const current = earningsMap.get(e.courier_id) || 0;
-        earningsMap.set(e.courier_id, current + parseFloat(e.total_earned.toString()));
-      });
-
-      const couriersWithEarnings = data?.map(courier => ({
-        ...courier,
-        today_earnings: earningsMap.get(courier.id) || 0
-      })) as unknown as Courier[];
-
-      setCouriers(couriersWithEarnings || []);
+      setCouriers((data as unknown as Courier[]) || []);
     } catch (error) {
       console.error('Error fetching couriers:', error);
       toast({
