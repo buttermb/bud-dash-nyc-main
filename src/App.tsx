@@ -133,10 +133,12 @@ const App = () => (
                       {/* Admin Login */}
                       <Route path="/admin/login" element={<AdminLogin />} />
 
+                      {/* Guest-accessible Routes */}
+                      <Route path="/cart" element={<Cart />} />
+                      <Route path="/checkout" element={<Checkout />} />
+                      <Route path="/order-confirmation" element={<OrderConfirmation />} />
+                      
                       {/* Protected User Routes */}
-                      <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-                      <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-                      <Route path="/order-confirmation" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
                       <Route path="/order-tracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
                       <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
                       <Route path="/settings/notifications" element={
