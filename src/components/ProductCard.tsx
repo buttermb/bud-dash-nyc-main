@@ -62,16 +62,24 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
   const badge = getProductBadge();
 
   const handleAddToCart = async () => {
-    console.log('🛒 handleAddToCart called for product:', product.name);
-    console.log('Product in stock:', product.in_stock);
-    console.log('User:', user ? 'authenticated' : 'guest');
+    console.log('🛒 ===== ADD TO CART CLICKED =====');
+    console.log('Product name:', product.name);
+    console.log('Product ID:', product.id);
+    console.log('Product in_stock:', product.in_stock);
+    console.log('Quantity:', quantity);
+    console.log('User status:', user ? 'authenticated' : 'guest');
+    console.log('Loading state:', loading);
+    console.log('Added state:', added);
     
     if (!product.in_stock) {
+      console.error('❌ Product not in stock');
       toast.error("This product is out of stock");
       return;
     }
 
+    console.log('✓ Product in stock, proceeding...');
     setLoading(true);
+    
     try {
       // Get default weight for products with weight options (always starts at 3.5g)
       const defaultWeight = getDefaultWeight(product.prices);
@@ -79,12 +87,16 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
 
       if (!user) {
         // Guest cart - use localStorage
-        console.log('Guest user detected, adding to guest cart');
+        console.log('🔓 Guest user detected, adding to guest cart');
+        console.log('Calling addToGuestCart with:', { productId: product.id, quantity, defaultWeight });
+        
         addToGuestCart(product.id, quantity, defaultWeight);
+        
+        console.log('✅ addToGuestCart called successfully');
         
         // Success feedback
         toast.success("🎉 Added to cart!", {
-          description: `${quantity}x ${product.name}`,
+          description: `${quantity}x ${product.name} (${defaultWeight})`,
           duration: 3000,
         });
         
@@ -93,6 +105,8 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
         queryClient.invalidateQueries({ queryKey: ["cart"] });
         queryClient.invalidateQueries({ queryKey: ["guest-cart-products"] });
         setLoading(false);
+        
+        console.log('🎉 Guest cart add complete!');
         return;
       }
 
