@@ -62,6 +62,10 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
   const badge = getProductBadge();
 
   const handleAddToCart = async () => {
+    console.log('🛒 handleAddToCart called for product:', product.name);
+    console.log('Product in stock:', product.in_stock);
+    console.log('User:', user ? 'authenticated' : 'guest');
+    
     if (!product.in_stock) {
       toast.error("This product is out of stock");
       return;
@@ -71,6 +75,7 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
     try {
       // Get default weight for products with weight options (always starts at 3.5g)
       const defaultWeight = getDefaultWeight(product.prices);
+      console.log('Default weight selected:', defaultWeight);
 
       if (!user) {
         // Guest cart - use localStorage
@@ -284,6 +289,9 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
           {/* ONE BIG ADD TO CART BUTTON - Primary CTA */}
           <Button
             onClick={(e) => {
+              console.log('🖱️ Add to Cart button clicked!');
+              console.log('Button disabled?', loading || !product.in_stock || added);
+              console.log('Loading:', loading, 'In stock:', product.in_stock, 'Added:', added);
               e.stopPropagation();
               handleAddToCart();
             }}
