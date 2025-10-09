@@ -134,12 +134,12 @@ const Cart = () => {
   const amountToFreeShipping = Math.max(freeShippingThreshold - subtotal, 0);
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
+    <div className="min-h-screen bg-background pb-24 md:pb-0">
       <Navigation />
       
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 md:px-6 py-6 md:py-12">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl font-bold mb-8">Shopping Cart</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-6 md:mb-8">Shopping Cart</h1>
 
           {cartItems.length === 0 ? (
             <Card className="p-12">
@@ -167,9 +167,9 @@ const Cart = () => {
                   const selectedWeight = item.selected_weight || "unit";
                   
                   return (
-                    <Card key={item.id} className="p-6">
-                      <div className="flex gap-6">
-                        <div className="w-32 h-32 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Card key={item.id} className="p-4 md:p-6">
+                      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+                        <div className="w-20 h-20 md:w-24 md:h-24 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
                           {item.products?.image_url ? (
                             <img 
                               src={item.products.image_url} 
@@ -177,31 +177,31 @@ const Cart = () => {
                               className="w-full h-full object-cover rounded-lg"
                             />
                           ) : (
-                            <span className="text-5xl">🌿</span>
+                            <span className="text-4xl md:text-5xl">🌿</span>
                           )}
                         </div>
                         
-                        <div className="flex-1 space-y-4">
+                        <div className="flex-1 space-y-3 md:space-y-4">
                           <div>
-                            <h3 className="text-xl font-bold">
+                            <h3 className="text-base md:text-xl font-bold leading-tight">
                               {item.products?.name}
                             </h3>
                             {selectedWeight !== "unit" && (
-                              <Badge variant="outline" className="mt-2">
+                              <Badge variant="outline" className="mt-1.5 md:mt-2 text-sm">
                                 Weight: {selectedWeight}
                               </Badge>
                             )}
-                            <p className="text-lg text-muted-foreground mt-1">
+                            <p className="text-base md:text-lg text-muted-foreground mt-1">
                               ${itemPrice.toFixed(2)} each
                             </p>
                           </div>
                           
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                            <div className="flex items-center gap-2">
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-10 w-10 md:h-11 md:w-11"
+                                className="min-h-[44px] min-w-[44px] h-11 w-11"
                                 onClick={() =>
                                   updateQuantity(item.id, item.product_id, selectedWeight, Math.max(1, item.quantity - 1))
                                 }
@@ -209,26 +209,27 @@ const Cart = () => {
                               >
                                 <Minus className="w-4 h-4" />
                               </Button>
-                              <span className="text-lg font-semibold w-12 text-center">
+                              <span className="text-base md:text-lg font-semibold min-w-[32px] text-center">
                                 {item.quantity}
                               </span>
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-10 w-10 md:h-11 md:w-11"
+                                className="min-h-[44px] min-w-[44px] h-11 w-11"
                                 onClick={() => updateQuantity(item.id, item.product_id, selectedWeight, item.quantity + 1)}
                               >
                                 <Plus className="w-4 h-4" />
                               </Button>
                             </div>
                             
-                            <div className="flex items-center gap-4">
-                              <p className="text-2xl font-bold">
+                            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                              <p className="text-xl md:text-2xl font-bold">
                                 ${(itemPrice * item.quantity).toFixed(2)}
                               </p>
                               <Button
                                 variant="ghost"
                                 size="icon"
+                                className="min-h-[44px] min-w-[44px] h-11 w-11"
                                 onClick={() => removeItem(item.id, item.product_id, selectedWeight)}
                               >
                                 <Trash2 className="w-5 h-5 text-destructive" />
@@ -244,18 +245,18 @@ const Cart = () => {
 
               {/* Order Summary */}
               <div className="lg:col-span-1">
-                <Card className="p-6 sticky top-24 space-y-6">
-                  <h2 className="text-2xl font-bold">Order Summary</h2>
+                <Card className="p-4 md:p-6 lg:sticky lg:top-24 space-y-4 md:space-y-6">
+                  <h2 className="text-xl md:text-2xl font-bold py-2">Order Summary</h2>
                   
                   <Separator />
 
                   {/* Free Shipping Progress */}
                   {subtotal < freeShippingThreshold ? (
                     <div className="space-y-3 p-4 bg-primary/5 rounded-lg">
-                      <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center justify-between text-base">
                         <span className="flex items-center gap-2">
                           <Truck className="h-4 w-4" />
-                          Free Shipping Progress
+                          <span className="font-medium">Free Shipping</span>
                         </span>
                         <span className="font-semibold">
                           ${amountToFreeShipping.toFixed(2)} to go
@@ -265,23 +266,23 @@ const Cart = () => {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 p-4 bg-primary/10 rounded-lg text-primary">
-                      <Truck className="h-5 w-5" />
-                      <span className="font-semibold">You've unlocked FREE SHIPPING! 🎉</span>
+                      <Truck className="h-5 w-5 flex-shrink-0" />
+                      <span className="font-semibold text-base">FREE SHIPPING! 🎉</span>
                     </div>
                   )}
 
                   <div className="space-y-3">
-                    <div className="flex justify-between text-lg">
+                    <div className="flex justify-between text-base md:text-lg">
                       <span className="text-muted-foreground">Subtotal</span>
                       <span className="font-semibold">${subtotal.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-lg">
+                    <div className="flex justify-between text-base md:text-lg">
                       <span className="text-muted-foreground">Delivery Fee</span>
                       <span className="font-semibold">
                         {subtotal >= freeShippingThreshold ? (
                           <span className="text-primary">FREE</span>
                         ) : (
-                          "Calculated at checkout"
+                          "At checkout"
                         )}
                       </span>
                     </div>
@@ -289,22 +290,22 @@ const Cart = () => {
 
                   <Separator />
 
-                  <div className="flex justify-between text-xl font-bold">
+                  <div className="flex justify-between text-2xl md:text-xl font-bold py-2">
                     <span>Total</span>
                     <span>${subtotal.toFixed(2)}</span>
                   </div>
 
                   <Button 
                     variant="hero" 
-                    className="w-full text-lg h-14" 
+                    className="w-full text-lg min-h-[56px] h-14 font-semibold" 
                     size="lg"
                     onClick={handleCheckout}
                   >
-                    Proceed to Checkout
+                    Proceed to Checkout • ${subtotal.toFixed(2)}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
 
-                  <div className="space-y-2 text-sm text-muted-foreground text-center">
+                  <div className="space-y-2 text-sm md:text-base text-muted-foreground text-center pt-2">
                     <p>✓ Valid ID required at delivery</p>
                     <p>✓ Must be 21+ years old</p>
                     <p>✓ Secure payment at checkout</p>

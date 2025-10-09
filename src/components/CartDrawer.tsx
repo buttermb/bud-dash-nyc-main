@@ -146,33 +146,33 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg flex flex-col">
         <SheetHeader>
-          <SheetTitle className="text-2xl">Shopping Cart</SheetTitle>
+          <SheetTitle className="text-xl md:text-2xl">Shopping Cart</SheetTitle>
         </SheetHeader>
 
         {cartItems.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
+          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4 px-4">
             <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
               <ShoppingBag className="w-12 h-12 text-muted-foreground" />
             </div>
             <div>
-              <h3 className="font-semibold text-lg mb-2">Your cart is empty</h3>
-              <p className="text-muted-foreground">
+              <h3 className="font-semibold text-base md:text-lg mb-2">Your cart is empty</h3>
+              <p className="text-muted-foreground text-sm md:text-base">
                 Add some products to get started
               </p>
             </div>
-            <Button variant="hero" onClick={() => onOpenChange(false)}>
+            <Button variant="hero" className="min-h-[44px]" onClick={() => onOpenChange(false)}>
               Browse Products
             </Button>
           </div>
         ) : (
           <>
-            <div className="flex-1 overflow-y-auto space-y-4 py-4">
+            <div className="flex-1 overflow-y-auto space-y-4 py-4 px-1">
               {cartItems.map((item) => {
                 const itemPrice = getItemPrice(item);
                 const selectedWeight = item.selected_weight || "unit";
                 
                 return (
-                  <div key={item.id} className="flex gap-4">
+                  <div key={item.id} className="flex gap-3">
                     <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
                       {item.products?.image_url ? (
                         <img 
@@ -185,52 +185,52 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-sm truncate">
+                      <h4 className="font-semibold text-base leading-tight line-clamp-2">
                         {item.products?.name}
                       </h4>
                       {selectedWeight !== "unit" && (
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm text-muted-foreground mt-0.5">
                           Weight: {selectedWeight}
                         </p>
                       )}
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-base text-muted-foreground mt-0.5">
                         ${itemPrice.toFixed(2)} each
                       </p>
                       <div className="flex items-center gap-2 mt-2">
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-7 w-7"
+                          className="min-h-[44px] min-w-[44px] h-11 w-11"
                           onClick={() =>
                             updateQuantity(item.id, item.product_id, selectedWeight, Math.max(1, item.quantity - 1))
                           }
                           disabled={item.quantity <= 1}
                         >
-                          <Minus className="w-3 h-3" />
+                          <Minus className="w-4 h-4" />
                         </Button>
-                        <span className="text-sm font-medium w-8 text-center">
+                        <span className="text-base font-medium min-w-[32px] text-center">
                           {item.quantity}
                         </span>
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-7 w-7"
+                          className="min-h-[44px] min-w-[44px] h-11 w-11"
                           onClick={() => updateQuantity(item.id, item.product_id, selectedWeight, item.quantity + 1)}
                         >
-                          <Plus className="w-3 h-3" />
+                          <Plus className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 ml-auto"
+                          className="min-h-[44px] min-w-[44px] h-11 w-11 ml-auto"
                           onClick={() => removeItem(item.id, item.product_id, selectedWeight)}
                         >
-                          <Trash2 className="w-3 h-3 text-destructive" />
+                          <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-semibold text-lg">
                         ${(itemPrice * item.quantity).toFixed(2)}
                       </p>
                     </div>
@@ -239,37 +239,37 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
               })}
             </div>
 
-            <div className="space-y-4 border-t pt-4">
+            <div className="space-y-4 border-t pt-4 px-1">
               {/* Free Shipping Progress */}
               {subtotal < freeShippingThreshold ? (
-                <div className="space-y-2 p-3 bg-primary/5 rounded-lg">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2">
-                      <Truck className="h-4 w-4" />
-                      Free Shipping Progress
+                <div className="space-y-2 p-4 bg-primary/5 rounded-lg">
+                  <div className="flex items-center justify-between text-base">
+                    <span className="flex items-center gap-2 font-medium">
+                      <Truck className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-sm md:text-base">Free Shipping</span>
                     </span>
-                    <span className="font-semibold">${amountToFreeShipping.toFixed(2)} to go</span>
+                    <span className="font-semibold text-sm md:text-base">${amountToFreeShipping.toFixed(2)} to go</span>
                   </div>
                   <Progress value={shippingProgress} className="h-2" />
                 </div>
               ) : (
-                <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg text-primary">
-                  <Truck className="h-5 w-5" />
-                  <span className="font-semibold">You've unlocked FREE SHIPPING! 🎉</span>
+                <div className="flex items-center gap-2 p-4 bg-primary/10 rounded-lg text-primary">
+                  <Truck className="h-5 w-5 flex-shrink-0" />
+                  <span className="font-semibold text-base">FREE SHIPPING! 🎉</span>
                 </div>
               )}
 
-              <div className="flex justify-between text-lg font-semibold">
+              <div className="flex justify-between text-lg md:text-xl font-semibold">
                 <span>Subtotal</span>
                 <span>${subtotal.toFixed(2)}</span>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm md:text-base text-muted-foreground">
                 Delivery fees calculated at checkout
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <Button 
                   variant="outline" 
-                  className="w-full" 
+                  className="w-full min-h-[48px] text-base font-medium" 
                   size="lg"
                   onClick={handleViewCart}
                 >
@@ -277,14 +277,14 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
                 </Button>
                 <Button 
                   variant="hero" 
-                  className="w-full" 
+                  className="w-full min-h-[48px] text-base font-medium" 
                   size="lg"
                   onClick={handleCheckout}
                 >
                   Checkout
                 </Button>
               </div>
-              <p className="text-xs text-center text-muted-foreground">
+              <p className="text-sm text-center text-muted-foreground pt-1">
                 Valid ID required at delivery • Must be 21+
               </p>
             </div>
