@@ -1032,7 +1032,22 @@ const Checkout = () => {
                       placeholder="Enter code"
                       value={promoCode}
                       onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      className="flex-1"
                     />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleApplyPromo}
+                      className="shrink-0"
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Member Savings Display */}
                 {isFirstOrder && (
                   <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg space-y-2">
                     <p className="text-sm font-semibold text-primary flex items-center gap-2">
@@ -1045,6 +1060,7 @@ const Checkout = () => {
                   </div>
                 )}
 
+                {/* Guest Upsell to Member */}
                 {!user && subtotal < 100 && (
                   <div className="p-4 bg-muted rounded-lg space-y-2">
                     <p className="text-sm font-medium">💰 Create account to save ${((subtotal * 0.1) + (guestDeliveryFee - calculateDeliveryFee(false))).toFixed(2)}</p>
@@ -1061,16 +1077,6 @@ const Checkout = () => {
                     </Button>
                   </div>
                 )}
-
-                <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleApplyPromo}
-                    >
-                      Apply
-                    </Button>
-                  </div>
-                </div>
 
                 <Separator />
 
