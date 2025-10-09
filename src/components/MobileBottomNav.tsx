@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useScrollDirection } from '@/hooks/useScrollDirection';
+import { haptics } from '@/utils/haptics';
 
 interface MobileBottomNavProps {
   onCartClick: () => void;
@@ -23,6 +25,7 @@ const MobileBottomNav = ({ onCartClick, onAuthClick }: MobileBottomNavProps) => 
   const location = useLocation();
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const scrollDirection = useScrollDirection();
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ["cart", user?.id],
@@ -60,13 +63,18 @@ const MobileBottomNav = ({ onCartClick, onAuthClick }: MobileBottomNavProps) => 
   // Only show on mobile devices
   if (!isMobile) return null;
 
+  // Hide on scroll down, show on scroll up (at top always show)
+  const isVisible = scrollDirection !== 'down' || window.scrollY < 100;
+
   return (
     <nav 
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-50 md:hidden",
+        "fixed left-0 right-0 z-50 md:hidden",
         "bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/80",
         "border-t border-border/40 shadow-[0_-2px_16px_rgba(0,0,0,0.08)]",
-        "rounded-t-2xl safe-area-bottom"
+        "rounded-t-2xl safe-area-bottom",
+        "transition-transform duration-300 ease-out",
+        isVisible ? "translate-y-0 bottom-0" : "translate-y-full bottom-0"
       )}
       style={{
         paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
@@ -83,6 +91,7 @@ const MobileBottomNav = ({ onCartClick, onAuthClick }: MobileBottomNavProps) => 
               key={item.label}
               to={item.path}
               onClick={(e) => {
+                haptics.light(); // Haptic feedback on tap
                 if (item.onClick) {
                   e.preventDefault();
                   item.onClick(e);

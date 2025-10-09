@@ -8,6 +8,7 @@ import ProductCategories from "@/components/ProductCategories";
 import HowItWorks from "@/components/HowItWorks";
 import FeaturedReviews from "@/components/FeaturedReviews";
 import TrendingProducts from "@/components/TrendingProducts";
+import InstallPWA from "@/components/InstallPWA";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, Truck, Award } from "lucide-react";
@@ -137,6 +138,9 @@ const Index = () => {
 
       {/* Trust Elements */}
       <ProductTrustElements />
+      
+      {/* PWA Install Prompt */}
+      <InstallPWA />
       
       <Footer />
     </div>

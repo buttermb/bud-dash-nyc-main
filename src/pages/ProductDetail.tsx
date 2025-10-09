@@ -5,11 +5,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShoppingCart, Star, ArrowLeft, FileText } from "lucide-react";
+import { Loader2, ShoppingCart, Star, ArrowLeft, FileText, Plus, Minus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { useProductViewTracking } from "@/hooks/useProductViewTracking";
+import StickyAddToCart from "@/components/StickyAddToCart";
+import Navigation from "@/components/Navigation";
+import { haptics } from "@/utils/haptics";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +22,8 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+  const [addedToCart, setAddedToCart] = useState(false);
   const { trackProductView } = useProductViewTracking();
 
   // Track product view
@@ -74,12 +79,21 @@ const ProductDetail = () => {
         if (error) throw error;
       }
     },
+    onMutate: () => {
+      setIsAdding(true);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       toast({ title: "Added to cart!" });
+      haptics.success(); // Success haptic
+      setAddedToCart(true);
+      setTimeout(() => setAddedToCart(false), 2000);
+      setIsAdding(false);
     },
     onError: () => {
       toast({ title: "Failed to add to cart", variant: "destructive" });
+      haptics.error(); // Error haptic
+      setIsAdding(false);
     },
   });
 
@@ -131,11 +145,13 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back
-      </Button>
+    <>
+      <Navigation />
+      <div className="container mx-auto px-4 py-8 pb-24 md:pb-8">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
 
       <div className="grid md:grid-cols-2 gap-8 mb-12">
         <div>
@@ -285,7 +301,19 @@ const ProductDetail = () => {
           )}
         </div>
       </div>
+
+      {/* Sticky Add to Cart for Mobile */}
+      <StickyAddToCart
+        productName={product.name}
+        price={product.price}
+        quantity={quantity}
+        onQuantityChange={setQuantity}
+        onAddToCart={() => addToCart.mutate()}
+        loading={isAdding}
+        added={addedToCart}
+      />
     </div>
+    </>
   );
 };
 

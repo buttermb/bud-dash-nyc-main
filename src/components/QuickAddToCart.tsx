@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { haptics } from "@/utils/haptics";
 
 interface QuickAddToCartProps {
   productId: string;
@@ -44,17 +45,24 @@ const QuickAddToCart = ({ productId, productName, size = "default" }: QuickAddTo
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
+      haptics.success(); // Success haptic feedback
       toast.success("🎉 Added to cart!", {
         icon: <Check className="w-4 h-4 animate-bounce" />,
         description: productName,
         duration: 2000,
       });
     },
+    onError: () => {
+      haptics.error(); // Error haptic feedback
+    },
   });
 
   return (
     <Button
-      onClick={() => addToCart.mutate()}
+      onClick={() => {
+        haptics.light(); // Light tap feedback
+        addToCart.mutate();
+      }}
       size={size}
       className="w-full font-bold hover:scale-105 transition-all"
       disabled={addToCart.isPending}

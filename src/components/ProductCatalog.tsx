@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ProductCard from "./ProductCard";
 import AuthModal from "./AuthModal";
-import { Loader2, Search, Leaf, Cookie, Droplets, Cigarette, Wind, ChevronRight, ChevronLeft } from "lucide-react";
+import MobileSearch from "./MobileSearch";
+import { Loader2, Leaf, Cookie, Droplets, Cigarette, Wind, ChevronRight, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useInventoryBatch } from "@/hooks/useInventoryBatch";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const INITIAL_CATEGORIES_TO_SHOW = 2;
 
@@ -17,6 +18,7 @@ const ProductCatalog = () => {
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [searchQuery, setSearchQuery] = useState("");
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const isMobile = useIsMobile();
 
   // Realtime subscription for product updates
   useEffect(() => {
@@ -110,15 +112,12 @@ const ProductCatalog = () => {
 
         {/* Search Bar */}
         <div className="max-w-2xl mx-auto mb-12">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-14 text-lg"
-            />
-          </div>
+          <MobileSearch
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search products, strains, vendors..."
+            className={isMobile ? "" : "relative"}
+          />
         </div>
 
         {isLoading ? (
