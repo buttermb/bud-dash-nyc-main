@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Gift, Truck, Zap, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { analytics } from '@/utils/analytics';
 
 interface SignUpIncentivePopupProps {
   cartTotal: number;
@@ -24,13 +25,46 @@ export default function SignUpIncentivePopup({
   const shippingFee = cartTotal >= 100 ? 0 : 5.99;
   const totalSavings = (parseFloat(discountAmount) + shippingFee).toFixed(2);
 
+  useEffect(() => {
+    if (isVisible) {
+      analytics.trackPopupViewed(cartTotal, 0, parseFloat(discountAmount));
+      
+      // Handle ESC key
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          analytics.trackPopupDismissed(cartTotal, 'esc_key');
+          onClose();
+        }
+      };
+      
+      window.addEventListener('keydown', handleEscape);
+      return () => window.removeEventListener('keydown', handleEscape);
+    }
+  }, [isVisible, cartTotal, discountAmount, onClose]);
+
   if (!isVisible) return null;
 
   const handleSignUp = () => {
     if (!email.includes('@')) {
       return;
     }
+    analytics.trackPopupSignup(email, cartTotal, parseFloat(totalSavings));
     onSignUp(email);
+  };
+
+  const handleGuestCheckout = () => {
+    analytics.trackPopupGuestCheckout(cartTotal, parseFloat(totalSavings));
+    onContinueAsGuest();
+  };
+
+  const handleClose = () => {
+    analytics.trackPopupDismissed(cartTotal, 'close_button');
+    onClose();
+  };
+
+  const handleBackdropClick = () => {
+    analytics.trackPopupDismissed(cartTotal, 'backdrop_click');
+    onClose();
   };
 
   return (
@@ -38,7 +72,7 @@ export default function SignUpIncentivePopup({
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-fade-in"
-        onClick={onClose}
+        onClick={handleBackdropClick}
       />
       
       {/* Popup */}
@@ -54,7 +88,7 @@ export default function SignUpIncentivePopup({
           
           {/* Close Button */}
           <button 
-            onClick={onClose}
+            onClick={handleClose}
             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors touch-target"
             aria-label="Close"
           >
@@ -138,7 +172,7 @@ export default function SignUpIncentivePopup({
 
           {/* Secondary CTA */}
           <button
-            onClick={onContinueAsGuest}
+            onClick={handleGuestCheckout}
             className="w-full text-muted-foreground text-sm hover:text-foreground transition-colors py-3"
           >
             No thanks, I'll pay full price

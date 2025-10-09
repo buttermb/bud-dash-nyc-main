@@ -24,8 +24,11 @@ import GuestCheckoutOption from "@/components/GuestCheckoutOption";
 import HighValueCartNotice from "@/components/HighValueCartNotice";
 import ExpressCheckoutButtons from "@/components/ExpressCheckoutButtons";
 import SignUpIncentivePopup from "@/components/SignUpIncentivePopup";
+import CheckoutReminderBanner from "@/components/CheckoutReminderBanner";
+import LowCartValueUpsell from "@/components/LowCartValueUpsell";
 import { useCartValueTrigger } from "@/hooks/useCartValueTrigger";
 import { getNeighborhoodFromZip, getRiskColor, getRiskLabel, getRiskTextColor } from "@/utils/neighborhoods";
+import { analytics } from "@/utils/analytics";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -221,6 +224,9 @@ const Checkout = () => {
     setPromoCode('SIGNUP10');
     setPromoDiscount(discount);
     
+    // Track signup event
+    analytics.trackPopupSignup(email, subtotal, discount + (subtotal >= 100 ? 0 : 5.99));
+    
     toast.success(`✓ Discount applied! You're saving $${discount.toFixed(2)}`);
   };
 
@@ -228,9 +234,16 @@ const Checkout = () => {
     localStorage.setItem('signup_popup_declined', 'true');
     setShowSignUpPopup(false);
     setHasSeenPopup(true);
+    
+    // Track guest checkout decision
+    const savings = subtotal * 0.1 + (subtotal >= 100 ? 0 : 5.99);
+    analytics.trackPopupGuestCheckout(subtotal, savings);
   };
 
   const handlePlaceOrder = async () => {
+    // Track checkout started
+    analytics.trackCheckoutStarted(subtotal, cartItems.length, !user);
+    
     // Show popup on first checkout attempt if not seen
     if (!user && !hasSeenPopup && subtotal >= 25) {
       const popupSeen = localStorage.getItem('signup_popup_seen');
@@ -377,6 +390,10 @@ const Checkout = () => {
       }
 
       toast.success("Order placed successfully!");
+      
+      // Track order completion
+      analytics.trackOrderCompleted(total, promoDiscount, !user);
+      
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       navigate(`/order-confirmation?orderId=${order.id}`);
     } catch (error: any) {
@@ -410,6 +427,19 @@ const Checkout = () => {
         <h1 className="text-2xl md:text-3xl font-bold mb-2">Checkout</h1>
         
         <CheckoutProgress currentStep={2} />
+
+        {/* Low cart value upsell - encourage adding more for signup benefits */}
+        {!user && subtotal < 25 && (
+          <LowCartValueUpsell currentTotal={subtotal} targetAmount={25} />
+        )}
+
+        {/* Checkout reminder banner - subtle reminder if guest hasn't signed up */}
+        {!user && subtotal >= 25 && !hasSeenPopup && !promoDiscount && (
+          <CheckoutReminderBanner 
+            savings={subtotal * 0.1 + (subtotal >= 100 ? 0 : 5.99)}
+            onSignUpClick={() => setShowSignUpPopup(true)}
+          />
+        )}
 
         {/* Subtle discount reminder if user got discount from popup */}
         {!user && promoDiscount > 0 && hasSeenPopup && (

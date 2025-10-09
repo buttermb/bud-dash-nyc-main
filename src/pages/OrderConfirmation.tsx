@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Package, MapPin, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
 import { CustomerLocationSharing } from "@/components/CustomerLocationSharing";
+import PostPurchaseSignupPrompt from "@/components/PostPurchaseSignupPrompt";
 
 const OrderConfirmation = () => {
   const navigate = useNavigate();
@@ -13,6 +15,7 @@ const OrderConfirmation = () => {
   const orderId = searchParams.get("orderId");
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!orderId) {
@@ -177,6 +180,16 @@ const OrderConfirmation = () => {
           </Card>
 
           <CustomerLocationSharing orderId={orderId} />
+
+          {/* Post-purchase signup prompt for guest orders */}
+          {!user && order.customer_name && (
+            <div className="mb-6">
+              <PostPurchaseSignupPrompt 
+                orderEmail={order.customer_phone || "guest@example.com"}
+                orderNumber={order.order_number || order.id.slice(0, 8)}
+              />
+            </div>
+          )}
 
           <div className="flex gap-4">
             <Button
