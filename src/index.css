@@ -99,6 +99,13 @@
     text-rendering: optimizeLegibility;
   }
   
+  /* Backdrop blur support check */
+  @supports (backdrop-filter: blur(10px)) {
+    .supports-backdrop-blur {
+      backdrop-filter: blur(10px);
+    }
+  }
+  
   /* Prevent zoom on input focus (iOS Safari) */
   @supports (-webkit-touch-callout: none) {
     input[type="text"],
