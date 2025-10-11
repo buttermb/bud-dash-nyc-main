@@ -1,7 +1,7 @@
 {
-  "name": "New York Minute - THCA Delivery",
-  "short_name": "NY Minute",
-  "description": "Legal THCA delivery in NYC. Order premium hemp-derived cannabis from licensed smoke shops.",
+  "name": "New York Minute NYC - Premium Flower Delivery",
+  "short_name": "NYM NYC",
+  "description": "Premium flower delivery in NYC. Order quality products from licensed vendors with fast, discreet delivery.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f1419",

@@ -178,7 +178,7 @@ export default function CourierLogin() {
             </Button>
           </form>
           <div className="mt-6 text-center text-sm">
-            <Link to="/admin-login" className="text-primary hover:underline">
+            <Link to="/admin/login" className="text-primary hover:underline">
               Admin login
             </Link>
           </div>
