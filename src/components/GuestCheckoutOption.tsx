@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Sparkles, ShoppingBag, Check, Gift, Zap, Package, Activity, Heart, Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Sparkles, ShoppingBag, Check } from "lucide-react";
 
 interface GuestCheckoutOptionProps {
   onGuestCheckout: () => void;
@@ -29,84 +28,6 @@ const GuestCheckoutOption = ({
   const guestTotal = cartTotal + guestDeliveryFee;
   
   const boroughName = borough ? borough.charAt(0).toUpperCase() + borough.slice(1) : "";
-  
-  // Dynamic benefits based on cart total
-  const getMemberBenefits = () => {
-    const benefits = [
-      {
-        icon: Check,
-        text: `✓ 10% off THIS order ($${firstOrderDiscount.toFixed(2)} discount)`,
-        highlight: true
-      }
-    ];
-    
-    // Show delivery fee savings only when cart is under $100
-    if (cartTotal < 100 && deliveryFeeSavings > 0) {
-      benefits.push({
-        icon: Package,
-        text: `🚚 FREE delivery (save $${deliveryFeeSavings.toFixed(2)})`,
-        highlight: false
-      });
-    }
-    
-    // Show FREE delivery threshold when cart is under $100
-    if (cartTotal < 100) {
-      benefits.push({
-        icon: Package,
-        text: "📦 FREE delivery on orders $100+",
-        highlight: false
-      });
-    }
-    
-    // Show priority benefits when cart is already $100+ (free delivery unlocked)
-    if (cartTotal >= 100) {
-      benefits.push({
-        icon: Zap,
-        text: "⚡ Priority delivery notifications",
-        highlight: false
-      });
-    }
-    
-    benefits.push({
-      icon: Activity,
-      text: "📦 Track orders in real-time",
-      highlight: false
-    });
-    
-    benefits.push({
-      icon: Heart,
-      text: "💾 Save favorites for quick reordering",
-      highlight: false
-    });
-    
-    // Show early access for high-value customers
-    if (cartTotal >= 100) {
-      benefits.push({
-        icon: Gift,
-        text: "🎁 Early access to new strains",
-        highlight: false
-      });
-    }
-    
-    benefits.push({
-      icon: Clock,
-      text: "⏱️ Faster checkout next time",
-      highlight: false
-    });
-    
-    // Add future savings benefit for high-value carts
-    if (cartTotal >= 100) {
-      benefits.push({
-        icon: Sparkles,
-        text: "💰 Save 10% on ALL future orders",
-        highlight: false
-      });
-    }
-    
-    return benefits;
-  };
-  
-  const memberBenefits = getMemberBenefits();
 
   return (
     <div className="grid md:grid-cols-2 gap-6 mb-8">
@@ -128,23 +49,30 @@ const GuestCheckoutOption = ({
             </div>
           </div>
           
-          {/* Dynamic Member Benefits */}
-          <ul className="space-y-2.5 text-sm" id="member-benefits-list">
-            {memberBenefits.map((benefit, index) => {
-              const IconComponent = benefit.icon;
-              return (
-                <li 
-                  key={index} 
-                  className={cn(
-                    "flex items-start gap-2.5",
-                    benefit.highlight && "font-semibold text-primary"
-                  )}
-                >
-                  <IconComponent className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span>{benefit.text}</span>
-                </li>
-              );
-            })}
+          <ul className="space-y-2.5 text-sm">
+            <li className="flex items-start gap-2.5">
+              <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <span><strong>10% off</strong> THIS order (${firstOrderDiscount.toFixed(2)} discount)</span>
+            </li>
+            {/* Only show delivery fee savings when cart is under $100 and there's actual savings */}
+            {cartTotal < 100 && deliveryFeeSavings > 0 && (
+              <li className="flex items-start gap-2.5">
+                <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <span><strong>Lower delivery fee</strong> (${memberDeliveryFee.toFixed(2)} vs ${guestDeliveryFee.toFixed(2)})</span>
+              </li>
+            )}
+            <li className="flex items-start gap-2.5">
+              <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <span><strong>FREE delivery</strong> on orders $100+</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <span><strong>Track orders</strong> in real-time</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <span><strong>Faster checkout</strong> next time</span>
+            </li>
           </ul>
 
           {cartTotal > 0 && totalSavings > 0 && (
