@@ -178,7 +178,6 @@
     .product-scroll-container {
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
-      overscroll-behavior-y: contain;
     }
   }
   
@@ -196,12 +195,6 @@
     img {
       pointer-events: auto;
       user-select: auto;
-    }
-    
-    /* Ensure scroll containers allow wheel events */
-    .overflow-x-auto {
-      overscroll-behavior-x: contain;
-      overscroll-behavior-y: none;
     }
   }
 }
