@@ -207,8 +207,8 @@ const ProductCatalog = () => {
                         scrollbarWidth: 'none',
                         msOverflowStyle: 'none',
                         WebkitOverflowScrolling: 'touch',
-                        touchAction: 'pan-x',
-                        overscrollBehaviorX: 'contain'
+                        touchAction: 'manipulation',
+                        overscrollBehaviorY: 'contain'
                       }}
                     >
                       {products.map((product) => (

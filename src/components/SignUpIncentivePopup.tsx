@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Gift, Truck, Zap, Shield } from 'lucide-react';
+import { X, Gift, Truck, Zap, Shield, Package, Activity, Heart, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -22,7 +22,10 @@ export default function SignUpIncentivePopup({
 }: SignUpIncentivePopupProps) {
   const [email, setEmail] = useState('');
   const discountAmount = (cartTotal * 0.1).toFixed(2);
-  const shippingFee = cartTotal >= 100 ? 0 : 5.99;
+  
+  // Dynamic delivery fee based on cart total
+  const currentDeliveryFee = cartTotal >= 100 ? 0 : (cartTotal >= 50 ? 10 : 15);
+  const shippingFee = cartTotal >= 100 ? 0 : currentDeliveryFee;
   const totalSavings = (parseFloat(discountAmount) + shippingFee).toFixed(2);
 
   useEffect(() => {
@@ -111,32 +114,86 @@ export default function SignUpIncentivePopup({
             Create an account to unlock your discount
           </p>
 
-          {/* Benefits */}
+          {/* Benefits - Dynamic based on cart total */}
           <div className="space-y-3 mb-6 bg-muted/50 p-4 rounded-xl">
             <div className="flex items-center gap-3">
               <div className="bg-primary p-1.5 rounded-full flex-shrink-0">
                 <Zap className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="text-sm">
-                <strong>10% off</strong> this order (${discountAmount})
+                ✓ <strong>10% off THIS order</strong> (${discountAmount} discount)
               </span>
             </div>
-            {shippingFee > 0 && (
+            
+            {/* Show delivery fee comparison only when it makes sense */}
+            {cartTotal < 100 && (
               <div className="flex items-center gap-3">
                 <div className="bg-primary p-1.5 rounded-full flex-shrink-0">
                   <Truck className="w-4 h-4 text-primary-foreground" />
                 </div>
                 <span className="text-sm">
-                  <strong>Free shipping</strong> today (${shippingFee.toFixed(2)})
+                  🚚 <strong>Lower delivery fee</strong> ($0.00 vs ${currentDeliveryFee.toFixed(2)})
                 </span>
               </div>
             )}
+            
+            {cartTotal < 100 && (
+              <div className="flex items-center gap-3">
+                <div className="bg-primary p-1.5 rounded-full flex-shrink-0">
+                  <Package className="w-4 h-4 text-primary-foreground" />
+                </div>
+                <span className="text-sm">
+                  📦 <strong>FREE delivery</strong> on orders $100+
+                </span>
+              </div>
+            )}
+            
+            {cartTotal >= 100 && (
+              <div className="flex items-center gap-3">
+                <div className="bg-primary p-1.5 rounded-full flex-shrink-0">
+                  <Zap className="w-4 h-4 text-primary-foreground" />
+                </div>
+                <span className="text-sm">
+                  ⚡ <strong>Priority delivery</strong> notifications
+                </span>
+              </div>
+            )}
+            
             <div className="flex items-center gap-3">
               <div className="bg-primary p-1.5 rounded-full flex-shrink-0">
-                <Gift className="w-4 h-4 text-primary-foreground" />
+                <Activity className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="text-sm">
-                <strong>Faster checkout</strong> next time
+                📦 <strong>Track orders</strong> in real-time
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="bg-primary p-1.5 rounded-full flex-shrink-0">
+                <Heart className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <span className="text-sm">
+                💾 <strong>Save favorites</strong> for faster reordering
+              </span>
+            </div>
+            
+            {cartTotal >= 100 && (
+              <div className="flex items-center gap-3">
+                <div className="bg-primary p-1.5 rounded-full flex-shrink-0">
+                  <Gift className="w-4 h-4 text-primary-foreground" />
+                </div>
+                <span className="text-sm">
+                  🎁 <strong>Early access</strong> to new strains
+                </span>
+              </div>
+            )}
+            
+            <div className="flex items-center gap-3">
+              <div className="bg-primary p-1.5 rounded-full flex-shrink-0">
+                <Clock className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <span className="text-sm">
+                ⏱️ <strong>Faster checkout</strong> next time
               </span>
             </div>
           </div>

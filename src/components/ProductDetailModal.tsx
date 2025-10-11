@@ -203,14 +203,19 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
           View detailed information about {product?.name}, including pricing, effects, and lab results
         </DialogDescription>
         
-        {/* Mobile-Optimized Close Button - Fixed positioning to stay above everything */}
+        {/* Mobile-Optimized Close Button - Always visible with high contrast */}
         <button
           onClick={() => onOpenChange(false)}
-          className="fixed right-4 top-4 z-[9999] rounded-full bg-background p-5 shadow-2xl ring-2 ring-primary hover:bg-primary hover:text-primary-foreground transition-all md:hidden touch-manipulation active:scale-95"
+          className="fixed right-4 top-4 z-[9999] rounded-full bg-black/80 text-white hover:bg-black transition-all md:hidden touch-manipulation active:scale-95 backdrop-blur-sm"
           aria-label="Close"
-          style={{ touchAction: 'manipulation' }}
+          style={{ 
+            touchAction: 'manipulation',
+            width: '44px',
+            height: '44px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.2)'
+          }}
         >
-          <X className="h-8 w-8" />
+          <X className="h-6 w-6 mx-auto" />
         </button>
         
         {/* Header Section */}
