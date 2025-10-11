@@ -98,8 +98,8 @@ const ProductCatalog = () => {
   };
 
   return (
-    <section id="products" className="py-16 md:py-32 bg-gradient-subtle">
-      <div className="container px-4 mx-auto">
+    <section id="products" className="py-16 md:py-32 bg-gradient-subtle overflow-hidden">
+      <div className="container px-4 mx-auto max-w-full">
         <div className="text-center space-y-4 md:space-y-6 mb-12 md:mb-20">
           <h2 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-wider">Shop Premium Flower</h2>
           <p className="text-lg md:text-2xl text-muted-foreground max-w-3xl mx-auto font-medium">
@@ -181,7 +181,7 @@ const ProductCatalog = () => {
                   </div>
 
                   {/* Horizontal Scrollable Product Row */}
-                  <div className="relative group">
+                  <div className="relative group -mx-4 md:mx-0">
                     {/* Desktop scroll buttons */}
                     <Button 
                       variant="outline" 
@@ -202,7 +202,7 @@ const ProductCatalog = () => {
 
                     <div 
                       ref={(el) => scrollContainerRef.current[category.key] = el}
-                      className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0"
+                      className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4 snap-x snap-mandatory px-4 md:px-0"
                       style={{ 
                         scrollbarWidth: 'none',
                         msOverflowStyle: 'none',
