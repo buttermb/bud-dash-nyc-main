@@ -207,7 +207,6 @@ const ProductCatalog = () => {
                         scrollbarWidth: 'none',
                         msOverflowStyle: 'none',
                         WebkitOverflowScrolling: 'touch',
-                        touchAction: 'manipulation',
                         overscrollBehaviorY: 'contain'
                       }}
                     >

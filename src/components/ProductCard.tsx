@@ -151,7 +151,6 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
       <Card 
         className="group overflow-hidden hover:ring-2 hover:ring-primary/50 hover:shadow-2xl transition-all duration-500 cursor-pointer relative bg-card hover:-translate-y-3 hover:brightness-105"
         onClick={handleCardClick}
-        style={{ touchAction: 'manipulation' }}
       >
         {/* Out of Stock Overlay */}
         {!product.in_stock && (
