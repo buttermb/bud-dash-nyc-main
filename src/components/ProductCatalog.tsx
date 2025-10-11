@@ -207,14 +207,41 @@ const ProductCatalog = () => {
                         scrollbarWidth: 'none',
                         msOverflowStyle: 'none',
                         WebkitOverflowScrolling: 'touch',
-                        overscrollBehaviorY: 'contain'
+                        overscrollBehaviorY: 'contain',
+                        cursor: 'grab'
+                      }}
+                      onMouseDown={(e) => {
+                        const container = scrollContainerRef.current[category.key];
+                        if (!container) return;
+                        container.style.cursor = 'grabbing';
+                        container.style.userSelect = 'none';
+                        
+                        const startX = e.pageX - container.offsetLeft;
+                        const scrollLeft = container.scrollLeft;
+                        
+                        const handleMouseMove = (e: MouseEvent) => {
+                          const x = e.pageX - container.offsetLeft;
+                          const walk = (x - startX) * 2;
+                          container.scrollLeft = scrollLeft - walk;
+                        };
+                        
+                        const handleMouseUp = () => {
+                          container.style.cursor = 'grab';
+                          container.style.userSelect = 'auto';
+                          document.removeEventListener('mousemove', handleMouseMove);
+                          document.removeEventListener('mouseup', handleMouseUp);
+                        };
+                        
+                        document.addEventListener('mousemove', handleMouseMove);
+                        document.addEventListener('mouseup', handleMouseUp);
                       }}
                     >
                       {products.map((product) => (
-                        <div 
-                          key={product.id} 
-                          className="w-[280px] md:w-[320px] flex-shrink-0 snap-start snap-always"
-                        >
+                      <div 
+                        key={product.id} 
+                        className="w-[280px] md:w-[320px] flex-shrink-0 snap-start snap-always"
+                        style={{ pointerEvents: 'auto' }}
+                      >
                           <ProductCard product={product} stockLevel={inventoryMap[product.id]} />
                         </div>
                       ))}
