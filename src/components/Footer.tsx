@@ -66,12 +66,12 @@ const Footer = () => {
             <div className="flex items-center gap-2">
               <NYMLogo size={50} />
               <div className="flex flex-col">
-                <span className="font-black text-lg tracking-wider">NEW YORK MINUTE</span>
-                <span className="text-xs text-muted-foreground tracking-widest">THCA DELIVERY. ELEVATED.</span>
+                <span className="font-black text-lg tracking-wider">BUD DASH NYC</span>
+                <span className="text-xs text-muted-foreground tracking-widest">PREMIUM FLOWER DELIVERY</span>
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              Hemp-derived THCA products. Lab-tested. NYC licensed.
+              Premium flower from licensed NYC cultivators. Lab-tested. Fast delivery.
             </p>
           </div>
 
@@ -84,7 +84,7 @@ const Footer = () => {
                   onClick={() => handleScrollToSection('flower')} 
                   className="hover:text-primary transition-colors text-left"
                 >
-                  THCA Flower
+                  Flower
                 </button>
               </li>
               <li>
@@ -92,7 +92,7 @@ const Footer = () => {
                   onClick={() => handleScrollToSection('pre-rolls')} 
                   className="hover:text-primary transition-colors text-left"
                 >
-                  THCA Pre-Rolls
+                  Pre-Rolls
                 </button>
               </li>
               <li>
@@ -100,15 +100,15 @@ const Footer = () => {
                   onClick={() => handleScrollToSection('vapes')} 
                   className="hover:text-primary transition-colors text-left"
                 >
-                  THCA Vapes
+                  Vapes
                 </button>
               </li>
               <li>
                 <button 
-                  onClick={() => handleScrollToSection('concentrates')} 
+                  onClick={() => handleScrollToSection('edibles')} 
                   className="hover:text-primary transition-colors text-left"
                 >
-                  THCA Concentrates
+                  Edibles
                 </button>
               </li>
             </ul>
@@ -136,9 +136,9 @@ const Footer = () => {
             </ul>
             <div className="mt-4 pt-4 border-t border-border space-y-1">
               <p className="font-semibold text-foreground">Contact Us</p>
-              <p className="text-xs">📞 (212) 555-THCA</p>
-              <p className="text-xs">📧 support@nymthca.com</p>
-              <p className="text-xs">🕐 9 AM - 11 PM Daily</p>
+              <p className="text-xs">📞 (212) 555-DASH</p>
+              <p className="text-xs">📧 hello@buddashnyc.com</p>
+              <p className="text-xs">🕐 8 AM - 10 PM Daily</p>
             </div>
           </div>
         </div>
@@ -160,16 +160,15 @@ const Footer = () => {
               <div className="bg-muted/50 border border-border rounded-lg p-4 mt-4 md:mt-0">
                 <div className="flex items-start gap-3">
                   <Badge variant="outline" className="mt-1 flex-shrink-0">21+</Badge>
-                  <div className="text-xs text-muted-foreground space-y-2">
-                    <p className="font-semibold text-foreground">THCA Legal Notice:</p>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li><strong>Licensed NY Cannabinoid Hemp Retailer:</strong> All operations comply with NY State hemp laws.</li>
-                      <li><strong>Hemp-Derived THCA Products:</strong> All products contain ≤0.3% Delta-9 THC and are federally legal.</li>
-                      <li><strong>THCA is Non-Psychoactive:</strong> THCA does not produce psychoactive effects in its raw form.</li>
-                      <li><strong>21+ Age Verification:</strong> Must be 21+ with valid ID. Age verified at delivery.</li>
-                      <li><strong>Lab-Tested:</strong> All products tested for potency and purity by third-party laboratories.</li>
-                      <li><strong>Discreet Delivery:</strong> Private packaging with no product identification on exterior.</li>
-                    </ul>
+                  <div className="text-[11px] text-muted-foreground space-y-2 leading-relaxed">
+                    <p className="font-semibold text-foreground">Legal & Compliance Information:</p>
+                    <p><strong>Licensed Cannabinoid Hemp Retailer</strong><br/>
+                    NY Office of Cannabis Management License #[Pending]</p>
+                    <p>All products are derived from hemp and contain less than 0.3% Delta-9 THC on a dry-weight basis, complying with federal and New York State regulations.</p>
+                    <p><strong>Age Restriction:</strong> Must be 21+ with valid government ID. ID verification required at delivery.</p>
+                    <p><strong>Health Notice:</strong> Products may produce intoxicating effects when heated or consumed. Do not use if pregnant, nursing, or operating vehicles/machinery. May result in positive drug test results.</p>
+                    <p><strong>FDA Disclaimer:</strong> These statements have not been evaluated by the FDA. Not intended to diagnose, treat, cure, or prevent any disease.</p>
+                    <p><strong>Customer Responsibility:</strong> You are responsible for knowing and complying with all applicable local laws and regulations.</p>
                   </div>
                 </div>
               </div>
@@ -178,8 +177,8 @@ const Footer = () => {
 
           {/* Copyright */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-2 text-sm text-muted-foreground">
-            <p>© 2024 New York Minute. All rights reserved.</p>
-            <p className="text-xs font-semibold tracking-wider">THCA DELIVERY. ELEVATED.</p>
+            <p>© 2025 Bud Dash NYC. All rights reserved.</p>
+            <p className="text-xs font-semibold tracking-wider">PREMIUM FLOWER DELIVERY</p>
           </div>
         </div>
       </div>

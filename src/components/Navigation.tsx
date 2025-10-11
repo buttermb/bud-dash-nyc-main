@@ -113,7 +113,7 @@ const Navigation = () => {
       {/* Free Shipping Banner */}
       <div className="bg-card border-b border-border py-2">
         <div className="container mx-auto px-4 text-center text-sm font-medium">
-          <span>Licensed NY Hemp Retailer | THCA Products | Same-Day Delivery | Free Shipping $100+</span>
+          <span>Licensed & Lab Tested | Same-Day Delivery | Free Shipping $100+</span>
         </div>
       </div>
 
@@ -122,8 +122,8 @@ const Navigation = () => {
           <Link to="/" className="flex items-center gap-3">
             <NYMLogo size={60} />
             <div className="flex flex-col">
-              <span className="font-black text-xl tracking-wider">NEW YORK MINUTE</span>
-              <span className="text-xs text-muted-foreground tracking-widest">THCA DELIVERY. ELEVATED.</span>
+              <span className="font-black text-xl tracking-wider">BUD DASH NYC</span>
+              <span className="text-xs text-muted-foreground tracking-widest">PREMIUM FLOWER DELIVERY</span>
             </div>
           </Link>
 

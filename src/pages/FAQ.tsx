@@ -10,64 +10,59 @@ import {
 const FAQ = () => {
   const faqs = [
     {
-      question: "What is THCA?",
+      question: "Are your products legal?",
       answer:
-        "THCA (tetrahydrocannabinolic acid) is the non-psychoactive precursor to THC found in raw cannabis plants. When heated (through smoking, vaping, or cooking), THCA converts to THC through a process called decarboxylation. THCA products are federally compliant under the 2018 Farm Bill when derived from hemp containing less than 0.3% delta-9 THC.",
+        "Yes. All products are derived from hemp and contain less than 0.3% Delta-9 THC, complying with federal and New York State regulations. We are a licensed cannabinoid hemp retailer by the NY Office of Cannabis Management.",
     },
     {
-      question: "Is THCA legal in NYC?",
+      question: "Are your products lab tested?",
       answer:
-        "Yes, hemp-derived THCA products are legal in New York State under both federal law (2018 Farm Bill) and state regulations, as long as they contain less than 0.3% delta-9 THC by dry weight. Our products are sourced from licensed NYC vendors and comply with all state and local regulations.",
+        "Yes. Every product is third-party lab tested for potency, purity, pesticides, heavy metals, and contaminants. Certificates of Analysis (COAs) are available for all products on request.",
     },
     {
-      question: "How does delivery work?",
+      question: "What areas do you deliver to?",
       answer:
-        "We offer same-day delivery to Brooklyn, Queens, and Manhattan. Orders typically arrive within 30-45 minutes. After placing your order, a nearby partner shop accepts it, prepares your products, and assigns a courier for delivery. You'll receive real-time updates on your order status.",
+        "We deliver across Manhattan, Brooklyn, and Queens. Enter your address at checkout to confirm delivery availability. Orders placed before 6 PM typically arrive same day.",
     },
     {
-      question: "What ID do I need at delivery?",
+      question: "How fast is delivery?",
       answer:
-        "You must present a valid government-issued photo ID showing you are 21 years or older. Acceptable IDs include a driver's license, state ID, passport, or military ID. The courier will verify your age before handing over your order. No ID, no delivery - no exceptions.",
+        "Orders typically arrive within 30-45 minutes. Delivery windows are 2-4 hours. You'll receive real-time updates on your order status.",
+    },
+    {
+      question: "Do you require ID?",
+      answer:
+        "Yes. You must be 21+ with valid government ID. Our driver will verify your age at delivery. Acceptable IDs: driver's license, state ID, passport, or military ID.",
     },
     {
       question: "What are the delivery fees?",
       answer:
-        "Delivery fees vary by location: Brooklyn and Queens have a $5 base fee. Manhattan has a $10 fee ($5 base + $5 borough surcharge). Additional distance charges may apply for deliveries over 2 miles from the partner shop. All fees are clearly displayed before checkout.",
+        "FREE on orders over $100. $10 for orders $50-$99. $15 for orders under $50. All fees displayed at checkout.",
     },
     {
-      question: "Can I track my order?",
+      question: "What should I expect in terms of effects?",
       answer:
-        "Yes! After placing your order, you'll receive a unique order number and can track your delivery in real-time. Track your order from the 'My Orders' page or via the link sent to your email. You'll see when the shop accepts your order, when it's being prepared, and when it's out for delivery.",
+        "Products may produce various effects depending on the strain and product type. Sativas tend to be energizing, indicas relaxing, and hybrids balanced. Effects vary by individual. Start with small amounts and use responsibly.",
     },
     {
-      question: "What are the purchase limits?",
+      question: "Will these products show up on a drug test?",
       answer:
-        "To comply with NYC regulations, we enforce the following limits: Flower products: Maximum 3 ounces per order. Concentrates: Maximum 24 grams per order. These limits help ensure responsible consumption and legal compliance. The cart will automatically prevent you from exceeding these limits.",
+        "Yes. Products may result in positive drug test results. If you're subject to drug testing, consult with your employer or testing authority before purchasing.",
     },
     {
       question: "What payment methods do you accept?",
       answer:
-        "We currently accept cash on delivery as our primary payment method. Simply have cash ready when the courier arrives. We're working on adding cryptocurrency payments (Bitcoin and USDC) soon. All transactions are discreet and secure.",
+        "We accept cash on delivery. Have cash ready when the driver arrives. Additional payment options coming soon.",
     },
     {
-      question: "What if I'm not satisfied with my order?",
+      question: "What is your return policy?",
       answer:
-        "Customer satisfaction is our priority. If you receive a damaged or incorrect product, please contact support immediately with your order number and photos. Due to the nature of cannabis products, we cannot accept returns once the seal is broken, but we'll work with you to resolve any legitimate issues.",
+        "Contact support immediately if you receive a damaged or incorrect product. Include your order number and photos. We'll work with you to resolve any issues.",
     },
     {
-      question: "How do I become a partner shop or courier?",
+      question: "How do I contact customer support?",
       answer:
-        "We're always looking for licensed NYC cannabis retailers and reliable couriers to join our network. Visit our 'Partner Shops' or 'Become a Courier' pages for eligibility requirements, benefits, and application forms. All partners must have proper licensing and pass background checks.",
-    },
-    {
-      question: "What are your delivery hours?",
-      answer:
-        "We offer delivery 7 days a week from 8:00 AM to 10:00 PM. Orders placed outside these hours will be processed when we reopen. During peak hours (evenings and weekends), delivery times may be slightly longer than our standard 30-45 minute estimate.",
-    },
-    {
-      question: "How should I store THCA products?",
-      answer:
-        "Keep THCA products in a cool, dark place away from direct sunlight and heat. For flower, use airtight containers to preserve freshness and potency. Edibles should be stored according to package instructions. Keep all products securely stored away from children and pets.",
+        "Email us at hello@buddashnyc.com or use the contact form on our Support page. We typically respond within 24 hours.",
     },
   ];
 
@@ -82,7 +77,7 @@ const FAQ = () => {
               Frequently Asked Questions
             </h1>
             <p className="text-xl text-muted-foreground">
-              Everything you need to know about THCA delivery in NYC
+              Everything you need to know about premium flower delivery in NYC
             </p>
           </div>
 
