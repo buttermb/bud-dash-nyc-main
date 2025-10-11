@@ -171,4 +171,34 @@
   .shadow-strong {
     box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
   }
+  
+  /* Mobile-only touch and scroll fixes */
+  @media (max-width: 767px) {
+    /* Allow scrolling over product cards on mobile */
+    .product-scroll-container {
+      -webkit-overflow-scrolling: touch;
+      touch-action: manipulation;
+      overscroll-behavior-y: contain;
+    }
+    
+    /* Prevent images from blocking scroll gestures */
+    img {
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+  }
+  
+  /* Desktop-only normal behavior */
+  @media (min-width: 768px) {
+    .product-scroll-container {
+      cursor: pointer;
+    }
+    
+    /* Normal image behavior on desktop */
+    img {
+      pointer-events: auto;
+      user-select: auto;
+    }
+  }
 }
