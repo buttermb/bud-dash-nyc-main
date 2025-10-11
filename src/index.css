@@ -197,5 +197,11 @@
       pointer-events: auto;
       user-select: auto;
     }
+    
+    /* Ensure scroll containers allow wheel events */
+    .overflow-x-auto {
+      overscroll-behavior-x: contain;
+      overscroll-behavior-y: none;
+    }
   }
 }
