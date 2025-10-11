@@ -202,11 +202,13 @@ const ProductCatalog = () => {
 
                     <div 
                       ref={(el) => scrollContainerRef.current[category.key] = el}
-                      className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4 snap-x snap-mandatory"
+                      className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0"
                       style={{ 
                         scrollbarWidth: 'none',
                         msOverflowStyle: 'none',
-                        WebkitOverflowScrolling: 'touch'
+                        WebkitOverflowScrolling: 'touch',
+                        touchAction: 'pan-x',
+                        overscrollBehaviorX: 'contain'
                       }}
                     >
                       {products.map((product) => (
