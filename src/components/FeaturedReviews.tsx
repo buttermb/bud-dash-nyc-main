@@ -37,7 +37,7 @@ const mockReviews = [
   {
     id: "6",
     rating: 5,
-    comment: "Fast, reliable, and top-quality products. The best cannabis delivery service in NYC!",
+    comment: "Fast, reliable, and top-quality products. The best flower delivery service in NYC!",
     product: { name: "Wedding Cake Premium", category: "flower" }
   },
 ];
