@@ -181,7 +181,7 @@ export default function ProductForm() {
       
       const thca = parseFloat(data.thca_percentage);
       if (isNaN(thca) || thca < 0) {
-        throw new Error("Valid THCA percentage is required (0-100)");
+        throw new Error("Valid cannabinoid percentage is required (0-100)");
       }
       
       const price = parseFloat(data.price);
@@ -374,15 +374,15 @@ export default function ProductForm() {
         } else if (error.message.includes("category")) {
           errorTitle = "Category required";
           errorMessage = "Please select a product category";
-        } else if (error.message.includes("THCA")) {
-          errorTitle = "THCA percentage required";
-          errorMessage = "Please enter a valid THCA percentage (0-100)";
+        } else if (error.message.includes("THCA") || error.message.includes("cannabinoid")) {
+          errorTitle = "Cannabinoid percentage required";
+          errorMessage = "Please enter a valid cannabinoid percentage (0-100)";
         } else if (error.message.includes("price")) {
           errorTitle = "Price required";
           errorMessage = "Please enter a valid price greater than $0";
         } else if (error.code === "23502") {
           errorTitle = "Missing required field";
-          errorMessage = "Please fill in all required fields: Name, Category, THCA %, and Price";
+          errorMessage = "Please fill in all required fields: Name, Category, Cannabinoid %, and Price";
         } else if (error.code === "23514") {
           errorTitle = "Invalid data";
           errorMessage = "One or more fields contain invalid values. Please check numeric fields.";
@@ -449,8 +449,8 @@ export default function ProductForm() {
     
     if (!formData.thca_percentage || parseFloat(formData.thca_percentage) === 0) {
       toast({
-        title: "THCA percentage required",
-        description: "Please enter the THCA percentage",
+        title: "Cannabinoid percentage required",
+        description: "Please enter the cannabinoid percentage",
         variant: "destructive",
       });
       setCurrentStep(1);
