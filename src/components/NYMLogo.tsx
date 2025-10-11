@@ -18,7 +18,7 @@ const NYMLogo = ({ size = 50, className = "" }: NYMLogoProps) => {
           fontSize: size * 0.35,
         }}
       >
-        NYM
+        BD
       </span>
     </div>
   );

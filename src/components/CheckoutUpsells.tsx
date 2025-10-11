@@ -159,8 +159,8 @@ const CheckoutUpsells = ({ cartItems }: CheckoutUpsellsProps) => {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="font-bold">${price.toFixed(2)}</p>
-                      {product.thca_percentage && (
-                        <p className="text-xs text-primary">{product.thca_percentage}% THCa</p>
+                       {product.thca_percentage && (
+                        <p className="text-xs text-primary">{product.thca_percentage}%</p>
                       )}
                     </div>
                   </div>

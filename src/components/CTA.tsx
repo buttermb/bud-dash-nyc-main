@@ -20,7 +20,7 @@ const CTA = () => {
             </h2>
             
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Get started now and have premium THCA delivered to your door in under 45 minutes.
+              Get started now and have premium flower delivered to your door in under 45 minutes.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">

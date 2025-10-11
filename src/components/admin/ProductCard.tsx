@@ -64,7 +64,7 @@ export function ProductCard({
         <div>
           <h3 className="font-semibold line-clamp-1">{product.name}</h3>
           <p className="text-sm text-muted-foreground">
-            {product.category} • {product.thca_percentage}% THCA
+            {product.category} • {product.thca_percentage}%
           </p>
         </div>
 

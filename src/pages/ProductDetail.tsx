@@ -5,10 +5,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShoppingCart, Star, ArrowLeft, FileText, Plus, Minus } from "lucide-react";
+import { Loader2, ShoppingCart, Star, ArrowLeft, FileText, Plus, Minus, Award, Shield, ChevronDown } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useProductViewTracking } from "@/hooks/useProductViewTracking";
 import StickyAddToCart from "@/components/StickyAddToCart";
 import Navigation from "@/components/Navigation";
@@ -188,19 +189,106 @@ const ProductDetail = () => {
 
           {product.strain_info && (
             <div className="space-y-2">
-              <h3 className="font-semibold">Strain Information</h3>
+              <h3 className="font-semibold">About This Strain</h3>
               <p className="text-muted-foreground">{product.strain_info}</p>
             </div>
           )}
 
-          <div className="flex items-center gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">THCA Content</p>
-              <Badge variant="outline" className="text-lg">
-                {product.thca_percentage}%
-              </Badge>
-            </div>
-          </div>
+          {/* Lab Testing & Compliance - Expandable Section */}
+          <Collapsible className="border rounded-lg">
+            <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
+              <span className="font-semibold flex items-center gap-2">
+                <Award className="w-5 h-5 text-primary" />
+                Lab Testing & Compliance
+              </span>
+              <ChevronDown className="w-5 h-5 transition-transform ui-expanded:rotate-180" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="p-4 pt-0 space-y-3">
+              <div className="text-sm space-y-2">
+                <p className="flex items-center gap-2">
+                  <span className="text-primary">✓</span>
+                  <span>Third-party lab tested</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="text-primary">✓</span>
+                  <span>Complies with federal and NY regulations</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="text-primary">✓</span>
+                  <span>Certificate of Analysis available</span>
+                </p>
+              </div>
+              
+              <div className="pt-3 border-t space-y-2">
+                <p className="font-semibold text-sm">Cannabinoid Profile:</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="p-2 bg-muted rounded">
+                    <p className="text-xs text-muted-foreground">Total Cannabinoids</p>
+                    <p className="font-bold">{product.thca_percentage || 0}%</p>
+                  </div>
+                  <div className="p-2 bg-muted rounded">
+                    <p className="text-xs text-muted-foreground">CBD</p>
+                    <p className="font-bold">&lt;1%</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="pt-3 border-t space-y-2">
+                <p className="font-semibold text-sm">Safety Testing:</p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <p className="flex items-center gap-1"><span className="text-primary">✓</span> Pesticide-free</p>
+                  <p className="flex items-center gap-1"><span className="text-primary">✓</span> Heavy metals tested</p>
+                  <p className="flex items-center gap-1"><span className="text-primary">✓</span> Microbial testing passed</p>
+                  <p className="flex items-center gap-1"><span className="text-primary">✓</span> Residual solvents clean</p>
+                </div>
+              </div>
+              
+              <p className="text-xs text-muted-foreground italic pt-2">
+                * This product is derived from hemp and contains less than 0.3% Delta-9 THC on a dry-weight basis.
+              </p>
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* Important Information - Expandable Section */}
+          <Collapsible className="border rounded-lg">
+            <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
+              <span className="font-semibold flex items-center gap-2">
+                <Shield className="w-5 h-5 text-primary" />
+                Important Information
+              </span>
+              <ChevronDown className="w-5 h-5 transition-transform ui-expanded:rotate-180" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="p-4 pt-0 space-y-3 text-sm">
+              <div className="space-y-2">
+                <p className="font-semibold">Age Requirement:</p>
+                <p className="text-muted-foreground">
+                  Must be 21+ with valid government ID. ID verification required at delivery.
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="font-semibold">Effects Notice:</p>
+                <p className="text-muted-foreground">
+                  This product contains cannabinoids that may produce intoxicating effects when heated or consumed. 
+                  Do not operate vehicles or machinery after use.
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="font-semibold">Drug Testing:</p>
+                <p className="text-muted-foreground">
+                  Use may result in positive drug test results.
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="font-semibold">Legal Notice:</p>
+                <p className="text-muted-foreground">
+                  Customer is responsible for compliance with all local laws and regulations.
+                </p>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           {product.lab_results_url && (
             <Button variant="outline" asChild className="w-full">

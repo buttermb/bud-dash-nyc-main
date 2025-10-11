@@ -752,7 +752,7 @@ export default function CourierDashboard() {
                       <div>
                         <div className="font-bold text-sm">{item.products?.name || item.product_name}</div>
                         {item.products?.thca_percentage && (
-                          <div className="text-xs text-slate-400">{item.products.thca_percentage}% THCA</div>
+                          <div className="text-xs text-slate-400">{item.products.thca_percentage}%</div>
                         )}
                       </div>
                       <div className="text-sm font-bold">x{item.quantity}</div>
@@ -894,7 +894,7 @@ export default function CourierDashboard() {
                             <div>
                               <div className="font-bold text-sm">{item.products?.name || item.product_name}</div>
                               {item.products?.thca_percentage && (
-                                <div className="text-xs text-slate-400">{item.products.thca_percentage}% THCA</div>
+                                <div className="text-xs text-slate-400">{item.products.thca_percentage}%</div>
                               )}
                             </div>
                             <div className="text-sm font-bold text-slate-300">x{item.quantity}</div>

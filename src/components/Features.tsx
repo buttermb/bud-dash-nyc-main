@@ -15,7 +15,7 @@ const features = [
   {
     icon: Leaf,
     title: "100% Legal",
-    description: "All THCA products are hemp-derived with ≤0.3% delta-9 THC, legal in NY.",
+    description: "Licensed Cannabinoid Hemp Retailer. All products comply with federal and state regulations.",
   },
   {
     icon: Lock,
@@ -41,7 +41,7 @@ const Features = () => {
         <div className="text-center space-y-6 mb-24">
           <h2 className="text-6xl md:text-7xl font-black uppercase tracking-wider">Why Choose Us</h2>
           <p className="text-2xl text-muted-foreground max-w-3xl mx-auto font-medium">
-            Safe, legal, and convenient THCA delivery you can trust
+            Safe, legal, and convenient delivery you can trust
           </p>
         </div>
 

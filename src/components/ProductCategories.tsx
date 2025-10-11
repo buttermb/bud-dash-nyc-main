@@ -5,7 +5,7 @@ import { Flower, Candy, Wind, Droplet } from "lucide-react";
 const categories = [
   {
     icon: Flower,
-    name: "THCA Flower",
+    name: "Flower",
     description: "Premium strains, lab-tested",
     popular: true,
     sectionId: "flower",
@@ -40,7 +40,7 @@ const ProductCategories = () => {
         <div className="text-center space-y-4 mb-16">
           <h2 className="text-4xl md:text-5xl font-bold">Shop by Category</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Explore our full range of legal THCA products
+            Explore our full range of premium products
           </p>
         </div>
 

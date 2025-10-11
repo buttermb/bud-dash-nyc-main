@@ -234,7 +234,7 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
             )}
             {product.thca_percentage && (
               <Badge className="bg-primary/10 text-primary border-primary/20 font-bold text-sm px-3 py-1">
-                {product.thca_percentage}% THCA
+                {product.thca_percentage}%
               </Badge>
             )}
           </div>

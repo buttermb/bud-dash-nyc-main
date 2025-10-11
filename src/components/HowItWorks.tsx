@@ -12,7 +12,7 @@ const steps = [
   {
     icon: ShoppingBag,
     title: "1. Browse & Order",
-    description: "Browse premium THCA products from licensed NYC retailers. Add items to your cart, select your preferred weights, and proceed to checkout with secure payment options.",
+    description: "Browse premium flower from licensed NYC cultivators. Add items to your cart, select your preferred weights, and proceed to checkout.",
   },
   {
     icon: Store,
@@ -33,7 +33,7 @@ const HowItWorks = () => {
         <div className="text-center space-y-4 md:space-y-6 mb-12 md:mb-24">
           <h2 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-wider">How It Works</h2>
           <p className="text-lg md:text-2xl text-muted-foreground max-w-3xl mx-auto font-medium">
-            Three simple steps to get premium THCA delivered
+            Three simple steps to get premium flower delivered
           </p>
         </div>
 

@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Bitcoin, DollarSign, Calendar as CalendarIcon, Clock, Zap, AlertTriangle, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -1023,6 +1024,34 @@ const Checkout = () => {
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
                   <span>${total.toFixed(2)}</span>
+                </div>
+
+                {/* Legal Confirmation Checkboxes */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                    <input 
+                      type="checkbox" 
+                      id="age-confirm"
+                      required
+                      className="mt-1 h-4 w-4 rounded border-gray-300"
+                    />
+                    <label htmlFor="age-confirm" className="text-sm flex-1 cursor-pointer">
+                      I certify that I am 21 years of age or older and will provide valid government ID at delivery.
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                    <input 
+                      type="checkbox" 
+                      id="legal-confirm"
+                      required
+                      className="mt-1 h-4 w-4 rounded border-gray-300"
+                    />
+                    <label htmlFor="legal-confirm" className="text-sm flex-1 cursor-pointer">
+                      I understand these products are derived from hemp, may produce effects when consumed, and may result in positive drug tests. 
+                      I am responsible for compliance with local laws.
+                    </label>
+                  </div>
                 </div>
 
                 <Button

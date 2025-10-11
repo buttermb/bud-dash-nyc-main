@@ -71,7 +71,7 @@ const BecomeCourier = () => {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold mb-6">Become a New York Minute Courier</h1>
           <p className="text-lg text-muted-foreground mb-12">
-            Join New York Minute's network of independent couriers and earn money delivering premium THCA products 
+            Join Bud Dash NYC's network of independent couriers and earn money delivering premium products 
             across New York City. Set your own schedule and be part of the growing legal cannabis industry.
           </p>
 
@@ -96,7 +96,7 @@ const BecomeCourier = () => {
               <Shield className="w-10 h-10 text-primary mb-4" />
               <h3 className="text-xl font-semibold mb-2">Legal & Safe</h3>
               <p className="text-muted-foreground">
-                Deliver legal THCA products with full compliance support and liability protection.
+                Deliver premium products with full compliance support and liability protection.
               </p>
             </div>
 

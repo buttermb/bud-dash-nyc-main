@@ -52,7 +52,7 @@ export function DetailsStep({ formData, updateFormData }: DetailsStepProps) {
           id="short-desc"
           value={formData.description || ""}
           onChange={(e) => updateFormData({ description: e.target.value })}
-          placeholder="Hand-trimmed indoor cultivation. This premium THCA flower represents the pinnacle of hemp genetics."
+          placeholder="Hand-trimmed indoor cultivation. Premium flower represents the pinnacle of quality genetics."
           maxLength={200}
           rows={3}
           className="mt-1.5"

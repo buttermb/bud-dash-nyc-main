@@ -29,9 +29,9 @@ const Terms = () => {
           <section>
             <h2 className="text-2xl font-semibold mb-4">3. Product Information</h2>
             <p className="text-muted-foreground">
-              All THCA products sold through our platform contain ≤0.3% delta-9 THC and are legal under New York 
-              state law. Products are sourced from licensed local shops and are third-party lab tested. Lab results 
-              are available upon request for all products.
+              All products sold through our platform are derived from hemp and contain less than 0.3% Delta-9 THC,
+              complying with federal and New York state regulations. Products are sourced from licensed vendors and 
+              are third-party lab tested. Lab results are available upon request for all products.
             </p>
           </section>
 
@@ -87,7 +87,7 @@ const Terms = () => {
           <section>
             <h2 className="text-2xl font-semibold mb-4">10. Contact Information</h2>
             <p className="text-muted-foreground">
-              For questions about these Terms of Service, please contact us at legal@bud-dash.nyc or visit our 
+              For questions about these Terms of Service, please contact us at hello@buddashnyc.com or visit our 
               support page.
             </p>
           </section>

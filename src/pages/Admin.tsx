@@ -269,7 +269,7 @@ const Admin = () => {
                       <div>
                         <h3 className="font-semibold">{product.name}</h3>
                         <p className="text-sm text-muted-foreground">{product.category} • ${product.price}</p>
-                        <p className="text-sm text-muted-foreground">THCA: {product.thca_percentage}%</p>
+                        <p className="text-sm text-muted-foreground">Content: {product.thca_percentage}%</p>
                         <p className={`text-sm ${product.in_stock ? "text-green-600" : "text-red-600"}`}>
                           {product.in_stock ? "In Stock" : "Out of Stock"}
                         </p>

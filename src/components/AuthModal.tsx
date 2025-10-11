@@ -171,7 +171,7 @@ const AuthModal = ({ open, onOpenChange, mode, onModeChange }: AuthModalProps) =
           <DialogDescription>
             {mode === "signin"
               ? "Sign in to your account to start ordering"
-              : "Create an account to order THCA products"}
+              : "Create an account to order premium products"}
           </DialogDescription>
         </DialogHeader>
 

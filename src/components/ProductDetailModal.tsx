@@ -280,7 +280,7 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
                 <Card>
                   <CardContent className="p-4 text-center">
                     <p className="text-3xl font-bold text-primary">{product.thca_percentage}%</p>
-                    <p className="text-xs text-muted-foreground">THCa Content</p>
+                    <p className="text-xs text-muted-foreground">Cannabinoid %</p>
                   </CardContent>
                 </Card>
               )}
@@ -401,28 +401,34 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
           </div>
         </div>
 
-        {/* Detailed Information Tabs - Simplified for mobile */}
-        <Tabs defaultValue="overview" className="px-3 md:px-6 pb-6">
-          <TabsList className="grid w-full grid-cols-3 h-auto gap-1 bg-muted/50 p-1.5">
-            <TabsTrigger 
-              value="overview" 
-              className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
-            >
-              Overview
-            </TabsTrigger>
-            <TabsTrigger 
-              value="effects" 
-              className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
-            >
-              Effects
-            </TabsTrigger>
-            <TabsTrigger 
-              value="reviews" 
-              className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
-            >
-              Reviews ({reviews.length})
-            </TabsTrigger>
-          </TabsList>
+          {/* Detailed Information Tabs - Simplified for mobile */}
+          <Tabs defaultValue="overview" className="px-3 md:px-6 pb-6">
+            <TabsList className="grid w-full grid-cols-4 h-auto gap-1 bg-muted/50 p-1.5">
+              <TabsTrigger 
+                value="overview" 
+                className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
+              >
+                Overview
+              </TabsTrigger>
+              <TabsTrigger 
+                value="effects" 
+                className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
+              >
+                Effects
+              </TabsTrigger>
+              <TabsTrigger 
+                value="compliance" 
+                className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
+              >
+                Lab Results
+              </TabsTrigger>
+              <TabsTrigger 
+                value="reviews" 
+                className="text-xs md:text-sm py-3 md:py-2.5 px-2 touch-manipulation min-h-[44px]"
+              >
+                Reviews ({reviews.length})
+              </TabsTrigger>
+            </TabsList>
 
           <TabsContent value="overview" className="space-y-6 mt-6">
             {product.description && (
@@ -468,7 +474,7 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
                   </div>
                   <div className="flex items-start gap-3 p-3 bg-background rounded-lg">
                     <span className="text-primary text-lg mt-0.5">✓</span>
-                    <span className="text-base">Premium quality hemp-derived THCA</span>
+                    <span className="text-base">Premium quality from licensed cultivators</span>
                   </div>
                   <div className="flex items-start gap-3 p-3 bg-background rounded-lg">
                     <span className="text-primary text-lg mt-0.5">✓</span>
@@ -613,6 +619,94 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
                   <p className="text-muted-foreground">{product.strain_lineage}</p>
                 </div>
               )}
+            </div>
+          </TabsContent>
+
+          {/* New Lab Testing & Compliance Tab */}
+          <TabsContent value="compliance" className="space-y-6 mt-6">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Award className="w-5 h-5 text-primary" />
+                  Lab Testing & Compliance
+                </h3>
+                <div className="space-y-3 text-sm">
+                  <p className="flex items-center gap-2">
+                    <span className="text-primary text-lg">✓</span>
+                    <span>Third-party lab tested</span>
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="text-primary text-lg">✓</span>
+                    <span>Complies with federal and NY regulations</span>
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="text-primary text-lg">✓</span>
+                    <span>Certificate of Analysis available</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-6 bg-muted/50 rounded-lg space-y-4">
+                <p className="font-semibold">Cannabinoid Profile:</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Total Cannabinoids</p>
+                      <p className="text-2xl font-bold text-primary">{product.thca_percentage || 0}%</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-xs text-muted-foreground mb-1">CBD</p>
+                      <p className="text-2xl font-bold">&lt;1%</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Delta-9 THC</p>
+                      <p className="text-2xl font-bold">&lt;0.3%</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              <div className="p-6 bg-muted/50 rounded-lg space-y-3">
+                <p className="font-semibold">Safety Testing:</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <p className="flex items-center gap-2"><span className="text-primary">✓</span> Pesticide-free</p>
+                  <p className="flex items-center gap-2"><span className="text-primary">✓</span> Heavy metals tested</p>
+                  <p className="flex items-center gap-2"><span className="text-primary">✓</span> Microbial testing passed</p>
+                  <p className="flex items-center gap-2"><span className="text-primary">✓</span> Residual solvents clean</p>
+                </div>
+              </div>
+
+              <div className="p-6 bg-primary/5 border-2 border-primary/20 rounded-lg space-y-3">
+                <p className="font-semibold flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-primary" />
+                  Important Information
+                </p>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <div>
+                    <p className="font-semibold text-foreground">Age Requirement:</p>
+                    <p>Must be 21+ with valid government ID. ID verification required at delivery.</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Effects Notice:</p>
+                    <p>This product contains cannabinoids that may produce intoxicating effects when heated or consumed. Do not operate vehicles or machinery after use.</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Drug Testing:</p>
+                    <p>Use may result in positive drug test results.</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Legal Notice:</p>
+                    <p>Customer is responsible for compliance with all local laws and regulations.</p>
+                  </div>
+                  <p className="text-xs italic pt-2">
+                    * This product is derived from hemp and contains less than 0.3% Delta-9 THC on a dry-weight basis.
+                  </p>
+                </div>
+              </div>
             </div>
           </TabsContent>
 

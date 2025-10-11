@@ -42,15 +42,15 @@ const Index = () => {
             <div className="flex justify-center animate-fade-in">
               <Badge variant="outline" className="px-6 py-3 text-base border-primary/50 bg-primary/10 backdrop-blur-sm">
                 <ShieldCheck className="w-5 h-5 mr-2" />
-                Licensed NY Hemp Retailer
+                Licensed & Lab Tested
               </Badge>
             </div>
             
             {/* Main Headline */}
             <h1 className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight leading-tight animate-fade-in">
-              Trusted THCA Delivery <br />
+              Premium Flower <br />
               <span className="bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
-                in NYC
+                Delivery NYC
               </span>
             </h1>
             
@@ -62,17 +62,17 @@ const Index = () => {
               </div>
               <div className="flex items-center gap-2 bg-background/50 backdrop-blur-sm px-4 py-2 rounded-full border border-primary/20">
                 <Award className="w-5 h-5 text-primary" />
-                <span className="font-medium">Lab-Tested Products</span>
+                <span className="font-medium">Lab-Tested Quality</span>
               </div>
               <div className="flex items-center gap-2 bg-background/50 backdrop-blur-sm px-4 py-2 rounded-full border border-primary/20">
                 <ShieldCheck className="w-5 h-5 text-primary" />
-                <span className="font-medium">21+ Age Verified</span>
+                <span className="font-medium">21+ Verified</span>
               </div>
             </div>
             
             {/* Value Proposition */}
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in">
-              Premium hemp-derived THCA products from licensed NYC vendors
+              Premium flower, pre-rolls, and edibles from licensed NYC cultivators
             </p>
             
             {/* Free Shipping Callout */}

@@ -33,7 +33,7 @@ const Blog = () => {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-4">Cannabis Education & News</h1>
         <p className="text-muted-foreground mb-8">
-          Learn about THCA, cannabis wellness, NYC delivery laws, and more from our expert team.
+          Learn about cannabis wellness, NYC delivery laws, and more from our expert team.
         </p>
 
         <div className="space-y-6">

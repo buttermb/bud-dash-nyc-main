@@ -63,7 +63,7 @@ const Privacy = () => {
             <h2 className="text-2xl font-semibold mb-4">7. Your Rights</h2>
             <p className="text-muted-foreground">
               You have the right to access, correct, or delete your personal information. You can also opt out of 
-              marketing communications at any time. To exercise these rights, contact us at privacy@bud-dash.nyc.
+              marketing communications at any time. To exercise these rights, contact us at hello@buddashnyc.com.
             </p>
           </section>
 
@@ -94,7 +94,7 @@ const Privacy = () => {
           <section>
             <h2 className="text-2xl font-semibold mb-4">11. Contact Us</h2>
             <p className="text-muted-foreground">
-              If you have questions about this Privacy Policy, please contact us at privacy@bud-dash.nyc or 
+              For questions about this Privacy Policy, please contact us at hello@buddashnyc.com or 
               visit our support page.
             </p>
           </section>

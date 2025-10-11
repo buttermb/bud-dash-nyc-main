@@ -25,11 +25,11 @@ export function BasicInfoStep({ formData, updateFormData }: BasicInfoStepProps) 
             id="name"
             value={formData.name || ""}
             onChange={(e) => updateFormData({ name: e.target.value })}
-            placeholder="Example: Purple Haze THCA Flower"
+            placeholder="Example: Blue Dream - Sativa"
             className="mt-1.5"
           />
           <p className="text-xs text-muted-foreground mt-1">
-            Example: "Purple Haze THCA Flower"
+            Example: "Blue Dream - Sativa"
           </p>
         </div>
 

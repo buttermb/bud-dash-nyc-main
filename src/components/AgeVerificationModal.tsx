@@ -43,7 +43,7 @@ const AgeVerificationModal = () => {
             </div>
             <DialogTitle className="text-2xl text-center">Age Verification Required</DialogTitle>
             <DialogDescription className="text-center text-base pt-2">
-              You must be 21 years or older to access this website and purchase THCA products.
+              You must be 21 years or older to access this website and purchase products.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-3 pt-4">

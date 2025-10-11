@@ -13,7 +13,7 @@ const mockReviews = [
   {
     id: "2",
     rating: 5,
-    comment: "Best THCA products in NYC. Customer service was excellent and the potency is exactly as advertised.",
+    comment: "Best flower in NYC. Customer service was excellent and the quality is exactly as advertised.",
     product: { name: "Premium Vape Cart", category: "vapes" }
   },
   {
@@ -32,7 +32,7 @@ const mockReviews = [
     id: "5",
     rating: 5,
     comment: "Perfect for my needs. The lab testing gives me peace of mind. Five stars!",
-    product: { name: "THCA Gummies", category: "edibles" }
+    product: { name: "Premium Gummies", category: "edibles" }
   },
   {
     id: "6",
@@ -54,7 +54,7 @@ const FeaturedReviews = () => {
             What Our Customers Say
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Real reviews from real customers who love our premium THCA products
+            Real reviews from real customers who love our premium products
           </p>
         </div>
 

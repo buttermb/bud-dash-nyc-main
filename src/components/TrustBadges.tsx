@@ -10,7 +10,7 @@ const TrustBadges = () => {
     },
     {
       icon: Award,
-      title: "Lab-Tested THCA",
+      title: "Lab-Tested Quality",
       description: "Potency & Purity",
       stat: "COA Verified"
     },
@@ -58,7 +58,7 @@ const TrustBadges = () => {
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-3">Why Choose Us?</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Join thousands of satisfied customers who trust us for premium THCA delivery
+            Join thousands of satisfied customers who trust us for premium delivery
           </p>
         </div>
         

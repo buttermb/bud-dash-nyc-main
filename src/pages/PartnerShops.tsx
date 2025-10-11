@@ -44,7 +44,7 @@ const PartnerShops = () => {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold mb-6">Partner with Bud-Dash NYC</h1>
           <p className="text-lg text-muted-foreground mb-12">
-            Expand your reach and grow your business by joining our network of licensed THCA retailers. 
+            Expand your reach and grow your business by joining our network of licensed NYC cultivators. 
             Connect with thousands of customers across Brooklyn, Queens, and Manhattan.
           </p>
 
@@ -61,7 +61,7 @@ const PartnerShops = () => {
               <Users className="w-10 h-10 text-primary mb-4" />
               <h3 className="text-xl font-semibold mb-2">Access Our Customer Base</h3>
               <p className="text-muted-foreground">
-                Connect with thousands of verified customers actively looking for premium THCA products.
+                Connect with thousands of verified customers actively looking for premium products.
               </p>
             </div>
 

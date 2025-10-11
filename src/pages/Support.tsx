@@ -35,7 +35,7 @@ const Support = () => {
               Customer Support
             </h1>
             <p className="text-xl text-muted-foreground">
-              We're here to help with your THCA delivery experience
+              We're here to help with your delivery experience
             </p>
           </div>
 
@@ -137,7 +137,7 @@ const Support = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    support@thcanyc.com
+                    hello@buddashnyc.com
                   </p>
                   <p className="text-sm text-muted-foreground mt-2">
                     Response time: Within 24 hours

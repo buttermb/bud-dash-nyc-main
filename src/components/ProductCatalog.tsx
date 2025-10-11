@@ -79,8 +79,8 @@ const ProductCatalog = () => {
   };
 
   const categories = [
-    { key: "flower", label: "Flower", icon: Leaf, desc: "Premium cannabis flower" },
-    { key: "edibles", label: "Edibles", icon: Cookie, desc: "Delicious infused treats" },
+    { key: "flower", label: "Flower", icon: Leaf, desc: "Premium indoor-grown flower" },
+    { key: "edibles", label: "Edibles", icon: Cookie, desc: "Delicious edibles" },
     { key: "pre-rolls", label: "Pre-Rolls", icon: Cigarette, desc: "Convenient & ready" },
     { key: "concentrates", label: "Concentrates", icon: Droplets, desc: "High-potency extracts" },
     { key: "vapes", label: "Vapes", icon: Wind, desc: "Smooth vapor experience" },
@@ -101,9 +101,9 @@ const ProductCatalog = () => {
     <section id="products" className="py-16 md:py-32 bg-gradient-subtle">
       <div className="container px-4 mx-auto">
         <div className="text-center space-y-4 md:space-y-6 mb-12 md:mb-20">
-          <h2 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-wider">Shop THCA Products</h2>
+          <h2 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-wider">Shop Premium Flower</h2>
           <p className="text-lg md:text-2xl text-muted-foreground max-w-3xl mx-auto font-medium">
-            Premium hemp-derived THCA products from licensed NYC vendors
+            Premium indoor-grown flower from licensed NYC cultivators
           </p>
         </div>
 

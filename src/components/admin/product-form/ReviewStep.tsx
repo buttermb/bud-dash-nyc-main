@@ -63,7 +63,7 @@ export function ReviewStep({ formData, updateFormData }: ReviewStepProps) {
           <div className="p-4 space-y-2">
             <h3 className="font-semibold text-lg">{formData.name || "Product Name"}</h3>
             <p className="text-sm text-muted-foreground">
-              {formData.category || "Category"} • {formData.thca_percentage || "0"}% THCA
+              {formData.category || "Category"} • {formData.thca_percentage || "0"}%
             </p>
             <p className="text-sm line-clamp-2">
               {formData.description || "No description provided"}
