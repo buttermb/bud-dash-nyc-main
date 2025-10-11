@@ -8,10 +8,10 @@ const About = () => {
       <Navigation />
       <main className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-6">About Bud Dash NYC</h1>
+          <h1 className="text-4xl font-bold mb-6">About New York Minute NYC</h1>
           
           <p className="text-lg text-muted-foreground mb-12">
-            Bud Dash NYC is New York's trusted premium flower delivery service. We partner with licensed NYC cultivators
+            New York Minute NYC is New York's trusted premium flower delivery service. We partner with licensed NYC cultivators
             to bring you the finest selection of flower, pre-rolls, and edibles—delivered fast and discreetly to 
             Manhattan, Brooklyn, and Queens.
           </p>
@@ -73,7 +73,7 @@ const About = () => {
           <section className="mb-12">
             <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
             <p className="text-muted-foreground">
-              We started Bud Dash with a simple mission: make premium products accessible to New Yorkers who want 
+              We started New York Minute with a simple mission: make premium products accessible to New Yorkers who want 
               quality, consistency, and convenience. No hassle, no compromise—just great flower delivered fast.
             </p>
           </section>
@@ -98,7 +98,7 @@ const About = () => {
               Our team is here to help.
             </p>
             <div className="space-y-2 text-muted-foreground">
-              <p>Email: hello@buddashnyc.com</p>
+              <p>Email: support@newyorkminutenyc.com</p>
               <p>Phone: (212) 555-DASH</p>
               <p>Hours: 8 AM - 10 PM, 7 Days a Week</p>
             </div>

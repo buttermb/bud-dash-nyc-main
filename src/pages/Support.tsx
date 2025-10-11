@@ -137,7 +137,7 @@ const Support = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    hello@buddashnyc.com
+                    support@newyorkminutenyc.com
                   </p>
                   <p className="text-sm text-muted-foreground mt-2">
                     Response time: Within 24 hours

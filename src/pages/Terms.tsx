@@ -87,7 +87,7 @@ const Terms = () => {
           <section>
             <h2 className="text-2xl font-semibold mb-4">10. Contact Information</h2>
             <p className="text-muted-foreground">
-              For questions about these Terms of Service, please contact us at hello@buddashnyc.com or visit our 
+              For questions about these Terms of Service, please contact us at legal@newyorkminutenyc.com or visit our 
               support page.
             </p>
           </section>

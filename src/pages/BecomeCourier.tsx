@@ -71,7 +71,7 @@ const BecomeCourier = () => {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold mb-6">Become a New York Minute Courier</h1>
           <p className="text-lg text-muted-foreground mb-12">
-            Join Bud Dash NYC's network of independent couriers and earn money delivering premium products 
+            Join New York Minute NYC's network of independent couriers and earn money delivering premium products 
             across New York City. Set your own schedule and be part of the growing legal cannabis industry.
           </p>
 

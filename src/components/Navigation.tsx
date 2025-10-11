@@ -122,7 +122,7 @@ const Navigation = () => {
           <Link to="/" className="flex items-center gap-3">
             <NYMLogo size={60} />
             <div className="flex flex-col">
-              <span className="font-black text-xl tracking-wider">BUD DASH NYC</span>
+              <span className="font-black text-xl tracking-wider">NEW YORK MINUTE NYC</span>
               <span className="text-xs text-muted-foreground tracking-widest">PREMIUM FLOWER DELIVERY</span>
             </div>
           </Link>

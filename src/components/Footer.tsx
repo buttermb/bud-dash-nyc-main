@@ -66,7 +66,7 @@ const Footer = () => {
             <div className="flex items-center gap-2">
               <NYMLogo size={50} />
               <div className="flex flex-col">
-                <span className="font-black text-lg tracking-wider">BUD DASH NYC</span>
+                <span className="font-black text-lg tracking-wider">NEW YORK MINUTE NYC</span>
                 <span className="text-xs text-muted-foreground tracking-widest">PREMIUM FLOWER DELIVERY</span>
               </div>
             </div>
@@ -137,7 +137,7 @@ const Footer = () => {
             <div className="mt-4 pt-4 border-t border-border space-y-1">
               <p className="font-semibold text-foreground">Contact Us</p>
               <p className="text-xs">📞 (212) 555-DASH</p>
-              <p className="text-xs">📧 hello@buddashnyc.com</p>
+              <p className="text-xs">📧 support@newyorkminutenyc.com</p>
               <p className="text-xs">🕐 8 AM - 10 PM Daily</p>
             </div>
           </div>
@@ -177,7 +177,7 @@ const Footer = () => {
 
           {/* Copyright */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-2 text-sm text-muted-foreground">
-            <p>© 2025 Bud Dash NYC. All rights reserved.</p>
+            <p>© 2025 New York Minute NYC. All rights reserved.</p>
             <p className="text-xs font-semibold tracking-wider">PREMIUM FLOWER DELIVERY</p>
           </div>
         </div>
