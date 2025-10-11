@@ -74,17 +74,21 @@ const MobileBottomNav = ({ onCartClick, onAuthClick }: MobileBottomNavProps) => 
     <nav 
       className={cn(
         "fixed left-0 right-0 z-50 md:hidden",
-        "bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/80",
-        "border-t border-border/40 shadow-[0_-2px_16px_rgba(0,0,0,0.08)]",
-        "rounded-t-2xl safe-area-bottom",
-        "transition-transform duration-300 ease-out",
+        "bg-card/98 backdrop-blur-xl supports-[backdrop-filter]:bg-card/95",
+        "border-t border-border/50",
+        "rounded-t-3xl safe-area-bottom",
+        "transition-all duration-300 ease-out",
+        "shadow-[0_-8px_32px_rgba(0,0,0,0.12)]",
         isVisible ? "translate-y-0 bottom-0" : "translate-y-full bottom-0"
       )}
       style={{
-        paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+        paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
       }}
     >
-      <div className="flex justify-around items-center h-16 px-2">
+      {/* Top accent line */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-border/60 rounded-full" />
+      
+      <div className="flex justify-around items-center h-[72px] px-3 pt-2">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path || 
                           (item.path === '/#products' && location.pathname === '/' && location.hash === '#products');
@@ -95,56 +99,84 @@ const MobileBottomNav = ({ onCartClick, onAuthClick }: MobileBottomNavProps) => 
               key={item.label}
               to={item.path}
               onClick={(e) => {
-                haptics.light(); // Haptic feedback on tap
+                haptics.light();
                 if (item.onClick) {
                   e.preventDefault();
                   item.onClick(e);
                 }
               }}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 relative",
-                "px-3 py-2 rounded-xl transition-all duration-200",
-                "min-w-[56px] min-h-[56px]", // 56px touch target
-                "active:scale-95",
+                "flex flex-col items-center justify-center gap-1.5 relative",
+                "px-4 py-2.5 rounded-2xl transition-all duration-300",
+                "min-w-[64px] min-h-[60px]",
+                "touch-target group",
+                "active:scale-[0.92]",
                 isActive 
-                  ? "bg-primary/10 text-primary" 
+                  ? "text-primary" 
                   : "text-muted-foreground hover:text-foreground"
               )}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
             >
-              <div className="relative">
-                <Icon 
-                  className={cn(
-                    "w-6 h-6 transition-all duration-200",
-                    isActive && "stroke-[2.5] scale-105"
-                  )} 
-                  strokeWidth={isActive ? 2.5 : 2}
+              {/* Active indicator pill */}
+              {isActive && (
+                <div 
+                  className="absolute inset-0 bg-primary/10 rounded-2xl animate-in fade-in zoom-in-95 duration-300"
+                  style={{
+                    boxShadow: '0 0 24px hsla(var(--primary) / 0.15)',
+                  }}
                 />
-                {item.badge !== undefined && item.badge > 0 && (
-                  <div 
+              )}
+              
+              <div className="relative z-10 flex flex-col items-center gap-1.5">
+                <div className="relative">
+                  {/* Glow effect on active */}
+                  {isActive && (
+                    <div 
+                      className="absolute inset-0 bg-primary/30 blur-xl rounded-full animate-pulse"
+                      style={{ animationDuration: '2s' }}
+                    />
+                  )}
+                  
+                  <Icon 
                     className={cn(
-                      "absolute -top-2 -right-2",
-                      "bg-destructive text-destructive-foreground",
-                      "text-[10px] font-bold leading-none",
-                      "rounded-full min-w-[18px] h-[18px]",
-                      "flex items-center justify-center px-1",
-                      "shadow-lg border-2 border-background",
-                      "animate-in zoom-in-50 duration-200"
-                    )}
-                  >
-                    {item.badge > 9 ? '9+' : item.badge}
-                  </div>
-                )}
+                      "w-[26px] h-[26px] transition-all duration-300 relative z-10",
+                      isActive && "scale-110 drop-shadow-[0_2px_8px_hsla(var(--primary)/0.4)]"
+                    )} 
+                    strokeWidth={isActive ? 2.5 : 2}
+                  />
+                  
+                  {/* Badge for cart */}
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <div 
+                      className={cn(
+                        "absolute -top-2 -right-2 z-20",
+                        "bg-gradient-to-br from-destructive to-destructive/90",
+                        "text-destructive-foreground",
+                        "text-[10px] font-bold leading-none",
+                        "rounded-full min-w-[20px] h-[20px]",
+                        "flex items-center justify-center px-1.5",
+                        "shadow-lg border-2 border-card",
+                        "animate-in zoom-in-50 duration-300",
+                        "ring-1 ring-destructive/20"
+                      )}
+                    >
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </div>
+                  )}
+                </div>
+                
+                <span 
+                  className={cn(
+                    "text-[10px] font-medium transition-all duration-300 whitespace-nowrap",
+                    isActive 
+                      ? "font-bold text-primary scale-105" 
+                      : "text-muted-foreground group-hover:text-foreground"
+                  )}
+                >
+                  {item.label}
+                </span>
               </div>
-              <span 
-                className={cn(
-                  "text-[11px] font-medium transition-all duration-200",
-                  isActive ? "font-semibold text-primary" : "text-muted-foreground"
-                )}
-              >
-                {item.label}
-              </span>
             </Link>
           );
         })}

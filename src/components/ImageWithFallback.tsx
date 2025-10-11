@@ -57,6 +57,13 @@ const ImageWithFallback = ({
         onError={handleError}
         onLoad={handleLoad}
         decoding="async"
+        style={{
+          touchAction: 'pan-y pinch-zoom',
+          pointerEvents: 'none',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+        }}
+        draggable={false}
       />
     </div>
   );
