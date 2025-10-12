@@ -972,6 +972,280 @@ export type Database = {
           },
         ]
       }
+      giveaway_entries: {
+        Row: {
+          base_entries: number | null
+          entered_at: string | null
+          entry_number_end: number | null
+          entry_number_start: number | null
+          giveaway_id: string | null
+          id: string
+          instagram_handle: string | null
+          instagram_post_entries: number | null
+          instagram_story_entries: number | null
+          instagram_tag_url: string | null
+          instagram_verified: boolean | null
+          newsletter_entries: number | null
+          referral_entries: number | null
+          status: string | null
+          total_entries: number | null
+          user_borough: string | null
+          user_email: string | null
+          user_first_name: string | null
+          user_id: string | null
+          user_last_name: string | null
+          user_phone: string | null
+        }
+        Insert: {
+          base_entries?: number | null
+          entered_at?: string | null
+          entry_number_end?: number | null
+          entry_number_start?: number | null
+          giveaway_id?: string | null
+          id?: string
+          instagram_handle?: string | null
+          instagram_post_entries?: number | null
+          instagram_story_entries?: number | null
+          instagram_tag_url?: string | null
+          instagram_verified?: boolean | null
+          newsletter_entries?: number | null
+          referral_entries?: number | null
+          status?: string | null
+          total_entries?: number | null
+          user_borough?: string | null
+          user_email?: string | null
+          user_first_name?: string | null
+          user_id?: string | null
+          user_last_name?: string | null
+          user_phone?: string | null
+        }
+        Update: {
+          base_entries?: number | null
+          entered_at?: string | null
+          entry_number_end?: number | null
+          entry_number_start?: number | null
+          giveaway_id?: string | null
+          id?: string
+          instagram_handle?: string | null
+          instagram_post_entries?: number | null
+          instagram_story_entries?: number | null
+          instagram_tag_url?: string | null
+          instagram_verified?: boolean | null
+          newsletter_entries?: number | null
+          referral_entries?: number | null
+          status?: string | null
+          total_entries?: number | null
+          user_borough?: string | null
+          user_email?: string | null
+          user_first_name?: string | null
+          user_id?: string | null
+          user_last_name?: string | null
+          user_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "giveaway_entries_giveaway_id_fkey"
+            columns: ["giveaway_id"]
+            isOneToOne: false
+            referencedRelation: "giveaways"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      giveaway_referrals: {
+        Row: {
+          clicked_at: string | null
+          converted: boolean | null
+          created_at: string | null
+          entries_awarded: number | null
+          giveaway_id: string | null
+          id: string
+          referral_code: string
+          referred_user_id: string | null
+          referrer_user_id: string | null
+          signed_up_at: string | null
+        }
+        Insert: {
+          clicked_at?: string | null
+          converted?: boolean | null
+          created_at?: string | null
+          entries_awarded?: number | null
+          giveaway_id?: string | null
+          id?: string
+          referral_code: string
+          referred_user_id?: string | null
+          referrer_user_id?: string | null
+          signed_up_at?: string | null
+        }
+        Update: {
+          clicked_at?: string | null
+          converted?: boolean | null
+          created_at?: string | null
+          entries_awarded?: number | null
+          giveaway_id?: string | null
+          id?: string
+          referral_code?: string
+          referred_user_id?: string | null
+          referrer_user_id?: string | null
+          signed_up_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "giveaway_referrals_giveaway_id_fkey"
+            columns: ["giveaway_id"]
+            isOneToOne: false
+            referencedRelation: "giveaways"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      giveaway_winners: {
+        Row: {
+          claimed_at: string | null
+          credit_amount: number | null
+          credit_code: string | null
+          entry_id: string | null
+          giveaway_id: string | null
+          id: string
+          notified_at: string | null
+          prize_rank: number
+          prize_title: string | null
+          prize_value: number | null
+          selected_at: string | null
+          status: string | null
+          user_id: string | null
+          winning_entry_number: number | null
+        }
+        Insert: {
+          claimed_at?: string | null
+          credit_amount?: number | null
+          credit_code?: string | null
+          entry_id?: string | null
+          giveaway_id?: string | null
+          id?: string
+          notified_at?: string | null
+          prize_rank: number
+          prize_title?: string | null
+          prize_value?: number | null
+          selected_at?: string | null
+          status?: string | null
+          user_id?: string | null
+          winning_entry_number?: number | null
+        }
+        Update: {
+          claimed_at?: string | null
+          credit_amount?: number | null
+          credit_code?: string | null
+          entry_id?: string | null
+          giveaway_id?: string | null
+          id?: string
+          notified_at?: string | null
+          prize_rank?: number
+          prize_title?: string | null
+          prize_value?: number | null
+          selected_at?: string | null
+          status?: string | null
+          user_id?: string | null
+          winning_entry_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "giveaway_winners_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "giveaway_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "giveaway_winners_giveaway_id_fkey"
+            columns: ["giveaway_id"]
+            isOneToOne: false
+            referencedRelation: "giveaways"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      giveaways: {
+        Row: {
+          base_entries: number | null
+          created_at: string | null
+          description: string | null
+          end_date: string
+          grand_prize_description: string | null
+          grand_prize_title: string | null
+          grand_prize_value: number | null
+          id: string
+          instagram_post_bonus_entries: number | null
+          instagram_story_bonus_entries: number | null
+          newsletter_bonus_entries: number | null
+          referral_bonus_entries: number | null
+          second_prize_title: string | null
+          second_prize_value: number | null
+          slug: string
+          start_date: string
+          status: string | null
+          tagline: string | null
+          third_prize_title: string | null
+          third_prize_value: number | null
+          title: string
+          total_entries: number | null
+          total_participants: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          base_entries?: number | null
+          created_at?: string | null
+          description?: string | null
+          end_date: string
+          grand_prize_description?: string | null
+          grand_prize_title?: string | null
+          grand_prize_value?: number | null
+          id?: string
+          instagram_post_bonus_entries?: number | null
+          instagram_story_bonus_entries?: number | null
+          newsletter_bonus_entries?: number | null
+          referral_bonus_entries?: number | null
+          second_prize_title?: string | null
+          second_prize_value?: number | null
+          slug: string
+          start_date: string
+          status?: string | null
+          tagline?: string | null
+          third_prize_title?: string | null
+          third_prize_value?: number | null
+          title: string
+          total_entries?: number | null
+          total_participants?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          base_entries?: number | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string
+          grand_prize_description?: string | null
+          grand_prize_title?: string | null
+          grand_prize_value?: number | null
+          id?: string
+          instagram_post_bonus_entries?: number | null
+          instagram_story_bonus_entries?: number | null
+          newsletter_bonus_entries?: number | null
+          referral_bonus_entries?: number | null
+          second_prize_title?: string | null
+          second_prize_value?: number | null
+          slug?: string
+          start_date?: string
+          status?: string | null
+          tagline?: string | null
+          third_prize_title?: string | null
+          third_prize_value?: number | null
+          title?: string
+          total_entries?: number | null
+          total_participants?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       gps_anomalies: {
         Row: {
           accuracy_meters: number | null
