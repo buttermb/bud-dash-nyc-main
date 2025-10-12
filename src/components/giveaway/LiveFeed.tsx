@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Entry {
@@ -95,7 +95,7 @@ export function LiveFeed({ giveawayId }: LiveFeedProps) {
         }
       }
 
-      setEntries(mixed.slice(0, 15)); // Show 15 total
+      setEntries(mixed.slice(0, 12)); // Show 12 entries
     } catch (error) {
       console.error('Error loading feed:', error);
     } finally {
@@ -119,12 +119,12 @@ export function LiveFeed({ giveawayId }: LiveFeedProps) {
 
   const getAvatarColor = (name: string) => {
     const colors = [
-      'from-blue-500 to-purple-500',
-      'from-green-500 to-blue-500',
-      'from-pink-500 to-red-500',
-      'from-yellow-500 to-orange-500',
+      'from-blue-500 to-cyan-500',
+      'from-emerald-500 to-teal-500',
+      'from-purple-500 to-pink-500',
+      'from-orange-500 to-amber-500',
       'from-indigo-500 to-purple-500',
-      'from-teal-500 to-green-500'
+      'from-rose-500 to-pink-500'
     ];
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
@@ -132,12 +132,12 @@ export function LiveFeed({ giveawayId }: LiveFeedProps) {
 
   if (loading) {
     return (
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+      <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-3xl p-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-white/10 rounded w-1/3" />
+          <div className="h-6 bg-slate-800 rounded w-1/3" />
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-16 bg-white/10 rounded" />
+              <div key={i} className="h-16 bg-slate-800 rounded-2xl" />
             ))}
           </div>
         </div>
@@ -146,16 +146,24 @@ export function LiveFeed({ giveawayId }: LiveFeedProps) {
   }
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+    <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-3xl p-8">
       <div className="flex items-center gap-3 mb-6">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-          <span className="text-xs font-bold text-red-400 uppercase tracking-wider">LIVE</span>
+        <div className="relative flex items-center gap-2">
+          <motion.div
+            animate={{ scale: [1, 1.2, 1], opacity: [1, 0.5, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="w-2 h-2 bg-emerald-400 rounded-full"
+          />
+          <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Live Activity</span>
         </div>
-        <h3 className="text-2xl font-black text-white">Recent Entries</h3>
+        <Activity className="w-4 h-4 text-emerald-400" />
       </div>
 
-      <div className="space-y-3 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+      <h3 className="text-2xl font-display font-bold mb-6 text-white">
+        Recent Entries
+      </h3>
+
+      <div className="space-y-3 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent pr-2">
         <AnimatePresence mode="popLayout">
           {entries.map((entry, index) => (
             <motion.div
@@ -163,28 +171,29 @@ export function LiveFeed({ giveawayId }: LiveFeedProps) {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              transition={{ delay: index * 0.05 }}
-              className="flex items-center gap-4 p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-all duration-300 group"
+              transition={{ delay: index * 0.03, duration: 0.3 }}
+              className="group relative"
             >
-              <div className={`w-12 h-12 bg-gradient-to-br ${getAvatarColor(entry.firstName)} rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 group-hover:rotate-6 transition-transform`}>
-                {entry.firstName[0]}
-              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
               
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-white truncate">
-                  {entry.firstName} from {entry.borough}
+              <div className="relative flex items-center gap-4 p-4 bg-slate-800/30 border border-slate-700/30 rounded-2xl hover:border-slate-600/50 transition-all duration-300">
+                <div className={`w-11 h-11 bg-gradient-to-br ${getAvatarColor(entry.firstName)} rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  {entry.firstName[0]}
                 </div>
-                <div className="text-sm text-white/60">
-                  just entered
+                
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-white text-sm truncate">
+                    {entry.firstName}
+                  </div>
+                  <div className="text-xs text-slate-500 flex items-center gap-2">
+                    <span>{entry.borough}</span>
+                    <span className="text-slate-700">•</span>
+                    <span>{entry.timeAgo}</span>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex flex-col items-end gap-1">
-                <div className="px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full">
-                  <span className="text-green-400 font-bold text-sm">+{entry.entries}</span>
-                </div>
-                <div className="text-xs text-white/40">
-                  {entry.timeAgo}
+                
+                <div className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                  <span className="text-emerald-400 font-bold text-sm">+{entry.entries}</span>
                 </div>
               </div>
             </motion.div>
@@ -193,9 +202,10 @@ export function LiveFeed({ giveawayId }: LiveFeedProps) {
       </div>
 
       <div className="mt-6 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-full">
-          <TrendingUp className="w-4 h-4 text-orange-400" />
-          <span className="text-sm font-bold text-orange-400">Entries are flying in! 🔥</span>
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-xl">
+          <span className="text-sm font-medium text-slate-400">
+            Entries updating in real-time
+          </span>
         </div>
       </div>
     </div>

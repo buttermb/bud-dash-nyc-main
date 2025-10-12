@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
 
 interface HeroProps {
   title: string;
@@ -10,112 +9,85 @@ interface HeroProps {
 
 export default function Hero({ title, tagline, totalEntries, totalParticipants }: HeroProps) {
   return (
-    <div className="text-center mb-16 relative">
-      {/* Animated background glow */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-full blur-3xl animate-pulse" />
-      </div>
-
+    <div className="text-center mb-20 relative">
       {/* Live badge */}
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
+        initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-full text-sm font-bold mb-6 shadow-lg shadow-red-500/50"
+        transition={{ duration: 0.3 }}
+        className="inline-flex items-center gap-2 px-5 py-2 bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-sm rounded-full text-sm font-semibold mb-8 text-emerald-400"
       >
         <motion.div
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-          className="w-2 h-2 bg-white rounded-full"
+          animate={{ scale: [1, 1.2, 1], opacity: [1, 0.8, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="w-2 h-2 bg-emerald-400 rounded-full"
         />
-        <span>LIVE NOW - LIMITED TIME</span>
-        <Sparkles className="w-4 h-4" />
+        <span className="tracking-wide">LIVE GIVEAWAY</span>
       </motion.div>
 
       {/* Main title */}
-      <motion.h1
+      <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="text-5xl md:text-7xl font-black mb-6 relative"
+        transition={{ delay: 0.1, duration: 0.5 }}
+        className="mb-6"
       >
-        <span className="bg-gradient-to-r from-green-400 via-emerald-400 to-blue-500 text-transparent bg-clip-text drop-shadow-lg">
-          {title}
-        </span>
-      </motion.h1>
+        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold mb-2 tracking-tight leading-none">
+          <span className="bg-gradient-to-br from-white via-white to-slate-400 text-transparent bg-clip-text">
+            {title}
+          </span>
+        </h1>
+      </motion.div>
       
       {/* Tagline */}
       <motion.p
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="text-xl md:text-3xl text-gray-200 mb-12 font-semibold"
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="text-lg sm:text-xl md:text-2xl text-slate-400 mb-16 max-w-3xl mx-auto font-light"
       >
-        {tagline} <span className="text-2xl md:text-4xl">⚡</span>
+        {tagline}
       </motion.p>
 
       {/* Stats */}
       <motion.div
-        initial={{ y: 20, opacity: 0 }}
+        initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="flex justify-center gap-8 md:gap-12"
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="flex flex-col sm:flex-row justify-center items-center gap-6 sm:gap-8"
       >
-        <div className="relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl blur opacity-50 group-hover:opacity-75 transition" />
-          <div className="relative bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl px-8 py-6 hover:border-green-400/50 transition-all">
+        <div className="group">
+          <div className="relative bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-2xl px-10 py-8 hover:border-primary/30 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.5, type: 'spring' }}
-              className="text-4xl md:text-5xl font-black bg-gradient-to-r from-green-400 to-emerald-400 text-transparent bg-clip-text mb-2"
+              transition={{ delay: 0.4, type: 'spring', stiffness: 200 }}
+              className="text-4xl sm:text-5xl font-display font-bold bg-gradient-to-br from-primary to-emerald-400 text-transparent bg-clip-text mb-2"
             >
               {totalEntries.toLocaleString()}
             </motion.div>
-            <div className="text-sm md:text-base text-gray-400 font-semibold">Total Entries</div>
+            <div className="text-sm text-slate-500 font-medium tracking-wide uppercase">Total Entries</div>
           </div>
         </div>
 
-        <div className="w-px bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+        <div className="hidden sm:block w-px h-16 bg-gradient-to-b from-transparent via-slate-700 to-transparent" />
 
-        <div className="relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-2xl blur opacity-50 group-hover:opacity-75 transition" />
-          <div className="relative bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl px-8 py-6 hover:border-blue-400/50 transition-all">
+        <div className="group">
+          <div className="relative bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-2xl px-10 py-8 hover:border-blue-500/30 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.6, type: 'spring' }}
-              className="text-4xl md:text-5xl font-black bg-gradient-to-r from-blue-400 to-cyan-400 text-transparent bg-clip-text mb-2"
+              transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
+              className="text-4xl sm:text-5xl font-display font-bold bg-gradient-to-br from-blue-400 to-cyan-400 text-transparent bg-clip-text mb-2"
             >
               {totalParticipants.toLocaleString()}
             </motion.div>
-            <div className="text-sm md:text-base text-gray-400 font-semibold">New Yorkers</div>
+            <div className="text-sm text-slate-500 font-medium tracking-wide uppercase">Participants</div>
           </div>
         </div>
       </motion.div>
-
-      {/* Floating particles */}
-      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -30, 0],
-              opacity: [0, 1, 0],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
-      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Award, DollarSign, Gift } from 'lucide-react';
+import { Trophy, DollarSign, Gift } from 'lucide-react';
 
 interface PrizeCardsProps {
   giveaway: any;
@@ -9,92 +9,99 @@ export default function PrizeCards({ giveaway }: PrizeCardsProps) {
   const prizes = [
     {
       rank: '1st',
-      icon: Award,
+      icon: Trophy,
       title: giveaway.grand_prize_title,
       description: giveaway.grand_prize_description,
-      value: `$${giveaway.grand_prize_value.toLocaleString()}`,
-      gradient: 'from-yellow-400 via-amber-500 to-orange-500',
-      shadow: 'shadow-yellow-500/50',
-      iconColor: 'text-yellow-400'
+      value: giveaway.grand_prize_value,
+      gradient: 'from-amber-400 to-yellow-600',
+      iconBg: 'from-amber-500/20 to-yellow-500/20',
+      borderColor: 'border-amber-500/20 hover:border-amber-500/40'
     },
     {
       rank: '2nd',
       icon: DollarSign,
       title: giveaway.second_prize_title,
       description: 'Store credit for your next order',
-      value: `$${giveaway.second_prize_value}`,
-      gradient: 'from-gray-300 via-gray-400 to-gray-500',
-      shadow: 'shadow-gray-500/50',
-      iconColor: 'text-gray-300'
+      value: giveaway.second_prize_value,
+      gradient: 'from-slate-300 to-slate-500',
+      iconBg: 'from-slate-400/20 to-slate-500/20',
+      borderColor: 'border-slate-500/20 hover:border-slate-500/40'
     },
     {
       rank: '3rd',
       icon: Gift,
       title: giveaway.third_prize_title,
       description: 'Store credit for any product',
-      value: `$${giveaway.third_prize_value}`,
-      gradient: 'from-orange-400 via-amber-600 to-orange-700',
-      shadow: 'shadow-orange-500/50',
-      iconColor: 'text-orange-400'
+      value: giveaway.third_prize_value,
+      gradient: 'from-orange-400 to-orange-600',
+      iconBg: 'from-orange-500/20 to-orange-600/20',
+      borderColor: 'border-orange-500/20 hover:border-orange-500/40'
     }
   ];
 
   return (
-    <div className="mb-16">
+    <div className="mb-20">
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="text-center mb-12"
       >
-        <h2 className="text-4xl md:text-5xl font-black mb-4 bg-gradient-to-r from-white to-gray-300 text-transparent bg-clip-text">
-          3 Winners. $4,250+ in Prizes 🏆
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold mb-4 bg-gradient-to-br from-white to-slate-400 text-transparent bg-clip-text">
+          Three Winners. ${(giveaway.grand_prize_value + giveaway.second_prize_value + giveaway.third_prize_value).toLocaleString()}+ in Prizes
         </h2>
-        <p className="text-gray-400 text-lg">
-          Drawing happens {new Date(giveaway.end_date).toLocaleDateString('en-US', { 
+        <p className="text-slate-500 text-base sm:text-lg font-light">
+          Winners announced {new Date(giveaway.end_date).toLocaleDateString('en-US', { 
             month: 'long', 
-            day: 'numeric', 
-            year: 'numeric' 
+            day: 'numeric',
+            year: 'numeric'
           })}
         </p>
       </motion.div>
 
-      <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {prizes.map((prize, index) => {
           const Icon = prize.icon;
           return (
             <motion.div
               key={index}
-              initial={{ y: 20, opacity: 0 }}
+              initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ y: -8 }}
+              transition={{ delay: index * 0.1, duration: 0.4 }}
+              whileHover={{ y: -4 }}
               className="relative group"
             >
-              <div className={`absolute inset-0 bg-gradient-to-r ${prize.gradient} rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity ${prize.shadow}`} />
+              <div className={`absolute inset-0 bg-gradient-to-br ${prize.iconBg} rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
               
-              <div className="relative bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-all">
-                {/* Rank Badge */}
-                <div className={`absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-r ${prize.gradient} rounded-full flex items-center justify-center font-black text-lg shadow-lg ${prize.shadow}`}>
+              <div className={`relative bg-slate-900/50 backdrop-blur-xl border ${prize.borderColor} rounded-3xl p-8 transition-all duration-300`}>
+                {/* Rank indicator */}
+                <div className={`absolute -top-3 -right-3 w-14 h-14 bg-gradient-to-br ${prize.gradient} rounded-2xl flex items-center justify-center font-display font-bold text-lg shadow-xl transform rotate-12 group-hover:rotate-0 transition-transform duration-300`}>
                   {prize.rank}
                 </div>
 
                 {/* Icon */}
-                <div className={`w-20 h-20 bg-gradient-to-r ${prize.gradient} rounded-2xl flex items-center justify-center mb-6 shadow-lg ${prize.shadow}`}>
-                  <Icon className="w-10 h-10 text-white" />
+                <div className={`w-16 h-16 bg-gradient-to-br ${prize.iconBg} backdrop-blur-sm rounded-2xl flex items-center justify-center mb-6 border border-white/5`}>
+                  <Icon className={`w-8 h-8 bg-gradient-to-br ${prize.gradient} text-transparent bg-clip-text`} strokeWidth={2.5} />
                 </div>
 
                 {/* Title */}
-                <h3 className="text-2xl font-black mb-2">{prize.title}</h3>
+                <h3 className="text-xl sm:text-2xl font-display font-bold mb-2 text-white">
+                  {prize.title}
+                </h3>
                 
                 {/* Description */}
-                <p className="text-gray-400 text-sm mb-4">{prize.description}</p>
+                <p className="text-slate-400 text-sm mb-6 font-light leading-relaxed">
+                  {prize.description}
+                </p>
 
                 {/* Value */}
-                <div className={`text-4xl font-black bg-gradient-to-r ${prize.gradient} text-transparent bg-clip-text`}>
-                  {prize.value}
+                <div className="flex items-baseline gap-2">
+                  <span className={`text-4xl sm:text-5xl font-display font-bold bg-gradient-to-br ${prize.gradient} text-transparent bg-clip-text`}>
+                    ${prize.value.toLocaleString()}
+                  </span>
+                  <span className="text-slate-600 text-sm font-medium uppercase tracking-wider">
+                    value
+                  </span>
                 </div>
-                
-                <div className="text-xs text-gray-500 mt-2">VALUE</div>
               </div>
             </motion.div>
           );

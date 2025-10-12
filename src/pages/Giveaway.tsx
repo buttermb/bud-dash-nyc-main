@@ -57,12 +57,12 @@ export default function GiveawayPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
         >
-          <Loader2 className="w-12 h-12 text-white" />
+          <Loader2 className="w-12 h-12 text-primary" />
         </motion.div>
       </div>
     );
@@ -70,23 +70,26 @@ export default function GiveawayPage() {
 
   if (!giveaway) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900">
-        <div className="text-center text-white">
-          <h1 className="text-3xl font-bold mb-4">Giveaway Not Found</h1>
-          <p className="text-gray-400">This giveaway doesn't exist or has ended.</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4 text-white font-display">Giveaway Not Found</h1>
+          <p className="text-slate-400">This giveaway doesn't exist or has ended.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 text-white overflow-hidden">
+    <div className="min-h-screen bg-slate-950 text-white overflow-hidden font-sans">
+      {/* Elegant gradient mesh background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -left-48 w-96 h-96 bg-green-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
       </div>
 
-      <div className="relative container mx-auto px-4 py-12 max-w-7xl">
+      <div className="relative container mx-auto px-4 sm:px-6 py-12 sm:py-20 max-w-7xl">
         <Hero
           title={giveaway.title}
           tagline={giveaway.tagline}

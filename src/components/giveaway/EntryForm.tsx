@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { submitGiveawayEntry } from '@/lib/api/giveaway';
-import { Instagram, Loader2, Sparkles, Check } from 'lucide-react';
+import { Instagram, Loader2, Sparkles, Check, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -40,9 +40,10 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
       });
 
       confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
+        particleCount: 150,
+        spread: 100,
+        origin: { y: 0.5 },
+        colors: ['#10b981', '#3b82f6', '#8b5cf6']
       });
 
       setEntryResult(result);
@@ -66,50 +67,58 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
   if (showSuccess && entryResult) {
     return (
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
+        initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="max-w-2xl mx-auto mb-16"
+        transition={{ duration: 0.4 }}
+        className="max-w-2xl mx-auto mb-20"
       >
-        <div className="relative bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-12 text-center overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-blue-500/20 animate-pulse" />
+        <div className="relative bg-slate-900/70 backdrop-blur-xl border border-slate-800 rounded-3xl p-12 text-center overflow-hidden">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-40 bg-gradient-to-b from-primary/20 to-transparent blur-3xl" />
           
           <div className="relative">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ type: 'spring', duration: 0.6 }}
-              className="w-24 h-24 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/50"
+              transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
+              className="w-20 h-20 bg-gradient-to-br from-primary to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl"
             >
-              <Check className="w-12 h-12" />
+              <Check className="w-10 h-10 text-white" strokeWidth={3} />
             </motion.div>
 
-            <h2 className="text-4xl font-black mb-4">You're In! 🎉</h2>
-            <p className="text-gray-300 mb-8">
+            <h2 className="text-3xl sm:text-4xl font-display font-bold mb-3 text-white">
+              You're Entered!
+            </h2>
+            <p className="text-slate-400 mb-10 font-light">
               Entry #{entryResult.entryNumbers.start.toLocaleString()}
             </p>
 
-            <div className="bg-white/5 rounded-2xl p-6 mb-6">
-              <div className="text-6xl font-black bg-gradient-to-r from-green-400 to-blue-400 text-transparent bg-clip-text mb-2">
+            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 mb-8">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3, type: 'spring', stiffness: 150 }}
+                className="text-6xl sm:text-7xl font-display font-bold bg-gradient-to-br from-primary to-blue-400 text-transparent bg-clip-text mb-3"
+              >
                 {entryResult.totalEntries}
-              </div>
-              <div className="text-gray-400">Your Total Entries</div>
+              </motion.div>
+              <div className="text-slate-500 font-medium uppercase tracking-wider text-sm">Your Total Entries</div>
             </div>
 
-            <div className="text-sm text-gray-400 space-y-2">
-              <div className="flex justify-between">
-                <span>Base entry:</span>
-                <span className="font-bold">{entryResult.breakdown.base}</span>
+            <div className="space-y-3 max-w-md mx-auto mb-8">
+              <div className="flex justify-between items-center px-4 py-3 bg-slate-800/30 rounded-xl">
+                <span className="text-slate-400 text-sm">Base entry</span>
+                <span className="font-bold text-white">{entryResult.breakdown.base}</span>
               </div>
               {entryResult.breakdown.newsletter > 0 && (
-                <div className="flex justify-between">
-                  <span>Newsletter:</span>
-                  <span className="font-bold text-green-400">+{entryResult.breakdown.newsletter}</span>
+                <div className="flex justify-between items-center px-4 py-3 bg-primary/10 border border-primary/20 rounded-xl">
+                  <span className="text-slate-400 text-sm">Newsletter bonus</span>
+                  <span className="font-bold text-primary">+{entryResult.breakdown.newsletter}</span>
                 </div>
               )}
             </div>
 
-            <p className="text-gray-400 text-sm mt-8">
-              Check your email for next steps! Redirecting...
+            <p className="text-slate-500 text-sm font-light">
+              Check your email for next steps • Redirecting in 5 seconds...
             </p>
           </div>
         </div>
@@ -121,99 +130,103 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
     <motion.div
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="max-w-2xl mx-auto mb-16"
+      transition={{ duration: 0.4 }}
+      className="max-w-2xl mx-auto mb-20"
     >
-      <div className="relative bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-green-400 to-blue-500 rounded-3xl opacity-20 blur" />
-        
-        <div className="relative">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl font-black mb-2 bg-gradient-to-r from-white to-gray-300 text-transparent bg-clip-text">
-              Enter to Win 🎉
-            </h2>
-            <p className="text-gray-400">Takes 2 minutes • FREE to enter</p>
+      <div className="relative bg-slate-900/70 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 sm:p-10 shadow-2xl">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl sm:text-4xl font-display font-bold mb-3 bg-gradient-to-br from-white to-slate-400 text-transparent bg-clip-text">
+            Enter to Win
+          </h2>
+          <p className="text-slate-500 font-light">Takes 2 minutes • 100% FREE</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="First Name"
+              className="w-full px-4 py-3.5 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-500 text-white font-light"
+              value={formData.firstName}
+              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Last Name"
+              className="w-full px-4 py-3.5 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-500 text-white font-light"
+              value={formData.lastName}
+              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+              required
+            />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <input
-                type="text"
-                placeholder="First Name"
-                className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400/20 transition-all placeholder:text-gray-500"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Last Name"
-                className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400/20 transition-all placeholder:text-gray-500"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                required
-              />
+          <input
+            type="email"
+            placeholder="Email Address"
+            className="w-full px-4 py-3.5 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-500 text-white font-light"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            required
+          />
+
+          <input
+            type="password"
+            placeholder="Create Password (minimum 8 characters)"
+            className="w-full px-4 py-3.5 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-500 text-white font-light"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            required
+            minLength={8}
+          />
+
+          <input
+            type="tel"
+            placeholder="Phone Number (for prize delivery)"
+            className="w-full px-4 py-3.5 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-500 text-white font-light"
+            value={formData.phone}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            required
+          />
+
+          <input
+            type="date"
+            placeholder="Date of Birth"
+            className="w-full px-4 py-3.5 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-white font-light [color-scheme:dark]"
+            value={formData.dateOfBirth}
+            onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+            required
+          />
+
+          <select
+            className="w-full px-4 py-3.5 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer text-white font-light"
+            value={formData.borough}
+            onChange={(e) => setFormData({ ...formData, borough: e.target.value })}
+            required
+          >
+            <option value="" className="bg-slate-900">Select NYC Borough</option>
+            <option value="Manhattan" className="bg-slate-900">Manhattan</option>
+            <option value="Brooklyn" className="bg-slate-900">Brooklyn</option>
+            <option value="Queens" className="bg-slate-900">Queens</option>
+            <option value="Bronx" className="bg-slate-900">Bronx</option>
+            <option value="Staten Island" className="bg-slate-900">Staten Island</option>
+          </select>
+
+          {/* Instagram Section */}
+          <div className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-500/20 rounded-2xl p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <Instagram className="w-5 h-5 text-pink-400" />
+              <h3 className="font-display font-bold text-pink-400">Instagram (Required)</h3>
+              <span className="ml-auto text-xs px-2 py-1 bg-red-500/10 text-red-400 rounded-full border border-red-500/20 font-medium">
+                Required
+              </span>
             </div>
-
-            <input
-              type="email"
-              placeholder="Email"
-              className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400/20 transition-all placeholder:text-gray-500"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-            />
-
-            <input
-              type="password"
-              placeholder="Create Password (min 8 characters)"
-              className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400/20 transition-all placeholder:text-gray-500"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              required
-              minLength={8}
-            />
-
-            <input
-              type="tel"
-              placeholder="Phone (for delivery)"
-              className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400/20 transition-all placeholder:text-gray-500"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              required
-            />
-
-            <input
-              type="date"
-              className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400/20 transition-all text-white"
-              value={formData.dateOfBirth}
-              onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-              required
-            />
-
-            <select
-              className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400/20 transition-all cursor-pointer text-white"
-              value={formData.borough}
-              onChange={(e) => setFormData({ ...formData, borough: e.target.value })}
-              required
-            >
-              <option value="" className="bg-gray-900">Select Borough</option>
-              <option value="Manhattan" className="bg-gray-900">Manhattan</option>
-              <option value="Brooklyn" className="bg-gray-900">Brooklyn</option>
-              <option value="Queens" className="bg-gray-900">Queens</option>
-              <option value="Bronx" className="bg-gray-900">Bronx</option>
-              <option value="Staten Island" className="bg-gray-900">Staten Island</option>
-            </select>
-
-            <div className="bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/20 rounded-2xl p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Instagram className="w-5 h-5 text-pink-400" />
-                <h3 className="font-bold text-pink-400">Instagram Required</h3>
-              </div>
-              
+            
+            <div className="space-y-3">
               <input
                 type="text"
-                placeholder="Your Instagram handle (@username)"
-                className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-400/20 transition-all mb-3 placeholder:text-gray-500"
+                placeholder="@your_instagram_handle"
+                className="w-full px-4 py-3.5 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-400/20 transition-all placeholder:text-slate-500 text-white font-light"
                 value={formData.instagramHandle}
                 onChange={(e) => setFormData({ ...formData, instagramHandle: e.target.value })}
                 required
@@ -221,70 +234,75 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
 
               <input
                 type="url"
-                placeholder="Instagram post URL where you tagged @buddashnyc"
-                className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-400/20 transition-all placeholder:text-gray-500"
+                placeholder="Instagram post URL (where you tagged @buddashnyc)"
+                className="w-full px-4 py-3.5 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-400/20 transition-all placeholder:text-slate-500 text-white font-light"
                 value={formData.instagramTagUrl}
                 onChange={(e) => setFormData({ ...formData, instagramTagUrl: e.target.value })}
                 required
               />
-
-              <p className="text-sm text-gray-400 mt-3 flex items-center gap-2">
-                <Check className="w-4 h-4 text-green-400" /> Follow @buddashnyc
-                <Check className="w-4 h-4 text-green-400" /> Tag 2+ friends
-              </p>
             </div>
 
-            <motion.label
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-3 cursor-pointer p-5 bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-xl hover:border-green-400/40 transition-all group"
-            >
-              <input
-                type="checkbox"
-                checked={formData.newsletterSubscribe}
-                onChange={(e) => setFormData({ ...formData, newsletterSubscribe: e.target.checked })}
-                className="w-5 h-5 rounded border-2 border-white/20 bg-white/5 checked:bg-green-500 checked:border-green-500 cursor-pointer"
-              />
-              <span className="flex-1">
-                📧 Subscribe to newsletter 
-                <span className="text-green-400 font-bold ml-2">(+1 entry)</span>
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-400 font-light">
+              <span className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-400" /> Follow @buddashnyc
               </span>
-            </motion.label>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              disabled={loading}
-              className="w-full relative overflow-hidden py-5 rounded-xl font-black text-lg shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed group"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-emerald-500 to-blue-500 group-hover:from-green-600 group-hover:via-emerald-600 group-hover:to-blue-600 transition-all" />
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                animate={{ x: loading ? ['-100%', '200%'] : '0%' }}
-                transition={{ duration: 1, repeat: loading ? Infinity : 0, ease: 'linear' }}
-              />
-              <span className="relative flex items-center justify-center gap-2">
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Entering...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5" />
-                    Enter Giveaway FREE
-                    <Sparkles className="w-5 h-5" />
-                  </>
-                )}
+              <span className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-400" /> Tag 2+ friends
               </span>
-            </motion.button>
+            </div>
+          </div>
 
-            <p className="text-xs text-gray-400 text-center">
-              By entering, you agree to our terms. Must be 21+ and in NYC area.
-            </p>
-          </form>
-        </div>
+          {/* Newsletter Checkbox */}
+          <motion.label
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            className="flex items-center gap-4 cursor-pointer p-5 bg-gradient-to-br from-primary/10 to-emerald-500/10 border border-primary/20 rounded-xl hover:border-primary/40 transition-all group"
+          >
+            <input
+              type="checkbox"
+              checked={formData.newsletterSubscribe}
+              onChange={(e) => setFormData({ ...formData, newsletterSubscribe: e.target.checked })}
+              className="w-5 h-5 rounded-lg border-2 border-slate-600 bg-slate-800 checked:bg-primary checked:border-primary cursor-pointer transition-all"
+            />
+            <div className="flex-1 flex items-center gap-3">
+              <Mail className="w-5 h-5 text-primary" />
+              <span className="text-white font-medium">
+                Subscribe to newsletter
+              </span>
+              <span className="ml-auto text-primary font-bold text-sm">+1 entry</span>
+            </div>
+          </motion.label>
+
+          {/* Submit Button */}
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            type="submit"
+            disabled={loading}
+            className="w-full relative overflow-hidden py-4 rounded-xl font-display font-bold text-lg shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-primary via-emerald-500 to-blue-500 group-hover:from-primary/90 group-hover:via-emerald-500/90 group-hover:to-blue-500/90 transition-all" />
+            <span className="relative flex items-center justify-center gap-2 text-white">
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Submitting Entry...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5" />
+                  Enter Giveaway FREE
+                  <Sparkles className="w-5 h-5" />
+                </>
+              )}
+            </span>
+          </motion.button>
+
+          <p className="text-xs text-slate-500 text-center font-light leading-relaxed">
+            By entering, you agree to our terms and conditions.<br />
+            Must be 21+ years old and located in NYC area.
+          </p>
+        </form>
       </div>
     </motion.div>
   );

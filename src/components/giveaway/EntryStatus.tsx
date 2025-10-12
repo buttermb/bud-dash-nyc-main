@@ -18,58 +18,61 @@ export default function EntryStatus({ entry, giveaway, onUpdate }: EntryStatusPr
   };
 
   return (
-    <div className="max-w-2xl mx-auto mb-16">
+    <div className="max-w-2xl mx-auto mb-20">
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
+        initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="relative bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden"
+        transition={{ duration: 0.4 }}
+        className="relative bg-slate-900/70 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 sm:p-10 shadow-2xl overflow-hidden"
       >
-        {/* Success glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-32 bg-gradient-to-b from-green-400/20 to-transparent blur-3xl" />
+        {/* Ambient glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-gradient-to-b from-primary/20 to-transparent blur-3xl" />
 
-        <div className="relative text-center mb-8">
+        <div className="relative text-center mb-10">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ type: 'spring', duration: 0.6 }}
-            className="w-20 h-20 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/50"
+            transition={{ type: 'spring', stiffness: 200 }}
+            className="w-16 h-16 bg-gradient-to-br from-primary to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl"
           >
-            <Check className="w-10 h-10" />
+            <Check className="w-8 h-8 text-white" strokeWidth={3} />
           </motion.div>
-          <h2 className="text-4xl font-black mb-2 bg-gradient-to-r from-white to-gray-300 text-transparent bg-clip-text">
-            You're Entered! 🎉
+          <h2 className="text-3xl sm:text-4xl font-display font-bold mb-2 text-white">
+            You're Entered!
           </h2>
-          <p className="text-gray-400">Entry #{entry.entryId?.slice(0, 8)}</p>
+          <p className="text-slate-500 font-light text-sm">
+            Entry #{entry.entryId?.slice(0, 8).toUpperCase()}
+          </p>
         </div>
 
         {/* Entry summary */}
-        <div className="bg-gradient-to-br from-white/10 to-white/5 rounded-2xl p-8 mb-6 border border-white/10">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 mb-8">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring' }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 150 }}
             className="text-center mb-6"
           >
-            <div className="text-7xl font-black bg-gradient-to-r from-green-400 via-emerald-400 to-blue-400 text-transparent bg-clip-text mb-2">
+            <div className="text-6xl sm:text-7xl font-display font-bold bg-gradient-to-br from-primary via-emerald-400 to-blue-400 text-transparent bg-clip-text mb-2">
               {entry.totalEntries}
             </div>
-            <div className="text-gray-400 font-semibold">Total Entries</div>
+            <div className="text-slate-500 font-medium uppercase tracking-wider text-sm">Total Entries</div>
           </motion.div>
 
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-              <span className="text-gray-300">Base entry:</span>
-              <span className="font-bold">{entry.breakdown.base}</span>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center px-4 py-3 bg-slate-700/30 rounded-xl">
+              <span className="text-slate-400 text-sm">Base entry</span>
+              <span className="font-bold text-white">{entry.breakdown.base}</span>
             </div>
             {entry.breakdown.newsletter > 0 && (
-              <div className="flex justify-between items-center p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                <span className="text-gray-300">Newsletter bonus:</span>
-                <span className="font-bold text-green-400">+{entry.breakdown.newsletter}</span>
+              <div className="flex justify-between items-center px-4 py-3 bg-primary/10 border border-primary/20 rounded-xl">
+                <span className="text-slate-400 text-sm">Newsletter bonus</span>
+                <span className="font-bold text-primary">+{entry.breakdown.newsletter}</span>
               </div>
             )}
             {entry.breakdown.referrals > 0 && (
-              <div className="flex justify-between items-center p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                <span className="text-gray-300">Referral bonus:</span>
+              <div className="flex justify-between items-center px-4 py-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                <span className="text-slate-400 text-sm">Referral bonus</span>
                 <span className="font-bold text-blue-400">+{entry.breakdown.referrals}</span>
               </div>
             )}
@@ -77,96 +80,96 @@ export default function EntryStatus({ entry, giveaway, onUpdate }: EntryStatusPr
         </div>
 
         {/* Referral section */}
-        <div className="relative overflow-hidden rounded-2xl p-6 mb-6">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-blue-500/20" />
-          <div className="absolute inset-0 border-2 border-gradient-to-r from-green-400 to-blue-400" />
-          
-          <div className="relative">
-            <h3 className="font-black text-2xl mb-2 flex items-center gap-2">
-              <Share2 className="w-6 h-6" />
-              Refer Friends (Unlimited!)
+        <div className="relative bg-gradient-to-br from-primary/10 to-blue-500/10 border border-primary/20 rounded-2xl p-6 mb-6">
+          <div className="mb-5">
+            <h3 className="font-display font-bold text-xl mb-2 flex items-center gap-2 text-white">
+              <Share2 className="w-5 h-5 text-primary" />
+              Refer Friends
             </h3>
-            <p className="text-gray-300 mb-4">+3 entries for each friend who enters</p>
-
-            {/* Referral link */}
-            <div className="flex gap-2 mb-4">
-              <input
-                type="text"
-                value={entry.referralLink}
-                readOnly
-                className="flex-1 bg-black/40 backdrop-blur-sm px-4 py-3 rounded-xl text-sm border border-white/10 focus:border-green-400 focus:outline-none transition-all"
-                onClick={(e) => e.currentTarget.select()}
-              />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={copyReferralLink}
-                className="bg-white/10 hover:bg-white/20 px-6 py-3 rounded-xl font-bold flex items-center gap-2 border border-white/10 hover:border-green-400/50 transition-all"
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-4 h-4 text-green-400" />
-                    <span className="text-green-400">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    Copy
-                  </>
-                )}
-              </motion.button>
-            </div>
-
-            {/* Share buttons */}
-            <div className="grid grid-cols-2 gap-2">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  copyReferralLink();
-                  setTimeout(() => {
-                    window.open('https://www.instagram.com/', '_blank');
-                  }, 300);
-                }}
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 py-3 rounded-xl font-bold text-sm transition-all"
-              >
-                <Instagram className="w-4 h-4" />
-                Instagram
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  const text = `I just entered to win 1 LB of premium flower from Bud Dash NYC! 🎉 Join me: ${entry.referralLink}`;
-                  window.open(`sms:?&body=${encodeURIComponent(text)}`, '_blank');
-                }}
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 py-3 rounded-xl font-bold text-sm transition-all"
-              >
-                <MessageCircle className="w-4 h-4" />
-                SMS
-              </motion.button>
-            </div>
-
-            {/* Stats */}
-            {entry.referralStats.successfulReferrals > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 p-4 bg-black/20 backdrop-blur-sm rounded-xl border border-white/10"
-              >
-                <div className="text-sm text-gray-400">
-                  You've referred: <span className="text-green-400 font-bold">{entry.referralStats.successfulReferrals} friends</span>
-                  <span className="text-blue-400 font-bold"> (+{entry.referralStats.totalBonusEntries} entries)</span>
-                </div>
-              </motion.div>
-            )}
+            <p className="text-slate-400 text-sm font-light">
+              Earn <span className="text-primary font-semibold">+3 entries</span> for each friend who signs up • Unlimited
+            </p>
           </div>
+
+          {/* Referral link */}
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={entry.referralLink}
+              readOnly
+              className="flex-1 bg-slate-800/70 backdrop-blur-sm px-4 py-3 rounded-xl text-sm border border-slate-700 focus:border-primary focus:outline-none transition-all text-slate-300 font-mono"
+              onClick={(e) => e.currentTarget.select()}
+            />
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={copyReferralLink}
+              className="bg-slate-800/70 hover:bg-slate-700/70 px-5 py-3 rounded-xl font-bold flex items-center gap-2 border border-slate-700 hover:border-primary/50 transition-all text-white"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 text-primary" />
+                  <span className="text-primary">Copied</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  Copy
+                </>
+              )}
+            </motion.button>
+          </div>
+
+          {/* Share buttons */}
+          <div className="grid grid-cols-2 gap-3">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                copyReferralLink();
+                setTimeout(() => {
+                  window.open('https://www.instagram.com/', '_blank');
+                }, 300);
+              }}
+              className="flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 py-3 rounded-xl font-bold text-sm transition-all text-white shadow-lg"
+            >
+              <Instagram className="w-4 h-4" />
+              Share on Instagram
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                const text = `Join me in Bud Dash NYC's giveaway! 🎉 Win premium flower: ${entry.referralLink}`;
+                window.open(`sms:?&body=${encodeURIComponent(text)}`, '_blank');
+              }}
+              className="flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 py-3 rounded-xl font-bold text-sm transition-all text-white shadow-lg"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Share via SMS
+            </motion.button>
+          </div>
+
+          {/* Referral stats */}
+          {entry.referralStats.successfulReferrals > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-5 p-4 bg-slate-800/50 border border-slate-700 rounded-xl"
+            >
+              <div className="text-sm text-slate-400 font-light text-center">
+                You've referred <span className="text-primary font-bold">{entry.referralStats.successfulReferrals} {entry.referralStats.successfulReferrals === 1 ? 'friend' : 'friends'}</span>
+                {' • '}
+                <span className="text-blue-400 font-bold">+{entry.referralStats.totalBonusEntries} bonus entries</span>
+              </div>
+            </motion.div>
+          )}
         </div>
 
-        {/* Motivational message */}
-        <div className="text-center p-4 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-xl">
-          <p className="text-sm text-gray-300">
-            🔥 Keep sharing to increase your chances! The more friends you refer, the better your odds!
+        {/* Motivation banner */}
+        <div className="text-center p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-xl">
+          <p className="text-sm text-slate-300 font-light">
+            Keep sharing to maximize your chances of winning! 🚀
           </p>
         </div>
       </motion.div>
