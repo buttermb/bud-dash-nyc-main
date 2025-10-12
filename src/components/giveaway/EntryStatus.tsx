@@ -1,6 +1,6 @@
+import { Check, Copy, Share2, Instagram, MessageCircle } from 'lucide-react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Copy, Share2, Trophy, Users } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
 interface EntryStatusProps {
   entry: any;
@@ -9,143 +9,165 @@ interface EntryStatusProps {
 }
 
 export default function EntryStatus({ entry, giveaway, onUpdate }: EntryStatusProps) {
-  const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
 
   const copyReferralLink = () => {
     navigator.clipboard.writeText(entry.referralLink);
-    toast({
-      title: "Link Copied! 📋",
-      description: "Share it to earn +3 entries per friend",
-    });
-  };
-
-  const shareOnSocial = () => {
-    const text = `I just entered to win 1 LB of premium flower from Bud Dash NYC! 🎉 Join me: ${entry.referralLink}`;
-    if (navigator.share) {
-      navigator.share({ text, url: entry.referralLink });
-    } else {
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`);
-    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <motion.div
-      initial={{ scale: 0.95, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      className="max-w-4xl mx-auto mb-16"
-    >
-      <div className="relative bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden">
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 rounded-3xl opacity-20 blur animate-pulse" />
-        
-        <div className="relative">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', duration: 0.6 }}
-              className="w-20 h-20 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/50"
-            >
-              <Trophy className="w-10 h-10" />
-            </motion.div>
-            <h2 className="text-4xl font-black mb-2 bg-gradient-to-r from-white to-gray-300 text-transparent bg-clip-text">
-              You're Entered! 🎉
-            </h2>
-            <p className="text-gray-400">Entry #{entry.entryNumbers?.start?.toLocaleString()}</p>
-          </div>
+    <div className="max-w-2xl mx-auto mb-16">
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="relative bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden"
+      >
+        {/* Success glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-32 bg-gradient-to-b from-green-400/20 to-transparent blur-3xl" />
 
-          {/* Entry Stats */}
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white/5 rounded-2xl p-6 text-center">
-              <div className="text-5xl font-black bg-gradient-to-r from-green-400 to-emerald-400 text-transparent bg-clip-text mb-2">
-                {entry.totalEntries}
+        <div className="relative text-center mb-8">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', duration: 0.6 }}
+            className="w-20 h-20 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/50"
+          >
+            <Check className="w-10 h-10" />
+          </motion.div>
+          <h2 className="text-4xl font-black mb-2 bg-gradient-to-r from-white to-gray-300 text-transparent bg-clip-text">
+            You're Entered! 🎉
+          </h2>
+          <p className="text-gray-400">Entry #{entry.entryId?.slice(0, 8)}</p>
+        </div>
+
+        {/* Entry summary */}
+        <div className="bg-gradient-to-br from-white/10 to-white/5 rounded-2xl p-8 mb-6 border border-white/10">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: 'spring' }}
+            className="text-center mb-6"
+          >
+            <div className="text-7xl font-black bg-gradient-to-r from-green-400 via-emerald-400 to-blue-400 text-transparent bg-clip-text mb-2">
+              {entry.totalEntries}
+            </div>
+            <div className="text-gray-400 font-semibold">Total Entries</div>
+          </motion.div>
+
+          <div className="space-y-3">
+            <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+              <span className="text-gray-300">Base entry:</span>
+              <span className="font-bold">{entry.breakdown.base}</span>
+            </div>
+            {entry.breakdown.newsletter > 0 && (
+              <div className="flex justify-between items-center p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <span className="text-gray-300">Newsletter bonus:</span>
+                <span className="font-bold text-green-400">+{entry.breakdown.newsletter}</span>
               </div>
-              <div className="text-sm text-gray-400">Your Total Entries</div>
-            </div>
-
-            <div className="bg-white/5 rounded-2xl p-6 text-center">
-              <div className="text-5xl font-black bg-gradient-to-r from-blue-400 to-cyan-400 text-transparent bg-clip-text mb-2">
-                {entry.referralStats.successfulReferrals}
+            )}
+            {entry.breakdown.referrals > 0 && (
+              <div className="flex justify-between items-center p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <span className="text-gray-300">Referral bonus:</span>
+                <span className="font-bold text-blue-400">+{entry.breakdown.referrals}</span>
               </div>
-              <div className="text-sm text-gray-400">Friends Referred</div>
-            </div>
-
-            <div className="bg-white/5 rounded-2xl p-6 text-center">
-              <div className="text-5xl font-black bg-gradient-to-r from-purple-400 to-pink-400 text-transparent bg-clip-text mb-2">
-                {giveaway.total_participants.toLocaleString()}
-              </div>
-              <div className="text-sm text-gray-400">Total Participants</div>
-            </div>
-          </div>
-
-          {/* Entry Breakdown */}
-          <div className="bg-white/5 rounded-2xl p-6 mb-8">
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-400" />
-              Entry Breakdown
-            </h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Base entry:</span>
-                <span className="font-bold">{entry.breakdown.base}</span>
-              </div>
-              {entry.breakdown.newsletter > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Newsletter bonus:</span>
-                  <span className="font-bold text-green-400">+{entry.breakdown.newsletter}</span>
-                </div>
-              )}
-              {entry.breakdown.referrals > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Referral bonus:</span>
-                  <span className="font-bold text-green-400">+{entry.breakdown.referrals}</span>
-                </div>
-              )}
-              <div className="pt-3 border-t border-white/10 flex justify-between items-center">
-                <span className="font-bold">Total:</span>
-                <span className="font-bold text-xl text-green-400">{entry.totalEntries}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Referral Section */}
-          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-6">
-            <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
-              <Users className="w-5 h-5 text-purple-400" />
-              Earn More Entries!
-            </h3>
-            <p className="text-gray-400 text-sm mb-4">
-              Share your referral link and get <span className="text-green-400 font-bold">+3 entries</span> for each friend who signs up!
-            </p>
-
-            <div className="bg-black/30 rounded-xl p-4 mb-4 break-all text-sm font-mono">
-              {entry.referralLink}
-            </div>
-
-            <div className="flex gap-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={copyReferralLink}
-                className="flex-1 py-3 px-4 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border border-white/10"
-              >
-                <Copy className="w-4 h-4" />
-                Copy Link
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={shareOnSocial}
-                className="flex-1 py-3 px-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-500/30"
-              >
-                <Share2 className="w-4 h-4" />
-                Share
-              </motion.button>
-            </div>
+            )}
           </div>
         </div>
-      </div>
-    </motion.div>
+
+        {/* Referral section */}
+        <div className="relative overflow-hidden rounded-2xl p-6 mb-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-blue-500/20" />
+          <div className="absolute inset-0 border-2 border-gradient-to-r from-green-400 to-blue-400" />
+          
+          <div className="relative">
+            <h3 className="font-black text-2xl mb-2 flex items-center gap-2">
+              <Share2 className="w-6 h-6" />
+              Refer Friends (Unlimited!)
+            </h3>
+            <p className="text-gray-300 mb-4">+3 entries for each friend who enters</p>
+
+            {/* Referral link */}
+            <div className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={entry.referralLink}
+                readOnly
+                className="flex-1 bg-black/40 backdrop-blur-sm px-4 py-3 rounded-xl text-sm border border-white/10 focus:border-green-400 focus:outline-none transition-all"
+                onClick={(e) => e.currentTarget.select()}
+              />
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={copyReferralLink}
+                className="bg-white/10 hover:bg-white/20 px-6 py-3 rounded-xl font-bold flex items-center gap-2 border border-white/10 hover:border-green-400/50 transition-all"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4 text-green-400" />
+                    <span className="text-green-400">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    Copy
+                  </>
+                )}
+              </motion.button>
+            </div>
+
+            {/* Share buttons */}
+            <div className="grid grid-cols-2 gap-2">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  const text = `I just entered to win 1 LB of premium flower from Bud Dash NYC! 🎉 Join me: ${entry.referralLink}`;
+                  window.open(`https://www.instagram.com/`, '_blank');
+                }}
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 py-3 rounded-xl font-bold text-sm transition-all"
+              >
+                <Instagram className="w-4 h-4" />
+                Instagram
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  const text = `I just entered to win 1 LB of premium flower from Bud Dash NYC! Join me: ${entry.referralLink}`;
+                  window.open(`sms:?body=${encodeURIComponent(text)}`, '_blank');
+                }}
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 py-3 rounded-xl font-bold text-sm transition-all"
+              >
+                <MessageCircle className="w-4 h-4" />
+                SMS
+              </motion.button>
+            </div>
+
+            {/* Stats */}
+            {entry.referralStats.successfulReferrals > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 p-4 bg-black/20 backdrop-blur-sm rounded-xl border border-white/10"
+              >
+                <div className="text-sm text-gray-400">
+                  You've referred: <span className="text-green-400 font-bold">{entry.referralStats.successfulReferrals} friends</span>
+                  <span className="text-blue-400 font-bold"> (+{entry.referralStats.totalBonusEntries} entries)</span>
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </div>
+
+        {/* Motivational message */}
+        <div className="text-center p-4 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-xl">
+          <p className="text-sm text-gray-300">
+            🔥 Keep sharing to increase your chances! The more friends you refer, the better your odds!
+          </p>
+        </div>
+      </motion.div>
+    </div>
   );
 }
