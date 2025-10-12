@@ -16,7 +16,8 @@ import {
   Package,
   Image,
   FileUp,
-  Settings
+  Settings,
+  Gift
 } from "lucide-react";
 import {
   Sidebar,
@@ -78,6 +79,7 @@ const menuGroups = [
     items: [
       { title: "Analytics", url: "/admin/analytics", icon: TrendingUp },
       { title: "Audit Logs", url: "/admin/audit-logs", icon: FileText },
+      { title: "Giveaway", url: "/admin/giveaway", icon: Gift },
     ]
   }
 ];

@@ -123,8 +123,10 @@ export default function EntryStatus({ entry, giveaway, onUpdate }: EntryStatusPr
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
-                  const text = `I just entered to win 1 LB of premium flower from Bud Dash NYC! 🎉 Join me: ${entry.referralLink}`;
-                  window.open(`https://www.instagram.com/`, '_blank');
+                  copyReferralLink();
+                  setTimeout(() => {
+                    window.open('https://www.instagram.com/', '_blank');
+                  }, 300);
                 }}
                 className="flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 py-3 rounded-xl font-bold text-sm transition-all"
               >
@@ -135,8 +137,8 @@ export default function EntryStatus({ entry, giveaway, onUpdate }: EntryStatusPr
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
-                  const text = `I just entered to win 1 LB of premium flower from Bud Dash NYC! Join me: ${entry.referralLink}`;
-                  window.open(`sms:?body=${encodeURIComponent(text)}`, '_blank');
+                  const text = `I just entered to win 1 LB of premium flower from Bud Dash NYC! 🎉 Join me: ${entry.referralLink}`;
+                  window.open(`sms:?&body=${encodeURIComponent(text)}`, '_blank');
                 }}
                 className="flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 py-3 rounded-xl font-bold text-sm transition-all"
               >
