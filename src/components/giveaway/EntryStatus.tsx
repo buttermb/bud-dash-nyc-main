@@ -1,6 +1,10 @@
-import { Check, Copy, Share2, Instagram, MessageCircle } from 'lucide-react';
+import { Check, Copy, Share2, Instagram, MessageCircle, Camera, Image } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { claimBonusEntry } from '@/lib/api/giveaway';
+import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface EntryStatusProps {
   entry: any;
@@ -10,11 +14,51 @@ interface EntryStatusProps {
 
 export default function EntryStatus({ entry, giveaway, onUpdate }: EntryStatusProps) {
   const [copied, setCopied] = useState(false);
+  const [claimingStory, setClaimingStory] = useState(false);
+  const [claimingPost, setClaimingPost] = useState(false);
+  const [storyUrl, setStoryUrl] = useState('');
+  const [postUrl, setPostUrl] = useState('');
 
   const copyReferralLink = () => {
     navigator.clipboard.writeText(entry.referralLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleClaimStoryBonus = async () => {
+    if (!storyUrl) {
+      toast.error('Please enter your Instagram story URL');
+      return;
+    }
+    
+    setClaimingStory(true);
+    try {
+      await claimBonusEntry(giveaway.id, 'instagram_story', storyUrl);
+      toast.success(`+${giveaway.instagram_story_bonus_entries} bonus entries added!`);
+      onUpdate();
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setClaimingStory(false);
+    }
+  };
+
+  const handleClaimPostBonus = async () => {
+    if (!postUrl) {
+      toast.error('Please enter your Instagram post URL');
+      return;
+    }
+    
+    setClaimingPost(true);
+    try {
+      await claimBonusEntry(giveaway.id, 'instagram_post', postUrl);
+      toast.success(`+${giveaway.instagram_post_bonus_entries} bonus entries added!`);
+      onUpdate();
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setClaimingPost(false);
+    }
   };
 
   return (
@@ -167,10 +211,72 @@ export default function EntryStatus({ entry, giveaway, onUpdate }: EntryStatusPr
         </div>
 
         {/* Motivation banner */}
-        <div className="text-center p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-xl">
+        <div className="text-center p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-xl mb-6">
           <p className="text-sm text-slate-300 font-light">
             Keep sharing to maximize your chances of winning! 🚀
           </p>
+        </div>
+
+        {/* Bonus Entry Claims */}
+        <div className="space-y-4">
+          <h3 className="font-display font-bold text-lg text-white flex items-center gap-2">
+            <Camera className="w-5 h-5 text-purple-400" />
+            Earn More Entries
+          </h3>
+
+          {/* Instagram Story Bonus */}
+          {entry.breakdown.story === 0 && (
+            <div className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-500/20 rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Camera className="w-5 h-5 text-pink-400" />
+                <span className="font-semibold text-pink-400">Instagram Story</span>
+                <span className="ml-auto text-pink-400 font-bold text-sm">+{giveaway.instagram_story_bonus_entries} entries</span>
+              </div>
+              <p className="text-xs text-slate-400 mb-3">Share about the giveaway on your story</p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Paste your story URL here"
+                  value={storyUrl}
+                  onChange={(e) => setStoryUrl(e.target.value)}
+                  className="flex-1 bg-slate-800/50 border-slate-700 focus:border-pink-400"
+                />
+                <Button
+                  onClick={handleClaimStoryBonus}
+                  disabled={claimingStory || !storyUrl}
+                  className="bg-gradient-to-r from-pink-500 to-purple-500"
+                >
+                  {claimingStory ? 'Claiming...' : 'Claim'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Instagram Post Bonus */}
+          {entry.breakdown.post === 0 && (
+            <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Image className="w-5 h-5 text-purple-400" />
+                <span className="font-semibold text-purple-400">Instagram Post</span>
+                <span className="ml-auto text-purple-400 font-bold text-sm">+{giveaway.instagram_post_bonus_entries} entries</span>
+              </div>
+              <p className="text-xs text-slate-400 mb-3">Create a post about the giveaway</p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Paste your post URL here"
+                  value={postUrl}
+                  onChange={(e) => setPostUrl(e.target.value)}
+                  className="flex-1 bg-slate-800/50 border-slate-700 focus:border-purple-400"
+                />
+                <Button
+                  onClick={handleClaimPostBonus}
+                  disabled={claimingPost || !postUrl}
+                  className="bg-gradient-to-r from-purple-500 to-blue-500"
+                >
+                  {claimingPost ? 'Claiming...' : 'Claim'}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>

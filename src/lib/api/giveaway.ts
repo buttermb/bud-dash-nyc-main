@@ -230,3 +230,80 @@ function formatTimeAgo(dateString: string): string {
   const hours = Math.floor(minutes / 60);
   return `${hours} hours ago`;
 }
+
+// ============================================
+// CLAIM BONUS ENTRY
+// ============================================
+export async function claimBonusEntry(
+  giveawayId: string,
+  bonusType: 'instagram_story' | 'instagram_post',
+  proofUrl: string
+) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Get giveaway config
+    const { data: giveaway } = await supabase
+      .from('giveaways')
+      .select('instagram_story_bonus_entries, instagram_post_bonus_entries')
+      .eq('id', giveawayId)
+      .single();
+
+    if (!giveaway) throw new Error('Giveaway not found');
+
+    // Get current entry
+    const { data: currentEntry, error: fetchError } = await supabase
+      .from('giveaway_entries')
+      .select('*')
+      .eq('giveaway_id', giveawayId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // Calculate bonus entries
+    const bonusEntries = bonusType === 'instagram_story' 
+      ? giveaway.instagram_story_bonus_entries
+      : giveaway.instagram_post_bonus_entries;
+
+    // Check if already claimed
+    if (bonusType === 'instagram_story' && currentEntry.instagram_story_entries > 0) {
+      throw new Error('Story bonus already claimed');
+    }
+    if (bonusType === 'instagram_post' && currentEntry.instagram_post_entries > 0) {
+      throw new Error('Post bonus already claimed');
+    }
+
+    // Update entry with bonus
+    const updates: any = {
+      total_entries: currentEntry.total_entries + bonusEntries,
+      entry_number_end: currentEntry.entry_number_end + bonusEntries
+    };
+
+    if (bonusType === 'instagram_story') {
+      updates.instagram_story_entries = bonusEntries;
+      updates.instagram_story_shared = true;
+      updates.story_url = proofUrl;
+    } else {
+      updates.instagram_post_entries = bonusEntries;
+      updates.instagram_post_shared = true;
+      updates.post_url = proofUrl;
+    }
+
+    const { error: updateError } = await supabase
+      .from('giveaway_entries')
+      .update(updates)
+      .eq('id', currentEntry.id);
+
+    if (updateError) throw updateError;
+
+    return {
+      success: true,
+      bonusEntries,
+      newTotal: updates.total_entries
+    };
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to claim bonus');
+  }
+}

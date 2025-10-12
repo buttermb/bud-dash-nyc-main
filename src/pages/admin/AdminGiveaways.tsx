@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Eye, Edit, TrendingUp, Users, Award } from 'lucide-react';
+import { Plus, Eye, Edit, TrendingUp, Users, Award, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -92,10 +92,12 @@ export default function AdminGiveaways() {
           <h1 className="text-3xl font-black">Giveaways</h1>
           <p className="text-muted-foreground">Manage and track your giveaway campaigns</p>
         </div>
-        <Button className="gap-2">
-          <Plus className="w-4 h-4" />
-          Create Giveaway
-        </Button>
+        <Link to="/admin/giveaways/new">
+          <Button className="gap-2">
+            <Plus className="w-4 h-4" />
+            Create Giveaway
+          </Button>
+        </Link>
       </div>
 
       {/* Active Giveaways */}
@@ -183,10 +185,16 @@ export default function AdminGiveaways() {
                         Analytics
                       </Button>
                     </Link>
-                    <Link to={`/admin/giveaway`}>
-                      <Button size="sm" className="gap-2">
+                    <Link to={`/admin/giveaways/${giveaway.id}/edit`}>
+                      <Button variant="outline" size="sm" className="gap-2">
                         <Edit className="w-4 h-4" />
-                        Manage
+                        Edit
+                      </Button>
+                    </Link>
+                    <Link to={`/admin/giveaways/${giveaway.id}/winners`}>
+                      <Button size="sm" className="gap-2">
+                        <Trophy className="w-4 h-4" />
+                        Winners
                       </Button>
                     </Link>
                   </div>
@@ -221,12 +229,12 @@ export default function AdminGiveaways() {
                       {giveaway.total_entries.toLocaleString()} entries
                     </p>
                   </div>
-                  <Link to={`/admin/giveaway`}>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Eye className="w-4 h-4" />
-                      View Results
-                    </Button>
-                  </Link>
+                    <Link to={`/admin/giveaways/${giveaway.id}/winners`}>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Trophy className="w-4 h-4" />
+                        View Results
+                      </Button>
+                    </Link>
                 </div>
               </motion.div>
             ))}
@@ -241,10 +249,12 @@ export default function AdminGiveaways() {
           <p className="text-muted-foreground mb-8">
             Create your first giveaway to start engaging with customers
           </p>
-          <Button className="gap-2">
-            <Plus className="w-4 h-4" />
-            Create Your First Giveaway
-          </Button>
+          <Link to="/admin/giveaways/new">
+            <Button className="gap-2">
+              <Plus className="w-4 h-4" />
+              Create Your First Giveaway
+            </Button>
+          </Link>
         </div>
       )}
     </div>
