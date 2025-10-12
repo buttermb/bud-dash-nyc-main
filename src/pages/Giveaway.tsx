@@ -9,6 +9,8 @@ import EntryStatus from '@/components/giveaway/EntryStatus';
 import PrizeCards from '@/components/giveaway/PrizeCards';
 import HowToEnter from '@/components/giveaway/HowToEnter';
 import { LiveFeed } from '@/components/giveaway/LiveFeed';
+import { SocialProofIndicators } from '@/components/giveaway/SocialProofIndicators';
+import { RecentEntryPopup } from '@/components/giveaway/RecentEntryPopup';
 import { Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -81,6 +83,9 @@ export default function GiveawayPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-hidden font-sans">
+      {/* Social proof popup */}
+      <RecentEntryPopup />
+      
       {/* Elegant gradient mesh background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
@@ -96,6 +101,8 @@ export default function GiveawayPage() {
           totalEntries={giveaway.total_entries}
           totalParticipants={giveaway.total_participants}
         />
+
+        <SocialProofIndicators totalEntries={giveaway.total_entries} />
 
         <Timer endDate={giveaway.end_date} />
 

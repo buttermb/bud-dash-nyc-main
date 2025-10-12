@@ -77,25 +77,21 @@ export function LiveFeed({ giveawayId }: LiveFeedProps) {
         timeAgo: formatTimeAgo(entry.entered_at)
       }));
 
-      // Mix with fake entries (30% fake, 70% real)
-      const fakeCount = Math.ceil(formatted.length * 0.3);
-      const fakeEntries = Array.from({ length: fakeCount }, generateFakeEntry);
+      // Mix with fake entries (60% fake for better social proof when starting)
+      const minEntries = 15; // Always show at least 15 entries
+      const fakeRatio = formatted.length < 5 ? 0.8 : 0.6; // More fake entries if we have few real ones
       
-      // Interleave real and fake entries
-      const mixed: Entry[] = [];
-      let realIndex = 0;
-      let fakeIndex = 0;
+      let allEntries = [...formatted];
       
-      while (realIndex < formatted.length || fakeIndex < fakeEntries.length) {
-        const useFake = Math.random() < 0.3 && fakeIndex < fakeEntries.length;
-        if (useFake) {
-          mixed.push(fakeEntries[fakeIndex++]);
-        } else if (realIndex < formatted.length) {
-          mixed.push(formatted[realIndex++]);
-        }
+      // Add fake entries to reach minimum or maintain ratio
+      while (allEntries.length < minEntries || (formatted.length > 0 && allEntries.length < formatted.length / (1 - fakeRatio))) {
+        allEntries.push(generateFakeEntry());
       }
+      
+      // Shuffle to mix real and fake naturally
+      allEntries = allEntries.sort(() => Math.random() - 0.5);
 
-      setEntries(mixed.slice(0, 12)); // Show 12 entries
+      setEntries(allEntries.slice(0, 15)); // Show 15 entries
     } catch (error) {
       console.error('Error loading feed:', error);
     } finally {

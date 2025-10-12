@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { submitGiveawayEntry } from '@/lib/api/giveaway';
-import { Instagram, Loader2, Sparkles, Check, Mail } from 'lucide-react';
+import { Instagram, Loader2, Sparkles, Check, Mail, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -134,11 +134,17 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
       className="max-w-2xl mx-auto mb-20"
     >
       <div className="relative bg-slate-900/70 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 sm:p-10 shadow-2xl">
+        {/* Account Required Badge */}
+        <div className="flex items-center justify-center gap-2 mb-6 px-4 py-2 bg-blue-500/10 border border-blue-400/20 rounded-full w-fit mx-auto">
+          <Users className="w-4 h-4 text-blue-400" />
+          <span className="text-sm font-medium text-blue-400">Account Required to Enter</span>
+        </div>
+
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-display font-bold mb-3 bg-gradient-to-br from-white to-slate-400 text-transparent bg-clip-text">
-            Enter to Win
+            Create Account & Enter
           </h2>
-          <p className="text-slate-500 font-light">Takes 2 minutes • 100% FREE</p>
+          <p className="text-slate-500 font-light">Takes 2 minutes • 100% FREE • Instant Entry</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
