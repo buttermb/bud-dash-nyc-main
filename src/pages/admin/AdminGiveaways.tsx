@@ -177,6 +177,12 @@ export default function AdminGiveaways() {
                         View Live
                       </Button>
                     </Link>
+                    <Link to={`/admin/giveaways/${giveaway.id}/analytics`}>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <TrendingUp className="w-4 h-4" />
+                        Analytics
+                      </Button>
+                    </Link>
                     <Link to={`/admin/giveaway`}>
                       <Button size="sm" className="gap-2">
                         <Edit className="w-4 h-4" />

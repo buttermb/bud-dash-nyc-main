@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { getGiveaway, getRecentEntries, getUserEntry } from '@/lib/api/giveaway';
-import { mixRealAndGeneratedEntries } from '@/lib/utils/socialProof';
+import { getGiveaway, getUserEntry } from '@/lib/api/giveaway';
 import Hero from '@/components/giveaway/Hero';
 import Timer from '@/components/giveaway/Timer';
 import EntryForm from '@/components/giveaway/EntryForm';
 import EntryStatus from '@/components/giveaway/EntryStatus';
 import PrizeCards from '@/components/giveaway/PrizeCards';
 import HowToEnter from '@/components/giveaway/HowToEnter';
-import LiveFeed from '@/components/giveaway/LiveFeed';
+import { LiveFeed } from '@/components/giveaway/LiveFeed';
 import { Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -20,7 +19,6 @@ export default function GiveawayPage() {
   
   const [giveaway, setGiveaway] = useState<any>(null);
   const [userEntry, setUserEntry] = useState<any>(null);
-  const [recentEntries, setRecentEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   const referralCode = searchParams.get('ref');
@@ -41,33 +39,14 @@ export default function GiveawayPage() {
     loadGiveaway();
   }, [user]);
 
-  useEffect(() => {
-    if (!giveaway) return;
-    
-    const interval = setInterval(() => {
-      getRecentEntries(giveaway.id).then(realEntries => {
-        const mixed = mixRealAndGeneratedEntries(realEntries, 10);
-        setRecentEntries(mixed);
-      });
-    }, 15000);
-
-    return () => clearInterval(interval);
-  }, [giveaway]);
-
   async function loadGiveaway() {
     try {
       const giveawayData = await getGiveaway(slug || 'nyc-biggest-flower');
       setGiveaway(giveawayData);
 
-      if (giveawayData) {
-        const entriesData = await getRecentEntries(giveawayData.id);
-        const mixed = mixRealAndGeneratedEntries(entriesData, 10);
-        setRecentEntries(mixed);
-
-        if (user) {
-          const userEntryData = await getUserEntry(giveawayData.id, user.id);
-          setUserEntry(userEntryData);
-        }
+      if (giveawayData && user) {
+        const userEntryData = await getUserEntry(giveawayData.id, user.id);
+        setUserEntry(userEntryData);
       }
     } catch (error) {
       console.error('Error loading giveaway:', error);
@@ -133,7 +112,7 @@ export default function GiveawayPage() {
 
         <PrizeCards giveaway={giveaway} />
         <HowToEnter giveaway={giveaway} />
-        <LiveFeed entries={recentEntries} />
+        <LiveFeed giveawayId={giveaway.id} />
       </div>
     </div>
   );
