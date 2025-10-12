@@ -1,16 +1,21 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { getGiveaway, getRecentEntries, getUserEntry } from '@/lib/api/giveaway';
 import { mixRealAndGeneratedEntries } from '@/lib/utils/socialProof';
 import Hero from '@/components/giveaway/Hero';
 import Timer from '@/components/giveaway/Timer';
 import EntryForm from '@/components/giveaway/EntryForm';
+import EntryStatus from '@/components/giveaway/EntryStatus';
+import PrizeCards from '@/components/giveaway/PrizeCards';
+import HowToEnter from '@/components/giveaway/HowToEnter';
+import LiveFeed from '@/components/giveaway/LiveFeed';
 import { Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function GiveawayPage() {
   const [searchParams] = useSearchParams();
+  const { slug } = useParams<{ slug: string }>();
   const [user, setUser] = useState<any>(null);
   
   const [giveaway, setGiveaway] = useState<any>(null);
@@ -51,7 +56,7 @@ export default function GiveawayPage() {
 
   async function loadGiveaway() {
     try {
-      const giveawayData = await getGiveaway('nyc-biggest-flower');
+      const giveawayData = await getGiveaway(slug || 'nyc-biggest-flower');
       setGiveaway(giveawayData);
 
       if (giveawayData) {
@@ -113,10 +118,11 @@ export default function GiveawayPage() {
         <Timer endDate={giveaway.end_date} />
 
         {userEntry ? (
-          <div className="text-center py-16">
-            <h2 className="text-3xl font-bold mb-4">You're Already Entered! 🎉</h2>
-            <p className="text-gray-400">Total entries: {userEntry.totalEntries}</p>
-          </div>
+          <EntryStatus
+            entry={userEntry}
+            giveaway={giveaway}
+            onUpdate={loadGiveaway}
+          />
         ) : (
           <EntryForm
             giveaway={giveaway}
@@ -124,6 +130,10 @@ export default function GiveawayPage() {
             onSuccess={loadGiveaway}
           />
         )}
+
+        <PrizeCards giveaway={giveaway} />
+        <HowToEnter giveaway={giveaway} />
+        <LiveFeed entries={recentEntries} />
       </div>
     </div>
   );

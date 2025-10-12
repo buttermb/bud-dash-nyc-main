@@ -68,6 +68,7 @@ const MediaLibrary = lazy(() => import("./pages/admin/MediaLibrary"));
 const ProductTemplates = lazy(() => import("./pages/admin/ProductTemplates"));
 const ImportExport = lazy(() => import("./pages/admin/ImportExport"));
 const COAManagement = lazy(() => import("./pages/admin/COAManagement"));
+const Giveaway = lazy(() => import("./pages/Giveaway"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -115,6 +116,9 @@ const App = () => (
                       <Route path="/become-courier" element={<BecomeCourier />} />
                       <Route path="/partner-shops" element={<PartnerShops />} />
                       <Route path="/track-order" element={<OrderLookup />} />
+                      
+                      {/* Giveaway */}
+                      <Route path="/giveaway/:slug" element={<Giveaway />} />
                       
                       {/* Public Order Tracking */}
                       <Route path="/track/:code" element={<CustomerTrackingPage />} />
