@@ -79,7 +79,8 @@ const menuGroups = [
     items: [
       { title: "Analytics", url: "/admin/analytics", icon: TrendingUp },
       { title: "Audit Logs", url: "/admin/audit-logs", icon: FileText },
-      { title: "Giveaway", url: "/admin/giveaway", icon: Gift },
+      { title: "All Giveaways", url: "/admin/giveaways", icon: Gift },
+      { title: "Current Giveaway", url: "/admin/giveaway", icon: Gift },
     ]
   }
 ];

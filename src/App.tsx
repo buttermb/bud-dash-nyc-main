@@ -70,6 +70,9 @@ const ImportExport = lazy(() => import("./pages/admin/ImportExport"));
 const COAManagement = lazy(() => import("./pages/admin/COAManagement"));
 const Giveaway = lazy(() => import("./pages/Giveaway"));
 const AdminGiveaway = lazy(() => import("./pages/admin/AdminGiveaway"));
+const AdminGiveaways = lazy(() => import("./pages/admin/AdminGiveaways"));
+const GiveawayRules = lazy(() => import("./pages/GiveawayRules"));
+const MyGiveawayEntries = lazy(() => import("./pages/MyGiveawayEntries"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -120,6 +123,12 @@ const App = () => (
                       
                       {/* Giveaway */}
                       <Route path="/giveaway/:slug" element={<Giveaway />} />
+                      <Route path="/giveaway/rules" element={<GiveawayRules />} />
+                      <Route path="/account/giveaway-entries" element={
+                        <ProtectedRoute>
+                          <MyGiveawayEntries />
+                        </ProtectedRoute>
+                      } />
                       
                       {/* Public Order Tracking */}
                       <Route path="/track/:code" element={<CustomerTrackingPage />} />
@@ -184,8 +193,9 @@ const App = () => (
                         <Route path="templates" element={<ProductTemplates />} />
                         <Route path="import-export" element={<ImportExport />} />
                         <Route path="coa-management" element={<COAManagement />} />
-                        <Route path="giveaway" element={<AdminGiveaway />} />
-                      </Route>
+                <Route path="giveaway" element={<AdminGiveaway />} />
+                <Route path="giveaways" element={<AdminGiveaways />} />
+              </Route>
 
                       <Route path="*" element={<NotFound />} />
                     </Routes>

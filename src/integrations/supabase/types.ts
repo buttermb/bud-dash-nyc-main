@@ -2103,6 +2103,7 @@ export type Database = {
           id: string
           id_document_url: string | null
           phone: string | null
+          referral_code: string | null
           user_id: string
           verification_approved_at: string | null
           verification_rejected_at: string | null
@@ -2116,6 +2117,7 @@ export type Database = {
           id?: string
           id_document_url?: string | null
           phone?: string | null
+          referral_code?: string | null
           user_id: string
           verification_approved_at?: string | null
           verification_rejected_at?: string | null
@@ -2129,6 +2131,7 @@ export type Database = {
           id?: string
           id_document_url?: string | null
           phone?: string | null
+          referral_code?: string | null
           user_id?: string
           verification_approved_at?: string | null
           verification_rejected_at?: string | null
@@ -2321,6 +2324,10 @@ export type Database = {
         Returns: boolean
       }
       generate_admin_pin: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_referral_code: {
         Args: Record<PropertyKey, never>
         Returns: string
       }

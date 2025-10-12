@@ -129,6 +129,12 @@ const Navigation = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
+            <Link 
+              to="/giveaway/nyc-biggest-flower" 
+              className="text-sm font-bold bg-gradient-to-r from-green-400 to-blue-400 text-white px-4 py-2 rounded-full hover:shadow-lg hover:scale-105 transition-all animate-pulse"
+            >
+              🎁 LIVE GIVEAWAY
+            </Link>
             {navLinks.map((link) => (
               link.scroll ? (
                 <a
@@ -215,6 +221,9 @@ const Navigation = () => {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => navigate("/my-orders")}>
                       My Orders
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/account/giveaway-entries")}>
+                      My Entries
                     </DropdownMenuItem>
                     <DropdownMenuItem>Profile Settings</DropdownMenuItem>
                     <DropdownMenuSeparator />
