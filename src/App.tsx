@@ -69,6 +69,7 @@ const ProductTemplates = lazy(() => import("./pages/admin/ProductTemplates"));
 const ImportExport = lazy(() => import("./pages/admin/ImportExport"));
 const COAManagement = lazy(() => import("./pages/admin/COAManagement"));
 const Giveaway = lazy(() => import("./pages/Giveaway"));
+const AdminGiveaway = lazy(() => import("./pages/admin/AdminGiveaway"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -183,6 +184,7 @@ const App = () => (
                         <Route path="templates" element={<ProductTemplates />} />
                         <Route path="import-export" element={<ImportExport />} />
                         <Route path="coa-management" element={<COAManagement />} />
+                        <Route path="giveaway" element={<AdminGiveaway />} />
                       </Route>
 
                       <Route path="*" element={<NotFound />} />
