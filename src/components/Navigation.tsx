@@ -131,12 +131,14 @@ const Navigation = () => {
           <nav className="hidden md:flex items-center gap-6">
             <Link 
               to="/giveaway/nyc-biggest-flower" 
-              className="relative text-sm font-bold bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] text-white px-6 py-2.5 rounded-full border border-white/20 backdrop-blur-sm shadow-[0_0_20px_rgba(var(--primary),0.3)] hover:shadow-[0_0_30px_rgba(var(--primary),0.5)] hover:scale-105 hover:border-white/40 transition-all duration-300 before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:animate-[shimmer_2s_infinite]"
+              className="relative text-sm font-semibold text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5 group"
             >
-              <span className="relative z-10 flex items-center gap-2">
-                <span className="text-base">🎁</span>
+              <span className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/5 border border-primary/20 group-hover:bg-primary/10 group-hover:border-primary/30 transition-all">
+                <span className="relative">
+                  🎁
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-accent rounded-full animate-pulse shadow-glow"></span>
+                </span>
                 <span className="tracking-wide">LIVE GIVEAWAY</span>
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.8)]"></span>
               </span>
             </Link>
             {navLinks.map((link) => (
