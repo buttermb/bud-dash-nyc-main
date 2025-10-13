@@ -26,10 +26,12 @@ import GuestCheckoutOption from "@/components/GuestCheckoutOption";
 import HighValueCartNotice from "@/components/HighValueCartNotice";
 import ExpressCheckoutButtons from "@/components/ExpressCheckoutButtons";
 import LowCartValueUpsell from "@/components/LowCartValueUpsell";
+import CouponInput from "@/components/CouponInput";
 import { useCartValueTrigger } from "@/hooks/useCartValueTrigger";
 import { getNeighborhoodFromZip, getRiskColor, getRiskLabel, getRiskTextColor } from "@/utils/neighborhoods";
 import { analytics } from "@/utils/analytics";
 import { useGuestCart } from "@/hooks/useGuestCart";
+import { applyCoupon, getCouponByCode } from "@/lib/api/coupons";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -41,8 +43,7 @@ const Checkout = () => {
   const [addressLng, setAddressLng] = useState<number>();
   const [borough, setBorough] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
-  const [promoCode, setPromoCode] = useState("");
-  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; couponId?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [deliveryType, setDeliveryType] = useState<"express" | "standard" | "economy">("standard");
   const [selectedDate, setSelectedDate] = useState<Date>();
@@ -192,23 +193,24 @@ const Checkout = () => {
   // First order discount for members only (10% off subtotal)
   const firstOrderDiscount = isFirstOrder ? subtotal * 0.10 : 0;
   
-  const total = subtotal + deliveryFee - firstOrderDiscount - promoDiscount;
-  const guestTotal = subtotal + guestDeliveryFee;
+  // Coupon discount
+  const couponDiscount = appliedCoupon?.discount || 0;
+  
+  const total = subtotal + deliveryFee - firstOrderDiscount - couponDiscount;
+  const guestTotal = subtotal + guestDeliveryFee - couponDiscount;
 
-  const handleApplyPromo = () => {
-    const validCodes: Record<string, number> = {
-      FIRST10: subtotal * 0.1,
-      SAVE5: 5,
-      WELCOME15: subtotal * 0.15,
-    };
+  const handleCouponApplied = async (discount: number, code: string) => {
+    // Fetch full coupon details to get ID
+    const coupon = await getCouponByCode(code);
+    setAppliedCoupon({ 
+      code, 
+      discount,
+      couponId: coupon?.id 
+    });
+  };
 
-    const discount = validCodes[promoCode.toUpperCase()] || 0;
-    if (discount > 0) {
-      setPromoDiscount(discount);
-      toast.success(`Promo code applied! You saved $${discount.toFixed(2)}`);
-    } else {
-      toast.error("Invalid promo code");
-    }
+  const handleCouponRemoved = () => {
+    setAppliedCoupon(null);
   };
 
   const handleAddressChange = (newAddress: string, lat?: number, lng?: number, detectedBorough?: string) => {
@@ -305,6 +307,16 @@ const Checkout = () => {
       if (error) throw error;
       if (data.error) throw new Error(data.error);
 
+      // Track coupon usage if applied
+      if (appliedCoupon?.couponId && user?.id) {
+        await applyCoupon(
+          appliedCoupon.couponId,
+          user.id,
+          data.orderId,
+          appliedCoupon.discount
+        );
+      }
+
       // Clear cart
       if (user) {
         // Authenticated user - edge function handles DB clear in background
@@ -318,7 +330,7 @@ const Checkout = () => {
       toast.success("Order placed successfully!");
       
       // Track order completion
-      analytics.trackOrderCompleted(total, promoDiscount, !user);
+      analytics.trackOrderCompleted(total, couponDiscount, !user);
       
       navigate(`/order-confirmation?orderId=${data.orderId}`);
     } catch (error: any) {
@@ -954,37 +966,26 @@ const Checkout = () => {
                       <span>-${firstOrderDiscount.toFixed(2)}</span>
                     </div>
                   )}
-                  {promoDiscount > 0 && (
-                    <div className="flex justify-between text-sm text-primary">
-                      <span>Promo Discount</span>
-                      <span>-${promoDiscount.toFixed(2)}</span>
-                    </div>
-                  )}
+                   {couponDiscount > 0 && (
+                     <div className="flex justify-between text-sm text-primary">
+                       <span>Coupon Discount ({appliedCoupon?.code})</span>
+                       <span>-${couponDiscount.toFixed(2)}</span>
+                     </div>
+                   )}
                 </div>
 
                 <Separator />
 
-                {/* Promo Code */}
-                <div className="space-y-2">
-                  <Label htmlFor="promo">Promo Code</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="promo"
-                      placeholder="Enter code"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleApplyPromo}
-                      className="shrink-0"
-                    >
-                      Apply
-                    </Button>
-                  </div>
-                </div>
+                 {/* Coupon Code Input */}
+                 <div className="space-y-2">
+                   <Label>Promo Code</Label>
+                   <CouponInput
+                     cartTotal={subtotal}
+                     onCouponApplied={handleCouponApplied}
+                     onCouponRemoved={handleCouponRemoved}
+                     appliedCode={appliedCoupon?.code}
+                   />
+                 </div>
 
                 <Separator />
 
