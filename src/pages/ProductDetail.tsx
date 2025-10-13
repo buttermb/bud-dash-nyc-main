@@ -14,6 +14,8 @@ import { useProductViewTracking } from "@/hooks/useProductViewTracking";
 import StickyAddToCart from "@/components/StickyAddToCart";
 import Navigation from "@/components/Navigation";
 import { haptics } from "@/utils/haptics";
+import { NativeShare } from "@/components/NativeShare";
+import { ImageGallerySwipe } from "@/components/ImageGallerySwipe";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -158,17 +160,23 @@ const ProductDetail = () => {
       <div className="grid md:grid-cols-2 gap-8 mb-12">
         <div>
           {product.image_url && (
-            <img
-              src={product.image_url}
+            <ImageGallerySwipe
+              images={[product.image_url]}
               alt={product.name}
-              className="w-full rounded-lg shadow-lg object-cover aspect-square"
             />
           )}
         </div>
 
         <div className="space-y-6">
           <div>
-            <h1 className="text-4xl font-bold mb-2">{product.name}</h1>
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-4xl font-bold">{product.name}</h1>
+              <NativeShare
+                title={product.name}
+                text={`Check out ${product.name} on NY Minute NYC`}
+                url={`/product/${id}`}
+              />
+            </div>
             <div className="flex items-center gap-2 mb-4">
               <Badge variant="secondary">{product.category}</Badge>
               {product.average_rating > 0 && (

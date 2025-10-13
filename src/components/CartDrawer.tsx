@@ -10,6 +10,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useGuestCart } from "@/hooks/useGuestCart";
+import { SwipeableCartItem } from "@/components/SwipeableCartItem";
+import { haptics } from "@/utils/haptics";
 
 interface CartDrawerProps {
   open: boolean;
@@ -105,6 +107,8 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
   };
 
   const removeItem = async (itemId: string, productId: string, selectedWeight: string) => {
+    haptics.medium(); // Haptic feedback for delete
+    
     if (!user) {
       // Guest cart - remove from localStorage
       removeFromGuestCart(productId, selectedWeight);
@@ -125,15 +129,18 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     } catch (error: any) {
       toast.error(error.message);
+      haptics.error();
     }
   };
 
   const handleCheckout = () => {
+    haptics.medium(); // Haptic feedback
     onOpenChange(false);
     navigate("/cart");
   };
 
   const handleViewCart = () => {
+    haptics.light(); // Light tap feedback
     onOpenChange(false);
     navigate("/cart");
   };
@@ -172,69 +179,70 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
                 const selectedWeight = item.selected_weight || "unit";
                 
                 return (
-                  <div key={item.id} className="flex gap-3">
-                    <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                      {item.products?.image_url ? (
-                        <img 
-                          src={item.products.image_url} 
-                          alt={item.products.name}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      ) : (
-                        <span className="text-3xl">🌿</span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-base leading-tight line-clamp-2">
-                        {item.products?.name}
-                      </h4>
-                      {selectedWeight !== "unit" && (
-                        <p className="text-sm text-muted-foreground mt-0.5">
-                          Weight: {selectedWeight}
+                  <SwipeableCartItem
+                    key={item.id}
+                    onDelete={() => removeItem(item.id, item.product_id, selectedWeight)}
+                  >
+                    <div className="flex gap-3 p-2">
+                      <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                        {item.products?.image_url ? (
+                          <img 
+                            src={item.products.image_url} 
+                            alt={item.products.name}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        ) : (
+                          <span className="text-3xl">🌿</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-base leading-tight line-clamp-2">
+                          {item.products?.name}
+                        </h4>
+                        {selectedWeight !== "unit" && (
+                          <p className="text-sm text-muted-foreground mt-0.5">
+                            Weight: {selectedWeight}
+                          </p>
+                        )}
+                        <p className="text-base text-muted-foreground mt-0.5">
+                          ${itemPrice.toFixed(2)} each
                         </p>
-                      )}
-                      <p className="text-base text-muted-foreground mt-0.5">
-                        ${itemPrice.toFixed(2)} each
-                      </p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="min-h-[44px] min-w-[44px] h-11 w-11"
-                          onClick={() =>
-                            updateQuantity(item.id, item.product_id, selectedWeight, Math.max(1, item.quantity - 1))
-                          }
-                          disabled={item.quantity <= 1}
-                        >
-                          <Minus className="w-4 h-4" />
-                        </Button>
-                        <span className="text-base font-medium min-w-[32px] text-center">
-                          {item.quantity}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="min-h-[44px] min-w-[44px] h-11 w-11"
-                          onClick={() => updateQuantity(item.id, item.product_id, selectedWeight, item.quantity + 1)}
-                        >
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="min-h-[44px] min-w-[44px] h-11 w-11 ml-auto"
-                          onClick={() => removeItem(item.id, item.product_id, selectedWeight)}
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="min-h-[44px] min-w-[44px] h-11 w-11"
+                            onClick={() => {
+                              haptics.light();
+                              updateQuantity(item.id, item.product_id, selectedWeight, Math.max(1, item.quantity - 1));
+                            }}
+                            disabled={item.quantity <= 1}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                          <span className="text-base font-medium min-w-[32px] text-center">
+                            {item.quantity}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="min-h-[44px] min-w-[44px] h-11 w-11"
+                            onClick={() => {
+                              haptics.light();
+                              updateQuantity(item.id, item.product_id, selectedWeight, item.quantity + 1);
+                            }}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="font-semibold text-lg">
+                          ${(itemPrice * item.quantity).toFixed(2)}
+                        </p>
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="font-semibold text-lg">
-                        ${(itemPrice * item.quantity).toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
+                  </SwipeableCartItem>
                 );
               })}
             </div>

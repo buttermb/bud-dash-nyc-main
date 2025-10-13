@@ -22,6 +22,7 @@ import NYMLogo from "./NYMLogo";
 import MobileBottomNav from "./MobileBottomNav";
 import { useGuestCart } from "@/hooks/useGuestCart";
 import { SearchBar } from "./SearchBar";
+import { haptics } from "@/utils/haptics";
 
 const Navigation = () => {
   const { user, signOut } = useAuth();
@@ -76,12 +77,14 @@ const Navigation = () => {
 
 
   const openAuth = (mode: "signin" | "signup") => {
+    haptics.light(); // Light tap feedback
     setAuthMode(mode);
     setShowAuthModal(true);
   };
 
   const handleNavClick = (href: string, scroll: boolean, closeSheet?: () => void) => {
     return (e: React.MouseEvent<HTMLAnchorElement>) => {
+      haptics.selection(); // Selection feedback for navigation
       if (scroll && href.includes('#')) {
         e.preventDefault();
         const id = href.split('#')[1];
@@ -175,7 +178,10 @@ const Navigation = () => {
             <Button
               variant="outline"
               className="relative gap-3 hidden sm:flex h-11 px-4"
-              onClick={() => setShowCart(true)}
+              onClick={() => {
+                haptics.light();
+                setShowCart(true);
+              }}
             >
               <ShoppingCart className="w-4 h-4" />
               <div className="flex flex-col items-start gap-0.5">
@@ -200,7 +206,10 @@ const Navigation = () => {
               variant="ghost"
               size="icon"
               className="relative sm:hidden h-10 w-10"
-              onClick={() => setShowCart(true)}
+              onClick={() => {
+                haptics.light();
+                setShowCart(true);
+              }}
             >
               <ShoppingCart className="w-5 h-5" />
               {cartCount > 0 && (
@@ -344,7 +353,10 @@ const Navigation = () => {
       <CartDrawer open={showCart} onOpenChange={setShowCart} />
       
       <MobileBottomNav 
-        onCartClick={() => setShowCart(true)}
+        onCartClick={() => {
+          haptics.light();
+          setShowCart(true);
+        }}
         onAuthClick={() => openAuth("signin")}
       />
     </>

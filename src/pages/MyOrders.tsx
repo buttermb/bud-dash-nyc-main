@@ -10,6 +10,8 @@ import Navigation from "@/components/Navigation";
 import { ShoppingBag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { PullToRefresh } from "@/components/PullToRefresh";
+import { haptics } from "@/utils/haptics";
 
 export default function MyOrders() {
   const { user } = useAuth();
@@ -61,6 +63,7 @@ export default function MyOrders() {
 
       if (error) throw error;
       setOrders(data || []);
+      haptics.light(); // Light feedback on successful refresh
     } catch (error) {
       console.error("Error fetching orders:", error);
       toast({
@@ -68,6 +71,7 @@ export default function MyOrders() {
         description: "Could not load your order history.",
         variant: "destructive",
       });
+      haptics.error(); // Error feedback
     } finally {
       setLoading(false);
     }
@@ -119,72 +123,83 @@ export default function MyOrders() {
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <h1 className="text-3xl font-bold mb-6">My Orders</h1>
+      <PullToRefresh onRefresh={fetchOrders}>
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <h1 className="text-3xl font-bold mb-6">My Orders</h1>
 
-        <Tabs defaultValue="all" onValueChange={setFilter}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="active">Active</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-            <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
-          </TabsList>
+          <Tabs defaultValue="all" onValueChange={(value) => {
+            haptics.selection(); // Selection feedback
+            setFilter(value);
+          }}>
+            <TabsList className="mb-6">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="active">Active</TabsTrigger>
+              <TabsTrigger value="completed">Completed</TabsTrigger>
+              <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value={filter}>
-            {filteredOrders.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <ShoppingBag className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h2 className="text-2xl font-bold mb-2">No Orders Yet</h2>
-                  <p className="text-muted-foreground mb-4">Start shopping to see your orders here.</p>
-                  <Button onClick={() => navigate("/")}>Start Shopping</Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {filteredOrders.map((order) => (
-                  <Card key={order.id} className="hover:shadow-lg transition-shadow">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-lg">
-                        Order #{order.id.slice(0, 8).toUpperCase()}
-                      </CardTitle>
-                      <Badge variant={getStatusColor(order.status) as any}>
-                        {order.status.replace("_", " ")}
-                      </Badge>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid md:grid-cols-4 gap-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground">Date</p>
-                          <p className="font-semibold">
-                            {new Date(order.created_at).toLocaleDateString()}
-                          </p>
+            <TabsContent value={filter}>
+              {filteredOrders.length === 0 ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <ShoppingBag className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h2 className="text-2xl font-bold mb-2">No Orders Yet</h2>
+                    <p className="text-muted-foreground mb-4">Start shopping to see your orders here.</p>
+                    <Button onClick={() => {
+                      haptics.medium();
+                      navigate("/");
+                    }}>Start Shopping</Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {filteredOrders.map((order) => (
+                    <Card key={order.id} className="hover:shadow-lg transition-shadow">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-lg">
+                          Order #{order.id.slice(0, 8).toUpperCase()}
+                        </CardTitle>
+                        <Badge variant={getStatusColor(order.status) as any}>
+                          {order.status.replace("_", " ")}
+                        </Badge>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid md:grid-cols-4 gap-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Date</p>
+                            <p className="font-semibold">
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Total</p>
+                            <p className="font-semibold">${Number(order.total_amount).toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Delivery</p>
+                            <p className="font-semibold">{order.delivery_borough}</p>
+                          </div>
+                          <div className="flex items-end justify-end">
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                haptics.light();
+                                navigate(`/track/${order.tracking_code || order.id}`);
+                              }}
+                            >
+                              View Details
+                            </Button>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Total</p>
-                          <p className="font-semibold">${Number(order.total_amount).toFixed(2)}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Delivery</p>
-                          <p className="font-semibold">{order.delivery_borough}</p>
-                        </div>
-                        <div className="flex items-end justify-end">
-                          <Button
-                            variant="outline"
-                            onClick={() => navigate(`/track/${order.tracking_code || order.id}`)}
-                          >
-                            View Details
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+      </PullToRefresh>
     </div>
   );
 }
