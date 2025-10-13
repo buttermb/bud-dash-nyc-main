@@ -43,19 +43,15 @@ const AuthModal = ({ open, onOpenChange, mode, onModeChange }: AuthModalProps) =
       newErrors.email = "Invalid email format";
     }
 
-    // Enhanced password security validation
+    // Password security validation
     if (!password) {
       newErrors.password = "Password is required";
-    } else if (password.length < 12) {
-      newErrors.password = "Password must be at least 12 characters";
-    } else if (!/[A-Z]/.test(password)) {
-      newErrors.password = "Password must contain at least one uppercase letter";
-    } else if (!/[a-z]/.test(password)) {
-      newErrors.password = "Password must contain at least one lowercase letter";
+    } else if (password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+    } else if (!/[a-zA-Z]/.test(password)) {
+      newErrors.password = "Password must contain at least one letter";
     } else if (!/[0-9]/.test(password)) {
       newErrors.password = "Password must contain at least one number";
-    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      newErrors.password = "Password must contain at least one special character";
     }
 
     if (mode === "signup") {
@@ -261,7 +257,7 @@ const AuthModal = ({ open, onOpenChange, mode, onModeChange }: AuthModalProps) =
             )}
             {mode === "signup" && (
               <p className="text-xs text-muted-foreground mt-1">
-                Must be 12+ characters with uppercase, lowercase, number, and special character
+                Must be at least 8 characters with a letter and number
               </p>
             )}
           </div>
