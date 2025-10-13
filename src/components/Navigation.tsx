@@ -205,13 +205,13 @@ const Navigation = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="relative sm:hidden h-10 w-10"
+              className="relative sm:hidden h-12 w-12 touch-manipulation active:scale-95 transition-transform"
               onClick={() => {
                 haptics.light();
                 setShowCart(true);
               }}
             >
-              <ShoppingCart className="w-5 h-5" />
+              <ShoppingCart className="w-6 h-6" />
               {cartCount > 0 && (
                 <Badge variant="default" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
                   {cartCount}
@@ -270,15 +270,19 @@ const Navigation = () => {
             {/* Mobile Menu */}
             <Sheet>
               <SheetTrigger asChild className="md:hidden">
-                <Button variant="ghost" size="icon">
-                  <Menu className="w-5 h-5" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-12 w-12 touch-manipulation active:scale-95 transition-transform"
+                >
+                  <Menu className="w-6 h-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent>
+              <SheetContent className="w-[85vw] sm:w-[400px]">
                 <div className="mb-6 mt-4">
                   <SearchBar variant="full" />
                 </div>
-                <nav className="flex flex-col gap-4">
+                <nav className="flex flex-col gap-6">
                   {navLinks.map((link) => (
                     link.scroll ? (
                       <a
@@ -288,7 +292,7 @@ const Navigation = () => {
                           const closeButton = document.querySelector('[aria-label="Close"]') as HTMLButtonElement;
                           closeButton?.click();
                         })}
-                        className="text-lg font-medium transition-colors hover:text-primary cursor-pointer"
+                        className="text-lg font-medium transition-colors hover:text-primary cursor-pointer py-2 px-3 rounded-lg hover:bg-muted active:scale-95 touch-manipulation"
                       >
                         {link.label}
                       </a>
@@ -301,7 +305,7 @@ const Navigation = () => {
                           const closeButton = document.querySelector('[aria-label="Close"]') as HTMLButtonElement;
                           closeButton?.click();
                         }}
-                        className="text-lg font-medium transition-colors hover:text-primary cursor-pointer"
+                        className="text-lg font-medium transition-colors hover:text-primary cursor-pointer py-2 px-3 rounded-lg hover:bg-muted active:scale-95 touch-manipulation"
                       >
                         {link.label}
                       </Link>
@@ -311,6 +315,7 @@ const Navigation = () => {
                     <>
                       <Button 
                         variant="outline" 
+                        className="h-12 text-base touch-manipulation active:scale-95"
                         onClick={() => {
                           navigate("/my-orders");
                           const closeButton = document.querySelector('[aria-label="Close"]') as HTMLButtonElement;
@@ -319,19 +324,31 @@ const Navigation = () => {
                       >
                         My Orders
                       </Button>
-                      <Button variant="outline" onClick={async () => {
-                        await signOut();
-                        navigate("/");
-                      }}>
+                      <Button 
+                        variant="outline" 
+                        className="h-12 text-base touch-manipulation active:scale-95"
+                        onClick={async () => {
+                          await signOut();
+                          navigate("/");
+                        }}
+                      >
                         Sign Out
                       </Button>
                     </>
                   ) : (
                     <>
-                      <Button variant="outline" onClick={() => openAuth("signin")}>
+                      <Button 
+                        variant="outline" 
+                        className="h-12 text-base touch-manipulation active:scale-95"
+                        onClick={() => openAuth("signin")}
+                      >
                         Sign In
                       </Button>
-                      <Button variant="hero" onClick={() => openAuth("signup")}>
+                      <Button 
+                        variant="hero" 
+                        className="h-12 text-base touch-manipulation active:scale-95"
+                        onClick={() => openAuth("signup")}
+                      >
                         Sign Up
                       </Button>
                     </>
