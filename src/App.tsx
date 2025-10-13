@@ -13,6 +13,7 @@ import CartAbandonmentWrapper from "./components/CartAbandonmentWrapper";
 import { NotificationPreferences } from "./components/NotificationPreferences";
 import OfflineBanner from "./components/OfflineBanner";
 import InstallPWA from "./components/InstallPWA";
+import { CartBadgeAnimation } from "./components/CartBadgeAnimation";
 
 // Eager load critical pages
 import Index from "./pages/Index";
@@ -113,6 +114,7 @@ const App = () => (
                 <BrowserRouter>
                   <OfflineBanner />
                   <InstallPWA />
+                  <CartBadgeAnimation />
                   <CartAbandonmentWrapper />
                   <Toaster />
                   <Sonner />

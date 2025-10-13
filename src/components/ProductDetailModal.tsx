@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { Minus, Plus, ShoppingCart, Loader2, Package, FileText, Download, QrCode, Shield, Award, Leaf, Clock, Activity, Heart, Star, X } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Loader2, Package, FileText, Download, QrCode, Shield, Award, Leaf, Clock, Activity, Heart, Star, X, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { sortProductWeights, getDefaultWeight, formatWeight } from "@/utils/productHelpers";
 import ReactStars from 'react-rating-stars-component';
+import { toast as sonnerToast } from "sonner";
+import { haptics } from "@/utils/haptics";
+import { useGuestCart } from "@/hooks/useGuestCart";
 import {
   Carousel,
   CarouselContent,
@@ -31,12 +34,14 @@ interface ProductDetailModalProps {
 export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired }: ProductDetailModalProps) => {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [added, setAdded] = useState(false);
   const [selectedWeight, setSelectedWeight] = useState<string>("");
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { addToGuestCart } = useGuestCart();
   const queryClient = useQueryClient();
 
   // Fetch reviews with photos
@@ -64,12 +69,8 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
   }, [product, open]);
 
   const handleAddToCart = async () => {
-    if (!user) {
-      onAuthRequired?.();
-      return;
-    }
-
     if (!product.in_stock) {
+      haptics.error();
       toast({
         title: "Out of Stock",
         description: "This product is currently unavailable.",
@@ -79,13 +80,43 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
     }
 
     setLoading(true);
+    haptics.light();
+    
     try {
+      const weightToUse = selectedWeight || "unit";
+
+      if (!user) {
+        // Guest cart - use localStorage
+        addToGuestCart(product.id, quantity, weightToUse);
+        
+        // Success feedback with animation
+        setAdded(true);
+        haptics.success();
+        sonnerToast.success("🎉 Added to cart!", {
+          description: `${quantity}x ${product.name}`,
+          duration: 2000,
+        });
+        
+        queryClient.invalidateQueries({ queryKey: ["cart"] });
+        queryClient.invalidateQueries({ queryKey: ["guest-cart-products"] });
+        
+        // Keep modal open but show success state
+        setTimeout(() => {
+          setAdded(false);
+          setQuantity(1);
+        }, 2000);
+        
+        setLoading(false);
+        return;
+      }
+
+      // Authenticated user - use database
       const { data: existingItem } = await supabase
         .from("cart_items")
         .select("*")
         .eq("user_id", user.id)
         .eq("product_id", product.id)
-        .eq("selected_weight", selectedWeight || "unit")
+        .eq("selected_weight", weightToUse)
         .maybeSingle();
 
       if (existingItem) {
@@ -101,20 +132,27 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
             user_id: user.id,
             product_id: product.id,
             quantity: quantity,
-            selected_weight: selectedWeight || "unit",
+            selected_weight: weightToUse,
           });
         if (error) throw error;
       }
 
+      // Success feedback with animation
+      setAdded(true);
+      haptics.success();
       queryClient.invalidateQueries({ queryKey: ["cart"] });
-      toast({
-        title: "Added to cart!",
-        description: `${product.name} has been added to your cart.`,
+      sonnerToast.success("🎉 Added to cart!", {
+        description: `${quantity}x ${product.name}`,
+        duration: 2000,
       });
 
-      onOpenChange(false);
-      setQuantity(1);
+      // Keep modal open but show success state
+      setTimeout(() => {
+        setAdded(false);
+        setQuantity(1);
+      }, 2000);
     } catch (error) {
+      haptics.error();
       toast({
         title: "Failed to add to cart",
         description: "Please try again.",
@@ -312,7 +350,11 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
                     <Button
                       key={weight}
                       variant={selectedWeight === weight ? "default" : "outline"}
-                      onClick={() => setSelectedWeight(weight)}
+                      onClick={() => {
+                        haptics.selection();
+                        setSelectedWeight(weight);
+                      }}
+                      disabled={added}
                       className="font-semibold uppercase h-12 text-base touch-manipulation"
                       size="lg"
                     >
@@ -342,8 +384,11 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={loading}
+                    onClick={() => {
+                      haptics.selection();
+                      setQuantity(Math.max(1, quantity - 1));
+                    }}
+                    disabled={loading || added}
                   >
                     <Minus className="w-4 h-4" />
                   </Button>
@@ -351,8 +396,11 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => setQuantity(quantity + 1)}
-                    disabled={loading}
+                    onClick={() => {
+                      haptics.selection();
+                      setQuantity(quantity + 1);
+                    }}
+                    disabled={loading || added}
                   >
                     <Plus className="w-4 h-4" />
                   </Button>
@@ -361,14 +409,22 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
 
               <Button
                 onClick={handleAddToCart}
-                disabled={!product.in_stock || loading}
-                className="w-full"
+                disabled={!product.in_stock || loading || added}
+                className={`w-full transition-all duration-300 ${
+                  added ? 'bg-green-600 hover:bg-green-600 animate-pulse' : ''
+                }`}
                 size="lg"
+                variant={added ? "default" : "default"}
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Adding...
+                  </>
+                ) : added ? (
+                  <>
+                    <Check className="w-5 h-5 mr-2 animate-bounce" />
+                    ✓ Added to Cart!
                   </>
                 ) : (
                   <>

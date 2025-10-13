@@ -12,6 +12,7 @@ import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { getDefaultWeight } from "@/utils/productHelpers";
 import { useProductViewCount } from "@/hooks/useProductViewCount";
 import { useGuestCart } from "@/hooks/useGuestCart";
+import { haptics } from "@/utils/haptics";
 import {
   Carousel,
   CarouselContent,
@@ -42,6 +43,7 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
   const isLowStock = actualStockLevel > 0 && actualStockLevel <= 5;
 
   const handleCardClick = () => {
+    haptics.light();
     addToRecentlyViewed(product.id);
     setShowDetailModal(true);
   };
@@ -63,11 +65,13 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
 
   const handleAddToCart = async () => {
     if (!product.in_stock) {
+      haptics.error();
       toast.error("This product is out of stock");
       return;
     }
 
     setLoading(true);
+    haptics.light();
     
     try {
       // Get default weight for products with weight options (always starts at 3.5g)
@@ -78,6 +82,7 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
         addToGuestCart(product.id, quantity, defaultWeight);
         
         // Success feedback
+        haptics.success();
         toast.success("Added to cart!", {
           description: `${quantity}x ${product.name}`,
           duration: 2000,
@@ -107,6 +112,7 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
       if (error) throw error;
 
       // Success feedback with confetti effect
+      haptics.success();
       toast.success("🎉 Added to cart!", {
         description: `${quantity}x ${product.name}`,
         duration: 2000,
@@ -114,6 +120,7 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
       setTimeout(() => setAdded(false), 2500);
       setQuantity(1);
     } catch (error: any) {
+      haptics.error();
       toast.error(error.message || "Failed to add to cart");
     } finally {
       setLoading(false);
@@ -133,11 +140,13 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
 
   const handleIncrement = (e: React.MouseEvent) => {
     e.stopPropagation();
+    haptics.selection();
     setQuantity(quantity + 1);
   };
 
   const handleDecrement = (e: React.MouseEvent) => {
     e.stopPropagation();
+    haptics.selection();
     setQuantity(Math.max(1, quantity - 1));
   };
 
@@ -270,6 +279,7 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              haptics.medium();
               handleAddToCart();
             }}
             disabled={loading || !product.in_stock || added}
