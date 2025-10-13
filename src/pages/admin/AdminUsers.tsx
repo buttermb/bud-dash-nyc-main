@@ -308,7 +308,7 @@ const AdminUsers = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0 md:p-6">
+        <CardContent className="p-0">
           {/* Mobile Card View */}
           {isMobile ? (
             <div className="space-y-3 p-3">
@@ -386,9 +386,8 @@ const AdminUsers = () => {
             </div>
           ) : (
             /* Desktop Table View */
-            <ScrollArea className="w-full">
-              <div className="rounded-md border min-w-[900px]">
-                <Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[900px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12"></TableHead>
@@ -604,8 +603,7 @@ const AdminUsers = () => {
                     ))}
                   </TableBody>
                 </Table>
-              </div>
-            </ScrollArea>
+            </div>
           )}
           
           {filteredUsers.length === 0 && (
