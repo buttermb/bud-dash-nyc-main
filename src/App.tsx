@@ -11,6 +11,8 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { lazy, Suspense } from "react";
 import CartAbandonmentWrapper from "./components/CartAbandonmentWrapper";
 import { NotificationPreferences } from "./components/NotificationPreferences";
+import OfflineBanner from "./components/OfflineBanner";
+import InstallPWA from "./components/InstallPWA";
 
 // Eager load critical pages
 import Index from "./pages/Index";
@@ -109,6 +111,8 @@ const App = () => (
             <CourierPinProvider>
               <TooltipProvider>
                 <BrowserRouter>
+                  <OfflineBanner />
+                  <InstallPWA />
                   <CartAbandonmentWrapper />
                   <Toaster />
                   <Sonner />

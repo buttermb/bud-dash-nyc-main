@@ -126,11 +126,30 @@
     width: 100%;
     max-width: 100vw;
     position: relative;
+    overscroll-behavior-y: none;
   }
   
   html {
     overflow-x: hidden;
     max-width: 100vw;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  
+  /* Better tap target sizes for all interactive elements */
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"],
+  select {
+    min-height: 44px;
+  }
+  
+  /* Better scrolling on iOS */
+  .scroll-container {
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Ensure minimum touch target sizes for accessibility */

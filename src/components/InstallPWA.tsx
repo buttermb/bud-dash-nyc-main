@@ -20,9 +20,20 @@ const InstallPWA = () => {
       
       // Check if user has dismissed this before
       const dismissed = localStorage.getItem('pwa-install-dismissed');
+      const dismissedTime = localStorage.getItem('pwa-install-dismissed-time');
+      
+      // Show again after 7 days
+      if (dismissed && dismissedTime) {
+        const sevenDays = 7 * 24 * 60 * 60 * 1000;
+        if (Date.now() - parseInt(dismissedTime) < sevenDays) {
+          return;
+        }
+      }
+      
       if (!dismissed) {
-        // Show after 30 seconds
-        setTimeout(() => setShowInstallPrompt(true), 30000);
+        // Show after 10 seconds on mobile, 30 seconds on desktop
+        const isMobile = window.innerWidth < 768;
+        setTimeout(() => setShowInstallPrompt(true), isMobile ? 10000 : 30000);
       }
     };
 
@@ -52,6 +63,7 @@ const InstallPWA = () => {
   const handleDismiss = () => {
     setShowInstallPrompt(false);
     localStorage.setItem('pwa-install-dismissed', 'true');
+    localStorage.setItem('pwa-install-dismissed-time', Date.now().toString());
   };
 
   if (!showInstallPrompt || !deferredPrompt) return null;
