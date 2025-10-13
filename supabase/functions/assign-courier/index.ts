@@ -57,10 +57,10 @@ serve(async (req) => {
 
     const { orderId, courierId } = await req.json();
 
-    // Get order with address
+    // Get order details
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .select("*, addresses(*)")
+      .select("*")
       .eq("id", orderId)
       .single();
 
@@ -94,12 +94,12 @@ serve(async (req) => {
       let minDistance = Infinity;
 
       for (const courier of availableCouriers) {
-        if (courier.current_lat && courier.current_lng && order.addresses.lat && order.addresses.lng) {
+        if (courier.current_lat && courier.current_lng && order.delivery_lat && order.delivery_lng) {
           const distance = calculateDistance(
             parseFloat(courier.current_lat),
             parseFloat(courier.current_lng),
-            parseFloat(order.addresses.lat),
-            parseFloat(order.addresses.lng)
+            parseFloat(order.delivery_lat),
+            parseFloat(order.delivery_lng)
           );
 
           if (distance < minDistance) {
@@ -161,13 +161,20 @@ serve(async (req) => {
     const estimatedDropoffTime = new Date(estimatedPickupTime);
     estimatedDropoffTime.setMinutes(estimatedDropoffTime.getMinutes() + 30);
 
+    if (!order.delivery_lat || !order.delivery_lng) {
+      return new Response(
+        JSON.stringify({ error: "Order missing delivery location" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     await supabase.from("deliveries").insert({
       order_id: orderId,
       courier_id: selectedCourierId,
       pickup_lat: 40.7128, // Merchant location (simplified)
       pickup_lng: -74.0060,
-      dropoff_lat: order.addresses.lat,
-      dropoff_lng: order.addresses.lng,
+      dropoff_lat: order.delivery_lat,
+      dropoff_lng: order.delivery_lng,
       estimated_pickup_time: estimatedPickupTime.toISOString(),
       estimated_dropoff_time: estimatedDropoffTime.toISOString(),
     });
