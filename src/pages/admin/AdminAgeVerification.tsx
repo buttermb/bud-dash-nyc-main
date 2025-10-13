@@ -61,10 +61,7 @@ const AdminAgeVerification = () => {
       // Fetch pending verifications
       const { data: verifications, error } = await supabase
         .from("age_verifications")
-        .select(`
-          *,
-          profiles!inner(user_id)
-        `)
+        .select("*")
         .eq("verified", false)
         .order("created_at", { ascending: false });
 
