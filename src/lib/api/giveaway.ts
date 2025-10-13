@@ -25,8 +25,8 @@ export async function getGiveaway(slug: string) {
 export async function submitGiveawayEntry(
   giveawayId: string,
   entryData: {
-    email: string;
-    password: string;
+    email?: string;
+    password?: string;
     firstName: string;
     lastName: string;
     phone: string;
@@ -48,26 +48,45 @@ export async function submitGiveawayEntry(
 
     if (!giveaway) throw new Error('Giveaway not found');
 
-    // 2. Create user account
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: entryData.email,
-      password: entryData.password,
-      options: {
-        data: {
-          first_name: entryData.firstName,
-          last_name: entryData.lastName,
-          phone: entryData.phone,
-          date_of_birth: entryData.dateOfBirth,
-          borough: entryData.borough,
-          instagram_handle: entryData.instagramHandle
-        },
-        emailRedirectTo: `${window.location.origin}/giveaway/nyc-biggest-flower`
-      }
-    });
+    // 2. Check if user is already logged in
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    let userId: string;
 
-    if (authError) throw authError;
-    const userId = authData.user?.id;
-    if (!userId) throw new Error('Failed to create user');
+    if (currentUser) {
+      // User is already logged in
+      userId = currentUser.id;
+    } else {
+      // Create new user account
+      if (!entryData.email || !entryData.password) {
+        throw new Error('Email and password are required for new accounts');
+      }
+
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: entryData.email,
+        password: entryData.password,
+        options: {
+          data: {
+            first_name: entryData.firstName,
+            last_name: entryData.lastName,
+            phone: entryData.phone,
+            date_of_birth: entryData.dateOfBirth,
+            borough: entryData.borough,
+            instagram_handle: entryData.instagramHandle
+          },
+          emailRedirectTo: `${window.location.origin}/giveaway/nyc-biggest-flower`
+        }
+      });
+
+      if (authError) {
+        if (authError.message?.includes('already registered')) {
+          throw new Error('This email is already registered. Please log in first to enter the giveaway.');
+        }
+        throw authError;
+      }
+      
+      userId = authData.user?.id;
+      if (!userId) throw new Error('Failed to create user');
+    }
 
     // 3. Calculate entry numbers
     const { data: lastEntry } = await supabase

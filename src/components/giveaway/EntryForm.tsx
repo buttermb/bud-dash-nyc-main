@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { submitGiveawayEntry } from '@/lib/api/giveaway';
+import { supabase } from '@/integrations/supabase/client';
 import { Instagram, Loader2, Sparkles, Check, Mail, Users, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
@@ -16,6 +17,7 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [entryResult, setEntryResult] = useState<any>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     firstName: '',
@@ -29,6 +31,12 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
     instagramTagUrl: '',
     newsletterSubscribe: true
   });
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsLoggedIn(!!user);
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,17 +174,20 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
       className="max-w-2xl mx-auto mb-20"
     >
       <div className="relative bg-slate-900/70 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 sm:p-10 shadow-2xl">
-        {/* Account Required Badge */}
-        <div className="flex items-center justify-center gap-2 mb-6 px-4 py-2 bg-blue-500/10 border border-blue-400/20 rounded-full w-fit mx-auto">
-          <Users className="w-4 h-4 text-blue-400" />
-          <span className="text-sm font-medium text-blue-400">Account Required to Enter</span>
-        </div>
+        {!isLoggedIn && (
+          <div className="flex items-center justify-center gap-2 mb-6 px-4 py-2 bg-blue-500/10 border border-blue-400/20 rounded-full w-fit mx-auto">
+            <Users className="w-4 h-4 text-blue-400" />
+            <span className="text-sm font-medium text-blue-400">Account Required to Enter</span>
+          </div>
+        )}
 
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-display font-bold mb-3 bg-gradient-to-br from-white to-slate-400 text-transparent bg-clip-text">
-            Create Account & Enter
+            {isLoggedIn ? 'Enter Giveaway' : 'Create Account & Enter'}
           </h2>
-          <p className="text-slate-500 font-light">Takes 2 minutes • 100% FREE • Instant Entry</p>
+          <p className="text-slate-500 font-light">
+            {isLoggedIn ? 'Complete your entry below • 100% FREE' : 'Takes 2 minutes • 100% FREE • Instant Entry'}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -199,24 +210,28 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
             />
           </div>
 
-          <input
-            type="email"
-            placeholder="Email Address"
-            className="w-full px-4 py-3.5 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-500 text-white font-light"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            required
-          />
+          {!isLoggedIn && (
+            <>
+              <input
+                type="email"
+                placeholder="Email Address"
+                className="w-full px-4 py-3.5 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-500 text-white font-light"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                required
+              />
 
-          <input
-            type="password"
-            placeholder="Create Password (minimum 8 characters)"
-            className="w-full px-4 py-3.5 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-500 text-white font-light"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            required
-            minLength={8}
-          />
+              <input
+                type="password"
+                placeholder="Create Password (minimum 8 characters)"
+                className="w-full px-4 py-3.5 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-500 text-white font-light"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                required
+                minLength={8}
+              />
+            </>
+          )}
 
           <input
             type="tel"
