@@ -14,10 +14,11 @@ interface CourierPinManagementProps {
 }
 
 export default function CourierPinManagement({ courierId, currentPin, courierName }: CourierPinManagementProps) {
-  const [pin, setPin] = useState(currentPin || '');
+  const [pin, setPin] = useState(''); // Always start with empty field
   const [loading, setLoading] = useState(false);
   const [pinCopied, setPinCopied] = useState(false);
   const [savedPin, setSavedPin] = useState<string>('');
+  const hasPinSet = currentPin && currentPin.startsWith('$sha256$');
 
   // Simple hash function for client-side PIN hashing  
   const hashPin = async (pin: string): Promise<string> => {
@@ -118,6 +119,16 @@ export default function CourierPinManagement({ courierId, currentPin, courierNam
       </div>
 
       <div className="space-y-3">
+        {hasPinSet && !savedPin && (
+          <div className="p-3 bg-muted border border-border rounded-lg">
+            <p className="text-sm font-medium mb-1">Current Status:</p>
+            <p className="text-sm text-muted-foreground">PIN is already set for this courier</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Set a new PIN below to replace it
+            </p>
+          </div>
+        )}
+        
         {savedPin && (
           <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg">
             <p className="text-sm font-semibold text-primary mb-1">Last Saved PIN:</p>
