@@ -11,6 +11,8 @@ import HowToEnter from '@/components/giveaway/HowToEnter';
 import { LiveFeed } from '@/components/giveaway/LiveFeed';
 import { SocialProofIndicators } from '@/components/giveaway/SocialProofIndicators';
 import { RecentEntryPopup } from '@/components/giveaway/RecentEntryPopup';
+import GiveawayHeader from '@/components/giveaway/GiveawayHeader';
+import BackToHomeButton from '@/components/giveaway/BackToHomeButton';
 import { Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -83,6 +85,12 @@ export default function GiveawayPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-hidden font-sans">
+      {/* Header Navigation */}
+      <GiveawayHeader />
+      
+      {/* Floating Back Button */}
+      <BackToHomeButton />
+      
       {/* Social proof popup */}
       <RecentEntryPopup />
       

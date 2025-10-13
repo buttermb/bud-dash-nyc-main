@@ -4,7 +4,7 @@ import { Instagram, Loader2, Sparkles, Check, Mail, Users, Copy } from 'lucide-r
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import CustomDatePicker from './CustomDatePicker';
+import SimpleDatePicker from './SimpleDatePicker';
 
 interface EntryFormProps {
   giveaway: any;
@@ -227,7 +227,7 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
             required
           />
 
-          <CustomDatePicker
+          <SimpleDatePicker
             value={formData.dateOfBirth}
             onChange={(date) => setFormData({ ...formData, dateOfBirth: date })}
           />
