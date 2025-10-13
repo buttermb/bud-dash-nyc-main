@@ -92,12 +92,22 @@ export default function AdminGiveaways() {
           <h1 className="text-3xl font-black">Giveaways</h1>
           <p className="text-muted-foreground">Manage and track your giveaway campaigns</p>
         </div>
-        <Link to="/admin/giveaways/new">
-          <Button className="gap-2">
-            <Plus className="w-4 h-4" />
-            Create Giveaway
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          {activeGiveaways.length > 0 && (
+            <Link to="/admin/giveaway">
+              <Button variant="outline" className="gap-2">
+                <Eye className="w-4 h-4" />
+                View Active Detail
+              </Button>
+            </Link>
+          )}
+          <Link to="/admin/giveaways/new">
+            <Button className="gap-2">
+              <Plus className="w-4 h-4" />
+              Create Giveaway
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Active Giveaways */}

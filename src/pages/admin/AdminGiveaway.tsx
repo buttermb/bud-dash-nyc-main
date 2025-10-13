@@ -4,8 +4,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Users, TrendingUp, Download, Shuffle } from 'lucide-react';
+import { Trophy, Users, TrendingUp, Download, Shuffle, List } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
 export default function AdminGiveaway() {
   const [giveaway, setGiveaway] = useState<any>(null);
@@ -162,14 +163,19 @@ export default function AdminGiveaway() {
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{giveaway.title}</h1>
+          <div className="flex items-center gap-4 mb-2">
+            <h1 className="text-3xl font-bold">{giveaway.title}</h1>
+            <Badge variant={giveaway.status === 'active' ? 'default' : 'secondary'} className="text-sm">
+              {giveaway.status.toUpperCase()}
+            </Badge>
+          </div>
           <p className="text-muted-foreground">
             Ends: {new Date(giveaway.end_date).toLocaleDateString()}
           </p>
         </div>
-        <Badge variant={giveaway.status === 'active' ? 'default' : 'secondary'}>
-          {giveaway.status}
-        </Badge>
+        <Button variant="outline" onClick={() => window.location.href = '/admin/giveaways'}>
+          View All Giveaways
+        </Button>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
