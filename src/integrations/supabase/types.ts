@@ -2542,6 +2542,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      hash_admin_pin: {
+        Args: { pin_text: string }
+        Returns: string
+      }
       increment_coupon_usage: {
         Args: { coupon_id: string }
         Returns: undefined

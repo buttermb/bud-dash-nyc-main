@@ -20,16 +20,6 @@ export default function CourierPinManagement({ courierId, currentPin, courierNam
   const [savedPin, setSavedPin] = useState<string>('');
   const hasPinSet = currentPin && currentPin.startsWith('$sha256$');
 
-  // Simple hash function for client-side PIN hashing  
-  const hashPin = async (pin: string): Promise<string> => {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(pin);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    return `$sha256$${hashHex}`;
-  };
-
   const generatePin = async () => {
     setLoading(true);
     try {
@@ -63,8 +53,12 @@ export default function CourierPinManagement({ courierId, currentPin, courierNam
       // Store the plain PIN temporarily to show after save
       const plainPin = pin;
       
-      // Hash the PIN before saving for security
-      const hashedPin = await hashPin(pin);
+      // Hash the PIN using the database function to ensure consistency with verification
+      const { data: hashedPin, error: hashError } = await supabase.rpc('hash_admin_pin', {
+        pin_text: pin
+      });
+      
+      if (hashError) throw hashError;
       
       console.log('Saving PIN for courier:', courierId);
       console.log('Plain PIN (for debugging):', plainPin);
