@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { submitGiveawayEntry } from '@/lib/api/giveaway';
-import { Instagram, Loader2, Sparkles, Check, Mail, Users } from 'lucide-react';
+import { Instagram, Loader2, Sparkles, Check, Mail, Users, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import CustomDatePicker from './CustomDatePicker';
 
 interface EntryFormProps {
   giveaway: any;
@@ -22,7 +23,7 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
     email: '',
     password: '',
     phone: '',
-    dateOfBirth: '',
+    dateOfBirth: null as Date | null,
     borough: '',
     instagramHandle: '',
     instagramTagUrl: '',
@@ -36,6 +37,7 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
     try {
       const result = await submitGiveawayEntry(giveaway.id, {
         ...formData,
+        dateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString().split('T')[0] : '',
         referralCode
       });
 
@@ -117,7 +119,37 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
               )}
             </div>
 
-            <p className="text-slate-500 text-sm font-light">
+            {/* Welcome Discount Section */}
+            <div className="mt-8 p-6 bg-gradient-to-r from-primary/20 to-blue-500/20 border border-primary/30 rounded-2xl">
+              <h3 className="text-xl font-bold mb-2 text-white">Welcome Gift 🎁</h3>
+              <p className="text-sm text-slate-300 mb-4">
+                Thanks for entering! Here's 10% off your first order:
+              </p>
+              <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <div className="text-2xl font-black text-primary">WELCOME10</div>
+                  <div className="text-xs text-slate-400">Valid for 30 days</div>
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText('WELCOME10');
+                    toast({ title: "Code copied!" });
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  <Copy className="w-4 h-4" />
+                  Copy
+                </button>
+              </div>
+              <a
+                href="/"
+                className="block mt-4 text-center py-3 bg-slate-800/30 rounded-lg hover:bg-slate-800/50 transition-all text-white font-medium"
+              >
+                Start Shopping →
+              </a>
+            </div>
+
+            <p className="text-slate-500 text-sm font-light mt-6">
               Check your email for next steps • Redirecting in 5 seconds...
             </p>
           </div>
@@ -195,13 +227,9 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
             required
           />
 
-          <input
-            type="date"
-            placeholder="Date of Birth"
-            className="w-full px-4 py-3.5 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-white font-light [color-scheme:dark]"
+          <CustomDatePicker
             value={formData.dateOfBirth}
-            onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-            required
+            onChange={(date) => setFormData({ ...formData, dateOfBirth: date })}
           />
 
           <select

@@ -17,7 +17,8 @@ import {
   Image,
   FileUp,
   Settings,
-  Gift
+  Gift,
+  Ticket
 } from "lucide-react";
 import {
   Sidebar,
@@ -81,6 +82,7 @@ const menuGroups = [
       { title: "Audit Logs", url: "/admin/audit-logs", icon: FileText },
       { title: "All Giveaways", url: "/admin/giveaways", icon: Gift },
       { title: "Current Giveaway", url: "/admin/giveaway", icon: Gift },
+      { title: "Coupon Codes", url: "/admin/coupons", icon: Ticket },
     ]
   }
 ];

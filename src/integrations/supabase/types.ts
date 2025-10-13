@@ -335,6 +335,104 @@ export type Database = {
           },
         ]
       }
+      coupon_codes: {
+        Row: {
+          auto_apply: boolean | null
+          code: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          end_date: string | null
+          id: string
+          max_discount: number | null
+          min_purchase: number | null
+          never_expires: boolean | null
+          per_user_limit: number | null
+          start_date: string | null
+          status: string | null
+          total_usage_limit: number | null
+          updated_at: string | null
+          used_count: number | null
+        }
+        Insert: {
+          auto_apply?: boolean | null
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          end_date?: string | null
+          id?: string
+          max_discount?: number | null
+          min_purchase?: number | null
+          never_expires?: boolean | null
+          per_user_limit?: number | null
+          start_date?: string | null
+          status?: string | null
+          total_usage_limit?: number | null
+          updated_at?: string | null
+          used_count?: number | null
+        }
+        Update: {
+          auto_apply?: boolean | null
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          end_date?: string | null
+          id?: string
+          max_discount?: number | null
+          min_purchase?: number | null
+          never_expires?: boolean | null
+          per_user_limit?: number | null
+          start_date?: string | null
+          status?: string | null
+          total_usage_limit?: number | null
+          updated_at?: string | null
+          used_count?: number | null
+        }
+        Relationships: []
+      }
+      coupon_usage: {
+        Row: {
+          coupon_id: string | null
+          discount_amount: number
+          id: string
+          order_id: string | null
+          used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          coupon_id?: string | null
+          discount_amount: number
+          id?: string
+          order_id?: string | null
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          coupon_id?: string | null
+          discount_amount?: number
+          id?: string
+          order_id?: string | null
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_usage_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupon_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courier_applications: {
         Row: {
           admin_notes: string | null
@@ -2298,6 +2396,42 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_welcome_discounts: {
+        Row: {
+          code: string | null
+          discount_percentage: number | null
+          expires_at: string | null
+          id: string
+          issued_at: string | null
+          order_id: string | null
+          used: boolean | null
+          used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          code?: string | null
+          discount_percentage?: number | null
+          expires_at?: string | null
+          id?: string
+          issued_at?: string | null
+          order_id?: string | null
+          used?: boolean | null
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          code?: string | null
+          discount_percentage?: number | null
+          expires_at?: string | null
+          id?: string
+          issued_at?: string | null
+          order_id?: string | null
+          used?: boolean | null
+          used_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

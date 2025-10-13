@@ -9,6 +9,8 @@ import HowItWorks from "@/components/HowItWorks";
 import FeaturedReviews from "@/components/FeaturedReviews";
 import TrendingProducts from "@/components/TrendingProducts";
 import InstallPWA from "@/components/InstallPWA";
+import GiveawayBanner from "@/components/GiveawayBanner";
+import FloatingGiveawayButton from "@/components/FloatingGiveawayButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, Truck, Award } from "lucide-react";
@@ -19,6 +21,7 @@ const Index = () => {
     <div className="min-h-screen pb-20 md:pb-0">
       <AgeVerificationModal />
       <RecentPurchaseNotification />
+      <GiveawayBanner />
       <Navigation />
       
       {/* Hero Section with Professional Gradient Design */}
@@ -141,6 +144,8 @@ const Index = () => {
       
       {/* PWA Install Prompt */}
       <InstallPWA />
+      
+      <FloatingGiveawayButton />
       
       <Footer />
     </div>
