@@ -9,7 +9,7 @@ import { CourierProvider } from "./contexts/CourierContext";
 import { CourierPinProvider } from "./contexts/CourierPinContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { lazy, Suspense } from "react";
-import CartAbandonmentWrapper from "./components/CartAbandonmentWrapper";
+
 import { NotificationPreferences } from "./components/NotificationPreferences";
 import OfflineBanner from "./components/OfflineBanner";
 import InstallPWA from "./components/InstallPWA";
@@ -116,7 +116,7 @@ const App = () => (
                   <OfflineBanner />
                   <InstallPWA />
                   <CartBadgeAnimation />
-                  <CartAbandonmentWrapper />
+                  
                   <Toaster />
                   <Sonner />
                   <Suspense fallback={<LoadingFallback />}>
