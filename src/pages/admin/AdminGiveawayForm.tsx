@@ -200,7 +200,7 @@ export default function AdminGiveawayForm() {
                 id="status"
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md"
+                className="w-full px-3 py-2 border border-input bg-background rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="draft">Draft</option>
                 <option value="active">Active</option>
@@ -216,8 +216,8 @@ export default function AdminGiveawayForm() {
             <CardTitle>Prizes</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-4 p-4 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg">
-              <h3 className="font-semibold flex items-center gap-2">
+            <div className="space-y-4 p-4 bg-card border border-primary/20 rounded-lg">
+              <h3 className="font-semibold flex items-center gap-2 text-primary">
                 <span>🥇</span> Grand Prize
               </h3>
               <div>
@@ -250,7 +250,7 @@ export default function AdminGiveawayForm() {
               </div>
             </div>
 
-            <div className="space-y-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg">
+            <div className="space-y-4 p-4 bg-muted/50 border border-border rounded-lg">
               <h3 className="font-semibold flex items-center gap-2">
                 <span>🥈</span> Second Prize
               </h3>
@@ -276,7 +276,7 @@ export default function AdminGiveawayForm() {
               </div>
             </div>
 
-            <div className="space-y-4 p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg">
+            <div className="space-y-4 p-4 bg-muted/50 border border-border rounded-lg">
               <h3 className="font-semibold flex items-center gap-2">
                 <span>🥉</span> Third Prize
               </h3>
