@@ -128,13 +128,8 @@ const Navigation = () => {
             </div>
           </Link>
 
-          {/* Search Bar */}
-          <div className="hidden md:block flex-1 max-w-md">
-            <SearchBar />
-          </div>
-
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-6 flex-1 justify-center">
             <Link 
               to="/giveaway/nyc-biggest-flower" 
               className="relative text-sm font-semibold transition-colors group"
@@ -173,6 +168,9 @@ const Navigation = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-3 min-w-fit">
+            {/* Search Icon */}
+            <SearchBar variant="icon" />
+            
             {/* Sticky Cart Preview */}
             <Button
               variant="outline"
@@ -268,7 +266,10 @@ const Navigation = () => {
                 </Button>
               </SheetTrigger>
               <SheetContent>
-                <nav className="flex flex-col gap-4 mt-8">
+                <div className="mb-6 mt-4">
+                  <SearchBar variant="full" />
+                </div>
+                <nav className="flex flex-col gap-4">
                   {navLinks.map((link) => (
                     link.scroll ? (
                       <a

@@ -5,7 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
-export function SearchBar() {
+interface SearchBarProps {
+  variant?: 'full' | 'icon';
+}
+
+export function SearchBar({ variant = 'full' }: SearchBarProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [products, setProducts] = useState<any[]>([]);
@@ -61,14 +65,25 @@ export function SearchBar() {
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors w-full md:w-auto"
-      >
-        <Search className="w-4 h-4 text-muted-foreground" />
-        <span className="text-muted-foreground text-sm">Search products...</span>
-        <kbd className="hidden md:inline-flex ml-auto text-xs bg-background px-2 py-1 rounded border">⌘K</kbd>
-      </button>
+      {variant === 'icon' ? (
+        <button
+          onClick={() => setOpen(true)}
+          className="relative p-2 hover:bg-muted rounded-lg transition-colors"
+          aria-label="Search products"
+          title="Search (⌘K)"
+        >
+          <Search className="w-5 h-5" />
+        </button>
+      ) : (
+        <button
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors w-full"
+        >
+          <Search className="w-4 h-4 text-muted-foreground" />
+          <span className="text-muted-foreground text-sm">Search products...</span>
+          <kbd className="ml-auto text-xs bg-background px-2 py-1 rounded border">⌘K</kbd>
+        </button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="p-0 max-w-2xl">
