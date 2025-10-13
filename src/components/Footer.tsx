@@ -1,4 +1,4 @@
-import { Shield, Award, Lock, ChevronDown } from "lucide-react";
+import { Shield, Award, Lock, ChevronDown, UserCog, Truck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
@@ -177,7 +177,27 @@ const Footer = () => {
 
           {/* Copyright */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-2 text-sm text-muted-foreground">
-            <p>© 2025 New York Minute NYC. All rights reserved.</p>
+            <div className="flex items-center gap-4">
+              <p>© 2025 New York Minute NYC. All rights reserved.</p>
+              
+              {/* Hidden Admin & Courier Login Buttons */}
+              <div className="flex items-center gap-2 opacity-30 hover:opacity-100 transition-opacity">
+                <Link 
+                  to="/admin/login" 
+                  className="p-1 hover:text-primary transition-colors"
+                  title="Admin Login"
+                >
+                  <UserCog className="w-3 h-3" />
+                </Link>
+                <Link 
+                  to="/courier/login" 
+                  className="p-1 hover:text-primary transition-colors"
+                  title="Courier Login"
+                >
+                  <Truck className="w-3 h-3" />
+                </Link>
+              </div>
+            </div>
             <p className="text-xs font-semibold tracking-wider">PREMIUM FLOWER DELIVERY</p>
           </div>
         </div>
