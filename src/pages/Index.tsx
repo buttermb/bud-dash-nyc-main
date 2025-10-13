@@ -145,8 +145,6 @@ const Index = () => {
       {/* PWA Install Prompt */}
       <InstallPWA />
       
-      <FloatingGiveawayButton />
-      
       <Footer />
     </div>
   );
