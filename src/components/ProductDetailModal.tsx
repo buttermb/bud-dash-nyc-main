@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { sortProductWeights, getDefaultWeight, formatWeight } from "@/utils/productHelpers";
+import ReactStars from 'react-rating-stars-component';
 import {
   Carousel,
   CarouselContent,
@@ -725,24 +726,14 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
                   {/* Star Rating */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium mb-2">Your Rating</label>
-                    <div className="flex gap-2">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => setReviewRating(i + 1)}
-                          className="transition-transform hover:scale-110 active:scale-95 touch-manipulation"
-                        >
-                          <Star
-                            className={`w-8 h-8 md:w-10 md:h-10 ${
-                              i < reviewRating
-                                ? "fill-primary text-primary"
-                                : "text-muted-foreground"
-                            }`}
-                          />
-                        </button>
-                      ))}
-                    </div>
+                    <ReactStars
+                      count={5}
+                      value={reviewRating}
+                      onChange={setReviewRating}
+                      size={40}
+                      activeColor="#10b981"
+                      edit={true}
+                    />
                   </div>
 
                   {/* Comment */}
