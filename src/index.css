@@ -87,6 +87,14 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
   
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
   /* Improve touch scrolling and interaction on mobile */
   * {
     -webkit-tap-highlight-color: transparent;

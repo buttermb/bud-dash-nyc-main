@@ -27,8 +27,8 @@ const AdminLayout = () => {
       <div className="min-h-screen flex w-full overflow-hidden">
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 border-b flex items-center px-2 md:px-4 gap-2 md:gap-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
-            <SidebarTrigger />
+          <header className="h-14 border-b flex items-center px-2 md:px-4 gap-2 md:gap-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0 pt-safe">
+            <SidebarTrigger className="h-10 w-10 touch-manipulation active:scale-95 transition-transform" />
             <nav className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground overflow-x-auto scrollbar-hide">
               {breadcrumbs.map((crumb, index) => (
                 <div key={crumb.url} className="flex items-center gap-2 flex-shrink-0">
@@ -47,7 +47,7 @@ const AdminLayout = () => {
               ))}
             </nav>
           </header>
-          <main className="flex-1 overflow-auto bg-muted/10">
+          <main className="flex-1 overflow-auto bg-muted/10 pb-safe">
             <Outlet />
           </main>
         </div>

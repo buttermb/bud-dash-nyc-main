@@ -508,7 +508,7 @@ export default function CourierDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-white pb-20">
+    <div className="min-h-screen bg-[#0f172a] text-white pb-20 pb-safe">
       {/* Modals */}
       <TutorialModal open={showTutorial} onComplete={handleTutorialComplete} />
       
@@ -537,7 +537,7 @@ export default function CourierDashboard() {
       {isOnline && <NotificationPermissionBanner />}
 
       {/* Header */}
-      <div className="bg-slate-900 border-b border-slate-800 px-4 py-4 sticky top-0 z-50">
+      <div className="bg-slate-900 border-b border-slate-800 px-4 py-4 sticky top-0 z-50 pt-safe">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
@@ -565,7 +565,7 @@ export default function CourierDashboard() {
             <div className="menu-container relative">
               <button 
                 onClick={() => setShowMenu(!showMenu)}
-                className="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-slate-700 transition border border-slate-700"
+                className="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-slate-700 transition border border-slate-700 touch-manipulation active:scale-95"
               >
                 <Menu size={20} />
               </button>
@@ -578,14 +578,14 @@ export default function CourierDashboard() {
                       setShowTutorial(true);
                       setShowMenu(false);
                     }}
-                    className="w-full px-4 py-3 text-left hover:bg-slate-700 transition flex items-center space-x-2 border-b border-slate-700"
+                    className="w-full px-4 py-3 text-left hover:bg-slate-700 transition flex items-center space-x-2 border-b border-slate-700 touch-manipulation active:scale-95"
                   >
                     <AlertCircle size={18} />
                     <span>View Tutorial</span>
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="w-full px-4 py-3 text-left hover:bg-slate-700 transition flex items-center space-x-2 text-red-400"
+                    className="w-full px-4 py-3 text-left hover:bg-slate-700 transition flex items-center space-x-2 text-red-400 touch-manipulation active:scale-95"
                   >
                     <LogOut size={18} />
                     <span>Logout</span>
