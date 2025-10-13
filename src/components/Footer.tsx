@@ -176,31 +176,54 @@ const Footer = () => {
           </Collapsible>
 
           {/* Copyright */}
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 w-full md:w-auto">
-              <p className="text-center md:text-left">© 2025 New York Minute NYC. All rights reserved.</p>
-              
-              {/* Discrete Admin & Courier Login Buttons */}
-              <div className="flex items-center gap-3 opacity-50 md:opacity-30 md:hover:opacity-100 transition-opacity">
-                <Link 
-                  to="/admin/login" 
-                  className="p-2 md:p-1 hover:text-primary transition-colors active:scale-95 touch-manipulation"
-                  title="Admin Login"
-                  aria-label="Admin Login"
-                >
-                  <UserCog className="w-5 h-5 md:w-4 md:h-4" />
-                </Link>
-                <Link 
-                  to="/courier/login" 
-                  className="p-2 md:p-1 hover:text-primary transition-colors active:scale-95 touch-manipulation"
-                  title="Courier Login"
-                  aria-label="Courier Login"
-                >
-                  <Truck className="w-5 h-5 md:w-4 md:h-4" />
-                </Link>
-              </div>
+          <div className="flex flex-col gap-4 text-sm text-muted-foreground">
+            {/* Mobile Login Buttons - Prominent */}
+            <div className="flex items-center justify-center gap-4 md:hidden py-3 border-t border-border">
+              <Link 
+                to="/admin/login" 
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors active:scale-95 touch-manipulation"
+                aria-label="Admin Login"
+              >
+                <UserCog className="w-5 h-5" />
+                <span className="text-xs font-medium">Admin</span>
+              </Link>
+              <Link 
+                to="/courier/login" 
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors active:scale-95 touch-manipulation"
+                aria-label="Courier Login"
+              >
+                <Truck className="w-5 h-5" />
+                <span className="text-xs font-medium">Courier</span>
+              </Link>
             </div>
-            <p className="text-xs font-semibold tracking-wider text-center md:text-right">PREMIUM FLOWER DELIVERY</p>
+
+            {/* Desktop Layout */}
+            <div className="flex flex-col md:flex-row justify-between items-center gap-2">
+              <div className="flex items-center gap-4">
+                <p className="text-center md:text-left">© 2025 New York Minute NYC. All rights reserved.</p>
+                
+                {/* Desktop Hidden Buttons */}
+                <div className="hidden md:flex items-center gap-2 opacity-30 hover:opacity-100 transition-opacity">
+                  <Link 
+                    to="/admin/login" 
+                    className="p-1 hover:text-primary transition-colors"
+                    title="Admin Login"
+                    aria-label="Admin Login"
+                  >
+                    <UserCog className="w-4 h-4" />
+                  </Link>
+                  <Link 
+                    to="/courier/login" 
+                    className="p-1 hover:text-primary transition-colors"
+                    title="Courier Login"
+                    aria-label="Courier Login"
+                  >
+                    <Truck className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+              <p className="text-xs font-semibold tracking-wider text-center md:text-right">PREMIUM FLOWER DELIVERY</p>
+            </div>
           </div>
         </div>
       </div>
