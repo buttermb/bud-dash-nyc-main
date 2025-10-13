@@ -15,6 +15,8 @@ interface CourierPinManagementProps {
 export default function CourierPinManagement({ courierId, currentPin, courierName }: CourierPinManagementProps) {
   const [pin, setPin] = useState(currentPin || '');
   const [loading, setLoading] = useState(false);
+  const [pinCopied, setPinCopied] = useState(false);
+  const [savedPin, setSavedPin] = useState<string>('');
 
   // Simple hash function for client-side PIN hashing  
   const hashPin = async (pin: string): Promise<string> => {
@@ -49,10 +51,22 @@ export default function CourierPinManagement({ courierId, currentPin, courierNam
       return;
     }
 
+    if (!pinCopied) {
+      toast.error('Please copy the PIN first - you won\'t see it again!');
+      return;
+    }
+
     setLoading(true);
     try {
+      // Store the plain PIN temporarily to show after save
+      const plainPin = pin;
+      
       // Hash the PIN before saving for security
       const hashedPin = await hashPin(pin);
+      
+      console.log('Saving PIN for courier:', courierId);
+      console.log('Plain PIN (for debugging):', plainPin);
+      console.log('Hashed PIN:', hashedPin);
       
       const { error } = await supabase
         .from('couriers')
@@ -75,8 +89,12 @@ export default function CourierPinManagement({ courierId, currentPin, courierNam
         }
       });
 
-      toast.success(`Admin PIN securely set for ${courierName}`);
-      setPin(''); // Clear PIN after saving
+      setSavedPin(plainPin); // Store for confirmation display
+      toast.success(`Admin PIN saved! Give PIN ${plainPin} to ${courierName}`);
+      
+      // Clear the input but keep savedPin for reference
+      setPin('');
+      setPinCopied(false);
     } catch (error) {
       toast.error('Failed to save PIN');
       console.error(error);
@@ -87,7 +105,8 @@ export default function CourierPinManagement({ courierId, currentPin, courierNam
 
   const copyPin = () => {
     navigator.clipboard.writeText(pin);
-    toast.success('PIN copied to clipboard');
+    setPinCopied(true);
+    toast.success('PIN copied! Now you can save it.');
   };
 
   return (
@@ -98,11 +117,24 @@ export default function CourierPinManagement({ courierId, currentPin, courierNam
       </div>
 
       <div className="space-y-3">
+        {savedPin && (
+          <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg">
+            <p className="text-sm font-semibold text-primary mb-1">Last Saved PIN:</p>
+            <p className="text-2xl font-mono tracking-widest text-center">{savedPin}</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Give this PIN to {courierName} for their first login
+            </p>
+          </div>
+        )}
+        
         <div className="flex gap-2">
           <Input
             type="text"
             value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            onChange={(e) => {
+              setPin(e.target.value.replace(/\D/g, '').slice(0, 6));
+              setPinCopied(false);
+            }}
             placeholder="6-digit PIN"
             maxLength={6}
             className="text-center text-lg tracking-widest font-mono"
@@ -117,7 +149,7 @@ export default function CourierPinManagement({ courierId, currentPin, courierNam
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
           <Button
-            variant="outline"
+            variant={pinCopied ? "default" : "outline"}
             size="icon"
             onClick={copyPin}
             disabled={!pin}
@@ -127,16 +159,25 @@ export default function CourierPinManagement({ courierId, currentPin, courierNam
           </Button>
         </div>
 
+        {pin && !pinCopied && (
+          <p className="text-xs text-yellow-600 dark:text-yellow-500 font-medium">
+            ⚠️ Copy the PIN before saving - you won't see it again!
+          </p>
+        )}
+
         <Button
           onClick={savePin}
-          disabled={loading || !pin || pin.length !== 6}
+          disabled={loading || !pin || pin.length !== 6 || !pinCopied}
           className="w-full"
         >
-          {loading ? 'Saving...' : 'Save Admin PIN'}
+          {loading ? 'Saving...' : pinCopied ? 'Save Admin PIN' : 'Copy PIN First'}
         </Button>
 
         <p className="text-xs text-muted-foreground">
-          This PIN must be provided to the courier on their first login. PINs are securely hashed before storage. Keep it secure.
+          1. Generate or enter a 6-digit PIN<br/>
+          2. Copy the PIN (required)<br/>
+          3. Save the PIN - it will be securely hashed<br/>
+          4. Give the PIN to {courierName} for their first login
         </p>
       </div>
     </Card>

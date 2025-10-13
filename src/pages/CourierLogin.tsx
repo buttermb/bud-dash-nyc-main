@@ -91,12 +91,19 @@ export default function CourierLogin() {
     if (!courierUserId) return false;
 
     try {
+      console.log('Verifying admin PIN for user:', courierUserId);
+      console.log('PIN entered:', pin);
+      
       const { data, error } = await supabase.rpc('verify_admin_pin', {
         courier_user_id: courierUserId,
         pin
       });
 
-      if (error) throw error;
+      console.log('Verification result:', data);
+      if (error) {
+        console.error('RPC error:', error);
+        throw error;
+      }
 
       if (data) {
         // Mark admin PIN as verified
