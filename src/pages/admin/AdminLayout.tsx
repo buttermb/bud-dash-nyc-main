@@ -2,6 +2,7 @@ import { Outlet, useLocation, Link } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { ChevronRight } from "lucide-react";
+import InstallPWA from "@/components/InstallPWA";
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -51,6 +52,7 @@ const AdminLayout = () => {
           </main>
         </div>
       </div>
+      <InstallPWA />
     </SidebarProvider>
   );
 };

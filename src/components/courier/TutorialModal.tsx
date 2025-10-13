@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Package, MapPin, DollarSign, CheckCircle, Navigation, AlertCircle } from 'lucide-react';
+import { Package, MapPin, DollarSign, CheckCircle, Navigation, AlertCircle, Download } from 'lucide-react';
 
 interface TutorialModalProps {
   open: boolean;
@@ -17,6 +17,12 @@ export default function TutorialModal({ open, onComplete }: TutorialModalProps) 
       title: 'Welcome to NYM Courier!',
       description: 'Let\'s walk through how to use the app and start earning today.',
       color: 'text-teal-400'
+    },
+    {
+      icon: Download,
+      title: 'Install as App (Recommended)',
+      description: 'For the best experience, add this to your home screen. On iPhone: Tap Share → "Add to Home Screen". On Android: Tap menu (⋮) → "Install app" or "Add to Home screen". This makes it work like a native app!',
+      color: 'text-purple-400'
     },
     {
       icon: MapPin,

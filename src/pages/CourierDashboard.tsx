@@ -19,6 +19,7 @@ import NotificationPermissionBanner from '@/components/courier/NotificationPermi
 import OrderCountdownTimer from '@/components/courier/OrderCountdownTimer';
 import AgeVerificationScanner from '@/components/courier/AgeVerificationScanner';
 import { GeofenceStatus } from '@/components/courier/GeofenceStatus';
+import InstallPWA from '@/components/InstallPWA';
 import { 
   requestNotificationPermission, 
   notifyNewOrder, 
@@ -1037,6 +1038,8 @@ export default function CourierDashboard() {
           </button>
         </div>
       </div>
+
+      <InstallPWA />
     </div>
   );
 }
