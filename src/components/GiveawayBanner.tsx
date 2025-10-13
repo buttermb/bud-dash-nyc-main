@@ -31,28 +31,30 @@ export default function GiveawayBanner() {
   if (!isVisible) return null;
 
   return (
-    <div className="relative bg-gradient-to-r from-primary via-emerald-500 to-blue-500 text-white py-3">
-      <div className="container mx-auto px-4 flex items-center justify-between">
-        <Link 
-          to="/giveaway/nyc-biggest-flower" 
-          className="flex-1 flex flex-wrap items-center justify-center gap-3 sm:gap-4 hover:opacity-90 transition-opacity"
-        >
-          <div className="flex items-center gap-2">
-            <Gift className="w-5 h-5" />
-            <span className="font-bold text-sm sm:text-base">WIN $4,000 IN PREMIUM FLOWER</span>
-          </div>
-          <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs sm:text-sm font-medium">
-            {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
-          </span>
-          <span className="text-xs sm:text-sm font-semibold">Enter FREE →</span>
-        </Link>
-        <button
-          onClick={handleDismiss}
-          className="ml-2 p-1 hover:bg-white/20 rounded transition-colors"
-          aria-label="Dismiss banner"
-        >
-          <X className="w-4 h-4" />
-        </button>
+    <div className="relative bg-gradient-to-r from-primary via-emerald-500 to-blue-500 text-white py-4 md:py-3 shadow-lg">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between gap-3">
+          <Link 
+            to="/giveaway/nyc-biggest-flower" 
+            className="flex-1 flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center sm:justify-center gap-2 sm:gap-4 hover:opacity-90 transition-opacity min-w-0"
+          >
+            <div className="flex items-center gap-2">
+              <Gift className="w-5 h-5 flex-shrink-0" />
+              <span className="font-bold text-sm sm:text-base leading-tight">WIN $4,000 IN PREMIUM FLOWER</span>
+            </div>
+            <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs sm:text-sm font-medium whitespace-nowrap">
+              {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
+            </span>
+            <span className="text-xs sm:text-sm font-semibold">Enter FREE →</span>
+          </Link>
+          <button
+            onClick={handleDismiss}
+            className="flex-shrink-0 p-2 hover:bg-white/20 rounded-lg transition-colors touch-manipulation active:scale-95"
+            aria-label="Dismiss banner"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   );
