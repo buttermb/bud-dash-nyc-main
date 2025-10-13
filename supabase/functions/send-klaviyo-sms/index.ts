@@ -33,8 +33,8 @@ serve(async (req) => {
 
     console.log('Sending SMS via Klaviyo:', { phone, messageLength: message.length });
 
-    // Klaviyo SMS API endpoint
-    const response = await fetch('https://a.klaviyo.com/api/messages/', {
+    // Klaviyo Campaigns API - Create SMS Campaign
+    const response = await fetch('https://a.klaviyo.com/api/campaigns/', {
       method: 'POST',
       headers: {
         'Authorization': `Klaviyo-API-Key ${klaviyoApiKey}`,
@@ -43,12 +43,20 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         data: {
-          type: 'message',
+          type: 'campaign',
           attributes: {
-            channel: 'sms',
-            phone_number: phone,
-            body: message,
-            context: metadata
+            name: `SMS Test - ${new Date().toISOString()}`,
+            audiences: {
+              included: [phone]
+            },
+            messages: {
+              sms: {
+                body: message
+              }
+            },
+            send_strategy: {
+              method: 'immediate'
+            }
           }
         }
       })

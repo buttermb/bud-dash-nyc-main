@@ -45,8 +45,8 @@ serve(async (req) => {
 
     console.log('Sending email via Klaviyo:', { to, subject, fromEmail });
 
-    // Klaviyo Email API endpoint
-    const response = await fetch('https://a.klaviyo.com/api/messages/', {
+    // Klaviyo Campaigns API - Create Email Campaign
+    const response = await fetch('https://a.klaviyo.com/api/campaigns/', {
       method: 'POST',
       headers: {
         'Authorization': `Klaviyo-API-Key ${klaviyoApiKey}`,
@@ -55,16 +55,26 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         data: {
-          type: 'message',
+          type: 'campaign',
           attributes: {
-            channel: 'email',
-            from_email: fromEmail,
-            from_name: fromName,
-            subject: subject,
-            to_emails: [to],
-            body_html: html,
-            body_text: text,
-            context: metadata
+            name: `Email Test - ${new Date().toISOString()}`,
+            audiences: {
+              included: [to]
+            },
+            messages: {
+              email: {
+                subject: subject,
+                from_email: fromEmail,
+                from_label: fromName,
+                content: {
+                  html: html,
+                  plain_text: text
+                }
+              }
+            },
+            send_strategy: {
+              method: 'immediate'
+            }
           }
         }
       })
