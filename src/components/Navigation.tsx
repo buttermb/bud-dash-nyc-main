@@ -118,27 +118,26 @@ const Navigation = () => {
       </div>
 
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/98 backdrop-blur-lg supports-[backdrop-filter]:bg-background/95 shadow-soft">
-        <div className="container flex h-20 items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-3">
-            <NYMLogo size={60} />
-            <div className="flex flex-col">
-              <span className="font-black text-xl tracking-wider">NEW YORK MINUTE NYC</span>
-              <span className="text-xs text-muted-foreground tracking-widest">PREMIUM FLOWER DELIVERY</span>
+        <div className="container flex h-24 items-center justify-between px-6 gap-8">
+          <Link to="/" className="flex items-center gap-4 min-w-fit">
+            <NYMLogo size={48} />
+            <div className="flex flex-col gap-0.5">
+              <span className="font-black text-base tracking-wider">NYM</span>
+              <span className="text-[10px] text-muted-foreground tracking-widest uppercase">Premium Delivery</span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-8 flex-1 justify-center">
             <Link 
               to="/giveaway/nyc-biggest-flower" 
-              className="relative text-sm font-semibold text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5 group"
+              className="relative text-sm font-semibold transition-colors group"
             >
-              <span className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/5 border border-primary/20 group-hover:bg-primary/10 group-hover:border-primary/30 transition-all">
+              <span className="relative flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/30 group-hover:border-primary/50 group-hover:shadow-glow transition-all">
                 <span className="relative">
-                  🎁
-                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-accent rounded-full animate-pulse shadow-glow"></span>
+                  LIVE GIVEAWAY
+                  <span className="absolute -top-1 -right-2 w-2 h-2 bg-accent rounded-full animate-pulse shadow-[0_0_8px_hsl(var(--accent))]"></span>
                 </span>
-                <span className="tracking-wide">LIVE GIVEAWAY</span>
               </span>
             </Link>
             {navLinks.map((link) => (
@@ -147,7 +146,7 @@ const Navigation = () => {
                   key={link.label}
                   href={link.href}
                   onClick={handleNavClick(link.href, link.scroll)}
-                  className="text-sm font-medium transition-colors hover:text-primary cursor-pointer"
+                  className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors cursor-pointer whitespace-nowrap"
                 >
                   {link.label}
                 </a>
@@ -158,7 +157,7 @@ const Navigation = () => {
                   onClick={() => {
                     setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0);
                   }}
-                  className="text-sm font-medium transition-colors hover:text-primary cursor-pointer"
+                  className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors cursor-pointer whitespace-nowrap"
                 >
                   {link.label}
                 </Link>
@@ -167,26 +166,26 @@ const Navigation = () => {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 min-w-fit">
             {/* Sticky Cart Preview */}
             <Button
               variant="outline"
-              className="relative gap-2 hidden sm:flex"
+              className="relative gap-3 hidden sm:flex h-11 px-4"
               onClick={() => setShowCart(true)}
             >
-              <ShoppingCart className="w-5 h-5" />
-              <div className="flex flex-col items-start">
-                <span className="text-xs font-semibold">
+              <ShoppingCart className="w-4 h-4" />
+              <div className="flex flex-col items-start gap-0.5">
+                <span className="text-xs font-semibold leading-none">
                   {cartCount} {cartCount === 1 ? 'item' : 'items'}
                 </span>
                 {cartTotal > 0 && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[10px] text-muted-foreground leading-none">
                     ${cartTotal.toFixed(2)}
                   </span>
                 )}
               </div>
               {cartCount > 0 && (
-                <Badge variant="default" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0">
+                <Badge variant="default" className="absolute -top-1.5 -right-1.5 h-5 w-5 flex items-center justify-center p-0 text-[10px]">
                   {cartCount}
                 </Badge>
               )}
@@ -196,7 +195,7 @@ const Navigation = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="relative sm:hidden"
+              className="relative sm:hidden h-10 w-10"
               onClick={() => setShowCart(true)}
             >
               <ShoppingCart className="w-5 h-5" />
@@ -208,10 +207,10 @@ const Navigation = () => {
             </Button>
 
             {user ? (
-              <div className="hidden sm:flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-3">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" className="h-10 w-10">
                       <User className="w-5 h-5" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -244,11 +243,11 @@ const Navigation = () => {
                 <ThemeToggle />
               </div>
             ) : (
-              <div className="hidden sm:flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => openAuth("signin")}>
+              <div className="hidden sm:flex items-center gap-3">
+                <Button variant="outline" size="sm" className="h-10" onClick={() => openAuth("signin")}>
                   Sign In
                 </Button>
-                <Button variant="hero" size="sm" onClick={() => openAuth("signup")}>
+                <Button variant="hero" size="sm" className="h-10" onClick={() => openAuth("signup")}>
                   Sign Up
                 </Button>
                 <ThemeToggle />
