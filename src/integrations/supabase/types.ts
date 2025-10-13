@@ -2542,6 +2542,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_coupon_usage: {
+        Args: { coupon_id: string }
+        Returns: undefined
+      }
       is_admin: {
         Args: { _user_id: string }
         Returns: boolean

@@ -78,6 +78,7 @@ const GiveawayRules = lazy(() => import("./pages/GiveawayRules"));
 const MyGiveawayEntries = lazy(() => import("./pages/MyGiveawayEntries"));
 const CouponList = lazy(() => import("./pages/admin/CouponList"));
 const CouponForm = lazy(() => import("./pages/admin/CouponForm"));
+const CouponEdit = lazy(() => import("./pages/admin/CouponEdit"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -206,7 +207,7 @@ const App = () => (
                 <Route path="giveaways/:id/winners" element={<AdminGiveawayWinners />} />
                 <Route path="coupons" element={<CouponList />} />
                 <Route path="coupons/create" element={<CouponForm />} />
-                <Route path="coupons/:id/edit" element={<CouponForm />} />
+                <Route path="coupons/:id/edit" element={<CouponEdit />} />
               </Route>
 
                       <Route path="*" element={<NotFound />} />

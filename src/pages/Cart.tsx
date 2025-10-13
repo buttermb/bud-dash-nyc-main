@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import CouponInput from "@/components/CouponInput";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -19,6 +20,7 @@ const Cart = () => {
   const { guestCart, updateGuestCartItem, removeFromGuestCart } = useGuestCart();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
 
   // Fetch authenticated user's cart
   const { data: dbCartItems = [] } = useQuery({
@@ -74,6 +76,9 @@ const Cart = () => {
     (sum, item) => sum + getItemPrice(item) * item.quantity,
     0
   );
+
+  const discount = appliedCoupon?.discount || 0;
+  const totalAfterDiscount = subtotal - discount;
 
   const updateQuantity = async (itemId: string, productId: string, selectedWeight: string, newQuantity: number) => {
     if (newQuantity < 1) return;
@@ -271,11 +276,32 @@ const Cart = () => {
                     </div>
                   )}
 
+                  {/* Coupon Input */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Have a coupon?</label>
+                    <CouponInput
+                      cartTotal={subtotal}
+                      onCouponApplied={(discountAmount, code) => {
+                        setAppliedCoupon({ code, discount: discountAmount });
+                      }}
+                      onCouponRemoved={() => setAppliedCoupon(null)}
+                      appliedCode={appliedCoupon?.code}
+                    />
+                  </div>
+
+                  <Separator />
+
                   <div className="space-y-3">
                     <div className="flex justify-between text-base md:text-lg">
                       <span className="text-muted-foreground">Subtotal</span>
                       <span className="font-semibold">${subtotal.toFixed(2)}</span>
                     </div>
+                    {appliedCoupon && (
+                      <div className="flex justify-between text-base md:text-lg text-primary">
+                        <span className="font-medium">Discount ({appliedCoupon.code})</span>
+                        <span className="font-semibold">-${discount.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-base md:text-lg">
                       <span className="text-muted-foreground">Delivery Fee</span>
                       <span className="font-semibold">
@@ -292,7 +318,7 @@ const Cart = () => {
 
                   <div className="flex justify-between text-2xl md:text-xl font-bold py-2">
                     <span>Total</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>${totalAfterDiscount.toFixed(2)}</span>
                   </div>
 
                   <Button 
@@ -301,7 +327,7 @@ const Cart = () => {
                     size="lg"
                     onClick={handleCheckout}
                   >
-                    Proceed to Checkout • ${subtotal.toFixed(2)}
+                    Proceed to Checkout • ${totalAfterDiscount.toFixed(2)}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
 
