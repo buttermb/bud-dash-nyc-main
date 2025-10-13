@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 
 interface Entry {
   id: string;
@@ -47,6 +48,7 @@ const generateFakeEntry = (): Entry => {
 export function LiveFeed({ giveawayId }: LiveFeedProps) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [parent] = useAutoAnimate();
 
   useEffect(() => {
     loadEntries();
@@ -159,15 +161,10 @@ export function LiveFeed({ giveawayId }: LiveFeedProps) {
         Recent Entries
       </h3>
 
-      <div className="space-y-3 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent pr-2">
-        <AnimatePresence mode="popLayout">
-          {entries.map((entry, index) => (
-            <motion.div
+      <div ref={parent} className="space-y-3 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent pr-2">
+        {entries.map((entry, index) => (
+            <div
               key={entry.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ delay: index * 0.03, duration: 0.3 }}
               className="group relative"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -192,9 +189,8 @@ export function LiveFeed({ giveawayId }: LiveFeedProps) {
                   <span className="text-emerald-400 font-bold text-sm">+{entry.entries}</span>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
-        </AnimatePresence>
       </div>
 
       <div className="mt-6 text-center">

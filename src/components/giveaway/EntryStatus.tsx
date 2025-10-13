@@ -1,10 +1,20 @@
-import { Check, Copy, Share2, Instagram, MessageCircle, Camera, Image } from 'lucide-react';
+import { Check, Copy, Share2, Instagram, MessageCircle, Camera, Image, QrCode } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { claimBonusEntry } from '@/lib/api/giveaway';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { QRCodeSVG } from 'qrcode.react';
+import {
+  FacebookShareButton,
+  TwitterShareButton,
+  WhatsappShareButton,
+  FacebookIcon,
+  TwitterIcon,
+  WhatsappIcon,
+} from 'react-share';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface EntryStatusProps {
   entry: any;
@@ -18,6 +28,9 @@ export default function EntryStatus({ entry, giveaway, onUpdate }: EntryStatusPr
   const [claimingPost, setClaimingPost] = useState(false);
   const [storyUrl, setStoryUrl] = useState('');
   const [postUrl, setPostUrl] = useState('');
+  const [showQR, setShowQR] = useState(false);
+
+  const shareText = `🎉 Join me in Bud Dash NYC's giveaway! Win premium flower and more! ${entry.referralLink}`;
 
   const copyReferralLink = () => {
     navigator.clipboard.writeText(entry.referralLink);
@@ -165,7 +178,7 @@ export default function EntryStatus({ entry, giveaway, onUpdate }: EntryStatusPr
           </div>
 
           {/* Share buttons */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 mb-3">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -178,7 +191,7 @@ export default function EntryStatus({ entry, giveaway, onUpdate }: EntryStatusPr
               className="flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 py-3 rounded-xl font-bold text-sm transition-all text-white shadow-lg"
             >
               <Instagram className="w-4 h-4" />
-              Share on Instagram
+              Instagram
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -190,9 +203,55 @@ export default function EntryStatus({ entry, giveaway, onUpdate }: EntryStatusPr
               className="flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 py-3 rounded-xl font-bold text-sm transition-all text-white shadow-lg"
             >
               <MessageCircle className="w-4 h-4" />
-              Share via SMS
+              SMS
             </motion.button>
           </div>
+
+          {/* Social share buttons */}
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <FacebookShareButton url={entry.referralLink} hashtag="#BudDashNYC">
+              <FacebookIcon size={40} round />
+            </FacebookShareButton>
+            <TwitterShareButton url={entry.referralLink} title={shareText}>
+              <TwitterIcon size={40} round />
+            </TwitterShareButton>
+            <WhatsappShareButton url={entry.referralLink} title={shareText}>
+              <WhatsappIcon size={40} round />
+            </WhatsappShareButton>
+          </div>
+
+          {/* QR Code */}
+          <Dialog open={showQR} onOpenChange={setShowQR}>
+            <DialogTrigger asChild>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full flex items-center justify-center gap-2 bg-slate-800/70 hover:bg-slate-700/70 py-3 rounded-xl font-bold text-sm border border-slate-700 hover:border-primary/50 transition-all text-white"
+              >
+                <QrCode className="w-4 h-4" />
+                Show QR Code
+              </motion.button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-center">Share QR Code</DialogTitle>
+              </DialogHeader>
+              <div className="flex flex-col items-center gap-4 py-4">
+                <div className="p-6 bg-white rounded-2xl shadow-xl">
+                  <QRCodeSVG
+                    value={entry.referralLink}
+                    size={200}
+                    level="H"
+                    includeMargin
+                    fgColor="#10b981"
+                  />
+                </div>
+                <p className="text-sm text-center text-muted-foreground">
+                  Scan to enter the giveaway
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Referral stats */}
           {entry.referralStats.successfulReferrals > 0 && (
