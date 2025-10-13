@@ -59,7 +59,7 @@ export function SearchBar({ variant = 'full' }: SearchBarProps) {
   }, [debouncedSearch]);
 
   const handleSelect = (productId: string) => {
-    navigate(`/products/${productId}`);
+    navigate(`/product/${productId}`);
     setOpen(false);
     setSearch('');
   };
