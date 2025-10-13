@@ -18,7 +18,8 @@ import {
   FileUp,
   Settings,
   Gift,
-  Ticket
+  Ticket,
+  Bell
 } from "lucide-react";
 import {
   Sidebar,
@@ -83,6 +84,7 @@ const menuGroups = [
       { title: "All Giveaways", url: "/admin/giveaways", icon: Gift },
       { title: "Current Giveaway", url: "/admin/giveaway", icon: Gift },
       { title: "Coupon Codes", url: "/admin/coupons", icon: Ticket },
+      { title: "Test Notifications", url: "/admin/notifications", icon: Bell },
     ]
   }
 ];
