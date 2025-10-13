@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -322,4 +322,4 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
   );
 };
 
-export default ProductCard;
+export default memo(ProductCard);

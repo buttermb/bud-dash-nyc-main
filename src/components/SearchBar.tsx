@@ -4,6 +4,7 @@ import { Search, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface SearchBarProps {
   variant?: 'full' | 'icon';
@@ -15,6 +16,7 @@ export function SearchBar({ variant = 'full' }: SearchBarProps) {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const debouncedSearch = useDebounce(search, 300);
 
   useEffect(() => {
     // Keyboard shortcut: Cmd+K or Ctrl+K
@@ -30,7 +32,7 @@ export function SearchBar({ variant = 'full' }: SearchBarProps) {
   }, []);
 
   useEffect(() => {
-    if (search.length < 2) {
+    if (debouncedSearch.length < 2) {
       setProducts([]);
       return;
     }
@@ -41,7 +43,7 @@ export function SearchBar({ variant = 'full' }: SearchBarProps) {
         const { data } = await supabase
           .from('products')
           .select('*')
-          .or(`name.ilike.%${search}%,description.ilike.%${search}%,category.ilike.%${search}%`)
+          .or(`name.ilike.%${debouncedSearch}%,description.ilike.%${debouncedSearch}%,category.ilike.%${debouncedSearch}%`)
           .eq('in_stock', true)
           .limit(10);
         
@@ -53,9 +55,8 @@ export function SearchBar({ variant = 'full' }: SearchBarProps) {
       }
     };
 
-    const debounce = setTimeout(searchProducts, 300);
-    return () => clearTimeout(debounce);
-  }, [search]);
+    searchProducts();
+  }, [debouncedSearch]);
 
   const handleSelect = (productId: string) => {
     navigate(`/products/${productId}`);
