@@ -52,6 +52,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface UserProfile {
   id: string;
@@ -71,6 +73,7 @@ interface UserProfile {
 const AdminUsers = () => {
   const { session } = useAdmin();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -234,10 +237,10 @@ const AdminUsers = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 md:p-6 space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">User Management</h1>
+        <p className="text-sm md:text-base text-muted-foreground">
           Manage customer accounts and verification status
         </p>
       </div>
@@ -305,135 +308,213 @@ const AdminUsers = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12"></TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Orders</TableHead>
-                  <TableHead>Total Spent</TableHead>
-                  <TableHead>Last Order</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <React.Fragment key={user.id}>
-                    <TableRow 
-                      className="cursor-pointer hover:bg-muted/50"
-                    >
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleRow(user.user_id)}
-                        >
-                          {expandedRows.has(user.user_id) ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </TableCell>
-                      <TableCell onClick={() => openUserDetails(user)}>
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                            <User className="h-5 w-5 text-primary" />
+        <CardContent className="p-0 md:p-6">
+          {/* Mobile Card View */}
+          {isMobile ? (
+            <div className="space-y-3 p-3">
+              {filteredUsers.map((user) => (
+                <Card key={user.id} className="overflow-hidden">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 flex-shrink-0">
+                          <User className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">
+                            {user.full_name || "Customer"}
                           </div>
-                          <div>
-                            <div className="font-medium">
-                              {user.full_name || "Customer"}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {user.email}
-                            </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {user.email}
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {user.phone ? (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Phone className="h-3 w-3 text-muted-foreground" />
-                            {user.phone}
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">No phone</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
+                      </div>
+                      {user.age_verified ? (
+                        <Badge className="bg-green-600 flex-shrink-0">
+                          <CheckCircle2 className="h-3 w-3" />
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="flex-shrink-0">
+                          <XCircle className="h-3 w-3" />
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                        <span>{user.order_count || 0} orders</span>
+                      </div>
+                      <div className="flex items-center gap-2 font-semibold text-green-600">
+                        <DollarSign className="h-4 w-4" />
+                        {(user.total_spent || 0).toFixed(2)}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2 border-t">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => openUserDetails(user)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                      <Button
+                        variant={user.age_verified ? "outline" : "default"}
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => toggleVerification(user.user_id, user.age_verified)}
+                      >
                         {user.age_verified ? (
-                          <Badge className="bg-green-600">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Verified
-                          </Badge>
+                          <>
+                            <ShieldOff className="h-4 w-4 mr-1" />
+                            Unverify
+                          </>
                         ) : (
-                          <Badge variant="secondary">
-                            <XCircle className="h-3 w-3 mr-1" />
-                            Unverified
-                          </Badge>
+                          <>
+                            <Shield className="h-4 w-4 mr-1" />
+                            Verify
+                          </>
                         )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{user.order_count || 0}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 font-semibold text-green-600">
-                          <DollarSign className="h-4 w-4" />
-                          {(user.total_spent || 0).toFixed(2)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {user.last_order_date ? (
-                          <div className="text-sm text-muted-foreground">
-                            {new Date(user.last_order_date).toLocaleDateString()}
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">No orders</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openUserDetails(user);
-                            }}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                          <Button
-                            variant={user.age_verified ? "outline" : "default"}
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleVerification(user.user_id, user.age_verified);
-                            }}
-                          >
-                            {user.age_verified ? (
-                              <>
-                                <ShieldOff className="h-4 w-4 mr-1" />
-                                Unverify
-                              </>
-                            ) : (
-                              <>
-                                <Shield className="h-4 w-4 mr-1" />
-                                Verify
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </TableCell>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            /* Desktop Table View */
+            <ScrollArea className="w-full">
+              <div className="rounded-md border min-w-[900px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12"></TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Orders</TableHead>
+                      <TableHead>Total Spent</TableHead>
+                      <TableHead>Last Order</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user) => (
+                      <React.Fragment key={user.id}>
+                        <TableRow 
+                          className="cursor-pointer hover:bg-muted/50"
+                        >
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleRow(user.user_id)}
+                            >
+                              {expandedRows.has(user.user_id) ? (
+                                <ChevronUp className="h-4 w-4" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </TableCell>
+                          <TableCell onClick={() => openUserDetails(user)}>
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                                <User className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <div className="font-medium">
+                                  {user.full_name || "Customer"}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {user.email}
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {user.phone ? (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Phone className="h-3 w-3 text-muted-foreground" />
+                                {user.phone}
+                              </div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">No phone</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {user.age_verified ? (
+                              <Badge className="bg-green-600">
+                                <CheckCircle2 className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Unverified
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">{user.order_count || 0}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2 font-semibold text-green-600">
+                              <DollarSign className="h-4 w-4" />
+                              {(user.total_spent || 0).toFixed(2)}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {user.last_order_date ? (
+                              <div className="text-sm text-muted-foreground">
+                                {new Date(user.last_order_date).toLocaleDateString()}
+                              </div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">No orders</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openUserDetails(user);
+                                }}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                View
+                              </Button>
+                              <Button
+                                variant={user.age_verified ? "outline" : "default"}
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleVerification(user.user_id, user.age_verified);
+                                }}
+                              >
+                                {user.age_verified ? (
+                                  <>
+                                    <ShieldOff className="h-4 w-4 mr-1" />
+                                    Unverify
+                                  </>
+                                ) : (
+                                  <>
+                                    <Shield className="h-4 w-4 mr-1" />
+                                    Verify
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
                     
                     {expandedRows.has(user.user_id) && (
                       <TableRow key={`expanded-${user.id}`}>
@@ -519,11 +600,13 @@ const AdminUsers = () => {
                         </TableCell>
                       </TableRow>
                     )}
-                  </React.Fragment>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                      </React.Fragment>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </ScrollArea>
+          )}
           
           {filteredUsers.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
