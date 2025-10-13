@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -127,36 +128,42 @@ export default function CourierPinManagement({ courierId, currentPin, courierNam
           </div>
         )}
         
-        <div className="flex gap-2">
-          <Input
-            type="text"
-            value={pin}
-            onChange={(e) => {
-              setPin(e.target.value.replace(/\D/g, '').slice(0, 6));
-              setPinCopied(false);
-            }}
-            placeholder="6-digit PIN"
-            maxLength={6}
-            className="text-center text-lg tracking-widest font-mono"
-          />
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={generatePin}
-            disabled={loading}
-            title="Generate random PIN"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
-          <Button
-            variant={pinCopied ? "default" : "outline"}
-            size="icon"
-            onClick={copyPin}
-            disabled={!pin}
-            title="Copy PIN"
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
+        <div className="space-y-2">
+          <Label htmlFor="pin-input" className="text-sm font-medium">
+            Enter or Generate 6-Digit PIN
+          </Label>
+          <div className="flex gap-2">
+            <Input
+              id="pin-input"
+              type="text"
+              value={pin}
+              onChange={(e) => {
+                setPin(e.target.value.replace(/\D/g, '').slice(0, 6));
+                setPinCopied(false);
+              }}
+              placeholder="Type your own PIN"
+              maxLength={6}
+              className="text-center text-lg tracking-widest font-mono"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={generatePin}
+              disabled={loading}
+              title="Generate random PIN"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button
+              variant={pinCopied ? "default" : "outline"}
+              size="icon"
+              onClick={copyPin}
+              disabled={!pin}
+              title="Copy PIN"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {pin && !pinCopied && (
