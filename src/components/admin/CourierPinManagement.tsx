@@ -87,12 +87,13 @@ export default function CourierPinManagement({ courierId, currentPin, courierNam
         details: { 
           courier_id: courierId,
           courier_name: courierName,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          action: 'Admin set new PIN - courier must re-verify'
         }
       });
 
       setSavedPin(plainPin); // Store for confirmation display
-      toast.success(`Admin PIN saved! Give PIN ${plainPin} to ${courierName}`);
+      toast.success(`Admin PIN saved! ${courierName} will need to verify with the new PIN on their next login.`);
       
       // Clear the input but keep savedPin for reference
       setPin('');

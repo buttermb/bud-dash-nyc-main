@@ -160,6 +160,43 @@ export default function CourierDashboard() {
     };
   }, [courier, isOnline, notificationsEnabled, queryClient]);
 
+  // Listen for admin PIN changes - force re-verification when admin updates PIN
+  useEffect(() => {
+    if (!courier?.id) return;
+
+    const channel = supabase
+      .channel('courier-pin-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'couriers',
+          filter: `id=eq.${courier.id}`
+        },
+        (payload) => {
+          // Check if admin_pin or admin_pin_verified was updated
+          const newRecord = payload.new as any;
+          const oldRecord = payload.old as any;
+          
+          if (newRecord.admin_pin !== oldRecord.admin_pin || 
+              (newRecord.admin_pin_verified === false && oldRecord.admin_pin_verified === true)) {
+            toast.info('Admin has updated your PIN. Please sign in again with the new PIN.');
+            // Sign out the courier to force re-login with new PIN
+            setTimeout(async () => {
+              await supabase.auth.signOut();
+              navigate('/courier/login');
+            }, 2000);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [courier?.id, navigate]);
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
