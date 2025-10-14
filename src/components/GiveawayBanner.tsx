@@ -31,28 +31,27 @@ export default function GiveawayBanner() {
   if (!isVisible) return null;
 
   return (
-    <div className="relative bg-gradient-to-r from-primary via-emerald-500 to-blue-500 text-white py-4 md:py-3 shadow-lg">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between gap-3">
+    <div className="relative bg-gradient-to-r from-primary via-emerald-500 to-blue-500 text-white py-2 md:py-3 shadow-lg pt-safe">
+      <div className="container mx-auto px-2 sm:px-4">
+        <div className="flex items-center justify-between gap-2">
           <Link 
             to="/giveaway/nyc-biggest-flower" 
-            className="flex-1 flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center sm:justify-center gap-2 sm:gap-4 hover:opacity-90 transition-opacity min-w-0"
+            className="flex-1 flex items-center justify-center gap-2 sm:gap-3 hover:opacity-90 transition-opacity min-w-0 py-1"
           >
-            <div className="flex items-center gap-2">
-              <Gift className="w-5 h-5 flex-shrink-0" />
-              <span className="font-bold text-sm sm:text-base leading-tight">WIN $4,000 IN PREMIUM FLOWER</span>
-            </div>
-            <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs sm:text-sm font-medium whitespace-nowrap">
-              {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
+            <Gift className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+            <span className="font-bold text-xs sm:text-sm md:text-base leading-tight truncate">
+              WIN $4,000 FLOWER
             </span>
-            <span className="text-xs sm:text-sm font-semibold">Enter FREE →</span>
+            <span className="px-2 py-0.5 sm:px-3 sm:py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium whitespace-nowrap">
+              {timeLeft.days}d {timeLeft.hours}h
+            </span>
           </Link>
           <button
             onClick={handleDismiss}
-            className="flex-shrink-0 p-2 hover:bg-white/20 rounded-lg transition-colors touch-manipulation active:scale-95"
+            className="flex-shrink-0 p-2 sm:p-2.5 hover:bg-white/20 rounded-full transition-colors touch-manipulation active:scale-95 min-w-[40px] min-h-[40px] flex items-center justify-center"
             aria-label="Dismiss banner"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
       </div>
