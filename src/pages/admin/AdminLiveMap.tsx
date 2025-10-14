@@ -10,7 +10,10 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { MapPin, Truck, Package, Clock, DollarSign, Users, UserPlus, Bell, BellOff, Maximize, Search, Activity, TrendingUp, Zap, RefreshCw, AlertTriangle, MapIcon, ChevronDown, ChevronUp, Phone } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { MapPin, Truck, Package, Clock, DollarSign, Users, UserPlus, Bell, BellOff, Maximize, Search, Activity, TrendingUp, Zap, RefreshCw, AlertTriangle, MapIcon, ChevronDown, ChevronUp, Phone, Filter, X, BarChart3 } from "lucide-react";
 import { AssignCourierDialog } from "@/components/admin/AssignCourierDialog";
 import { useToast } from "@/hooks/use-toast";
 import { OrderMap } from "@/components/admin/OrderMap";
@@ -461,7 +464,7 @@ const AdminLiveMap = () => {
           {/* Filters */}
           <Card>
             <CardContent className="p-4">
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4">
                 <div className="w-full">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -469,25 +472,79 @@ const AdminLiveMap = () => {
                       placeholder="Search orders, customers, couriers..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 pr-10"
                     />
+                    {searchQuery && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                        onClick={() => setSearchQuery('')}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 </div>
+                
+                {/* Status Badge Filters */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Status Filters:</span>
+                    {(statusFilter !== 'all' || boroughFilter !== 'all') && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs ml-auto"
+                        onClick={() => {
+                          setStatusFilter('all');
+                          setBoroughFilter('all');
+                        }}
+                      >
+                        Clear All
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge
+                      variant={statusFilter === 'all' ? 'default' : 'outline'}
+                      className="cursor-pointer"
+                      onClick={() => setStatusFilter('all')}
+                    >
+                      All ({deliveries.length})
+                    </Badge>
+                    <Badge
+                      variant={statusFilter === 'confirmed' ? 'default' : 'outline'}
+                      className={`cursor-pointer ${statusFilter === 'confirmed' ? 'bg-purple-600 hover:bg-purple-700' : ''}`}
+                      onClick={() => setStatusFilter('confirmed')}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-purple-500 mr-1.5"></span>
+                      Confirmed ({deliveries.filter(d => (d.order || d).status === 'confirmed').length})
+                    </Badge>
+                    <Badge
+                      variant={statusFilter === 'preparing' ? 'default' : 'outline'}
+                      className={`cursor-pointer ${statusFilter === 'preparing' ? 'bg-yellow-600 hover:bg-yellow-700' : ''}`}
+                      onClick={() => setStatusFilter('preparing')}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-yellow-500 mr-1.5"></span>
+                      Preparing ({deliveries.filter(d => (d.order || d).status === 'preparing').length})
+                    </Badge>
+                    <Badge
+                      variant={statusFilter === 'out_for_delivery' ? 'default' : 'outline'}
+                      className={`cursor-pointer ${statusFilter === 'out_for_delivery' ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                      onClick={() => setStatusFilter('out_for_delivery')}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-blue-500 mr-1.5 animate-pulse"></span>
+                      Out for Delivery ({deliveries.filter(d => (d.order || d).status === 'out_for_delivery').length})
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Borough Select */}
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full sm:flex-1">
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                      <SelectItem value="preparing">Preparing</SelectItem>
-                      <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
-                    </SelectContent>
-                  </Select>
                   <Select value={boroughFilter} onValueChange={setBoroughFilter}>
-                    <SelectTrigger className="w-full sm:flex-1">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Filter by borough" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover z-50">
@@ -500,6 +557,13 @@ const AdminLiveMap = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                 {/* Results Count */}
+                {filteredDeliveries.length !== deliveries.length && (
+                  <div className="text-sm text-muted-foreground">
+                    Showing {filteredDeliveries.length} of {deliveries.length} orders
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
