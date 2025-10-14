@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, MapPin } from "lucide-react";
+import { ShoppingBag, MapPin, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 
 const RecentPurchaseNotification = () => {
   const [visiblePurchase, setVisiblePurchase] = useState<any>(null);
@@ -100,7 +101,18 @@ const RecentPurchaseNotification = () => {
           transition={{ type: "spring", stiffness: 200, damping: 20 }}
           className="fixed bottom-6 left-6 z-50 max-w-sm"
         >
-          <div className="bg-card border border-primary/20 shadow-xl rounded-lg p-4 backdrop-blur-sm">
+          <div className="relative bg-card border border-primary/20 shadow-xl rounded-lg p-4 backdrop-blur-sm">
+            {/* Close Button - Positioned outside the card flow */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-background border-2 border-border shadow-lg hover:bg-destructive hover:text-destructive-foreground hover:border-destructive z-10"
+              onClick={() => setShowNotification(false)}
+              aria-label="Dismiss notification"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+
             <div className="flex items-center gap-3">
               {/* Product Image or Icon */}
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -116,7 +128,7 @@ const RecentPurchaseNotification = () => {
               </div>
 
               {/* Content */}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 pr-2">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                   <p className="text-sm font-semibold truncate">
