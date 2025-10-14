@@ -89,6 +89,7 @@ const CouponEdit = lazy(() => import("./pages/admin/CouponEdit"));
 const AdminNotifications = lazy(() => import("./pages/admin/AdminNotifications"));
 const GlobalSearch = lazy(() => import("./pages/admin/GlobalSearch"));
 const SystemSettings = lazy(() => import("./pages/admin/SystemSettings"));
+const ButtonTester = lazy(() => import("./pages/admin/ButtonTester"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -229,6 +230,7 @@ const App = () => (
                 <Route path="notifications" element={<AdminNotifications />} />
                 <Route path="search" element={<GlobalSearch />} />
                 <Route path="settings" element={<SystemSettings />} />
+                <Route path="button-tester" element={<ButtonTester />} />
               </Route>
 
                       <Route path="*" element={<NotFound />} />
