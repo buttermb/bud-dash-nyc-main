@@ -5,21 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminAlerts } from "@/components/admin/AdminAlerts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { MapPin, Truck, Package, Clock, DollarSign, Users, Navigation, UserPlus, CheckCircle2, Shield, Bell, BellOff, Maximize, Search, Activity, TrendingUp, Zap, RefreshCw, Filter, Eye, Layers, Route, AlertTriangle, MapIcon } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { MapPin, Truck, Package, Clock, DollarSign, Users, UserPlus, Bell, BellOff, Maximize, Search, Activity, TrendingUp, Zap, RefreshCw, AlertTriangle, MapIcon } from "lucide-react";
 import { AssignCourierDialog } from "@/components/admin/AssignCourierDialog";
 import { useToast } from "@/hooks/use-toast";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
 import { OrderMap } from "@/components/admin/OrderMap";
-
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 interface RealtimeStats {
   ordersLastHour: number;
@@ -61,14 +54,12 @@ const AdminLiveMap = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Play notification sound
   const playNotificationSound = () => {
     if (soundEnabled && audioRef.current) {
       audioRef.current.play().catch(e => console.log('Audio play failed:', e));
     }
   };
 
-  // Add activity to feed
   const addActivity = (type: ActivityItem['type'], message: string, severity: ActivityItem['severity'] = 'info') => {
     const newActivity: ActivityItem = {
       id: Date.now().toString(),
@@ -77,10 +68,9 @@ const AdminLiveMap = () => {
       timestamp: new Date(),
       severity
     };
-    setActivityFeed(prev => [newActivity, ...prev.slice(0, 49)]); // Keep last 50
+    setActivityFeed(prev => [newActivity, ...prev.slice(0, 49)]);
   };
 
-  // Fetch live deliveries
   const fetchLiveDeliveries = async () => {
     try {
       const { data, error } = await supabase
@@ -101,7 +91,6 @@ const AdminLiveMap = () => {
       const previousCount = deliveries.length;
       setDeliveries(data || []);
       
-      // Detect new orders
       if (data && data.length > previousCount) {
         playNotificationSound();
         addActivity('order', `New order received! Total active: ${data.length}`, 'success');
@@ -109,34 +98,20 @@ const AdminLiveMap = () => {
     } catch (error) {
       console.error('Error fetching deliveries:', error);
       addActivity('alert', 'Failed to fetch deliveries', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Fetch realtime stats
   const fetchRealtimeStats = async () => {
     try {
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
       
       const [ordersResult, revenueResult, couriersResult, completedResult] = await Promise.all([
-        supabase
-          .from('orders')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', oneHourAgo),
-        supabase
-          .from('orders')
-          .select('total_amount')
-          .gte('created_at', oneHourAgo)
-          .eq('status', 'delivered'),
-        supabase
-          .from('couriers')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_online', true)
-          .eq('is_active', true),
-        supabase
-          .from('orders')
-          .select('delivered_at, created_at')
-          .eq('status', 'delivered')
-          .gte('created_at', oneHourAgo)
+        supabase.from('orders').select('*', { count: 'exact', head: true }).gte('created_at', oneHourAgo),
+        supabase.from('orders').select('total_amount').gte('created_at', oneHourAgo).eq('status', 'delivered'),
+        supabase.from('couriers').select('*', { count: 'exact', head: true }).eq('is_online', true).eq('is_active', true),
+        supabase.from('orders').select('delivered_at, created_at').eq('status', 'delivered').gte('created_at', oneHourAgo)
       ]);
 
       const inProgressResult = await supabase
@@ -159,16 +134,13 @@ const AdminLiveMap = () => {
         ?.map((order: any) => {
           const created = new Date(order.created_at);
           const delivered = new Date(order.delivered_at);
-          return (delivered.getTime() - created.getTime()) / 1000 / 60; // minutes
+          return (delivered.getTime() - created.getTime()) / 1000 / 60;
         })
         .reduce((a: number, b: number) => a + b, 0) / (completedResult.data?.length || 1);
 
       const revenue = revenueResult.data?.reduce((sum: number, order: any) => sum + Number(order.total_amount || 0), 0) || 0;
       const avgOrderValue = revenueResult.data?.length ? revenue / revenueResult.data.length : 0;
-
-      const completionRate = totalOrdersToday.count && deliveredToday.count 
-        ? (deliveredToday.count / totalOrdersToday.count) * 100 
-        : 0;
+      const completionRate = totalOrdersToday.count && deliveredToday.count ? (deliveredToday.count / totalOrdersToday.count) * 100 : 0;
 
       setStats({
         ordersLastHour: ordersResult.count || 0,
@@ -187,7 +159,6 @@ const AdminLiveMap = () => {
     }
   };
 
-  // Toggle fullscreen
   const toggleFullscreen = () => {
     if (!document.fullscreenElement && containerRef.current) {
       containerRef.current.requestFullscreen();
@@ -198,20 +169,17 @@ const AdminLiveMap = () => {
     }
   };
 
-  // Setup realtime subscriptions
   useEffect(() => {
     if (!session) return;
 
     fetchLiveDeliveries();
     fetchRealtimeStats();
 
-    // Auto-refresh
     const interval = autoRefresh ? setInterval(() => {
       fetchLiveDeliveries();
       fetchRealtimeStats();
     }, 5000) : null;
 
-    // Realtime subscriptions
     const channel = supabase
       .channel("live-map-updates")
       .on(
@@ -251,7 +219,6 @@ const AdminLiveMap = () => {
     };
   }, [session, autoRefresh, soundEnabled]);
 
-  // Filter deliveries
   const filteredDeliveries = deliveries.filter((delivery) => {
     const statusMatch = statusFilter === "all" || delivery.order?.status === statusFilter;
     const boroughMatch = boroughFilter === "all" || delivery.order?.delivery_borough === boroughFilter;
@@ -263,7 +230,6 @@ const AdminLiveMap = () => {
     return statusMatch && boroughMatch && searchMatch;
   });
 
-  // Map orders for OrderMap component
   const mapOrders = filteredDeliveries.map(d => ({
     id: d.order?.id || d.id,
     tracking_code: d.order?.tracking_code || '',
@@ -314,21 +280,21 @@ const AdminLiveMap = () => {
   }
 
   return (
-    <div ref={containerRef} className="h-screen flex flex-col bg-background overflow-hidden">
+    <div ref={containerRef} className="min-h-screen flex flex-col bg-background">
       <audio ref={audioRef} src="/notification.mp3" preload="auto" />
       
       <AdminAlerts />
 
       {/* Header */}
-      <div className="border-b bg-card px-6 py-4">
-        <div className="flex items-center justify-between">
+      <div className="border-b bg-card px-4 md:px-6 py-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
               <MapIcon className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Live Operations Center</h1>
-              <p className="text-sm text-muted-foreground">Real-time delivery tracking & management</p>
+              <h1 className="text-xl md:text-2xl font-bold">Live Operations Center</h1>
+              <p className="text-xs md:text-sm text-muted-foreground">Real-time delivery tracking & management</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -338,7 +304,7 @@ const AdminLiveMap = () => {
               onClick={() => setAutoRefresh(!autoRefresh)}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${autoRefresh ? 'animate-spin' : ''}`} />
-              {autoRefresh ? 'Auto' : 'Manual'}
+              <span className="hidden sm:inline">{autoRefresh ? 'Auto' : 'Manual'}</span>
             </Button>
             <Button
               variant={soundEnabled ? "default" : "outline"}
@@ -351,6 +317,7 @@ const AdminLiveMap = () => {
               variant="outline"
               size="sm"
               onClick={toggleFullscreen}
+              className="hidden md:flex"
             >
               <Maximize className="h-4 w-4" />
             </Button>
@@ -359,97 +326,97 @@ const AdminLiveMap = () => {
       </div>
 
       {/* Stats Dashboard */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 p-6 bg-muted/30">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3 md:gap-4 p-4 md:p-6 bg-muted/30">
         <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2 mb-1">
-              <Activity className="h-4 w-4 text-blue-500" />
-              <p className="text-xs text-muted-foreground">Active Now</p>
+              <Activity className="h-3 md:h-4 w-3 md:w-4 text-blue-500" />
+              <p className="text-xs text-muted-foreground">Active</p>
             </div>
-            <p className="text-2xl font-bold">{stats?.ordersInProgress || 0}</p>
+            <p className="text-xl md:text-2xl font-bold">{stats?.ordersInProgress || 0}</p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2 mb-1">
-              <Package className="h-4 w-4 text-purple-500" />
-              <p className="text-xs text-muted-foreground">Last Hour</p>
+              <Package className="h-3 md:h-4 w-3 md:w-4 text-purple-500" />
+              <p className="text-xs text-muted-foreground">Last Hr</p>
             </div>
-            <p className="text-2xl font-bold">{stats?.ordersLastHour || 0}</p>
+            <p className="text-xl md:text-2xl font-bold">{stats?.ordersLastHour || 0}</p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2 mb-1">
-              <DollarSign className="h-4 w-4 text-green-500" />
-              <p className="text-xs text-muted-foreground">Revenue/Hr</p>
+              <DollarSign className="h-3 md:h-4 w-3 md:w-4 text-green-500" />
+              <p className="text-xs text-muted-foreground">Revenue</p>
             </div>
-            <p className="text-2xl font-bold">${stats?.revenueLastHour?.toFixed(0) || 0}</p>
+            <p className="text-xl md:text-2xl font-bold">${stats?.revenueLastHour?.toFixed(0) || 0}</p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2 mb-1">
-              <Truck className="h-4 w-4 text-orange-500" />
+              <Truck className="h-3 md:h-4 w-3 md:w-4 text-orange-500" />
               <p className="text-xs text-muted-foreground">Couriers</p>
             </div>
-            <p className="text-2xl font-bold">{stats?.activeCouriers || 0}</p>
+            <p className="text-xl md:text-2xl font-bold">{stats?.activeCouriers || 0}</p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2 mb-1">
-              <Clock className="h-4 w-4 text-cyan-500" />
+              <Clock className="h-3 md:h-4 w-3 md:w-4 text-cyan-500" />
               <p className="text-xs text-muted-foreground">Avg Time</p>
             </div>
-            <p className="text-2xl font-bold">{stats?.avgDeliveryTime || 0}m</p>
+            <p className="text-xl md:text-2xl font-bold">{stats?.avgDeliveryTime || 0}m</p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="h-4 w-4 text-emerald-500" />
-              <p className="text-xs text-muted-foreground">Success Rate</p>
+              <TrendingUp className="h-3 md:h-4 w-3 md:w-4 text-emerald-500" />
+              <p className="text-xs text-muted-foreground">Success</p>
             </div>
-            <p className="text-2xl font-bold">{stats?.completionRate || 0}%</p>
+            <p className="text-xl md:text-2xl font-bold">{stats?.completionRate || 0}%</p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2 mb-1">
-              <DollarSign className="h-4 w-4 text-yellow-500" />
+              <DollarSign className="h-3 md:h-4 w-3 md:w-4 text-yellow-500" />
               <p className="text-xs text-muted-foreground">Avg Order</p>
             </div>
-            <p className="text-2xl font-bold">${stats?.avgOrderValue?.toFixed(0) || 0}</p>
+            <p className="text-xl md:text-2xl font-bold">${stats?.avgOrderValue?.toFixed(0) || 0}</p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2 mb-1">
-              <Zap className="h-4 w-4 text-red-500" />
-              <p className="text-xs text-muted-foreground">Peak Hours</p>
+              <Zap className="h-3 md:h-4 w-3 md:w-4 text-red-500" />
+              <p className="text-xs text-muted-foreground">Peak Hrs</p>
             </div>
-            <p className="text-xs font-semibold">{stats?.peakHours || 'N/A'}</p>
+            <p className="text-[10px] md:text-xs font-semibold">{stats?.peakHours || 'N/A'}</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex gap-6 p-6 overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-6">
         {/* Left Panel - Map & Controls */}
-        <div className="flex-1 flex flex-col gap-4 min-w-0">
+        <div className="w-full lg:flex-1 flex flex-col gap-4">
           {/* Filters */}
           <Card>
             <CardContent className="p-4">
-              <div className="flex flex-wrap gap-3">
-                <div className="flex-1 min-w-[200px]">
+              <div className="flex flex-col gap-3">
+                <div className="w-full">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -460,37 +427,39 @@ const AdminLiveMap = () => {
                     />
                   </div>
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                    <SelectItem value="preparing">Preparing</SelectItem>
-                    <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={boroughFilter} onValueChange={setBoroughFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by borough" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Boroughs</SelectItem>
-                    <SelectItem value="Manhattan">Manhattan</SelectItem>
-                    <SelectItem value="Brooklyn">Brooklyn</SelectItem>
-                    <SelectItem value="Queens">Queens</SelectItem>
-                    <SelectItem value="Bronx">Bronx</SelectItem>
-                    <SelectItem value="Staten Island">Staten Island</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full sm:flex-1">
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="confirmed">Confirmed</SelectItem>
+                      <SelectItem value="preparing">Preparing</SelectItem>
+                      <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={boroughFilter} onValueChange={setBoroughFilter}>
+                    <SelectTrigger className="w-full sm:flex-1">
+                      <SelectValue placeholder="Filter by borough" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      <SelectItem value="all">All Boroughs</SelectItem>
+                      <SelectItem value="Manhattan">Manhattan</SelectItem>
+                      <SelectItem value="Brooklyn">Brooklyn</SelectItem>
+                      <SelectItem value="Queens">Queens</SelectItem>
+                      <SelectItem value="Bronx">Bronx</SelectItem>
+                      <SelectItem value="Staten Island">Staten Island</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Map */}
-          <div className="flex-1 rounded-lg overflow-hidden border shadow-lg">
+          <div className="h-[400px] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border shadow-lg">
             <OrderMap
               orders={mapOrders}
               selectedOrderId={selectedDelivery?.order?.id}
@@ -503,8 +472,8 @@ const AdminLiveMap = () => {
         </div>
 
         {/* Right Panel - Orders & Activity */}
-        <div className="w-[400px] flex flex-col gap-4">
-          <Tabs defaultValue="orders" className="flex-1 flex flex-col">
+        <div className="w-full lg:w-[400px] flex flex-col gap-4">
+          <Tabs defaultValue="orders">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="orders">
                 Orders ({filteredDeliveries.length})
@@ -514,13 +483,13 @@ const AdminLiveMap = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="orders" className="flex-1 mt-4">
-              <Card className="h-full flex flex-col">
+            <TabsContent value="orders" className="mt-4">
+              <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg">Active Orders</CardTitle>
                 </CardHeader>
-                <CardContent className="flex-1 p-0">
-                  <ScrollArea className="h-full">
+                <CardContent className="p-0">
+                  <ScrollArea className="h-[500px] md:h-[600px]">
                     <div className="space-y-2 p-4">
                       {filteredDeliveries.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">
@@ -596,13 +565,13 @@ const AdminLiveMap = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="activity" className="flex-1 mt-4">
-              <Card className="h-full flex flex-col">
+            <TabsContent value="activity" className="mt-4">
+              <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg">Live Activity Feed</CardTitle>
                 </CardHeader>
-                <CardContent className="flex-1 p-0">
-                  <ScrollArea className="h-full">
+                <CardContent className="p-0">
+                  <ScrollArea className="h-[500px] md:h-[600px]">
                     <div className="space-y-2 p-4">
                       {activityFeed.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">
