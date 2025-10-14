@@ -53,17 +53,19 @@ export const OrderMap = ({ orders, selectedOrderId, onOrderSelect }: OrderMapPro
   }, []);
 
   useEffect(() => {
-    if (!map.current || !mapLoaded) return;
+    if (!map.current || !mapLoaded || !orders.length) return;
 
     // Clear existing markers
     const markers = document.querySelectorAll('.mapboxgl-marker');
     markers.forEach(marker => marker.remove());
 
     const bounds = new mapboxgl.LngLatBounds();
+    let hasValidCoordinates = false;
 
     orders.forEach(order => {
       // Add delivery location marker
-      if (order.dropoff_lat && order.dropoff_lng) {
+      if (order.dropoff_lat && order.dropoff_lng && 
+          !isNaN(order.dropoff_lat) && !isNaN(order.dropoff_lng)) {
         const el = document.createElement('div');
         el.className = 'map-marker-delivery';
         el.style.cssText = `
@@ -100,10 +102,12 @@ export const OrderMap = ({ orders, selectedOrderId, onOrderSelect }: OrderMapPro
         el.addEventListener('click', () => onOrderSelect?.(order.id));
         
         bounds.extend([order.dropoff_lng, order.dropoff_lat]);
+        hasValidCoordinates = true;
       }
 
       // Add courier location marker
-      if (order.courier?.current_lat && order.courier?.current_lng) {
+      if (order.courier?.current_lat && order.courier?.current_lng &&
+          !isNaN(order.courier.current_lat) && !isNaN(order.courier.current_lng)) {
         const courierEl = document.createElement('div');
         courierEl.className = 'map-marker-courier';
         courierEl.style.cssText = `
@@ -135,14 +139,21 @@ export const OrderMap = ({ orders, selectedOrderId, onOrderSelect }: OrderMapPro
           .addTo(map.current!);
 
         bounds.extend([order.courier.current_lng, order.courier.current_lat]);
+        hasValidCoordinates = true;
       }
     });
 
-    // Fit map to show all markers
-    if (!bounds.isEmpty()) {
+    // Fit map to show all markers, or default to NYC
+    if (hasValidCoordinates && !bounds.isEmpty()) {
       map.current.fitBounds(bounds, {
         padding: 50,
         maxZoom: 14
+      });
+    } else {
+      // Default to NYC view if no valid coordinates
+      map.current.flyTo({
+        center: [-73.935242, 40.730610],
+        zoom: 11
       });
     }
   }, [orders, mapLoaded, selectedOrderId, onOrderSelect]);
