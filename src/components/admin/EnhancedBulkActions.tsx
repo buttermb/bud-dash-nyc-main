@@ -27,7 +27,8 @@ interface EnhancedBulkActionsProps {
   selectedCount: number;
   selectedProducts: string[];
   products: any[];
-  onBulkUpdate: (updates: any) => void;
+  onBulkUpdate: (updates: any) => Promise<void>;
+  onIndividualUpdate: (id: string, updates: any) => Promise<void>;
   onBulkDelete: () => void;
   onClearSelection: () => void;
 }
@@ -37,6 +38,7 @@ export function EnhancedBulkActions({
   selectedProducts,
   products,
   onBulkUpdate,
+  onIndividualUpdate,
   onBulkDelete,
   onClearSelection,
 }: EnhancedBulkActionsProps) {
@@ -45,24 +47,31 @@ export function EnhancedBulkActions({
   const [bulkStock, setBulkStock] = useState("");
   const [priceAdjustment, setPriceAdjustment] = useState<"increase" | "decrease">("increase");
   const [adjustmentPercent, setAdjustmentPercent] = useState("");
+  const [priceDialogOpen, setPriceDialogOpen] = useState(false);
+  const [stockDialogOpen, setStockDialogOpen] = useState(false);
 
   const selectedProductsData = products.filter((p) =>
     selectedProducts.includes(p.id)
   );
 
-  const handleBulkPriceAdjustment = () => {
+  const handleBulkPriceAdjustment = async () => {
     const percent = parseFloat(adjustmentPercent);
     if (isNaN(percent)) return;
 
     const multiplier = priceAdjustment === "increase" ? 1 + percent / 100 : 1 - percent / 100;
     
-    selectedProducts.forEach((id) => {
+    // Update each product individually with their calculated price
+    for (const id of selectedProducts) {
       const product = products.find((p) => p.id === id);
       if (product) {
         const newPrice = Math.max(0.01, product.price * multiplier);
-        onBulkUpdate({ id, updates: { price: parseFloat(newPrice.toFixed(2)) } });
+        await onIndividualUpdate(id, { price: parseFloat(newPrice.toFixed(2)) });
       }
-    });
+    }
+    
+    // Close dialog and reset
+    setPriceDialogOpen(false);
+    setAdjustmentPercent("");
   };
 
   const totalValue = selectedProductsData.reduce(
@@ -88,7 +97,7 @@ export function EnhancedBulkActions({
           <Button
             size="sm"
             variant="secondary"
-            onClick={() => onBulkUpdate({ in_stock: true })}
+            onClick={async () => await onBulkUpdate({ in_stock: true })}
           >
             <Eye className="mr-2 h-4 w-4" />
             Show All
@@ -96,14 +105,14 @@ export function EnhancedBulkActions({
           <Button
             size="sm"
             variant="secondary"
-            onClick={() => onBulkUpdate({ in_stock: false })}
+            onClick={async () => await onBulkUpdate({ in_stock: false })}
           >
             <EyeOff className="mr-2 h-4 w-4" />
             Hide All
           </Button>
 
           {/* Bulk Price Adjustment */}
-          <Dialog>
+          <Dialog open={priceDialogOpen} onOpenChange={setPriceDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm" variant="secondary">
                 <DollarSign className="mr-2 h-4 w-4" />
@@ -177,7 +186,7 @@ export function EnhancedBulkActions({
           </Dialog>
 
           {/* Set Stock */}
-          <Dialog>
+          <Dialog open={stockDialogOpen} onOpenChange={setStockDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm" variant="secondary">
                 <Package className="mr-2 h-4 w-4" />
@@ -202,11 +211,12 @@ export function EnhancedBulkActions({
                   />
                 </div>
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
                     const stock = parseInt(bulkStock);
                     if (!isNaN(stock) && stock >= 0) {
-                      onBulkUpdate({ stock_quantity: stock, in_stock: stock > 0 });
+                      await onBulkUpdate({ stock_quantity: stock, in_stock: stock > 0 });
                       setBulkStock("");
+                      setStockDialogOpen(false);
                     }
                   }}
                   className="w-full"

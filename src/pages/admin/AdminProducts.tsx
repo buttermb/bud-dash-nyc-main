@@ -244,6 +244,8 @@ export default function AdminProducts() {
         return (a.price || 0) - (b.price || 0);
       case "price-desc":
         return (b.price || 0) - (a.price || 0);
+      case "stock-asc":
+        return (a.stock_quantity || 0) - (b.stock_quantity || 0);
       case "recent":
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       default:
@@ -330,6 +332,7 @@ export default function AdminProducts() {
             <SelectItem value="name-desc">Name (Z-A)</SelectItem>
             <SelectItem value="price-asc">Price (Low to High)</SelectItem>
             <SelectItem value="price-desc">Price (High to Low)</SelectItem>
+            <SelectItem value="stock-asc">Stock (Low to High)</SelectItem>
           </SelectContent>
         </Select>
 
@@ -369,7 +372,12 @@ export default function AdminProducts() {
           selectedCount={selectedProducts.length}
           selectedProducts={selectedProducts}
           products={products || []}
-          onBulkUpdate={(updates) => bulkUpdateProducts.mutate(updates)}
+          onBulkUpdate={async (updates) => {
+            await bulkUpdateProducts.mutateAsync(updates);
+          }}
+          onIndividualUpdate={async (id, updates) => {
+            await updateProduct.mutateAsync({ id, updates });
+          }}
           onBulkDelete={() => bulkDeleteProducts.mutate()}
           onClearSelection={() => setSelectedProducts([])}
         />

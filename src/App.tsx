@@ -209,7 +209,8 @@ const App = () => (
                         <Route path="delivery-safety" element={<AdminDeliverySafety />} />
                         <Route path="products" element={<AdminProducts />} />
                         <Route path="products/new" element={<ProductForm />} />
-                        <Route path="products/edit/:id" element={<ProductForm />} />
+                        <Route path="products/:id/edit" element={<ProductForm />} />
+                        <Route path="products/:id/duplicate" element={<ProductForm />} />
                         <Route path="products/analytics" element={<ProductAnalytics />} />
                         <Route path="inventory" element={<InventoryManagement />} />
                         <Route path="media" element={<MediaLibrary />} />
