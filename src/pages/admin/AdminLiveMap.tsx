@@ -481,9 +481,9 @@ const AdminLiveMap = () => {
       </div>
 
       {/* Main Content */}
-      <div className={isFullscreen ? "flex-1 flex flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-6 min-h-0 overflow-auto" : "flex flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-6"}>
+      <div className={isFullscreen ? "flex-1 flex flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-6 min-h-0 overflow-x-auto" : "flex flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-6"}>
         {/* Left Panel - Map & Controls */}
-        <div className={isFullscreen ? "w-full lg:flex-1 flex flex-col gap-4 min-h-0" : "w-full lg:flex-1 flex flex-col gap-4"}>
+        <div className={isFullscreen ? "w-full lg:flex-[2] flex flex-col gap-4 min-h-0 flex-shrink-0" : "w-full lg:flex-1 flex flex-col gap-4"}>
           {/* Filters */}
           <Card className="flex-shrink-0">
             <CardContent className="p-4">
@@ -592,7 +592,7 @@ const AdminLiveMap = () => {
           </Card>
 
           {/* Map */}
-          <div className={isFullscreen ? "flex-1 min-h-0 rounded-lg overflow-hidden border shadow-lg" : "h-[400px] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border shadow-lg"}>
+          <div className={isFullscreen ? "flex-1 min-h-[600px] rounded-lg overflow-hidden border shadow-lg" : "h-[400px] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border shadow-lg"}>
             {loading ? (
               <div className="h-full flex items-center justify-center bg-muted/30">
                 <div className="text-center">
@@ -618,7 +618,7 @@ const AdminLiveMap = () => {
         </div>
 
         {/* Right Panel - Orders & Activity */}
-        <div className="w-full lg:w-[400px] flex flex-col gap-4 flex-shrink-0">
+        <div className={isFullscreen ? "w-full lg:w-[400px] flex flex-col gap-4 flex-shrink-0 min-w-[400px]" : "w-full lg:w-[400px] flex flex-col gap-4 flex-shrink-0"}>
           <Tabs defaultValue="orders">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="orders">
