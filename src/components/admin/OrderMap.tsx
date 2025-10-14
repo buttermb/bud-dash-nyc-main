@@ -27,11 +27,20 @@ interface OrderMapProps {
       vehicle_type?: string;
     };
   }>;
+  activeCouriers?: Array<{
+    id: string;
+    full_name: string;
+    current_lat?: number;
+    current_lng?: number;
+    vehicle_type?: string;
+    rating?: number;
+    is_online: boolean;
+  }>;
   selectedOrderId?: string;
   onOrderSelect?: (orderId: string) => void;
 }
 
-export const OrderMap = ({ orders, selectedOrderId, onOrderSelect }: OrderMapProps) => {
+export const OrderMap = ({ orders, activeCouriers = [], selectedOrderId, onOrderSelect }: OrderMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
@@ -140,7 +149,7 @@ export const OrderMap = ({ orders, selectedOrderId, onOrderSelect }: OrderMapPro
   }, [mapLoaded]);
 
   useEffect(() => {
-    if (!map.current || !mapLoaded || !orders.length) return;
+    if (!map.current || !mapLoaded) return;
 
     // Clear existing markers
     Object.values(markersRef.current).forEach(marker => marker.remove());
@@ -316,6 +325,76 @@ export const OrderMap = ({ orders, selectedOrderId, onOrderSelect }: OrderMapPro
       }
     });
 
+    // Add all active couriers that aren't assigned to orders
+    if (showCouriers && activeCouriers && activeCouriers.length > 0) {
+      activeCouriers.forEach(courier => {
+        // Skip if courier already has a marker (is assigned to an order)
+        if (markersRef.current[`courier-${courier.id}`]) return;
+        
+        if (courier.current_lat && courier.current_lng &&
+            !isNaN(courier.current_lat) && !isNaN(courier.current_lng)) {
+          
+          const courierEl = document.createElement('div');
+          courierEl.innerHTML = `
+            <div style="
+              width: 45px;
+              height: 45px;
+              background: linear-gradient(135deg, #10b981, #059669);
+              border: 3px solid white;
+              border-radius: 50%;
+              cursor: pointer;
+              box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 22px;
+              animation: float 3s ease-in-out infinite;
+              position: relative;
+            ">
+              🚗
+              <div style="
+                position: absolute;
+                top: -2px;
+                right: -2px;
+                width: 10px;
+                height: 10px;
+                background: #10b981;
+                border: 2px solid white;
+                border-radius: 50%;
+                animation: pulse 2s infinite;
+              "></div>
+            </div>
+          `;
+
+          const courierPopup = `
+            <div style="padding: 12px;">
+              <div style="font-weight: bold; font-size: 16px; margin-bottom: 8px; color: #10b981;">
+                🚗 ${courier.full_name}
+              </div>
+              <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
+                Status: <span style="color: #10b981; font-weight: 600;">AVAILABLE</span>
+              </div>
+              <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
+                Vehicle: ${courier.vehicle_type || 'N/A'}
+              </div>
+              <div style="font-size: 12px; color: #666;">
+                Rating: ⭐ ${courier.rating?.toFixed(1) || '5.0'}
+              </div>
+            </div>
+          `;
+
+          const courierMarker = new mapboxgl.Marker(courierEl)
+            .setLngLat([courier.current_lng, courier.current_lat])
+            .setPopup(new mapboxgl.Popup({ offset: 28 }).setHTML(courierPopup))
+            .addTo(map.current!);
+
+          markersRef.current[`courier-${courier.id}`] = courierMarker;
+          bounds.extend([courier.current_lng, courier.current_lat]);
+          hasValidCoordinates = true;
+        }
+      });
+    }
+
     // Add route lines
     if (showRoutes && routeFeatures.length > 0) {
       map.current.addSource('routes', {
@@ -387,7 +466,7 @@ export const OrderMap = ({ orders, selectedOrderId, onOrderSelect }: OrderMapPro
         duration: 1000
       });
     }
-  }, [orders, mapLoaded, selectedOrderId, onOrderSelect, showRoutes, showHeatmap, showCouriers]);
+  }, [orders, mapLoaded, selectedOrderId, onOrderSelect, showRoutes, showHeatmap, showCouriers, activeCouriers]);
 
   if (!MAPBOX_TOKEN) {
     return (

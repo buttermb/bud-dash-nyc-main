@@ -56,6 +56,7 @@ const AdminLiveMap = () => {
   const [activityFeed, setActivityFeed] = useState<ActivityItem[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const [activeCouriers, setActiveCouriers] = useState<any[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -74,6 +75,25 @@ const AdminLiveMap = () => {
       severity
     };
     setActivityFeed(prev => [newActivity, ...prev.slice(0, 49)]);
+  };
+
+  const fetchActiveCouriers = async () => {
+    try {
+      const { data: couriersData, error: couriersError } = await supabase
+        .from('couriers')
+        .select('*')
+        .eq('is_online', true)
+        .eq('is_active', true);
+
+      if (couriersError) {
+        console.error('Error fetching active couriers:', couriersError);
+        return;
+      }
+
+      setActiveCouriers(couriersData || []);
+    } catch (error) {
+      console.error('Error fetching active couriers:', error);
+    }
   };
 
   const fetchLiveDeliveries = async () => {
@@ -140,6 +160,9 @@ const AdminLiveMap = () => {
         playNotificationSound();
         addActivity('order', `New order received! Total active: ${deliveriesData.length}`, 'success');
       }
+
+      // Fetch active couriers
+      await fetchActiveCouriers();
     } catch (error) {
       console.error('Error fetching deliveries:', error);
       addActivity('alert', 'Failed to fetch deliveries', 'error');
@@ -580,6 +603,7 @@ const AdminLiveMap = () => {
             ) : (
               <OrderMap
                 orders={mapOrders}
+                activeCouriers={activeCouriers}
                 selectedOrderId={selectedDelivery?.order?.id || selectedDelivery?.id}
                 onOrderSelect={(orderId) => {
                   const delivery = filteredDeliveries.find(d => {
