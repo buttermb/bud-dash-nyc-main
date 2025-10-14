@@ -3,6 +3,8 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -145,6 +147,30 @@ export const OrderMap = ({ orders, selectedOrderId, onOrderSelect }: OrderMapPro
     }
   }, [orders, mapLoaded, selectedOrderId, onOrderSelect]);
 
+  if (!MAPBOX_TOKEN) {
+    return (
+      <Card className="overflow-hidden">
+        <div className="p-6">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Mapbox token not configured. Please add VITE_MAPBOX_TOKEN to your environment variables.
+              <br />
+              <a 
+                href="https://mapbox.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="underline hover:text-destructive-foreground mt-2 inline-block"
+              >
+                Get your Mapbox token here →
+              </a>
+            </AlertDescription>
+          </Alert>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="overflow-hidden">
       <div className="p-4 border-b bg-muted/50">
@@ -153,7 +179,7 @@ export const OrderMap = ({ orders, selectedOrderId, onOrderSelect }: OrderMapPro
           <div className="flex gap-2">
             <Badge variant="outline" className="bg-blue-500/10">
               <span className="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
-              Deliveries
+              Deliveries ({orders.length})
             </Badge>
             <Badge variant="outline" className="bg-purple-500/10">
               <span className="w-2 h-2 rounded-full bg-purple-500 mr-2"></span>

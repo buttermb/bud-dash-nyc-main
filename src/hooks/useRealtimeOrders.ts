@@ -21,13 +21,13 @@ interface Order {
 interface UseRealtimeOrdersOptions {
   statusFilter?: string[];
   autoRefetch?: boolean;
-  onUpdate?: (order: Order) => void;
 }
 
 export const useRealtimeOrders = (options: UseRealtimeOrdersOptions = {}) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
+  const { statusFilter } = options;
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -48,8 +48,8 @@ export const useRealtimeOrders = (options: UseRealtimeOrdersOptions = {}) => {
         .order('created_at', { ascending: false })
         .limit(100);
 
-      if (options.statusFilter && options.statusFilter.length > 0) {
-        query = query.in('status', options.statusFilter);
+      if (statusFilter && statusFilter.length > 0) {
+        query = query.in('status', statusFilter);
       }
 
       const { data, error } = await query;
@@ -61,7 +61,7 @@ export const useRealtimeOrders = (options: UseRealtimeOrdersOptions = {}) => {
     } finally {
       setLoading(false);
     }
-  }, [options.statusFilter]);
+  }, [statusFilter?.join(',')]);
 
   useEffect(() => {
     fetchOrders();
@@ -78,20 +78,12 @@ export const useRealtimeOrders = (options: UseRealtimeOrdersOptions = {}) => {
         },
         (payload) => {
           const newOrder = payload.new as Order;
-          const oldOrder = payload.old as Order;
 
-          if (payload.eventType === 'INSERT') {
-            if (!options.statusFilter || options.statusFilter.includes(newOrder.status)) {
-              fetchOrders();
-            }
-          } else if (payload.eventType === 'UPDATE') {
-            setOrders(prev => 
-              prev.map(order => 
-                order.id === newOrder.id ? { ...order, ...newOrder } : order
-              )
-            );
-            options.onUpdate?.(newOrder);
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            // Refetch to get complete data with joins
+            fetchOrders();
           } else if (payload.eventType === 'DELETE') {
+            const oldOrder = payload.old as Order;
             setOrders(prev => prev.filter(order => order.id !== oldOrder.id));
           }
         }
@@ -105,7 +97,7 @@ export const useRealtimeOrders = (options: UseRealtimeOrdersOptions = {}) => {
         supabase.removeChannel(newChannel);
       }
     };
-  }, [fetchOrders, options.onUpdate]);
+  }, [statusFilter?.join(',')]); // Only re-run if filter changes
 
   return {
     orders,

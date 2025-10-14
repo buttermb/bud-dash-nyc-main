@@ -67,16 +67,7 @@ export default function AdminOrders() {
   const [showMap, setShowMap] = useState(true);
 
   const { orders, loading, refetch } = useRealtimeOrders({
-    statusFilter: statusFilter === 'all' ? undefined : [statusFilter],
-    onUpdate: (order) => {
-      // Show toast for status changes
-      if (selectedOrder?.id === order.id) {
-        toast({
-          title: 'Order Updated',
-          description: `Status changed to ${order.status.replace('_', ' ')}`
-        });
-      }
-    }
+    statusFilter: statusFilter === 'all' ? undefined : [statusFilter]
   });
 
   const { eta } = useETATracking(selectedOrder?.id || null);
