@@ -85,8 +85,7 @@ const AdminLiveMap = () => {
             product_id,
             product_name,
             quantity,
-            price,
-            selected_weight
+            price
           ),
           couriers (
             id,
@@ -101,7 +100,12 @@ const AdminLiveMap = () => {
         .in('status', ['confirmed', 'preparing', 'out_for_delivery'])
         .order('created_at', { ascending: false });
 
-      if (ordersError) throw ordersError;
+      if (ordersError) {
+        console.error('Error fetching orders:', ordersError);
+        throw ordersError;
+      }
+      
+      console.log('Fetched orders:', ordersData);
       
       // Transform to match expected format with all fields
       const deliveriesData = ordersData?.map(order => ({
@@ -123,6 +127,8 @@ const AdminLiveMap = () => {
         dropoff_lat: order.dropoff_lat,
         dropoff_lng: order.dropoff_lng
       })) || [];
+      
+      console.log('Transformed deliveries:', deliveriesData);
       
       const previousCount = deliveries.length;
       setDeliveries(deliveriesData);
@@ -655,15 +661,10 @@ const AdminLiveMap = () => {
                                           <div key={idx} className="text-sm flex justify-between items-start gap-2 py-1">
                                             <div className="flex-1">
                                               <p className="font-medium">{item.product_name || 'Product'}</p>
-                                              {item.selected_weight && (
-                                                <p className="text-xs text-muted-foreground">
-                                                  {item.selected_weight}
-                                                </p>
-                                              )}
                                             </div>
                                             <div className="text-right">
                                               <p className="text-muted-foreground">x{item.quantity}</p>
-                                              <p className="font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
+                                              <p className="font-semibold">${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</p>
                                             </div>
                                           </div>
                                         ))}
