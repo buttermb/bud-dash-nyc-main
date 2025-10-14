@@ -21,7 +21,8 @@ import {
   Ticket,
   Bell,
   Search,
-  Bug
+  Bug,
+  MessageCircle
 } from "lucide-react";
 import {
   Sidebar,
@@ -74,6 +75,7 @@ const menuGroups = [
   {
     title: "Users & Security",
     items: [
+      { title: "Live Chat Support", url: "/admin/live-chat", icon: MessageCircle },
       { title: "Users", url: "/admin/users", icon: Users },
       { title: "Age Verification", url: "/admin/age-verification", icon: CheckCircle },
       { title: "Compliance", url: "/admin/compliance", icon: Shield },
