@@ -481,9 +481,9 @@ const AdminLiveMap = () => {
       </div>
 
       {/* Main Content */}
-      <div className={isFullscreen ? "flex-1 flex flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-6 min-h-0 overflow-hidden" : "flex flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-6"}>
+      <div className={isFullscreen ? "flex-1 flex flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-6 min-h-0 overflow-auto" : "flex flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-6"}>
         {/* Left Panel - Map & Controls */}
-        <div className={isFullscreen ? "w-full lg:flex-1 flex flex-col gap-4 min-h-0 overflow-y-auto pr-2" : "w-full lg:flex-1 flex flex-col gap-4"}>
+        <div className="w-full lg:flex-1 flex flex-col gap-4">
           {/* Filters */}
           <Card>
             <CardContent className="p-4">
@@ -618,8 +618,8 @@ const AdminLiveMap = () => {
         </div>
 
         {/* Right Panel - Orders & Activity */}
-        <div className={isFullscreen ? "w-full lg:w-[400px] flex flex-col min-h-0 overflow-y-auto" : "w-full lg:w-[400px] flex flex-col gap-4"}>
-          <Tabs defaultValue="orders" className="flex-shrink-0">
+        <div className="w-full lg:w-[400px] flex flex-col gap-4 flex-shrink-0">
+          <Tabs defaultValue="orders">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="orders">
                 Orders ({filteredDeliveries.length})
