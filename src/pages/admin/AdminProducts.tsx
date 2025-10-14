@@ -3,12 +3,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Filter, ArrowUpDown } from "lucide-react";
+import { Plus, Search, Filter, ArrowUpDown, Grid, List } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ProductCard } from "@/components/admin/ProductCard";
-import { ProductFilters } from "@/components/admin/ProductFilters";
+import { InlineProductEdit } from "@/components/admin/InlineProductEdit";
 import { BulkActions } from "@/components/admin/BulkActions";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -25,6 +26,7 @@ export default function AdminProducts() {
   const [stockFilter, setStockFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortOption>("recent");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -81,6 +83,28 @@ export default function AdminProducts() {
     onError: (error: any) => {
       toast({
         title: "Failed to update status",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const updateProduct = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
+      const { error } = await supabase
+        .from("products")
+        .update(updates)
+        .eq("id", id);
+      
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ["admin-products"] });
+      toast({ title: "✓ Product updated" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update product",
         description: error.message,
         variant: "destructive"
       });
@@ -219,6 +243,17 @@ export default function AdminProducts() {
             <SelectItem value="price-desc">Price (High to Low)</SelectItem>
           </SelectContent>
         </Select>
+
+        <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v)}>
+          <TabsList>
+            <TabsTrigger value="list">
+              <List className="h-4 w-4" />
+            </TabsTrigger>
+            <TabsTrigger value="grid">
+              <Grid className="h-4 w-4" />
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* Bulk Actions */}
@@ -230,9 +265,9 @@ export default function AdminProducts() {
         />
       )}
 
-      {/* Products Grid */}
+      {/* Products Display */}
       {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className={viewMode === "grid" ? "grid gap-4 md:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
           {[...Array(6)].map((_, i) => (
             <div key={i} className="h-64 animate-pulse rounded-lg bg-muted" />
           ))}
@@ -246,35 +281,57 @@ export default function AdminProducts() {
                   type="checkbox"
                   checked={selectedProducts.length === filteredProducts.length}
                   onChange={selectAll}
-                  className="h-4 w-4"
+                  className="h-4 w-4 rounded"
                 />
                 <span className="text-sm text-muted-foreground">
                   Select All ({filteredProducts.length})
                 </span>
               </div>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    isSelected={selectedProducts.includes(product.id)}
-                    onToggleSelect={() => toggleProductSelection(product.id)}
-                    onToggleStatus={() =>
-                      toggleProductStatus.mutate({
-                        id: product.id,
-                        in_stock: product.in_stock,
-                      })
-                    }
-                    onDelete={() => {
-                      if (confirm("Are you sure you want to delete this product?")) {
-                        deleteProduct.mutate(product.id);
+
+              {viewMode === "list" ? (
+                <div className="space-y-3">
+                  {filteredProducts.map((product) => (
+                    <InlineProductEdit
+                      key={product.id}
+                      product={product}
+                      isSelected={selectedProducts.includes(product.id)}
+                      onToggleSelect={() => toggleProductSelection(product.id)}
+                      onUpdate={(id, updates) => updateProduct.mutate({ id, updates })}
+                      onDelete={(id) => {
+                        if (confirm("Are you sure you want to delete this product?")) {
+                          deleteProduct.mutate(id);
+                        }
+                      }}
+                      onEdit={(id) => navigate(`/admin/products/${id}/edit`)}
+                      onDuplicate={(id) => navigate(`/admin/products/${id}/duplicate`)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      isSelected={selectedProducts.includes(product.id)}
+                      onToggleSelect={() => toggleProductSelection(product.id)}
+                      onToggleStatus={() =>
+                        toggleProductStatus.mutate({
+                          id: product.id,
+                          in_stock: product.in_stock,
+                        })
                       }
-                    }}
-                    onEdit={() => navigate(`/admin/products/${product.id}/edit`)}
-                    onDuplicate={() => navigate(`/admin/products/${product.id}/duplicate`)}
-                  />
-                ))}
-              </div>
+                      onDelete={() => {
+                        if (confirm("Are you sure you want to delete this product?")) {
+                          deleteProduct.mutate(product.id);
+                        }
+                      }}
+                      onEdit={() => navigate(`/admin/products/${product.id}/edit`)}
+                      onDuplicate={() => navigate(`/admin/products/${product.id}/duplicate`)}
+                    />
+                  ))}
+                </div>
+              )}
             </>
           ) : (
             <div className="py-12 text-center">

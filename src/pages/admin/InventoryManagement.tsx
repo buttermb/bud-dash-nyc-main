@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Package, TrendingDown, RefreshCcw } from "lucide-react";
+import { AlertTriangle, Package, TrendingDown, RefreshCcw, Plus, Minus, Edit, ChevronDown, Search, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +21,10 @@ export default function InventoryManagement() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [adjustAmount, setAdjustAmount] = useState(0);
   const [adjustReason, setAdjustReason] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [stockFilter, setStockFilter] = useState("all");
+  const [quickAdjustMode, setQuickAdjustMode] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -93,9 +99,64 @@ export default function InventoryManagement() {
     }
   });
 
-  const lowStockProducts = products?.filter((p) => (p.stock_quantity || 0) < 10) || [];
+  // Filter products
+  const filteredProducts = products?.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === "all" || p.category === categoryFilter;
+    const matchesStock = stockFilter === "all" ||
+      (stockFilter === "low" && (p.stock_quantity || 0) < 10 && (p.stock_quantity || 0) > 0) ||
+      (stockFilter === "out" && (p.stock_quantity || 0) === 0) ||
+      (stockFilter === "in" && (p.stock_quantity || 0) >= 10);
+    return matchesSearch && matchesCategory && matchesStock;
+  }) || [];
+
+  const lowStockProducts = products?.filter((p) => (p.stock_quantity || 0) < 10 && (p.stock_quantity || 0) > 0) || [];
   const outOfStockProducts = products?.filter((p) => !p.in_stock || (p.stock_quantity || 0) === 0) || [];
   const totalInventoryValue = products?.reduce((sum, p) => sum + (p.price || 0) * (p.stock_quantity || 0), 0) || 0;
+
+  const quickAdjust = useMutation({
+    mutationFn: async ({ productId, amount }: { productId: string; amount: number }) => {
+      const product = products?.find(p => p.id === productId);
+      if (!product) return;
+      
+      const newStock = Math.max(0, (product.stock_quantity || 0) + amount);
+      const { error } = await supabase
+        .from("products")
+        .update({ 
+          stock_quantity: newStock,
+          in_stock: newStock > 0 
+        })
+        .eq("id", productId);
+
+      if (error) throw error;
+      return { productId, newStock };
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ["admin-products"] });
+      toast({ title: "✓ Stock updated" });
+    },
+  });
+
+  const exportInventory = () => {
+    const csv = [
+      ["Product Name", "Category", "Stock", "Value", "Status"].join(","),
+      ...(products || []).map(p => [
+        `"${p.name}"`,
+        p.category,
+        p.stock_quantity || 0,
+        ((p.stock_quantity || 0) * (p.price || 0)).toFixed(2),
+        (p.stock_quantity || 0) > 0 ? "In Stock" : "Out of Stock"
+      ].join(","))
+    ].join("\n");
+    
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `inventory-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    toast({ title: "✓ Inventory exported" });
+  };
 
   return (
     <div className="space-y-6">
@@ -104,14 +165,24 @@ export default function InventoryManagement() {
           <h1 className="text-3xl font-bold">Inventory Management</h1>
           <p className="text-muted-foreground">Track and manage product stock levels</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => queryClient.refetchQueries({ queryKey: ["admin-products"] })}
-        >
-          <RefreshCcw className="mr-2 h-4 w-4" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportInventory}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => queryClient.refetchQueries({ queryKey: ["admin-products"] })}
+          >
+            <RefreshCcw className="mr-2 h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Overview Cards */}
@@ -159,82 +230,154 @@ export default function InventoryManagement() {
         </Card>
       </div>
 
+      {/* Search and Filters */}
+      <div className="flex flex-col gap-4 lg:flex-row">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-full lg:w-[200px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="flower">Flower</SelectItem>
+            <SelectItem value="pre-rolls">Pre-Rolls</SelectItem>
+            <SelectItem value="edibles">Edibles</SelectItem>
+            <SelectItem value="vapes">Vapes</SelectItem>
+            <SelectItem value="concentrates">Concentrates</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={stockFilter} onValueChange={setStockFilter}>
+          <SelectTrigger className="w-full lg:w-[200px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Stock Levels</SelectItem>
+            <SelectItem value="in">In Stock (10+)</SelectItem>
+            <SelectItem value="low">Low Stock (1-9)</SelectItem>
+            <SelectItem value="out">Out of Stock</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Inventory Value */}
       <Card className="p-6">
         <h2 className="text-xl font-bold mb-2">Total Inventory Value</h2>
         <p className="text-4xl font-bold text-green-600">${totalInventoryValue.toFixed(2)}</p>
-        <p className="text-sm text-muted-foreground mt-1">Based on retail prices</p>
+        <p className="text-sm text-muted-foreground mt-1">Based on retail prices • {products?.length || 0} products</p>
       </Card>
 
-      {/* Low Stock Alerts */}
-      {lowStockProducts.length > 0 && (
-        <Card className="p-6">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-yellow-600" />
-            Low Stock Alerts
-          </h2>
-          <div className="space-y-3">
-            {lowStockProducts.map((product) => (
-              <div key={product.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={product.image_url || "/placeholder.svg"}
-                    alt={product.name}
-                    className="h-12 w-12 rounded object-cover"
-                  />
-                  <div>
-                    <p className="font-semibold">{product.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {product.stock_quantity || 0} units left
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => setSelectedProduct(product)}
-                  variant="outline"
-                  size="sm"
-                >
-                  Adjust Stock
-                </Button>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
+      {/* All Products Table */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold">All Products</h2>
+          <Button
+            variant={quickAdjustMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => setQuickAdjustMode(!quickAdjustMode)}
+          >
+            <Edit className="mr-2 h-4 w-4" />
+            {quickAdjustMode ? "Exit Quick Edit" : "Quick Adjust"}
+          </Button>
+        </div>
 
-      {/* Out of Stock */}
-      {outOfStockProducts.length > 0 && (
-        <Card className="p-6">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <TrendingDown className="h-5 w-5 text-red-600" />
-            Out of Stock Products
-          </h2>
-          <div className="space-y-3">
-            {outOfStockProducts.map((product) => (
-              <div key={product.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+        <div className="space-y-2">
+          {filteredProducts.length === 0 ? (
+            <div className="py-12 text-center text-muted-foreground">
+              No products found matching your filters
+            </div>
+          ) : (
+            filteredProducts.map((product) => (
+              <div 
+                key={product.id} 
+                className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+              >
+                <div className="flex items-center gap-4 flex-1">
                   <img
                     src={product.image_url || "/placeholder.svg"}
                     alt={product.name}
-                    className="h-12 w-12 rounded object-cover grayscale"
+                    className="h-16 w-16 rounded object-cover"
                   />
-                  <div>
+                  <div className="flex-1">
                     <p className="font-semibold">{product.name}</p>
-                    <Badge variant="secondary">Out of Stock</Badge>
+                    <div className="flex items-center gap-3 mt-1">
+                      <Badge variant="outline">{product.category}</Badge>
+                      <span className="text-sm text-muted-foreground">
+                        ${product.price}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-center min-w-[100px]">
+                    <p className={`text-2xl font-bold ${
+                      (product.stock_quantity || 0) === 0 ? "text-red-600" :
+                      (product.stock_quantity || 0) < 10 ? "text-yellow-600" :
+                      "text-green-600"
+                    }`}>
+                      {product.stock_quantity || 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground">units</p>
                   </div>
                 </div>
-                <Button
-                  onClick={() => setSelectedProduct(product)}
-                  variant="outline"
-                  size="sm"
-                >
-                  Restock
-                </Button>
+
+                <div className="flex items-center gap-2">
+                  {quickAdjustMode ? (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => quickAdjust.mutate({ productId: product.id, amount: -10 })}
+                        disabled={quickAdjust.isPending}
+                      >
+                        -10
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => quickAdjust.mutate({ productId: product.id, amount: -1 })}
+                        disabled={quickAdjust.isPending}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => quickAdjust.mutate({ productId: product.id, amount: 1 })}
+                        disabled={quickAdjust.isPending}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => quickAdjust.mutate({ productId: product.id, amount: 10 })}
+                        disabled={quickAdjust.isPending}
+                      >
+                        +10
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      onClick={() => setSelectedProduct(product)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Adjust Stock
+                    </Button>
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
-        </Card>
-      )}
+            ))
+          )}
+        </div>
+      </Card>
 
       {/* Adjust Stock Dialog */}
       <Dialog open={!!selectedProduct} onOpenChange={() => setSelectedProduct(null)}>
