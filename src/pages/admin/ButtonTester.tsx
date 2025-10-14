@@ -69,53 +69,107 @@ const ButtonTester = () => {
     return new Promise((resolve) => {
       const originalFetch = window.fetch;
       const originalXHROpen = XMLHttpRequest.prototype.open;
+      const originalXHRSend = XMLHttpRequest.prototype.send;
       let capturedError: string | null = null;
       let is404 = false;
+      let networkErrors: string[] = [];
 
       // Intercept fetch requests
       window.fetch = async (...args) => {
+        const url = typeof args[0] === 'string' ? args[0] : args[0] instanceof Request ? args[0].url : 'unknown';
+        
         try {
           const response = await originalFetch(...args);
+          
+          // Check for various error status codes
           if (response.status === 404) {
             is404 = true;
-            capturedError = `404 Not Found: ${args[0]}`;
+            networkErrors.push(`404 Not Found: ${url}`);
+          } else if (response.status >= 400 && response.status < 600) {
+            networkErrors.push(`HTTP ${response.status} Error: ${url}`);
+          } else if (!response.ok) {
+            networkErrors.push(`Request failed (${response.status}): ${url}`);
           }
+          
           return response;
         } catch (error) {
-          capturedError = error instanceof Error ? error.message : 'Fetch error';
+          const errorMsg = error instanceof Error ? error.message : 'Network error';
+          networkErrors.push(`Fetch failed for ${url}: ${errorMsg}`);
           throw error;
         }
       };
 
-      // Intercept XHR requests
-      XMLHttpRequest.prototype.open = function(...args) {
-        const url = args[1];
+      // Intercept XHR requests with better error handling
+      const xhrInstances = new WeakMap<XMLHttpRequest, string>();
+      
+      XMLHttpRequest.prototype.open = function(...args: any[]) {
+        const url = args[1] as string;
+        xhrInstances.set(this, url);
+        
+        // Add error handlers
+        this.addEventListener('error', function() {
+          networkErrors.push(`XHR Error: ${url}`);
+        });
+        
+        this.addEventListener('timeout', function() {
+          networkErrors.push(`XHR Timeout: ${url}`);
+        });
+        
         this.addEventListener('load', function() {
           if (this.status === 404) {
             is404 = true;
-            capturedError = `404 Not Found: ${url}`;
+            networkErrors.push(`404 Not Found: ${url}`);
+          } else if (this.status >= 400 && this.status < 600) {
+            networkErrors.push(`HTTP ${this.status} Error: ${url}`);
           }
         });
+        
         return originalXHROpen.apply(this, args);
+      };
+
+      XMLHttpRequest.prototype.send = function(...args: any[]) {
+        try {
+          return originalXHRSend.apply(this, args);
+        } catch (error) {
+          const url = xhrInstances.get(this) || 'unknown';
+          networkErrors.push(`XHR Send failed for ${url}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          throw error;
+        }
       };
 
       // Capture console errors
       const originalConsoleError = console.error;
+      const consoleErrors: string[] = [];
       console.error = (...args) => {
-        capturedError = args.join(' ');
+        const errorMsg = args.map(arg => 
+          typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+        ).join(' ');
+        consoleErrors.push(errorMsg);
         originalConsoleError(...args);
       };
+
+      // Capture unhandled promise rejections
+      const handleRejection = (event: PromiseRejectionEvent) => {
+        networkErrors.push(`Unhandled Promise: ${event.reason}`);
+      };
+      window.addEventListener('unhandledrejection', handleRejection);
 
       try {
         // Simulate click
         button.element.click();
 
-        // Wait a bit for async operations
+        // Wait longer for async operations to complete
         setTimeout(() => {
           // Restore original functions
           window.fetch = originalFetch;
           XMLHttpRequest.prototype.open = originalXHROpen;
+          XMLHttpRequest.prototype.send = originalXHRSend;
           console.error = originalConsoleError;
+          window.removeEventListener('unhandledrejection', handleRejection);
+
+          // Compile all errors
+          const allErrors = [...networkErrors, ...consoleErrors];
+          capturedError = allErrors.length > 0 ? allErrors.join('\n') : null;
 
           let status: ButtonTest['status'] = 'success';
           if (is404) {
@@ -130,12 +184,14 @@ const ButtonTester = () => {
             status,
             errorMessage: capturedError || undefined
           });
-        }, 1000);
+        }, 2000); // Increased timeout to catch slower requests
       } catch (error) {
         // Restore original functions
         window.fetch = originalFetch;
         XMLHttpRequest.prototype.open = originalXHROpen;
+        XMLHttpRequest.prototype.send = originalXHRSend;
         console.error = originalConsoleError;
+        window.removeEventListener('unhandledrejection', handleRejection);
 
         resolve({
           label: button.label,
