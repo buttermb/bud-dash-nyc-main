@@ -19,6 +19,7 @@ export type Database = {
           action_type: string
           created_at: string | null
           description: string | null
+          device_fingerprint: string | null
           id: string
           ip_address: string | null
           metadata: Json | null
@@ -29,6 +30,7 @@ export type Database = {
           action_type: string
           created_at?: string | null
           description?: string | null
+          device_fingerprint?: string | null
           id?: string
           ip_address?: string | null
           metadata?: Json | null
@@ -39,6 +41,7 @@ export type Database = {
           action_type?: string
           created_at?: string | null
           description?: string | null
+          device_fingerprint?: string | null
           id?: string
           ip_address?: string | null
           metadata?: Json | null
@@ -309,6 +312,60 @@ export type Database = {
           id?: string
           ip_address?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      blocked_devices: {
+        Row: {
+          blocked_at: string | null
+          blocked_by: string | null
+          fingerprint: string
+          id: string
+          reason: string | null
+          user_id: string | null
+        }
+        Insert: {
+          blocked_at?: string | null
+          blocked_by?: string | null
+          fingerprint: string
+          id?: string
+          reason?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          blocked_at?: string | null
+          blocked_by?: string | null
+          fingerprint?: string
+          id?: string
+          reason?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      blocked_ips: {
+        Row: {
+          blocked_at: string | null
+          blocked_by: string | null
+          expires_at: string | null
+          id: string
+          ip_address: string
+          reason: string | null
+        }
+        Insert: {
+          blocked_at?: string | null
+          blocked_by?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address: string
+          reason?: string | null
+        }
+        Update: {
+          blocked_at?: string | null
+          blocked_by?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string
+          reason?: string | null
         }
         Relationships: []
       }
@@ -1051,36 +1108,48 @@ export type Database = {
       }
       device_fingerprints: {
         Row: {
+          blocked_at: string | null
+          blocked_by: string | null
+          blocked_reason: string | null
           browser: string | null
           created_at: string | null
           device_type: string | null
           fingerprint: string
           id: string
           ip_address: string | null
+          is_blocked: boolean | null
           last_seen: string | null
           multiple_accounts: boolean | null
           os: string | null
           user_id: string
         }
         Insert: {
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
           browser?: string | null
           created_at?: string | null
           device_type?: string | null
           fingerprint: string
           id?: string
           ip_address?: string | null
+          is_blocked?: boolean | null
           last_seen?: string | null
           multiple_accounts?: boolean | null
           os?: string | null
           user_id: string
         }
         Update: {
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
           browser?: string | null
           created_at?: string | null
           device_type?: string | null
           fingerprint?: string
           id?: string
           ip_address?: string | null
+          is_blocked?: boolean | null
           last_seen?: string | null
           multiple_accounts?: boolean | null
           os?: string | null
@@ -2657,6 +2726,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_ip_addresses: {
+        Row: {
+          blocked_at: string | null
+          blocked_by: string | null
+          blocked_reason: string | null
+          first_seen: string | null
+          id: string
+          ip_address: string
+          is_blocked: boolean | null
+          last_seen: string | null
+          times_used: number | null
+          user_id: string
+        }
+        Insert: {
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
+          first_seen?: string | null
+          id?: string
+          ip_address: string
+          is_blocked?: boolean | null
+          last_seen?: string | null
+          times_used?: number | null
+          user_id: string
+        }
+        Update: {
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
+          first_seen?: string | null
+          id?: string
+          ip_address?: string
+          is_blocked?: boolean | null
+          last_seen?: string | null
+          times_used?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -2845,6 +2953,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      is_device_blocked: {
+        Args: { _fingerprint: string }
+        Returns: boolean
+      }
+      is_ip_blocked: {
+        Args: { _ip_address: string }
+        Returns: boolean
+      }
       log_document_access: {
         Args: { _access_type: string; _verification_id: string }
         Returns: undefined
@@ -2863,6 +2979,10 @@ export type Database = {
           _user_id: string
         }
         Returns: string
+      }
+      track_ip_address: {
+        Args: { _ip_address: string; _user_id: string }
+        Returns: undefined
       }
       update_purchase_limits: {
         Args: {
