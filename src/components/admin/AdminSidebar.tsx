@@ -19,7 +19,8 @@ import {
   Settings,
   Gift,
   Ticket,
-  Bell
+  Bell,
+  Search
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,6 +44,7 @@ const menuGroups = [
     title: "Dashboard",
     items: [
       { title: "Overview", url: "/admin/dashboard", icon: LayoutDashboard },
+      { title: "Global Search", url: "/admin/search", icon: Search },
     ]
   },
   {

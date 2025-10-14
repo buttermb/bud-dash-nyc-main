@@ -87,6 +87,7 @@ const CouponList = lazy(() => import("./pages/admin/CouponList"));
 const CouponForm = lazy(() => import("./pages/admin/CouponForm"));
 const CouponEdit = lazy(() => import("./pages/admin/CouponEdit"));
 const AdminNotifications = lazy(() => import("./pages/admin/AdminNotifications"));
+const GlobalSearch = lazy(() => import("./pages/admin/GlobalSearch"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -224,6 +225,7 @@ const App = () => (
                 <Route path="coupons/create" element={<CouponForm />} />
                 <Route path="coupons/:id/edit" element={<CouponEdit />} />
                 <Route path="notifications" element={<AdminNotifications />} />
+                <Route path="search" element={<GlobalSearch />} />
               </Route>
 
                       <Route path="*" element={<NotFound />} />
