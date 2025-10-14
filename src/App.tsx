@@ -97,10 +97,13 @@ const ButtonTester = lazy(() => import("./pages/admin/ButtonTester"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30000, // Data stays fresh for 30s
-      gcTime: 5 * 60 * 1000, // Cache for 5 minutes
-      refetchOnWindowFocus: false, // Don't refetch on window focus for better UX
-      retry: 1, // Only retry once on failure
+      staleTime: 60 * 1000, // Data stays fresh for 1 minute
+      gcTime: 10 * 60 * 1000, // Garbage collection after 10 minutes
+      refetchOnWindowFocus: false, // Reduce unnecessary API calls on focus
+      refetchOnMount: false, // Don't refetch when component mounts if data exists
+      refetchOnReconnect: true, // Refetch when internet connection is restored
+      retry: 2, // Retry failed requests twice
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
     },
   },
 });

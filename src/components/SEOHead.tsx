@@ -7,6 +7,7 @@ interface SEOHeadProps {
   image?: string;
   type?: string;
   structuredData?: object;
+  schema?: object; // Alias for structuredData
 }
 
 export const SEOHead = ({ 
@@ -14,10 +15,12 @@ export const SEOHead = ({
   description = 'Premium flower delivery across NYC. Fast, discreet delivery to Manhattan, Brooklyn & Queens. Lab-tested products from licensed vendors.',
   image = 'https://lovable.dev/opengraph-image-p98pqg.png',
   type = 'website',
-  structuredData
+  structuredData,
+  schema
 }: SEOHeadProps) => {
   const location = useLocation();
   const url = `https://65e49124-2bb1-4ef2-904b-5dcf255784da.lovableproject.com${location.pathname}`;
+  const finalSchema = schema || structuredData; // Support both prop names
 
   useEffect(() => {
     // Update title
@@ -64,16 +67,16 @@ export const SEOHead = ({
     canonical.href = url;
 
     // Add structured data
-    if (structuredData) {
+    if (finalSchema) {
       let script = document.querySelector('script[type="application/ld+json"]') as HTMLScriptElement;
       if (!script) {
         script = document.createElement('script');
         script.type = 'application/ld+json';
         document.head.appendChild(script);
       }
-      script.textContent = JSON.stringify(structuredData);
+      script.textContent = JSON.stringify(finalSchema);
     }
-  }, [title, description, image, type, url, structuredData]);
+  }, [title, description, image, type, url, finalSchema]);
 
   return null;
 };

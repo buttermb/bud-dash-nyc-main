@@ -1,4 +1,4 @@
-import { useState, memo } from "react";
+import { useState, memo, useCallback, useMemo } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +28,7 @@ interface ProductCardProps {
   stockLevel?: number;
 }
 
-const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) => {
+const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLevel }: ProductCardProps) {
   const { user } = useAuth();
   const { addToRecentlyViewed } = useRecentlyViewed();
   const { addToGuestCart } = useGuestCart();
@@ -63,6 +63,11 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
   };
 
   const badge = getProductBadge();
+
+  const productImages = useMemo(() => [
+    product.image_url,
+    ...(product.additional_images || [])
+  ].filter(Boolean), [product.image_url, product.additional_images]);
 
   const handleAddToCart = async () => {
     if (!product.in_stock) {
@@ -150,11 +155,6 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
     haptics.selection();
     setQuantity(Math.max(1, quantity - 1));
   };
-
-
-  const productImages = product.images && product.images.length > 0 
-    ? product.images 
-    : [product.image_url || "/placeholder.svg"];
 
   return (
     <>
@@ -329,6 +329,8 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
       />
     </>
   );
-};
+});
 
-export default memo(ProductCard);
+ProductCard.displayName = 'ProductCard';
+
+export default ProductCard;

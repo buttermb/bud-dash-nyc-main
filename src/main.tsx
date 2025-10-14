@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { PerformanceMonitor } from "./utils/performance";
 
 // Register service worker for PWA capabilities and caching
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
@@ -21,14 +22,16 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
   });
 }
 
-// Performance monitoring
-if ('PerformanceObserver' in window && import.meta.env.DEV) {
-  const observer = new PerformanceObserver((list) => {
-    for (const entry of list.getEntries()) {
-      console.log(`Performance: ${entry.name}`, entry);
-    }
+// Initialize performance monitoring
+if (import.meta.env.DEV) {
+  PerformanceMonitor.init();
+  
+  // Log performance report after page load
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      console.log(PerformanceMonitor.getReport());
+    }, 3000);
   });
-  observer.observe({ entryTypes: ['paint', 'largest-contentful-paint'] });
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
