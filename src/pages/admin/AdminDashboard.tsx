@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/contexts/AdminContext";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { 
   ShoppingCart, 
   Users, 
@@ -10,7 +13,13 @@ import {
   Truck,
   Store,
   Shield,
-  Clock
+  Clock,
+  Activity,
+  Bell,
+  Zap,
+  Package,
+  DollarSign,
+  CheckCircle
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -28,14 +37,65 @@ interface DashboardMetrics {
 
 const AdminDashboard = () => {
   const { session } = useAdmin();
+  const navigate = useNavigate();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [realtimeActivity, setRealtimeActivity] = useState<any[]>([]);
+  const [systemAlerts, setSystemAlerts] = useState<any[]>([]);
+  const [systemHealth, setSystemHealth] = useState({ status: "healthy", unresolvedFlags: 0, activeUsers: 0, ordersLastHour: 0 });
 
   useEffect(() => {
     if (session) {
       fetchDashboardMetrics();
+      fetchSystemHealth();
+      setupRealtimeSubscription();
     }
   }, [session]);
+
+  const setupRealtimeSubscription = () => {
+    const channel = supabase
+      .channel('admin-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
+        setRealtimeActivity(prev => [{
+          type: 'new_order',
+          message: `New order #${payload.new.order_number}`,
+          timestamp: new Date(),
+          data: payload.new
+        }, ...prev].slice(0, 10));
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'fraud_flags' }, (payload) => {
+        setSystemAlerts(prev => [{
+          type: 'fraud_alert',
+          severity: 'high',
+          message: `Fraud detected: ${payload.new.flag_type}`,
+          timestamp: new Date()
+        }, ...prev].slice(0, 5));
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  };
+
+  const fetchSystemHealth = async () => {
+    try {
+      const now = new Date();
+      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+
+      const [unresolvedFlags, activeOrders] = await Promise.all([
+        supabase.from("fraud_flags").select("id", { count: "exact", head: true }).is("resolved_at", null),
+        supabase.from("orders").select("id", { count: "exact", head: true }).gte("created_at", oneHourAgo.toISOString()),
+      ]);
+
+      setSystemHealth({
+        status: (unresolvedFlags.count || 0) > 10 ? "warning" : "healthy",
+        unresolvedFlags: unresolvedFlags.count || 0,
+        activeUsers: 0,
+        ordersLastHour: activeOrders.count || 0
+      });
+    } catch (error) {
+      console.error("Failed to fetch system health:", error);
+    }
+  };
 
   const fetchDashboardMetrics = async () => {
     try {
@@ -92,11 +152,71 @@ const AdminDashboard = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
-        <p className="text-muted-foreground">
-          Real-time metrics and key performance indicators
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
+          <p className="text-muted-foreground">
+            Real-time metrics and key performance indicators
+          </p>
+        </div>
+        <Badge variant={systemHealth.status === "healthy" ? "default" : "destructive"} className="gap-1">
+          <Activity className="h-3 w-3" />
+          {systemHealth.status === "healthy" ? "System Healthy" : "Attention Required"}
+        </Badge>
+      </div>
+
+      {/* System Health Snapshot */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Orders (Last Hour)</CardTitle>
+            <Zap className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{systemHealth.ordersLastHour}</div>
+            <p className="text-xs text-muted-foreground">Real-time tracking</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Unresolved Flags</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">{systemHealth.unresolvedFlags}</div>
+            <Button
+              variant="link"
+              size="sm"
+              className="p-0 h-auto text-xs"
+              onClick={() => navigate("/admin/users")}
+            >
+              Review now →
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">System Alerts</CardTitle>
+            <Bell className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{systemAlerts.length}</div>
+            <p className="text-xs text-muted-foreground">Active notifications</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Revenue Today</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${(metrics?.todayRevenue || 0).toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">From {metrics?.todayOrders || 0} orders</p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -150,34 +270,97 @@ const AdminDashboard = () => {
         />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
+      {/* Real-time Activity & Alerts */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Real-time Activity
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              View detailed analytics in the Analytics section
-            </p>
+            <div className="space-y-3">
+              {realtimeActivity.length > 0 ? (
+                realtimeActivity.map((activity, idx) => (
+                  <div key={idx} className="flex items-center justify-between border-b pb-2 last:border-0">
+                    <div>
+                      <p className="text-sm font-medium">{activity.message}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(activity.timestamp).toLocaleTimeString()}
+                      </p>
+                    </div>
+                    <Badge variant="secondary">{activity.type.replace('_', ' ')}</Badge>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">Waiting for activity...</p>
+              )}
+            </div>
           </CardContent>
         </Card>
-        <Card className="col-span-3">
+
+        <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              System Alerts
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Navigate using the sidebar to:
-            </p>
-            <ul className="text-sm space-y-1 ml-4 list-disc">
-              <li>Monitor live deliveries</li>
-              <li>Manage orders and users</li>
-              <li>Review compliance issues</li>
-              <li>View analytics and reports</li>
-            </ul>
+          <CardContent>
+            <div className="space-y-3">
+              {systemAlerts.length > 0 ? (
+                systemAlerts.map((alert, idx) => (
+                  <div key={idx} className="flex items-start gap-2 border-b pb-2 last:border-0">
+                    <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{alert.message}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(alert.timestamp).toLocaleTimeString()}
+                      </p>
+                    </div>
+                    <Badge variant="destructive" className="text-xs flex-shrink-0">
+                      {alert.severity}
+                    </Badge>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center py-4">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  No active alerts
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-2 md:grid-cols-4">
+            <Button variant="outline" onClick={() => navigate("/admin/products")} className="justify-start">
+              <Package className="mr-2 h-4 w-4" />
+              Manage Products
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/admin/users")} className="justify-start">
+              <Users className="mr-2 h-4 w-4" />
+              View Users
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/admin/live-orders")} className="justify-start">
+              <Truck className="mr-2 h-4 w-4" />
+              Live Deliveries
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/admin/analytics")} className="justify-start">
+              <TrendingUp className="mr-2 h-4 w-4" />
+              View Analytics
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
