@@ -1,216 +1,175 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { RefreshCw, Download, Zap, Clock, HardDrive, Network } from "lucide-react";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { RefreshCw, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { PerformanceMonitor as PM } from '@/utils/performance';
 
-interface PerformanceMetric {
-  name: string;
-  value: number;
-  rating: 'good' | 'needs-improvement' | 'poor';
-  description: string;
-}
+export default function PerformanceMonitor() {
+  const [metrics, setMetrics] = useState(PM.getMetrics());
+  const [memoryInfo, setMemoryInfo] = useState<any>(null);
+  const [resourceTiming, setResourceTiming] = useState<PerformanceResourceTiming[]>([]);
 
-interface ResourceTiming {
-  name: string;
-  duration: number;
-  size?: number;
-  type: string;
-}
-
-const PerformanceMonitor = () => {
-  const [metrics, setMetrics] = useState<PerformanceMetric[]>([]);
-  const [resources, setResources] = useState<ResourceTiming[]>([]);
-  const [memoryUsage, setMemoryUsage] = useState<any>(null);
-
-  const calculateMetrics = () => {
-    const perfData = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+  const refreshMetrics = () => {
+    setMetrics(PM.getMetrics());
     
-    if (!perfData) return;
-
-    const newMetrics: PerformanceMetric[] = [
-      {
-        name: 'First Contentful Paint',
-        value: performance.getEntriesByName('first-contentful-paint')[0]?.startTime || 0,
-        rating: getRating(performance.getEntriesByName('first-contentful-paint')[0]?.startTime || 0, 1800, 3000),
-        description: 'Time until first content is visible'
-      },
-      {
-        name: 'DOM Content Loaded',
-        value: perfData.domContentLoadedEventEnd - perfData.fetchStart,
-        rating: getRating(perfData.domContentLoadedEventEnd - perfData.fetchStart, 1500, 2500),
-        description: 'Time until DOM is fully parsed'
-      },
-      {
-        name: 'Load Complete',
-        value: perfData.loadEventEnd - perfData.fetchStart,
-        rating: getRating(perfData.loadEventEnd - perfData.fetchStart, 2500, 4000),
-        description: 'Total page load time'
-      },
-      {
-        name: 'Time to Interactive',
-        value: perfData.domInteractive - perfData.fetchStart,
-        rating: getRating(perfData.domInteractive - perfData.fetchStart, 2000, 3500),
-        description: 'Time until page is interactive'
-      }
-    ];
-
-    setMetrics(newMetrics);
-
-    // Get resource timings
-    const resourceEntries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
-    const resourceData: ResourceTiming[] = resourceEntries.slice(-50).map(entry => ({
-      name: entry.name.split('/').pop() || entry.name,
-      duration: entry.duration,
-      size: entry.transferSize,
-      type: entry.initiatorType
-    }));
-
-    setResources(resourceData);
-
-    // Memory usage (if available)
-    if ('memory' in performance) {
-      setMemoryUsage((performance as any).memory);
+    if ((performance as any).memory) {
+      setMemoryInfo((performance as any).memory);
     }
-  };
 
-  const getRating = (value: number, goodThreshold: number, poorThreshold: number): 'good' | 'needs-improvement' | 'poor' => {
-    if (value <= goodThreshold) return 'good';
-    if (value <= poorThreshold) return 'needs-improvement';
-    return 'poor';
-  };
-
-  const getRatingColor = (rating: 'good' | 'needs-improvement' | 'poor') => {
-    switch (rating) {
-      case 'good': return 'bg-success';
-      case 'needs-improvement': return 'bg-warning';
-      case 'poor': return 'bg-destructive';
-    }
-  };
-
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-  };
-
-  const formatTime = (ms: number) => {
-    if (ms < 1000) return `${Math.round(ms)}ms`;
-    return `${(ms / 1000).toFixed(2)}s`;
-  };
-
-  const exportMetrics = () => {
-    const data = {
-      metrics,
-      resources,
-      memoryUsage,
-      timestamp: new Date().toISOString()
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `performance-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Metrics exported");
+    const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+    setResourceTiming(resources.slice(-20));
   };
 
   useEffect(() => {
-    calculateMetrics();
+    refreshMetrics();
     
-    // Recalculate on page load events
-    window.addEventListener('load', calculateMetrics);
-    
-    return () => {
-      window.removeEventListener('load', calculateMetrics);
-    };
+    const interval = setInterval(refreshMetrics, 5000);
+    return () => clearInterval(interval);
   }, []);
 
-  const overallRating = metrics.length > 0 
-    ? metrics.filter(m => m.rating === 'good').length >= metrics.length / 2 
-      ? 'good' 
-      : metrics.filter(m => m.rating === 'poor').length > metrics.length / 2
-        ? 'poor'
-        : 'needs-improvement'
-    : 'good';
+  const getScoreColor = (value: number, thresholds: { good: number; fair: number }) => {
+    if (value <= thresholds.good) return 'text-green-500';
+    if (value <= thresholds.fair) return 'text-yellow-500';
+    return 'text-destructive';
+  };
+
+  const formatBytes = (bytes: number) => {
+    const mb = bytes / 1024 / 1024;
+    return `${mb.toFixed(2)} MB`;
+  };
+
+  const formatDuration = (ms: number) => {
+    return `${Math.round(ms)} ms`;
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Performance Monitor</h1>
-          <p className="text-muted-foreground">Real-time performance metrics and resource usage</p>
+          <h1 className="text-3xl font-bold">Performance Monitor</h1>
+          <p className="text-muted-foreground">
+            Real-time Core Web Vitals and resource monitoring
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={calculateMetrics} variant="outline">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
-          <Button onClick={exportMetrics} variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-        </div>
+        <Button onClick={refreshMetrics} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Overall Performance</CardTitle>
-            <Badge className={getRatingColor(overallRating)}>
-              {overallRating.toUpperCase().replace('-', ' ')}
-            </Badge>
-          </div>
-          <CardDescription>Core Web Vitals and performance metrics</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {metrics.map((metric, index) => (
-              <div key={index} className="border rounded-lg p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Zap className="h-4 w-4" />
-                    <span className="font-medium">{metric.name}</span>
-                  </div>
-                  <Badge className={getRatingColor(metric.rating)}>
-                    {metric.rating}
-                  </Badge>
-                </div>
-                <div className="text-2xl font-bold">{formatTime(metric.value)}</div>
-                <p className="text-xs text-muted-foreground">{metric.description}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {memoryUsage && (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <HardDrive className="h-5 w-5" />
-              Memory Usage
-            </CardTitle>
-            <CardDescription>Current JavaScript heap size</CardDescription>
+            <CardTitle className="text-sm">First Contentful Paint (FCP)</CardTitle>
+            <CardDescription>Time until first content renders</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-3xl font-bold ${getScoreColor(metrics.FCP || 0, { good: 1800, fair: 3000 })}`}>
+              {metrics.FCP ? formatDuration(metrics.FCP) : 'N/A'}
+            </div>
+            <div className="text-xs text-muted-foreground mt-2">
+              Good: &lt; 1.8s | Fair: &lt; 3.0s
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Largest Contentful Paint (LCP)</CardTitle>
+            <CardDescription>Largest element render time</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-3xl font-bold ${getScoreColor(metrics.LCP || 0, { good: 2500, fair: 4000 })}`}>
+              {metrics.LCP ? formatDuration(metrics.LCP) : 'N/A'}
+            </div>
+            <div className="text-xs text-muted-foreground mt-2">
+              Good: &lt; 2.5s | Fair: &lt; 4.0s
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">First Input Delay (FID)</CardTitle>
+            <CardDescription>Time to first interaction</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-3xl font-bold ${getScoreColor(metrics.FID || 0, { good: 100, fair: 300 })}`}>
+              {metrics.FID ? formatDuration(metrics.FID) : 'N/A'}
+            </div>
+            <div className="text-xs text-muted-foreground mt-2">
+              Good: &lt; 100ms | Fair: &lt; 300ms
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Cumulative Layout Shift (CLS)</CardTitle>
+            <CardDescription>Visual stability score</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-3xl font-bold ${getScoreColor(metrics.CLS || 0, { good: 0.1, fair: 0.25 })}`}>
+              {metrics.CLS !== undefined ? metrics.CLS.toFixed(3) : 'N/A'}
+            </div>
+            <div className="text-xs text-muted-foreground mt-2">
+              Good: &lt; 0.1 | Fair: &lt; 0.25
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Time to First Byte (TTFB)</CardTitle>
+            <CardDescription>Server response time</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-3xl font-bold ${getScoreColor(metrics.TTFB || 0, { good: 800, fair: 1800 })}`}>
+              {metrics.TTFB ? formatDuration(metrics.TTFB) : 'N/A'}
+            </div>
+            <div className="text-xs text-muted-foreground mt-2">
+              Good: &lt; 800ms | Fair: &lt; 1.8s
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {memoryInfo && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Memory Usage</CardTitle>
+            <CardDescription>JavaScript heap size</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Used JS Heap</p>
-                <p className="text-2xl font-bold">{formatBytes(memoryUsage.usedJSHeapSize)}</p>
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Used</div>
+                <div className="text-2xl font-bold">
+                  {formatBytes(memoryInfo.usedJSHeapSize)}
+                </div>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total JS Heap</p>
-                <p className="text-2xl font-bold">{formatBytes(memoryUsage.totalJSHeapSize)}</p>
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Total</div>
+                <div className="text-2xl font-bold">
+                  {formatBytes(memoryInfo.totalJSHeapSize)}
+                </div>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Heap Limit</p>
-                <p className="text-2xl font-bold">{formatBytes(memoryUsage.jsHeapSizeLimit)}</p>
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Limit</div>
+                <div className="text-2xl font-bold">
+                  {formatBytes(memoryInfo.jsHeapSizeLimit)}
+                </div>
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all"
+                  style={{
+                    width: `${(memoryInfo.usedJSHeapSize / memoryInfo.jsHeapSizeLimit) * 100}%`
+                  }}
+                />
               </div>
             </div>
           </CardContent>
@@ -219,81 +178,37 @@ const PerformanceMonitor = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Network className="h-5 w-5" />
-            Resource Timings
-          </CardTitle>
-          <CardDescription>Recent network resources loaded</CardDescription>
+          <CardTitle>Recent Resources</CardTitle>
+          <CardDescription>Last 20 loaded resources</CardDescription>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[400px]">
-            <div className="space-y-2">
-              {resources.map((resource, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 border rounded hover:bg-accent/50 transition-colors"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{resource.type}</Badge>
-                      <span className="text-sm truncate">{resource.name}</span>
-                    </div>
+          <div className="space-y-2">
+            {resourceTiming.map((resource, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">
+                    {resource.name.split('/').pop() || resource.name}
                   </div>
-                  <div className="flex items-center gap-4 text-sm">
-                    {resource.size && (
-                      <span className="text-muted-foreground">{formatBytes(resource.size)}</span>
-                    )}
-                    <span className="font-medium">{formatTime(resource.duration)}</span>
+                  <div className="text-xs text-muted-foreground">
+                    {resource.initiatorType}
                   </div>
                 </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recommendations</CardTitle>
-          <CardDescription>Performance optimization suggestions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 text-sm">
-            {metrics.some(m => m.rating === 'poor') && (
-              <li className="flex items-start gap-2">
-                <span>🔴</span>
-                <span>Critical: Some metrics need immediate attention. Focus on reducing load times.</span>
-              </li>
-            )}
-            {resources.filter(r => r.duration > 1000).length > 0 && (
-              <li className="flex items-start gap-2">
-                <span>⚠️</span>
-                <span>Some resources are loading slowly (&gt;1s). Consider code splitting or lazy loading.</span>
-              </li>
-            )}
-            {resources.filter(r => r.size && r.size > 500000).length > 0 && (
-              <li className="flex items-start gap-2">
-                <span>📦</span>
-                <span>Large resources detected (&gt;500KB). Consider compression or optimization.</span>
-              </li>
-            )}
-            {memoryUsage && (memoryUsage.usedJSHeapSize / memoryUsage.jsHeapSizeLimit) > 0.7 && (
-              <li className="flex items-start gap-2">
-                <span>💾</span>
-                <span>High memory usage detected. Check for memory leaks.</span>
-              </li>
-            )}
-            {metrics.every(m => m.rating === 'good') && (
-              <li className="flex items-start gap-2">
-                <span>✅</span>
-                <span>Excellent performance! All metrics are within good thresholds.</span>
-              </li>
-            )}
-          </ul>
+                <div className="text-right ml-4">
+                  <div className="text-sm font-bold">
+                    {formatDuration(resource.duration)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {formatBytes(resource.transferSize || 0)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>
   );
-};
-
-export default PerformanceMonitor;
+}

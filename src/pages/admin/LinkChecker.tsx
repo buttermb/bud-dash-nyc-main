@@ -1,286 +1,213 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Progress } from "@/components/ui/progress";
-import { Play, CheckCircle, XCircle, ExternalLink, Loader2, Download } from "lucide-react";
-import { toast } from "sonner";
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Play, ExternalLink, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface LinkResult {
+interface LinkCheck {
   url: string;
-  status: 'working' | 'broken' | 'external' | 'untested';
+  status: 'checking' | 'valid' | 'broken' | 'external';
   statusCode?: number;
-  linkText: string;
-  foundOn: string;
+  text?: string;
+  element?: string;
 }
 
-const LinkChecker = () => {
+export default function LinkChecker() {
   const [checking, setChecking] = useState(false);
-  const [results, setResults] = useState<LinkResult[]>([]);
-  const [progress, setProgress] = useState(0);
-  const [currentUrl, setCurrentUrl] = useState("");
+  const [results, setResults] = useState<LinkCheck[]>([]);
 
-  const checkLink = async (url: string, linkText: string, foundOn: string): Promise<LinkResult> => {
-    // Check if external link
-    const isExternal = url.startsWith('http') && !url.includes(window.location.hostname);
-    
-    if (isExternal) {
-      return {
-        url,
-        status: 'external',
-        linkText,
-        foundOn
-      };
-    }
-
-    // Check internal links
-    try {
-      const response = await fetch(url, { method: 'HEAD' });
-      return {
-        url,
-        status: response.ok ? 'working' : 'broken',
-        statusCode: response.status,
-        linkText,
-        foundOn
-      };
-    } catch (error) {
-      return {
-        url,
-        status: 'broken',
-        linkText,
-        foundOn
-      };
-    }
-  };
-
-  const getAllLinks = () => {
-    const links: { url: string; text: string; page: string }[] = [];
-    const currentPage = window.location.pathname;
-    
-    document.querySelectorAll('a[href]').forEach((link) => {
-      const href = link.getAttribute('href');
-      if (href) {
-        links.push({
-          url: href,
-          text: link.textContent?.trim() || 'No text',
-          page: currentPage
-        });
-      }
-    });
-
-    return links;
-  };
-
-  const runCheck = async () => {
+  const checkLinks = async () => {
     setChecking(true);
     setResults([]);
-    setProgress(0);
-    
-    const links = getAllLinks();
-    const uniqueLinks = Array.from(new Map(links.map(l => [l.url, l])).values());
-    
-    toast.info(`Checking ${uniqueLinks.length} unique links...`);
-    
-    const linkResults: LinkResult[] = [];
-    
-    for (let i = 0; i < uniqueLinks.length; i++) {
-      const link = uniqueLinks[i];
-      setCurrentUrl(link.url);
-      setProgress(((i + 1) / uniqueLinks.length) * 100);
-      
-      const result = await checkLink(link.url, link.text, link.page);
-      linkResults.push(result);
-      setResults([...linkResults]);
-      
-      // Small delay to avoid overwhelming the server
-      await new Promise(resolve => setTimeout(resolve, 100));
+
+    try {
+      const links = Array.from(document.querySelectorAll('a[href]'));
+      const checks: LinkCheck[] = [];
+
+      for (const link of links) {
+        const href = link.getAttribute('href');
+        if (!href) continue;
+
+        const check: LinkCheck = {
+          url: href,
+          status: 'checking',
+          text: link.textContent?.trim() || '',
+          element: link.tagName
+        };
+
+        checks.push(check);
+      }
+
+      setResults([...checks]);
+
+      for (let i = 0; i < checks.length; i++) {
+        const check = checks[i];
+        
+        try {
+          if (check.url.startsWith('http') && !check.url.includes(window.location.host)) {
+            checks[i].status = 'external';
+          } else {
+            const response = await fetch(check.url, { method: 'HEAD' });
+            checks[i].statusCode = response.status;
+            checks[i].status = response.ok ? 'valid' : 'broken';
+          }
+        } catch (error) {
+          checks[i].status = 'broken';
+          checks[i].statusCode = 0;
+        }
+
+        setResults([...checks]);
+      }
+
+      const brokenCount = checks.filter(c => c.status === 'broken').length;
+      const externalCount = checks.filter(c => c.status === 'external').length;
+      const validCount = checks.filter(c => c.status === 'valid').length;
+
+      toast.success(
+        `Link check complete: ${validCount} valid, ${brokenCount} broken, ${externalCount} external`
+      );
+    } catch (error) {
+      toast.error('Failed to check links');
+      console.error(error);
+    } finally {
+      setChecking(false);
     }
-    
-    setChecking(false);
-    setCurrentUrl("");
-    setProgress(100);
-    
-    const broken = linkResults.filter(r => r.status === 'broken').length;
-    const working = linkResults.filter(r => r.status === 'working').length;
-    
-    toast.success(`Check complete: ${working} working, ${broken} broken links`);
   };
 
-  const exportResults = () => {
-    const data = JSON.stringify(results, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `link-check-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Results exported");
+  const getStatusIcon = (status: LinkCheck['status']) => {
+    switch (status) {
+      case 'checking':
+        return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
+      case 'valid':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'broken':
+        return <AlertCircle className="h-4 w-4 text-destructive" />;
+      case 'external':
+        return <ExternalLink className="h-4 w-4 text-blue-500" />;
+    }
+  };
+
+  const getStatusBadge = (status: LinkCheck['status']) => {
+    const variants = {
+      checking: 'outline',
+      valid: 'default',
+      broken: 'destructive',
+      external: 'secondary'
+    } as const;
+
+    return (
+      <Badge variant={variants[status]}>
+        {status.toUpperCase()}
+      </Badge>
+    );
   };
 
   const stats = {
     total: results.length,
-    working: results.filter(r => r.status === 'working').length,
+    valid: results.filter(r => r.status === 'valid').length,
     broken: results.filter(r => r.status === 'broken').length,
-    external: results.filter(r => r.status === 'external').length
-  };
-
-  const getStatusIcon = (status: LinkResult['status']) => {
-    switch (status) {
-      case 'working':
-        return <CheckCircle className="h-4 w-4 text-success" />;
-      case 'broken':
-        return <XCircle className="h-4 w-4 text-destructive" />;
-      case 'external':
-        return <ExternalLink className="h-4 w-4 text-primary" />;
-      default:
-        return <Loader2 className="h-4 w-4 animate-spin" />;
-    }
-  };
-
-  const getStatusBadge = (status: LinkResult['status']) => {
-    switch (status) {
-      case 'working':
-        return <Badge className="bg-success">Working</Badge>;
-      case 'broken':
-        return <Badge variant="destructive">Broken</Badge>;
-      case 'external':
-        return <Badge variant="outline">External</Badge>;
-      default:
-        return <Badge variant="outline">Untested</Badge>;
-    }
+    external: results.filter(r => r.status === 'external').length,
+    checking: results.filter(r => r.status === 'checking').length,
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Link Checker</h1>
-        <p className="text-muted-foreground">
-          Check all links on the current page for broken URLs
-        </p>
-      </div>
-
+    <div className="container mx-auto p-6">
       <Card>
         <CardHeader>
-          <CardTitle>Check Links</CardTitle>
+          <CardTitle>Link Checker</CardTitle>
           <CardDescription>
-            This will test all links on the current page and verify they work correctly
+            Test all links on the current page for broken or external links
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {checking && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="truncate">Checking: {currentUrl}</span>
-                <span>{Math.round(progress)}%</span>
-              </div>
-              <Progress value={progress} />
-            </div>
-          )}
-          
-          <div className="flex gap-2">
-            <Button onClick={runCheck} disabled={checking} size="lg" className="flex-1">
+        <CardContent>
+          <div className="space-y-4">
+            <Button
+              onClick={checkLinks}
+              disabled={checking}
+              size="lg"
+            >
               {checking ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Checking Links...
                 </>
               ) : (
                 <>
-                  <Play className="mr-2 h-4 w-4" />
-                  Check All Links
+                  <Play className="h-4 w-4 mr-2" />
+                  Start Link Check
                 </>
               )}
             </Button>
+
             {results.length > 0 && (
-              <Button onClick={exportResults} variant="outline" size="lg">
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold">{stats.total}</div>
+                      <div className="text-xs text-muted-foreground">Total Links</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold text-green-500">{stats.valid}</div>
+                      <div className="text-xs text-muted-foreground">Valid</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold text-destructive">{stats.broken}</div>
+                      <div className="text-xs text-muted-foreground">Broken</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold text-blue-500">{stats.external}</div>
+                      <div className="text-xs text-muted-foreground">External</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold text-muted-foreground">{stats.checking}</div>
+                      <div className="text-xs text-muted-foreground">Checking</div>
+                    </CardContent>
+                  </Card>
+                </div>
 
-      {results.length > 0 && (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Total Links</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.total}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-success">Working</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-success">{stats.working}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-destructive">Broken</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-destructive">{stats.broken}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">External</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.external}</div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Link Results</CardTitle>
-              <CardDescription>
-                {checking ? "Checking links..." : `Found ${results.length} links`}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[500px]">
-                <div className="space-y-2">
+                <div className="border rounded-lg divide-y max-h-[600px] overflow-auto">
                   {results.map((result, index) => (
                     <div
                       key={index}
-                      className="flex items-start gap-3 p-3 border rounded hover:bg-accent/50 transition-colors"
+                      className="p-4 hover:bg-muted/50 transition-colors flex items-start gap-3"
                     >
-                      <div className="mt-0.5">{getStatusIcon(result.status)}</div>
-                      <div className="flex-1 min-w-0 space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium truncate">{result.linkText}</span>
+                      <div className="mt-1">
+                        {getStatusIcon(result.status)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
                           {getStatusBadge(result.status)}
-                          {result.statusCode && (
-                            <Badge variant="outline">{result.statusCode}</Badge>
+                          {result.statusCode !== undefined && (
+                            <Badge variant="outline">
+                              {result.statusCode}
+                            </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground truncate">
+                        <div className="text-sm font-medium truncate mb-1">
+                          {result.text || '(no text)'}
+                        </div>
+                        <div className="text-xs text-muted-foreground font-mono truncate">
                           {result.url}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Found on: {result.foundOn}
-                        </p>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </>
-      )}
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default LinkChecker;
+}
