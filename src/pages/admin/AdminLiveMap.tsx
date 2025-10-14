@@ -7,75 +7,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Truck, Package, Clock, DollarSign, Users, Navigation, UserPlus, CheckCircle2, Shield } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { MapPin, Truck, Package, Clock, DollarSign, Users, Navigation, UserPlus, CheckCircle2, Shield, Bell, BellOff, Maximize, Search, Activity, TrendingUp, Zap, RefreshCw, Filter, Eye, Layers, Route, AlertTriangle, MapIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AssignCourierDialog } from "@/components/admin/AssignCourierDialog";
 import { useToast } from "@/hooks/use-toast";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { OrderMap } from "@/components/admin/OrderMap";
 
-// Use public token from environment or fallback
-const MAPBOX_TOKEN = "pk.eyJ1IjoiYnV1dGVybWIiLCJhIjoiY21nNzNrd3U3MGlyNjJqcTNlMnhsenFwbCJ9.Ss9KyWJkDeSvZilooUFZgA";
-mapboxgl.accessToken = MAPBOX_TOKEN;
-
-// Geocoding helper function
-const geocodeAddress = async (address: string): Promise<[number, number] | null> => {
-  try {
-    const response = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${MAPBOX_TOKEN}&limit=1`
-    );
-    const data = await response.json();
-    if (data.features && data.features.length > 0) {
-      return data.features[0].geometry.coordinates; // [lng, lat]
-    }
-    return null;
-  } catch (error) {
-    console.error("Geocoding error:", error);
-    return null;
-  }
-};
-
-// Reverse geocoding helper function
-const reverseGeocode = async (lng: number, lat: number): Promise<string | null> => {
-  try {
-    const response = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&limit=1`
-    );
-    const data = await response.json();
-    if (data.features && data.features.length > 0) {
-      return data.features[0].place_name;
-    }
-    return null;
-  } catch (error) {
-    console.error("Reverse geocoding error:", error);
-    return null;
-  }
-};
-
-// Get optimized route using Mapbox Directions API
-const getOptimizedRoute = async (
-  start: [number, number], 
-  end: [number, number]
-): Promise<{ route: any; duration: number; distance: number } | null> => {
-  try {
-    const response = await fetch(
-      `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${start[0]},${start[1]};${end[0]},${end[1]}?geometries=geojson&overview=full&steps=true&access_token=${MAPBOX_TOKEN}`
-    );
-    const data = await response.json();
-    if (data.routes && data.routes.length > 0) {
-      const route = data.routes[0];
-      return {
-        route: route.geometry,
-        duration: route.duration, // in seconds
-        distance: route.distance, // in meters
-      };
-    }
-    return null;
-  } catch (error) {
-    console.error("Route optimization error:", error);
-    return null;
-  }
-};
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 interface RealtimeStats {
   ordersLastHour: number;
@@ -83,6 +27,19 @@ interface RealtimeStats {
   activeCouriers: number;
   avgDeliveryTime: number;
   activeUsers: number;
+  ordersInProgress: number;
+  completionRate: number;
+  avgOrderValue: number;
+  peakHours: string;
+  topBorough: string;
+}
+
+interface ActivityItem {
+  id: string;
+  type: 'order' | 'delivery' | 'courier' | 'alert';
+  message: string;
+  timestamp: Date;
+  severity?: 'info' | 'warning' | 'success' | 'error';
 }
 
 const AdminLiveMap = () => {
@@ -90,869 +47,266 @@ const AdminLiveMap = () => {
   const { toast } = useToast();
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [stats, setStats] = useState<RealtimeStats | null>(null);
-  const [showHeatmap, setShowHeatmap] = useState(false);
-  const [heatmapData, setHeatmapData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [boroughFilter, setBoroughFilter] = useState<string>("all");
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const markers = useRef<mapboxgl.Marker[]>([]);
-  const heatmapSourceAdded = useRef(false);
-  const routeLayersAdded = useRef<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [selectedDelivery, setSelectedDelivery] = useState<any>(null);
+  const [activityFeed, setActivityFeed] = useState<ActivityItem[]>([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!session) {
-      console.log("No session available, skipping data fetch");
-      return;
+  // Play notification sound
+  const playNotificationSound = () => {
+    if (soundEnabled && audioRef.current) {
+      audioRef.current.play().catch(e => console.log('Audio play failed:', e));
     }
+  };
 
-    console.log("Session available, fetching data...");
-    fetchLiveDeliveries(true); // Show loading on initial load
+  // Add activity to feed
+  const addActivity = (type: ActivityItem['type'], message: string, severity: ActivityItem['severity'] = 'info') => {
+    const newActivity: ActivityItem = {
+      id: Date.now().toString(),
+      type,
+      message,
+      timestamp: new Date(),
+      severity
+    };
+    setActivityFeed(prev => [newActivity, ...prev.slice(0, 49)]); // Keep last 50
+  };
+
+  // Fetch live deliveries
+  const fetchLiveDeliveries = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('deliveries')
+        .select(`
+          *,
+          order:orders (
+            *,
+            items:order_items (*)
+          ),
+          courier:couriers (*)
+        `)
+        .in('order.status', ['confirmed', 'preparing', 'out_for_delivery'])
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const previousCount = deliveries.length;
+      setDeliveries(data || []);
+      
+      // Detect new orders
+      if (data && data.length > previousCount) {
+        playNotificationSound();
+        addActivity('order', `New order received! Total active: ${data.length}`, 'success');
+      }
+    } catch (error) {
+      console.error('Error fetching deliveries:', error);
+      addActivity('alert', 'Failed to fetch deliveries', 'error');
+    }
+  };
+
+  // Fetch realtime stats
+  const fetchRealtimeStats = async () => {
+    try {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      
+      const [ordersResult, revenueResult, couriersResult, completedResult] = await Promise.all([
+        supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', oneHourAgo),
+        supabase
+          .from('orders')
+          .select('total_amount')
+          .gte('created_at', oneHourAgo)
+          .eq('status', 'delivered'),
+        supabase
+          .from('couriers')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_online', true)
+          .eq('is_active', true),
+        supabase
+          .from('orders')
+          .select('delivered_at, created_at')
+          .eq('status', 'delivered')
+          .gte('created_at', oneHourAgo)
+      ]);
+
+      const inProgressResult = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['confirmed', 'preparing', 'out_for_delivery']);
+
+      const totalOrdersToday = await supabase
+        .from('orders')
+        .select('status', { count: 'exact', head: true })
+        .gte('created_at', new Date().toDateString());
+
+      const deliveredToday = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'delivered')
+        .gte('created_at', new Date().toDateString());
+
+      const avgDeliveryTime = completedResult.data
+        ?.map((order: any) => {
+          const created = new Date(order.created_at);
+          const delivered = new Date(order.delivered_at);
+          return (delivered.getTime() - created.getTime()) / 1000 / 60; // minutes
+        })
+        .reduce((a: number, b: number) => a + b, 0) / (completedResult.data?.length || 1);
+
+      const revenue = revenueResult.data?.reduce((sum: number, order: any) => sum + Number(order.total_amount || 0), 0) || 0;
+      const avgOrderValue = revenueResult.data?.length ? revenue / revenueResult.data.length : 0;
+
+      const completionRate = totalOrdersToday.count && deliveredToday.count 
+        ? (deliveredToday.count / totalOrdersToday.count) * 100 
+        : 0;
+
+      setStats({
+        ordersLastHour: ordersResult.count || 0,
+        revenueLastHour: revenue,
+        activeCouriers: couriersResult.count || 0,
+        avgDeliveryTime: Math.round(avgDeliveryTime) || 0,
+        activeUsers: 0,
+        ordersInProgress: inProgressResult.count || 0,
+        completionRate: Math.round(completionRate),
+        avgOrderValue,
+        peakHours: '12PM-2PM, 6PM-9PM',
+        topBorough: 'Manhattan'
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  // Toggle fullscreen
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement && containerRef.current) {
+      containerRef.current.requestFullscreen();
+      setIsFullscreen(true);
+    } else if (document.exitFullscreen) {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  // Setup realtime subscriptions
+  useEffect(() => {
+    if (!session) return;
+
+    fetchLiveDeliveries();
     fetchRealtimeStats();
-    
-    // Refresh data every 10 seconds
-    const interval = setInterval(() => {
-      console.log("Refreshing data...");
-      fetchLiveDeliveries(); // Don't show loading on auto-refresh
+
+    // Auto-refresh
+    const interval = autoRefresh ? setInterval(() => {
+      fetchLiveDeliveries();
       fetchRealtimeStats();
-    }, 10000);
-    
-    // Set up real-time subscription for both deliveries and orders
+    }, 5000) : null;
+
+    // Realtime subscriptions
     const channel = supabase
       .channel("live-map-updates")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "deliveries",
-        },
+        { event: "*", schema: "public", table: "orders" },
         (payload) => {
-          console.log("Delivery update received:", payload);
+          const newRecord = payload.new as any;
+          const oldRecord = payload.old as any;
+
+          if (payload.eventType === 'INSERT') {
+            addActivity('order', `New order: ${newRecord.order_number}`, 'success');
+            playNotificationSound();
+          } else if (payload.eventType === 'UPDATE' && newRecord.status !== oldRecord?.status) {
+            addActivity('order', `Order ${newRecord.order_number} → ${newRecord.status}`, 'info');
+          }
+          
+          fetchLiveDeliveries();
+          fetchRealtimeStats();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "couriers" },
+        (payload) => {
+          const courier = payload.new as any;
+          if (courier.is_online && !payload.old?.is_online) {
+            addActivity('courier', `${courier.full_name} is now online`, 'success');
+          }
           fetchLiveDeliveries();
         }
       )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "orders",
-        },
-        (payload) => {
-          console.log("Order update received:", payload);
-          const newRecord = payload.new as any;
-          const oldRecord = payload.old as any;
-          
-          // When order status changes to delivered
-          if (newRecord && newRecord.status === 'delivered' && oldRecord?.status !== 'delivered') {
-            console.log("Order delivered! Refreshing map to show courier's next delivery...");
-            // Remove delivered order and fetch updated deliveries to show courier's next order
-            setDeliveries(prev => prev.filter(d => d.order_id !== newRecord.id));
-            // Refresh to get courier's next active order
-            setTimeout(() => fetchLiveDeliveries(), 500);
-          } 
-          // Refresh for active orders
-          else if (newRecord && ['confirmed', 'preparing', 'out_for_delivery'].includes(newRecord.status)) {
-            fetchLiveDeliveries();
-          }
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "couriers",
-        },
-        (payload) => {
-          console.log("Courier location updated:", payload);
-          // Update courier locations in real-time
-          const updatedCourier = payload.new as any;
-          if (updatedCourier.current_lat && updatedCourier.current_lng) {
-            fetchLiveDeliveries();
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log("Real-time subscription status:", status);
-      });
+      .subscribe();
 
     return () => {
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
       supabase.removeChannel(channel);
     };
-  }, [session]);
+  }, [session, autoRefresh, soundEnabled]);
 
-  // Initialize map when container is ready
-  useEffect(() => {
-    if (map.current) {
-      return; // Map already initialized
-    }
-
-    if (!mapContainer.current) {
-      console.log("Map container not ready yet");
-      return;
-    }
-
-    console.log("Initializing Mapbox map...");
-    try {
-      const mapInstance = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: "mapbox://styles/mapbox/dark-v11", // Dark mode for NYM branding
-        center: [-73.9855, 40.7580], // Manhattan center (40.7580, -73.9855)
-        zoom: 11,
-        maxBounds: [
-          [-74.2591, 40.4774], // Southwest (Staten Island)
-          [-73.7004, 40.9176], // Northeast (Bronx)
-        ],
-      });
-
-      mapInstance.on('load', () => {
-        console.log("Mapbox map loaded successfully");
-        map.current = mapInstance;
-        setLoading(false);
-      });
-
-      mapInstance.on('error', (e) => {
-        console.error("Mapbox error:", e);
-        setLoading(false);
-      });
-
-      mapInstance.addControl(new mapboxgl.NavigationControl(), "top-right");
-    } catch (error) {
-      console.error("Failed to initialize map:", error);
-      setLoading(false);
-    }
+  // Filter deliveries
+  const filteredDeliveries = deliveries.filter((delivery) => {
+    const statusMatch = statusFilter === "all" || delivery.order?.status === statusFilter;
+    const boroughMatch = boroughFilter === "all" || delivery.order?.delivery_borough === boroughFilter;
+    const searchMatch = !searchQuery || 
+      delivery.order?.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      delivery.order?.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      delivery.courier?.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return statusMatch && boroughMatch && searchMatch;
   });
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (map.current) {
-        console.log("Cleaning up map");
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!map.current) {
-      console.log("Map not initialized yet");
-      return;
-    }
-
-    console.log("Updating markers. Deliveries count:", deliveries.length);
-
-    // Clear existing markers
-    markers.current.forEach(marker => marker.remove());
-    markers.current = [];
-
-    // Clear existing route layers
-    routeLayersAdded.current.forEach(layerId => {
-      if (map.current!.getLayer(layerId)) {
-        map.current!.removeLayer(layerId);
-      }
-      if (map.current!.getSource(layerId)) {
-        map.current!.removeSource(layerId);
-      }
-    });
-    routeLayersAdded.current.clear();
-
-    if (deliveries.length === 0) {
-      console.log("No deliveries to display");
-      return;
-    }
-
-    // Filter deliveries based on status and borough
-    const filteredDeliveries = deliveries.filter((delivery) => {
-      const statusMatch = statusFilter === "all" || delivery.order?.status === statusFilter;
-      const boroughMatch = boroughFilter === "all" || delivery.order?.delivery_borough === boroughFilter;
-      return statusMatch && boroughMatch;
-    });
-
-    // Add markers and routes for each delivery
-    filteredDeliveries.forEach(async (delivery) => {
-      console.log("Processing delivery:", delivery);
-      
-      // Use coordinates from order object, not delivery object
-      const actualDropoffLat = delivery.order?.dropoff_lat || delivery.dropoff_lat;
-      const actualDropoffLng = delivery.order?.dropoff_lng || delivery.dropoff_lng;
-      
-      // Customer live location
-      const customerLat = delivery.order?.customer_lat;
-      const customerLng = delivery.order?.customer_lng;
-      const customerLocationEnabled = delivery.order?.customer_location_enabled;
-      
-      console.log("Using coordinates:", { actualDropoffLat, actualDropoffLng, customerLat, customerLng, customerLocationEnabled });
-      
-      // Calculate route to customer's live location if available, otherwise to address
-      let routeData = null;
-      let routeTargetLat = actualDropoffLat;
-      let routeTargetLng = actualDropoffLng;
-      
-      // Prefer customer's live location if available
-      if (customerLocationEnabled && customerLat && customerLng) {
-        routeTargetLat = customerLat;
-        routeTargetLng = customerLng;
-      }
-      
-      if (delivery.courier?.current_lat && delivery.courier?.current_lng && routeTargetLat && routeTargetLng) {
-        const courierLng = parseFloat(delivery.courier.current_lng);
-        const courierLat = parseFloat(delivery.courier.current_lat);
-        const dropoffLng = parseFloat(routeTargetLng);
-        const dropoffLat = parseFloat(routeTargetLat);
-        
-        routeData = await getOptimizedRoute(
-          [courierLng, courierLat],
-          [dropoffLng, dropoffLat]
-        );
-
-        // Add route line to map
-        if (routeData && map.current) {
-          const routeId = `route-${delivery.id}`;
-          if (!routeLayersAdded.current.has(routeId)) {
-            map.current.addSource(routeId, {
-              type: 'geojson',
-              data: {
-                type: 'Feature',
-                properties: {},
-                geometry: routeData.route
-              }
-            });
-
-            map.current.addLayer({
-              id: routeId,
-              type: 'line',
-              source: routeId,
-              layout: {
-                'line-join': 'round',
-                'line-cap': 'round'
-              },
-              paint: {
-                'line-color': '#3b82f6', // Blue route line
-                'line-width': 4,
-                'line-opacity': 0.75
-              }
-            });
-
-            routeLayersAdded.current.add(routeId);
-            console.log("Added optimized route line for delivery:", delivery.id);
-          }
-        }
-      }
-
-      const etaText = routeData ? `⏱️ <strong>ETA:</strong> ${Math.round(routeData.duration / 60)} min | ${(routeData.distance / 1000).toFixed(1)} km` : '';
-      
-      // Calculate customer location update age (used in multiple places)
-      const lastUpdate = delivery.order?.customer_location_updated_at 
-        ? new Date(delivery.order.customer_location_updated_at)
-        : null;
-      const updateAge = lastUpdate 
-        ? Math.round((Date.now() - lastUpdate.getTime()) / 1000)
-        : null;
-      const updateText = updateAge 
-        ? updateAge < 60 ? `${updateAge}s ago` : `${Math.round(updateAge / 60)}min ago`
-        : 'Unknown';
-      
-      // Show customer's live location marker if enabled (blue pulsing dot)
-      if (customerLocationEnabled && customerLat && customerLng) {
-        const customerMarkerEl = document.createElement('div');
-        customerMarkerEl.className = 'custom-customer-marker';
-        customerMarkerEl.innerHTML = `
-          <div style="position: relative;">
-            <div style="background: #3b82f6; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5); animation: pulse 2s infinite;">
-              📍
-            </div>
-          </div>
-        `;
-        
-        // Calculate distance from delivery address to customer location
-        const distanceFromAddress = customerLat && customerLng && actualDropoffLat && actualDropoffLng
-          ? Math.sqrt(Math.pow((customerLat - actualDropoffLat) * 69, 2) + Math.pow((customerLng - actualDropoffLng) * 54.6, 2))
-          : null;
-        
-        const locationStatus = distanceFromAddress 
-          ? distanceFromAddress < 0.02 ? '✓ At location' 
-            : distanceFromAddress < 0.1 ? '⚠️ Nearby' 
-            : '🚨 Not at address'
-          : '';
-        
-        const distanceText = distanceFromAddress 
-          ? `<div style="margin-top: 4px; color: ${distanceFromAddress < 0.02 ? '#10b981' : distanceFromAddress < 0.1 ? '#f59e0b' : '#ef4444'};">
-              ${locationStatus} (${(distanceFromAddress).toFixed(2)} mi from address)
-            </div>`
-          : '';
-        
-        const customerPopup = new mapboxgl.Popup({ maxWidth: '300px' }).setHTML(
-          `<div style="padding: 12px; font-family: system-ui;">
-            <strong style="font-size: 16px; color: #3b82f6;">📍 Customer Live Location</strong><br/>
-            <div style="margin-top: 8px; color: #374151;">
-              <div><strong>Order:</strong> ${delivery.order?.order_number || 'Unknown'}</div>
-              <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Updated ${updateText}</div>
-              ${distanceText}
-              ${delivery.order?.customer_name ? `<div style="margin-top: 4px;"><strong>Customer:</strong> ${delivery.order.customer_name}</div>` : ''}
-            </div>
-          </div>`
-        );
-        
-        const customerMarker = new mapboxgl.Marker({ element: customerMarkerEl })
-          .setLngLat([parseFloat(customerLng), parseFloat(customerLat)])
-          .setPopup(customerPopup)
-          .addTo(map.current!);
-        
-        markers.current.push(customerMarker);
-        console.log("Added customer live location marker");
-        
-        // Draw line from customer location to delivery address if they're different
-        if (distanceFromAddress && distanceFromAddress > 0.02) {
-          const distanceLineId = `distance-line-${delivery.id}`;
-          if (!routeLayersAdded.current.has(distanceLineId) && map.current) {
-            map.current.addSource(distanceLineId, {
-              type: 'geojson',
-              data: {
-                type: 'Feature',
-                properties: {},
-                geometry: {
-                  type: 'LineString',
-                  coordinates: [
-                    [parseFloat(customerLng), parseFloat(customerLat)],
-                    [parseFloat(actualDropoffLng), parseFloat(actualDropoffLat)]
-                  ]
-                }
-              }
-            });
-            
-            map.current.addLayer({
-              id: distanceLineId,
-              type: 'line',
-              source: distanceLineId,
-              layout: {
-                'line-join': 'round',
-                'line-cap': 'round'
-              },
-              paint: {
-                'line-color': '#9ca3af',
-                'line-width': 2,
-                'line-dasharray': [2, 2],
-                'line-opacity': 0.6
-              }
-            });
-            
-            routeLayersAdded.current.add(distanceLineId);
-          }
-        }
-      }
-      
-      // Show destination marker (delivery address - red house icon)
-      if (actualDropoffLat && actualDropoffLng) {
-        const orderNumber = delivery.order?.order_number || `#${delivery.order?.id?.substring(0, 8).toUpperCase() || 'Order'}`;
-        const items = delivery.order?.items || [];
-        const itemsList = items.length > 0 
-          ? items.map((item: any) => `${item.product_name || 'Product'} x${item.quantity || 1}`).join('<br/>')
-          : 'No items';
-        
-        // Choose marker color and icon based on order status
-        const getMarkerStyle = (status: string) => {
-          switch (status) {
-            case 'pending':
-              return { bg: '#ef4444', icon: '📦', label: 'PENDING' }; // Red
-            case 'confirmed':
-              return { bg: '#f59e0b', icon: '📋', label: 'CONFIRMED' }; // Yellow
-            case 'out_for_delivery':
-              return { bg: '#3b82f6', icon: '🚚', label: 'EN ROUTE' }; // Blue
-            case 'delivered':
-              return { bg: '#6b7280', icon: '✓', label: 'DELIVERED' }; // Gray
-            default:
-              return { bg: '#ef4444', icon: '📦', label: 'PENDING' }; // Red default
-          }
-        };
-        
-        const markerStyle = getMarkerStyle(delivery.order?.status);
-        
-        // Create custom marker element (house icon for delivery address)
-        const markerElement = document.createElement('div');
-        markerElement.className = 'custom-marker';
-        markerElement.innerHTML = `
-          <div style="background: ${markerStyle.bg}; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.3); border: 3px solid white;">
-            🏠
-          </div>
-        `;
-        
-        const popup = new mapboxgl.Popup({ 
-          maxWidth: '350px',
-          closeButton: true,
-          closeOnClick: false
-        }).setHTML(
-          `<div style="padding: 12px; font-family: system-ui;" id="popup-${delivery.id}">
-            <strong style="font-size: 16px;">${orderNumber}</strong><br/>
-            ${etaText ? `<div style="margin-top: 8px; padding: 8px; background: #dbeafe; border-radius: 6px; color: #1e40af; font-size: 14px; font-weight: 500;">${etaText}</div>` : ''}
-            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
-              <div style="color: #059669; font-weight: 600; margin-bottom: 4px;">Status: ${markerStyle.label}</div>
-              <div style="color: #374151; margin: 4px 0;"><strong>🏠 Delivery Address:</strong><br/>${delivery.order?.delivery_address || 'Unknown'}</div>
-              <div style="color: #374151; margin: 4px 0;"><strong>Borough:</strong> ${delivery.order?.delivery_borough || 'N/A'}</div>
-              ${customerLocationEnabled && customerLat && customerLng 
-                ? `<div style="margin-top: 8px; padding: 8px; background: #dbeafe; border-radius: 6px;">
-                    <div style="color: #1e40af; font-weight: 600;">📍 Customer Location Active</div>
-                    <div style="font-size: 12px; color: #1e40af; margin-top: 4px;">
-                      Updated ${updateAge ? updateAge < 60 ? `${updateAge}s ago` : `${Math.round(updateAge / 60)}min ago` : 'recently'}
-                    </div>
-                  </div>`
-                : `<div style="margin-top: 8px; padding: 8px; background: #f3f4f6; border-radius: 6px;">
-                    <div style="color: #6b7280; font-size: 14px;">⚫ Customer location not available</div>
-                  </div>`
-              }
-            </div>
-            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
-              <strong>Items (${items.length}):</strong><br/>
-              <div style="font-size: 14px; color: #4b5563; margin-top: 4px;">${itemsList}</div>
-            </div>
-            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
-              <strong>Total:</strong> <span style="color: #059669; font-weight: 600;">$${parseFloat(delivery.order?.total_amount || 0).toFixed(2)}</span>
-            </div>
-            ${delivery.courier 
-              ? `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; color: #059669;">
-                   <strong>🚗 Courier:</strong> ${delivery.courier.full_name}<br/>
-                   <span style="font-size: 14px;">${delivery.courier.vehicle_type} - ${delivery.courier.vehicle_plate}</span>
-                 </div>
-                 <button 
-                   id="complete-${delivery.id}" 
-                   style="width: 100%; margin-top: 8px; padding: 8px; background: #22c55e; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;"
-                 >
-                   ✓ Mark as Delivered
-                 </button>` 
-              : `<button 
-                   id="assign-${delivery.id}" 
-                   style="width: 100%; margin-top: 8px; padding: 8px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;"
-                 >
-                   👤 Assign Courier
-                 </button>`
-            }
-          </div>`
-        );
-
-        const destinationMarker = new mapboxgl.Marker({ element: markerElement })
-          .setLngLat([
-            parseFloat(actualDropoffLng),
-            parseFloat(actualDropoffLat),
-          ])
-          .setPopup(popup)
-          .addTo(map.current!);
-
-        // Add event listeners after popup opens
-        popup.on('open', () => {
-          const assignBtn = document.getElementById(`assign-${delivery.id}`);
-          const completeBtn = document.getElementById(`complete-${delivery.id}`);
-          
-          if (assignBtn) {
-            assignBtn.addEventListener('click', () => {
-              setSelectedOrder({
-                id: delivery.order_id,
-                address: delivery.order?.delivery_address
-              });
-              setAssignDialogOpen(true);
-            });
-          }
-          
-          if (completeBtn) {
-            completeBtn.addEventListener('click', async () => {
-              await handleMarkDelivered(delivery.order_id);
-            });
-          }
-        });
-
-        markers.current.push(destinationMarker);
-        console.log("Added destination marker for order:", orderNumber);
-      }
-      
-      // Show courier location marker if available (green marker)
-      if (delivery.courier?.current_lat && delivery.courier?.current_lng) {
-        const courierLng = parseFloat(delivery.courier.current_lng);
-        const courierLat = parseFloat(delivery.courier.current_lat);
-        
-        // Calculate time since last location update
-        const lastUpdate = delivery.courier.last_location_update 
-          ? new Date(delivery.courier.last_location_update)
-          : null;
-        const timeSinceUpdate = lastUpdate 
-          ? Math.round((Date.now() - lastUpdate.getTime()) / 1000 / 60) // minutes
-          : null;
-        const locationAge = timeSinceUpdate 
-          ? `<div style="color: ${timeSinceUpdate > 5 ? '#ef4444' : '#10b981'}; font-size: 12px; margin-top: 4px;">
-               📍 Updated ${timeSinceUpdate}min ago
-             </div>`
-          : '<div style="color: #6b7280; font-size: 12px; margin-top: 4px;">📍 Location unknown</div>';
-
-        const courierMarker = new mapboxgl.Marker({ 
-          color: "#22c55e" // Green for courier
-        })
-          .setLngLat([courierLng, courierLat])
-          .setPopup(
-            new mapboxgl.Popup().setHTML(
-              `<div style="padding: 12px; font-family: system-ui;" id="courier-popup-${delivery.courier.id}">
-                <strong style="font-size: 16px;">🚗 ${delivery.courier.full_name}</strong><br/>
-                <div style="margin-top: 8px; color: #374151;">
-                  <strong>Delivering:</strong> ${delivery.order?.order_number || 'Order'}<br/>
-                  ${etaText ? `<div style="margin: 8px 0; padding: 8px; background: #dbeafe; border-radius: 6px; color: #1e40af; font-size: 14px;">${etaText}</div>` : ''}
-                  <strong>Vehicle:</strong> ${delivery.courier.vehicle_type}<br/>
-                  <strong>Plate:</strong> ${delivery.courier.vehicle_plate}<br/>
-                  ${locationAge}
-                  <button 
-                    id="request-location-${delivery.courier.id}" 
-                    style="width: 100%; margin-top: 8px; padding: 8px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;"
-                  >
-                    📍 Request Current Location
-                  </button>
-                </div>
-              </div>`
-            )
-          )
-          .addTo(map.current!);
-
-        // Add event listener for location request button
-        courierMarker.getPopup().on('open', () => {
-          const requestBtn = document.getElementById(`request-location-${delivery.courier.id}`);
-          if (requestBtn) {
-            requestBtn.addEventListener('click', async () => {
-              await requestCourierLocation(delivery.courier.id, delivery.courier.full_name);
-            });
-          }
-        });
-
-        markers.current.push(courierMarker);
-        console.log("Added courier marker with optimized route:", delivery.courier.full_name);
-      }
-    });
-
-    console.log("Total markers added:", markers.current.length);
-
-    // Fit map to markers if there are any
-    if (markers.current.length > 0) {
-      const bounds = new mapboxgl.LngLatBounds();
-      markers.current.forEach(marker => {
-        const lngLat = marker.getLngLat();
-        bounds.extend(lngLat);
-      });
-      map.current.fitBounds(bounds, { padding: 100, maxZoom: 14 });
-    }
-  }, [deliveries]);
-
-  // Add heatmap layer when enabled
-  useEffect(() => {
-    if (!map.current || !heatmapData) return;
-
-    const mapInstance = map.current;
-
-    if (showHeatmap && !heatmapSourceAdded.current) {
-      mapInstance.addSource('heatmap-source', {
-        type: 'geojson',
-        data: heatmapData
-      });
-
-      mapInstance.addLayer({
-        id: 'heatmap-layer',
-        type: 'heatmap',
-        source: 'heatmap-source',
-        paint: {
-          'heatmap-weight': ['get', 'intensity'],
-          'heatmap-intensity': 0.5,
-          'heatmap-color': [
-            'interpolate',
-            ['linear'],
-            ['heatmap-density'],
-            0, 'rgba(33,102,172,0)',
-            0.2, 'rgb(103,169,207)',
-            0.4, 'rgb(209,229,240)',
-            0.6, 'rgb(253,219,199)',
-            0.8, 'rgb(239,138,98)',
-            1, 'rgb(178,24,43)'
-          ],
-          'heatmap-radius': 30,
-          'heatmap-opacity': 0.7
-        }
-      });
-
-      heatmapSourceAdded.current = true;
-    } else if (!showHeatmap && heatmapSourceAdded.current) {
-      if (mapInstance.getLayer('heatmap-layer')) {
-        mapInstance.removeLayer('heatmap-layer');
-      }
-      if (mapInstance.getSource('heatmap-source')) {
-        mapInstance.removeSource('heatmap-source');
-      }
-      heatmapSourceAdded.current = false;
-    }
-  }, [showHeatmap, heatmapData]);
-
-  const fetchLiveDeliveries = async (showLoading = false) => {
-    try {
-      if (showLoading) {
-        setLoading(true);
-      }
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      console.log("Fetching live deliveries from:", `${supabaseUrl}/functions/v1/admin-dashboard?endpoint=live-deliveries`);
-      
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/admin-dashboard?endpoint=live-deliveries`,
-        {
-          headers: {
-            Authorization: `Bearer ${session?.access_token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Response error:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Live deliveries data:", data);
-      
-      // Filter out delivered orders from live map
-      const activeDeliveries = (data.deliveries || []).filter(
-        (delivery: any) => delivery.order?.status !== 'delivered'
-      );
-      
-      setDeliveries(activeDeliveries);
-    } catch (error) {
-      console.error("Failed to fetch live deliveries:", error);
-      setDeliveries([]); // Set empty array on error
-    } finally {
-      if (showLoading) {
-        setLoading(false);
-      }
-    }
-  };
-
-  const centerMapOnDelivery = (delivery: any) => {
-    // Use coordinates from order object, not delivery object
-    const actualDropoffLat = delivery.order?.dropoff_lat || delivery.dropoff_lat;
-    const actualDropoffLng = delivery.order?.dropoff_lng || delivery.dropoff_lng;
-    
-    if (!map.current || !actualDropoffLat || !actualDropoffLng) return;
-
-    const dropoffLng = parseFloat(actualDropoffLng);
-    const dropoffLat = parseFloat(actualDropoffLat);
-
-    // Center and zoom to the delivery location
-    map.current.flyTo({
-      center: [dropoffLng, dropoffLat],
-      zoom: 15,
-      duration: 1500,
-      essential: true
-    });
-
-    // Find and open the popup for this delivery
-    const marker = markers.current.find(m => {
-      const lngLat = m.getLngLat();
-      return Math.abs(lngLat.lng - dropoffLng) < 0.0001 && 
-             Math.abs(lngLat.lat - dropoffLat) < 0.0001;
-    });
-
-    if (marker && marker.getPopup()) {
-      marker.togglePopup();
-    }
-  };
-
-  const requestCourierLocation = async (courierId: string, courierName: string) => {
-    try {
-      toast({
-        title: "Requesting Location",
-        description: `Requesting current location from ${courierName}...`,
-      });
-
-      // Trigger location refresh by updating courier record
-      const { error } = await supabase
-        .from('couriers')
-        .update({ 
-          last_location_update: new Date().toISOString() 
-        })
-        .eq('id', courierId);
-
-      if (error) throw error;
-
-      // Refresh deliveries to show updated location
-      setTimeout(() => {
-        fetchLiveDeliveries();
-        toast({
-          title: "Location Requested",
-          description: "Courier will send updated location shortly",
-        });
-      }, 1500);
-    } catch (error) {
-      console.error("Error requesting courier location:", error);
-      toast({
-        title: "Error",
-        description: "Failed to request courier location",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleMarkDelivered = async (orderId: string) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error("Not authenticated");
-      }
-
-      // Get the courier_id from the current delivery before marking as delivered
-      const delivery = deliveries.find(d => d.order_id === orderId);
-      const courierId = delivery?.courier?.id;
-
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/functions/v1/update-order-status`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          orderId,
-          status: "delivered",
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update order status");
-      }
-
-      toast({
-        title: "✅ Delivery Complete",
-        description: courierId 
-          ? "Map updating to show courier's next delivery..." 
-          : "Order marked as delivered",
-      });
-
-      // Remove the delivered order immediately
-      setDeliveries(prev => prev.filter(d => d.order_id !== orderId));
-      
-      // Refresh after a short delay to show courier's next order
-      setTimeout(() => {
-        fetchLiveDeliveries();
-        fetchRealtimeStats();
-      }, 1000);
-    } catch (error: any) {
-      console.error("Failed to mark order as delivered:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to update order status",
-      });
-    }
-  };
-
-  const fetchRealtimeStats = async () => {
-    try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/admin-dashboard?endpoint=realtime-stats`,
-        {
-          headers: {
-            Authorization: `Bearer ${session?.access_token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch realtime stats:", error);
-    }
-  };
-
-  const fetchHeatmapData = async () => {
-    try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/admin-dashboard?endpoint=heatmap&days=7&type=orders`,
-        {
-          headers: {
-            Authorization: `Bearer ${session?.access_token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Convert to GeoJSON for Mapbox
-        const geojson = {
-          type: 'FeatureCollection',
-          features: data.heatmapData.map((point: any) => ({
-            type: 'Feature',
-            properties: { intensity: point.intensity },
-            geometry: {
-              type: 'Point',
-              coordinates: [point.lng, point.lat]
-            }
-          }))
-        };
-        
-        setHeatmapData(geojson);
-      }
-    } catch (error) {
-      console.error("Failed to fetch heatmap:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (showHeatmap && !heatmapData) {
-      fetchHeatmapData();
-    }
-  }, [showHeatmap]);
+  // Map orders for OrderMap component
+  const mapOrders = filteredDeliveries.map(d => ({
+    id: d.order?.id || d.id,
+    tracking_code: d.order?.tracking_code || '',
+    status: d.order?.status || 'pending',
+    delivery_address: d.order?.delivery_address || '',
+    dropoff_lat: d.order?.dropoff_lat || d.dropoff_lat,
+    dropoff_lng: d.order?.dropoff_lng || d.dropoff_lng,
+    eta_minutes: d.order?.eta_minutes,
+    courier_id: d.courier?.id,
+    courier: d.courier ? {
+      full_name: d.courier.full_name,
+      current_lat: d.courier.current_lat,
+      current_lng: d.courier.current_lng,
+      vehicle_type: d.courier.vehicle_type
+    } : undefined
+  }));
 
   const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: "bg-yellow-500",
-      confirmed: "bg-blue-500",
-      preparing: "bg-purple-500",
-      out_for_delivery: "bg-green-500",
-      delivered: "bg-gray-500",
+    const colors: { [key: string]: string } = {
+      pending: "bg-gray-500",
+      confirmed: "bg-purple-500",
+      preparing: "bg-yellow-500",
+      out_for_delivery: "bg-blue-500",
+      delivered: "bg-green-500",
     };
     return colors[status] || "bg-gray-500";
   };
 
-  if (loading) {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-96" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-5">
-          {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
-        </div>
-        <Skeleton className="h-[600px] w-full" />
-      </div>
-    );
-  }
+  const getActivityIcon = (type: ActivityItem['type']) => {
+    switch (type) {
+      case 'order': return <Package className="h-4 w-4" />;
+      case 'delivery': return <Truck className="h-4 w-4" />;
+      case 'courier': return <Users className="h-4 w-4" />;
+      case 'alert': return <AlertTriangle className="h-4 w-4" />;
+    }
+  };
 
   if (!session) {
     return (
       <div className="p-6">
         <Card>
-          <CardContent className="py-12 text-center">
-            <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-lg font-semibold">Authentication Required</p>
-            <p className="text-sm text-muted-foreground">
-              Please log in to view the live delivery map
-            </p>
+          <CardContent className="p-6">
+            <p className="text-muted-foreground">Please log in to access the live map.</p>
           </CardContent>
         </Card>
       </div>
@@ -960,314 +314,351 @@ const AdminLiveMap = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Debug Info */}
-      <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
-        <CardContent className="pt-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">Session Status</p>
-              <p className="font-semibold">{session ? "✅ Connected" : "❌ Not Connected"}</p>
+    <div ref={containerRef} className="h-screen flex flex-col bg-background overflow-hidden">
+      <audio ref={audioRef} src="/notification.mp3" preload="auto" />
+      
+      <AdminAlerts />
+
+      {/* Header */}
+      <div className="border-b bg-card px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <MapIcon className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="text-muted-foreground">Admin User</p>
-              <p className="font-semibold truncate">{session?.user?.email || "N/A"}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Deliveries Loaded</p>
-              <p className="font-semibold">{deliveries.length}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Map Status</p>
-              <p className="font-semibold">{map.current ? "✅ Initialized" : "⚠️ Not Initialized"}</p>
+              <h1 className="text-2xl font-bold">Live Operations Center</h1>
+              <p className="text-sm text-muted-foreground">Real-time delivery tracking & management</p>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Live Delivery Map</h1>
-          <p className="text-muted-foreground">
-            Real-time tracking of active deliveries ({deliveries.length} active)
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Button
-            onClick={() => {
-              fetchLiveDeliveries();
-              fetchRealtimeStats();
-              toast({
-                title: "Refreshing",
-                description: "Updating map data...",
-              });
-            }}
-            variant="outline"
-            size="sm"
-            className="gap-2"
-          >
-            <Navigation className="h-4 w-4" />
-            Refresh Map
-          </Button>
           <div className="flex items-center gap-2">
-            <Switch
-              checked={showHeatmap}
-              onCheckedChange={setShowHeatmap}
-              id="heatmap-toggle"
-            />
-            <label htmlFor="heatmap-toggle" className="text-sm font-medium">
-              Show Heatmap
-            </label>
-          </div>
-        </div>
-      </div>
-
-      {/* Real-time Stats Bar */}
-      {stats && (
-        <div className="grid gap-4 md:grid-cols-5">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Orders (1h)</p>
-                  <p className="text-2xl font-bold">{stats.ordersLastHour}</p>
-                </div>
-                <Clock className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Revenue (1h)</p>
-                  <p className="text-2xl font-bold">${stats.revenueLastHour.toFixed(2)}</p>
-                </div>
-                <DollarSign className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Active Users</p>
-                  <p className="text-2xl font-bold">{stats.activeUsers}</p>
-                </div>
-                <Users className="h-8 w-8 text-purple-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Active Couriers</p>
-                  <p className="text-2xl font-bold">{stats.activeCouriers}</p>
-                </div>
-                <Truck className="h-8 w-8 text-orange-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Avg Delivery</p>
-                  <p className="text-2xl font-bold">
-                    {stats.avgDeliveryTime > 0 ? `${stats.avgDeliveryTime}m` : 'N/A'}
-                  </p>
-                </div>
-                <Navigation className="h-8 w-8 text-indigo-500" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {deliveries.length === 0 ? (
-          <Card className="col-span-full">
-            <CardContent className="py-12 text-center">
-              <Truck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-lg font-semibold">No active deliveries</p>
-              <p className="text-sm text-muted-foreground">
-                All orders are either pending or completed
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          deliveries.map((delivery) => (
-            <Card 
-              key={delivery.id}
-              className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => centerMapOnDelivery(delivery)}
+            <Button
+              variant={autoRefresh ? "default" : "outline"}
+              size="sm"
+              onClick={() => setAutoRefresh(!autoRefresh)}
             >
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">
-                    {delivery.order.order_number}
-                  </CardTitle>
-                  <Badge className={getStatusColor(delivery.order.status)}>
-                    {delivery.order.status.replace("_", " ")}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-start space-x-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <div className="flex-1 text-sm">
-                    <p className="font-medium">Delivery Address</p>
-                    <p className="text-muted-foreground">
-                      {delivery.order.delivery_address}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-2">
-                  <Truck className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <div className="flex-1 text-sm">
-                    <p className="font-medium">Courier</p>
-                    <p className="text-muted-foreground">
-                      {delivery.courier?.full_name || "Unassigned"}
-                    </p>
-                    {delivery.courier && (
-                      <p className="text-xs text-muted-foreground">
-                        {delivery.courier.vehicle_type} - {delivery.courier.vehicle_plate}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-2">
-                  <Package className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <div className="flex-1 text-sm">
-                    <p className="font-medium">Items</p>
-                    <p className="text-muted-foreground">
-                      {delivery.order.items?.length || 0} items - $
-                      {parseFloat(delivery.order.total_amount).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-2">
-                  <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <div className="flex-1 text-sm">
-                    <p className="font-medium">Estimated Delivery</p>
-                    <p className="text-muted-foreground">
-                      {delivery.estimated_dropoff_time
-                        ? new Date(delivery.estimated_dropoff_time).toLocaleTimeString()
-                        : "Calculating..."}
-                    </p>
-                  </div>
-                </div>
-
-                {delivery.courier?.current_lat && delivery.courier?.current_lng && (
-                  <div className="pt-2 border-t">
-                    <p className="text-xs text-muted-foreground">
-                      Last location: {parseFloat(delivery.courier.current_lat).toFixed(4)}, 
-                      {parseFloat(delivery.courier.current_lng).toFixed(4)}
-                    </p>
-                  </div>
-                )}
-
-                <div className="flex gap-2 pt-3">
-                  {delivery.courier ? (
-                    <Button
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMarkDelivered(delivery.order_id);
-                      }}
-                      className="w-full flex items-center gap-2"
-                    >
-                      <CheckCircle2 className="h-4 w-4" />
-                      Mark as Delivered
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedOrder({
-                          id: delivery.order_id,
-                          address: delivery.order?.delivery_address
-                        });
-                        setAssignDialogOpen(true);
-                      }}
-                      className="w-full flex items-center gap-2"
-                    >
-                      <UserPlus className="h-4 w-4" />
-                      Assign Courier
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
+              <RefreshCw className={`h-4 w-4 mr-2 ${autoRefresh ? 'animate-spin' : ''}`} />
+              {autoRefresh ? 'Auto' : 'Manual'}
+            </Button>
+            <Button
+              variant={soundEnabled ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSoundEnabled(!soundEnabled)}
+            >
+              {soundEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleFullscreen}
+            >
+              <Maximize className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Live Delivery Map</CardTitle>
-          <p className="text-sm text-muted-foreground mt-1">
-            {deliveries.length > 0 
-              ? `Tracking ${deliveries.length} active ${deliveries.length === 1 ? 'delivery' : 'deliveries'}`
-              : 'No active deliveries to display'}
-          </p>
-        </CardHeader>
-        <CardContent>
-          <div className="relative">
-            <div 
-              ref={mapContainer} 
-              className="w-full h-[600px] rounded-lg border border-border bg-muted/50" 
-              style={{ minHeight: '600px' }}
-            />
-            
-            {/* Map Legend */}
-            <div className="absolute top-4 left-4 bg-background/95 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-border z-10 max-w-xs">
-              <h3 className="font-semibold text-sm mb-3">Map Legend</h3>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <span>Delivery Destination</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span>Active Courier</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-1 bg-blue-500 rounded"></div>
-                  <span>Optimized Route</span>
-                </div>
-                <div className="mt-2 pt-2 border-t border-border text-muted-foreground">
-                  <p className="flex items-center gap-1">
-                    <Navigation className="h-3 w-3" />
-                    Routes use real-time traffic data
-                  </p>
-                </div>
-              </div>
+      {/* Stats Dashboard */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 p-6 bg-muted/30">
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Activity className="h-4 w-4 text-blue-500" />
+              <p className="text-xs text-muted-foreground">Active Now</p>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            <p className="text-2xl font-bold">{stats?.ordersInProgress || 0}</p>
+          </CardContent>
+        </Card>
 
-      <AssignCourierDialog
-        orderId={selectedOrder?.id || ''}
-        orderAddress={selectedOrder?.address || ''}
-        open={assignDialogOpen}
-        onOpenChange={setAssignDialogOpen}
-        onSuccess={() => {
-          fetchLiveDeliveries();
-          setSelectedOrder(null);
-        }}
-      />
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Package className="h-4 w-4 text-purple-500" />
+              <p className="text-xs text-muted-foreground">Last Hour</p>
+            </div>
+            <p className="text-2xl font-bold">{stats?.ordersLastHour || 0}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <DollarSign className="h-4 w-4 text-green-500" />
+              <p className="text-xs text-muted-foreground">Revenue/Hr</p>
+            </div>
+            <p className="text-2xl font-bold">${stats?.revenueLastHour?.toFixed(0) || 0}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Truck className="h-4 w-4 text-orange-500" />
+              <p className="text-xs text-muted-foreground">Couriers</p>
+            </div>
+            <p className="text-2xl font-bold">{stats?.activeCouriers || 0}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="h-4 w-4 text-cyan-500" />
+              <p className="text-xs text-muted-foreground">Avg Time</p>
+            </div>
+            <p className="text-2xl font-bold">{stats?.avgDeliveryTime || 0}m</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="h-4 w-4 text-emerald-500" />
+              <p className="text-xs text-muted-foreground">Success Rate</p>
+            </div>
+            <p className="text-2xl font-bold">{stats?.completionRate || 0}%</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <DollarSign className="h-4 w-4 text-yellow-500" />
+              <p className="text-xs text-muted-foreground">Avg Order</p>
+            </div>
+            <p className="text-2xl font-bold">${stats?.avgOrderValue?.toFixed(0) || 0}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Zap className="h-4 w-4 text-red-500" />
+              <p className="text-xs text-muted-foreground">Peak Hours</p>
+            </div>
+            <p className="text-xs font-semibold">{stats?.peakHours || 'N/A'}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex gap-6 p-6 overflow-hidden">
+        {/* Left Panel - Map & Controls */}
+        <div className="flex-1 flex flex-col gap-4 min-w-0">
+          {/* Filters */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-wrap gap-3">
+                <div className="flex-1 min-w-[200px]">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search orders, customers, couriers..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="confirmed">Confirmed</SelectItem>
+                    <SelectItem value="preparing">Preparing</SelectItem>
+                    <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={boroughFilter} onValueChange={setBoroughFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter by borough" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Boroughs</SelectItem>
+                    <SelectItem value="Manhattan">Manhattan</SelectItem>
+                    <SelectItem value="Brooklyn">Brooklyn</SelectItem>
+                    <SelectItem value="Queens">Queens</SelectItem>
+                    <SelectItem value="Bronx">Bronx</SelectItem>
+                    <SelectItem value="Staten Island">Staten Island</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Map */}
+          <div className="flex-1 rounded-lg overflow-hidden border shadow-lg">
+            <OrderMap
+              orders={mapOrders}
+              selectedOrderId={selectedDelivery?.order?.id}
+              onOrderSelect={(orderId) => {
+                const delivery = filteredDeliveries.find(d => d.order?.id === orderId);
+                setSelectedDelivery(delivery);
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Right Panel - Orders & Activity */}
+        <div className="w-[400px] flex flex-col gap-4">
+          <Tabs defaultValue="orders" className="flex-1 flex flex-col">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="orders">
+                Orders ({filteredDeliveries.length})
+              </TabsTrigger>
+              <TabsTrigger value="activity">
+                Activity
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="orders" className="flex-1 mt-4">
+              <Card className="h-full flex flex-col">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Active Orders</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 p-0">
+                  <ScrollArea className="h-full">
+                    <div className="space-y-2 p-4">
+                      {filteredDeliveries.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No active deliveries</p>
+                        </div>
+                      ) : (
+                        filteredDeliveries.map((delivery) => (
+                          <Card
+                            key={delivery.id}
+                            className={`cursor-pointer transition-all hover:shadow-md ${
+                              selectedDelivery?.id === delivery.id ? 'ring-2 ring-primary' : ''
+                            }`}
+                            onClick={() => setSelectedDelivery(delivery)}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between mb-2">
+                                <div>
+                                  <p className="font-semibold">{delivery.order?.order_number}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {delivery.order?.customer_name || 'Customer'}
+                                  </p>
+                                </div>
+                                <Badge className={getStatusColor(delivery.order?.status)}>
+                                  {delivery.order?.status?.replace('_', ' ')}
+                                </Badge>
+                              </div>
+                              <div className="space-y-1 text-sm">
+                                <div className="flex items-center gap-2">
+                                  <MapPin className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-muted-foreground truncate">
+                                    {delivery.order?.delivery_borough}
+                                  </span>
+                                </div>
+                                {delivery.courier && (
+                                  <div className="flex items-center gap-2">
+                                    <Truck className="h-3 w-3 text-muted-foreground" />
+                                    <span className="text-muted-foreground">
+                                      {delivery.courier.full_name}
+                                    </span>
+                                  </div>
+                                )}
+                                {delivery.order?.eta_minutes && (
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="h-3 w-3 text-muted-foreground" />
+                                    <span className="text-muted-foreground">
+                                      ETA: {delivery.order.eta_minutes} min
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              {!delivery.courier && delivery.order?.status === 'pending' && (
+                                <Button
+                                  size="sm"
+                                  className="w-full mt-3"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedOrder(delivery.order);
+                                    setAssignDialogOpen(true);
+                                  }}
+                                >
+                                  <UserPlus className="h-3 w-3 mr-2" />
+                                  Assign Courier
+                                </Button>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))
+                      )}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="activity" className="flex-1 mt-4">
+              <Card className="h-full flex flex-col">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Live Activity Feed</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 p-0">
+                  <ScrollArea className="h-full">
+                    <div className="space-y-2 p-4">
+                      {activityFeed.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Activity className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No recent activity</p>
+                        </div>
+                      ) : (
+                        activityFeed.map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                          >
+                            <div className={`p-2 rounded-full ${
+                              item.severity === 'success' ? 'bg-green-500/10 text-green-500' :
+                              item.severity === 'warning' ? 'bg-yellow-500/10 text-yellow-500' :
+                              item.severity === 'error' ? 'bg-red-500/10 text-red-500' :
+                              'bg-blue-500/10 text-blue-500'
+                            }`}>
+                              {getActivityIcon(item.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium">{item.message}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(item.timestamp).toLocaleTimeString()}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+
+      {/* Assign Courier Dialog */}
+      {selectedOrder && (
+        <AssignCourierDialog
+          open={assignDialogOpen}
+          onOpenChange={setAssignDialogOpen}
+          orderId={selectedOrder.id}
+          orderAddress={selectedOrder.delivery_address || ''}
+          onSuccess={() => {
+            setAssignDialogOpen(false);
+            fetchLiveDeliveries();
+            addActivity('courier', `Courier assigned to ${selectedOrder.order_number}`, 'success');
+            toast({
+              title: "Courier Assigned",
+              description: "The courier has been successfully assigned to this order.",
+            });
+          }}
+        />
+      )}
     </div>
   );
 };
