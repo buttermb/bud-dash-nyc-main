@@ -115,13 +115,13 @@ const Navigation = () => {
   return (
     <>
       {/* Free Shipping Banner */}
-      <div className="bg-card border-b border-border py-2">
+      <div className="bg-card border-b border-border py-2" role="banner" aria-label="Promotional banner">
         <div className="container mx-auto px-4 text-center text-sm font-medium">
           <span>Licensed & Lab Tested | Same-Day Delivery | Free Shipping $100+</span>
         </div>
       </div>
 
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/98 backdrop-blur-lg supports-[backdrop-filter]:bg-background/95 shadow-soft">
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/98 backdrop-blur-lg supports-[backdrop-filter]:bg-background/95 shadow-soft" role="navigation" aria-label="Main navigation">
         <div className="container flex h-24 items-center justify-between px-6 gap-8">
           <Link to="/" className="flex items-center gap-4 min-w-fit">
             <NYMLogo size={48} />
@@ -132,7 +132,7 @@ const Navigation = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6 flex-1 justify-center">
+          <nav className="hidden md:flex items-center gap-6 flex-1 justify-center" aria-label="Primary navigation">
             <Link 
               to="/giveaway/nyc-biggest-flower" 
               className="relative text-sm font-semibold transition-colors group"
@@ -182,6 +182,7 @@ const Navigation = () => {
                 haptics.light();
                 setShowCart(true);
               }}
+              aria-label={`Shopping cart with ${cartCount} items and total $${cartTotal.toFixed(2)}`}
             >
               <ShoppingCart className="w-4 h-4" />
               <div className="flex flex-col items-start gap-0.5">
@@ -210,6 +211,7 @@ const Navigation = () => {
                 haptics.light();
                 setShowCart(true);
               }}
+              aria-label={`Shopping cart with ${cartCount} items`}
             >
               <ShoppingCart className="w-6 h-6" />
               {cartCount > 0 && (
@@ -223,7 +225,7 @@ const Navigation = () => {
               <div className="hidden sm:flex items-center gap-3">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-10 w-10">
+                    <Button variant="ghost" size="icon" className="h-10 w-10" aria-label="User account menu">
                       <User className="w-5 h-5" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -274,6 +276,7 @@ const Navigation = () => {
                   variant="ghost" 
                   size="icon" 
                   className="h-12 w-12 touch-manipulation active:scale-95 transition-transform"
+                  aria-label="Open mobile menu"
                 >
                   <Menu className="w-6 h-6" />
                 </Button>
@@ -282,7 +285,7 @@ const Navigation = () => {
                 <div className="mb-6 mt-4">
                   <SearchBar variant="full" />
                 </div>
-                <nav className="flex flex-col gap-6">
+                <nav className="flex flex-col gap-6" aria-label="Mobile navigation menu">
                   {navLinks.map((link) => (
                     link.scroll ? (
                       <a

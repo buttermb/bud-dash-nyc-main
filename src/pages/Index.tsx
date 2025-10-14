@@ -1,20 +1,21 @@
-import ProductCatalog from "@/components/ProductCatalog";
-import Footer from "@/components/Footer";
+import { lazy, Suspense } from "react";
 import Navigation from "@/components/Navigation";
 import AgeVerificationModal from "@/components/AgeVerificationModal";
-import RecentPurchaseNotification from "@/components/RecentPurchaseNotification";
-import ProductTrustElements from "@/components/ProductTrustElements";
-import ProductCategories from "@/components/ProductCategories";
-import HowItWorks from "@/components/HowItWorks";
-import FeaturedReviews from "@/components/FeaturedReviews";
-import TrendingProducts from "@/components/TrendingProducts";
-import InstallPWA from "@/components/InstallPWA";
 import GiveawayBanner from "@/components/GiveawayBanner";
-import FloatingGiveawayButton from "@/components/FloatingGiveawayButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, Truck, Award } from "lucide-react";
 import { SEOHead } from "@/components/SEOHead";
+import { EnhancedLoadingState } from "@/components/EnhancedLoadingState";
+
+// Lazy load non-critical components for better initial page load
+const ProductCatalog = lazy(() => import("@/components/ProductCatalog"));
+const Footer = lazy(() => import("@/components/Footer"));
+const RecentPurchaseNotification = lazy(() => import("@/components/RecentPurchaseNotification"));
+const ProductTrustElements = lazy(() => import("@/components/ProductTrustElements"));
+const HowItWorks = lazy(() => import("@/components/HowItWorks"));
+const TrendingProducts = lazy(() => import("@/components/TrendingProducts"));
+const InstallPWA = lazy(() => import("@/components/InstallPWA"));
 
 
 const Index = () => {
@@ -25,13 +26,15 @@ const Index = () => {
         description="Fast, discreet premium cannabis delivery across NYC. Lab-tested flower, edibles, concentrates from licensed vendors. Same-day delivery to Manhattan, Brooklyn & Queens."
       />
       <div className="min-h-screen pb-20 md:pb-0">
-        <AgeVerificationModal />
-      <RecentPurchaseNotification />
+      <AgeVerificationModal />
+      <Suspense fallback={null}>
+        <RecentPurchaseNotification />
+      </Suspense>
       <GiveawayBanner />
       <Navigation />
       
       {/* Hero Section with Professional Gradient Design */}
-      <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden" role="banner" aria-label="Hero section">
         {/* Animated Gradient Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-background z-0" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent z-0" />
@@ -133,25 +136,37 @@ const Index = () => {
       </div>
 
       {/* Trending Products Carousel */}
-      <TrendingProducts />
+      <Suspense fallback={<EnhancedLoadingState variant="grid" count={4} />}>
+        <TrendingProducts />
+      </Suspense>
 
       {/* PRODUCTS */}
-      <div id="products" className="bg-background">
-        <ProductCatalog />
-      </div>
+      <section id="products" className="bg-background" aria-label="Product catalog">
+        <Suspense fallback={<EnhancedLoadingState variant="grid" count={8} />}>
+          <ProductCatalog />
+        </Suspense>
+      </section>
 
       {/* How It Works */}
-      <div id="how-it-works">
-        <HowItWorks />
-      </div>
+      <section id="how-it-works" aria-label="How it works">
+        <Suspense fallback={<EnhancedLoadingState variant="card" count={3} />}>
+          <HowItWorks />
+        </Suspense>
+      </section>
 
       {/* Trust Elements */}
-      <ProductTrustElements />
+      <Suspense fallback={null}>
+        <ProductTrustElements />
+      </Suspense>
       
       {/* PWA Install Prompt */}
-      <InstallPWA />
+      <Suspense fallback={null}>
+        <InstallPWA />
+      </Suspense>
       
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
       </div>
     </>
   );
