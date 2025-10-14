@@ -20,6 +20,20 @@ const ButtonTester = () => {
   const getAllButtons = () => {
     const buttons: { label: string; path: string; element: HTMLElement }[] = [];
     
+    // Dangerous button patterns to skip
+    const dangerousPatterns = [
+      /sign\s*out/i,
+      /log\s*out/i,
+      /logout/i,
+      /delete/i,
+      /remove/i,
+      /clear/i,
+      /reset/i,
+      /cancel/i,
+      /close/i,
+      /dismiss/i
+    ];
+    
     // Get all button elements, links that look like buttons, and elements with onClick
     const buttonElements = document.querySelectorAll('button, a[role="button"], [onclick]');
     
@@ -28,6 +42,18 @@ const ButtonTester = () => {
       const label = element.textContent?.trim() || element.getAttribute('aria-label') || 'Unnamed Button';
       const href = element.getAttribute('href');
       const path = window.location.pathname;
+      
+      // Skip dangerous buttons
+      const isDangerous = dangerousPatterns.some(pattern => pattern.test(label));
+      if (isDangerous) {
+        return;
+      }
+      
+      // Skip navigation/sidebar buttons to prevent page navigation
+      const isNavigation = element.closest('nav, [role="navigation"], aside, header');
+      if (isNavigation) {
+        return;
+      }
       
       buttons.push({
         label: label.substring(0, 50), // Limit label length
@@ -191,10 +217,22 @@ const ButtonTester = () => {
         <CardHeader>
           <CardTitle>Test Controls</CardTitle>
           <CardDescription>
-            This will simulate clicking all buttons on the current page and report any errors
+            This will simulate clicking all buttons on the current page and report any errors.
+            <br />
+            <strong>Safe Mode:</strong> Automatically skips sign out, delete, navigation, and other potentially destructive buttons.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div className="p-4 bg-muted rounded-lg space-y-2">
+            <h3 className="font-semibold text-sm">Automatically Excluded:</h3>
+            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+              <li>Sign Out / Logout buttons</li>
+              <li>Delete / Remove buttons</li>
+              <li>Navigation & Sidebar links</li>
+              <li>Close / Cancel / Dismiss buttons</li>
+              <li>Clear / Reset buttons</li>
+            </ul>
+          </div>
           <Button onClick={runTests} disabled={testing} size="lg">
             {testing ? (
               <>
@@ -204,7 +242,7 @@ const ButtonTester = () => {
             ) : (
               <>
                 <Play className="mr-2 h-4 w-4" />
-                Run Tests
+                Run Safe Tests
               </>
             )}
           </Button>
