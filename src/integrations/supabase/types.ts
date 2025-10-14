@@ -14,53 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_logs: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          description: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          performed_by: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          performed_by?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          performed_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       addresses: {
         Row: {
           apartment: string | null
           borough: string
           city: string
+          coordinates: Json | null
           created_at: string | null
+          delivery_count: number | null
           id: string
           is_default: boolean | null
+          issue_count: number | null
           lat: number | null
           latitude: number | null
           lng: number | null
           longitude: number | null
+          neighborhood: string | null
+          risk_zone: string | null
           state: string
           street: string
           user_id: string | null
+          verified: boolean | null
           zip_code: string
         }
         Insert: {
           apartment?: string | null
           borough: string
           city?: string
+          coordinates?: Json | null
           created_at?: string | null
+          delivery_count?: number | null
           id?: string
           is_default?: boolean | null
+          issue_count?: number | null
           lat?: number | null
           latitude?: number | null
           lng?: number | null
           longitude?: number | null
+          neighborhood?: string | null
+          risk_zone?: string | null
           state?: string
           street: string
           user_id?: string | null
+          verified?: boolean | null
           zip_code: string
         }
         Update: {
           apartment?: string | null
           borough?: string
           city?: string
+          coordinates?: Json | null
           created_at?: string | null
+          delivery_count?: number | null
           id?: string
           is_default?: boolean | null
+          issue_count?: number | null
           lat?: number | null
           latitude?: number | null
           lng?: number | null
           longitude?: number | null
+          neighborhood?: string | null
+          risk_zone?: string | null
           state?: string
           street?: string
           user_id?: string | null
+          verified?: boolean | null
           zip_code?: string
         }
         Relationships: []
@@ -997,6 +1048,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      device_fingerprints: {
+        Row: {
+          browser: string | null
+          created_at: string | null
+          device_type: string | null
+          fingerprint: string
+          id: string
+          ip_address: string | null
+          last_seen: string | null
+          multiple_accounts: boolean | null
+          os: string | null
+          user_id: string
+        }
+        Insert: {
+          browser?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          fingerprint: string
+          id?: string
+          ip_address?: string | null
+          last_seen?: string | null
+          multiple_accounts?: boolean | null
+          os?: string | null
+          user_id: string
+        }
+        Update: {
+          browser?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          fingerprint?: string
+          id?: string
+          ip_address?: string | null
+          last_seen?: string | null
+          multiple_accounts?: boolean | null
+          os?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      fraud_flags: {
+        Row: {
+          auto_resolved: boolean | null
+          created_at: string | null
+          description: string
+          flag_type: string
+          id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          user_id: string
+        }
+        Insert: {
+          auto_resolved?: boolean | null
+          created_at?: string | null
+          description: string
+          flag_type: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          user_id: string
+        }
+        Update: {
+          auto_resolved?: boolean | null
+          created_at?: string | null
+          description?: string
+          flag_type?: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       geofence_checks: {
         Row: {
@@ -2056,6 +2182,42 @@ export type Database = {
           },
         ]
       }
+      payment_methods: {
+        Row: {
+          card_brand: string | null
+          card_holder_name: string | null
+          card_last_four: string | null
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          payment_type: string
+          user_id: string
+          verified: boolean | null
+        }
+        Insert: {
+          card_brand?: string | null
+          card_holder_name?: string | null
+          card_last_four?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          payment_type: string
+          user_id: string
+          verified?: boolean | null
+        }
+        Update: {
+          card_brand?: string | null
+          card_holder_name?: string | null
+          card_last_four?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          payment_type?: string
+          user_id?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           average_rating: number | null
@@ -2195,46 +2357,127 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string | null
           age_verified: boolean | null
+          average_order_value: number | null
+          cancelled_orders: number | null
+          chargebacks: number | null
           created_at: string | null
+          daily_limit: number | null
+          date_of_birth: string | null
+          failed_payments: number | null
+          first_name: string | null
           full_name: string | null
           id: string
           id_document_url: string | null
+          id_expiry_date: string | null
+          id_number: string | null
+          id_type: string | null
+          id_verified: boolean | null
+          last_login_at: string | null
+          last_name: string | null
+          last_order_date: string | null
+          lifetime_value: number | null
+          login_attempts: number | null
+          name_change_count: number | null
+          order_limit: number | null
           phone: string | null
           referral_code: string | null
+          reported_issues: number | null
+          risk_score: number | null
+          selfie_verified: boolean | null
+          total_orders: number | null
+          total_spent: number | null
+          trust_level: string | null
           user_id: string
+          user_id_code: string | null
           verification_approved_at: string | null
           verification_rejected_at: string | null
           verification_rejection_reason: string | null
           verification_submitted_at: string | null
+          weekly_limit: number | null
         }
         Insert: {
+          account_status?: string | null
           age_verified?: boolean | null
+          average_order_value?: number | null
+          cancelled_orders?: number | null
+          chargebacks?: number | null
           created_at?: string | null
+          daily_limit?: number | null
+          date_of_birth?: string | null
+          failed_payments?: number | null
+          first_name?: string | null
           full_name?: string | null
           id?: string
           id_document_url?: string | null
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          id_verified?: boolean | null
+          last_login_at?: string | null
+          last_name?: string | null
+          last_order_date?: string | null
+          lifetime_value?: number | null
+          login_attempts?: number | null
+          name_change_count?: number | null
+          order_limit?: number | null
           phone?: string | null
           referral_code?: string | null
+          reported_issues?: number | null
+          risk_score?: number | null
+          selfie_verified?: boolean | null
+          total_orders?: number | null
+          total_spent?: number | null
+          trust_level?: string | null
           user_id: string
+          user_id_code?: string | null
           verification_approved_at?: string | null
           verification_rejected_at?: string | null
           verification_rejection_reason?: string | null
           verification_submitted_at?: string | null
+          weekly_limit?: number | null
         }
         Update: {
+          account_status?: string | null
           age_verified?: boolean | null
+          average_order_value?: number | null
+          cancelled_orders?: number | null
+          chargebacks?: number | null
           created_at?: string | null
+          daily_limit?: number | null
+          date_of_birth?: string | null
+          failed_payments?: number | null
+          first_name?: string | null
           full_name?: string | null
           id?: string
           id_document_url?: string | null
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          id_verified?: boolean | null
+          last_login_at?: string | null
+          last_name?: string | null
+          last_order_date?: string | null
+          lifetime_value?: number | null
+          login_attempts?: number | null
+          name_change_count?: number | null
+          order_limit?: number | null
           phone?: string | null
           referral_code?: string | null
+          reported_issues?: number | null
+          risk_score?: number | null
+          selfie_verified?: boolean | null
+          total_orders?: number | null
+          total_spent?: number | null
+          trust_level?: string | null
           user_id?: string
+          user_id_code?: string | null
           verification_approved_at?: string | null
           verification_rejected_at?: string | null
           verification_rejection_reason?: string | null
           verification_submitted_at?: string | null
+          weekly_limit?: number | null
         }
         Relationships: []
       }
@@ -2348,6 +2591,42 @@ export type Database = {
           },
         ]
       }
+      risk_factors: {
+        Row: {
+          avg_income: number | null
+          borough: string
+          crime_rate: number | null
+          delivery_issues: number | null
+          id: string
+          neighborhood: string
+          risk_level: number
+          scam_reports: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          avg_income?: number | null
+          borough: string
+          crime_rate?: number | null
+          delivery_issues?: number | null
+          id?: string
+          neighborhood: string
+          risk_level?: number
+          scam_reports?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          avg_income?: number | null
+          borough?: string
+          crime_rate?: number | null
+          delivery_issues?: number | null
+          id?: string
+          neighborhood?: string
+          risk_level?: number
+          scam_reports?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       security_events: {
         Row: {
           created_at: string | null
@@ -2449,6 +2728,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      calculate_risk_score: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       check_is_admin: {
         Args: { _user_id: string }
         Returns: boolean
@@ -2467,6 +2750,10 @@ export type Database = {
       }
       generate_tracking_code: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_user_id_code: {
+        Args: { p_borough: string; p_user_id: string }
         Returns: string
       }
       get_admin_dashboard_metrics: {

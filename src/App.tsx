@@ -58,6 +58,7 @@ const AdminCouriers = lazy(() => import("./pages/admin/AdminCouriers"));
 const AdminCourierDetails = lazy(() => import("./pages/admin/AdminCourierDetails"));
 const AdminCompliance = lazy(() => import("./pages/admin/AdminCompliance"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminUserDetails = lazy(() => import("./pages/admin/AdminUserDetails"));
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AdminAuditLogs = lazy(() => import("./pages/admin/AdminAuditLogs"));
 const AdminAgeVerification = lazy(() => import("./pages/admin/AdminAgeVerification"));
@@ -192,6 +193,7 @@ const App = () => (
                         <Route path="couriers/:id" element={<AdminCourierDetails />} />
                         <Route path="compliance" element={<AdminCompliance />} />
                         <Route path="users" element={<AdminUsers />} />
+                        <Route path="users/:id" element={<AdminUserDetails />} />
                         <Route path="analytics" element={<AdminAnalytics />} />
                         <Route path="audit-logs" element={<AdminAuditLogs />} />
                         <Route path="age-verification" element={<AdminAgeVerification />} />
