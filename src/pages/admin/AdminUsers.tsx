@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/contexts/AdminContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -73,6 +74,7 @@ interface UserProfile {
 const AdminUsers = () => {
   const { session } = useAdmin();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -419,7 +421,7 @@ const AdminUsers = () => {
                               )}
                             </Button>
                           </TableCell>
-                          <TableCell onClick={() => openUserDetails(user)}>
+                          <TableCell onClick={() => navigate(`/admin/users/${user.user_id}`)} className="cursor-pointer hover:underline">
                             <div className="flex items-center gap-3">
                               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                                 <User className="h-5 w-5 text-primary" />

@@ -74,6 +74,7 @@ const menuGroups = [
       { title: "Users", url: "/admin/users", icon: Users },
       { title: "Age Verification", url: "/admin/age-verification", icon: CheckCircle },
       { title: "Compliance", url: "/admin/compliance", icon: Shield },
+      { title: "Risk Factors", url: "/admin/risk-factors", icon: AlertTriangle },
     ]
   },
   {

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AdminProvider } from "./contexts/AdminContext";
 import { CourierProvider } from "./contexts/CourierContext";
+import { DeviceTracker } from "./components/DeviceTracker";
 import { CourierPinProvider } from "./contexts/CourierPinContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { lazy, Suspense } from "react";
@@ -59,6 +60,8 @@ const AdminCourierDetails = lazy(() => import("./pages/admin/AdminCourierDetails
 const AdminCompliance = lazy(() => import("./pages/admin/AdminCompliance"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminUserDetails = lazy(() => import("./pages/admin/AdminUserDetails"));
+const RiskFactorManagement = lazy(() => import("./pages/admin/RiskFactorManagement"));
+const UserAccount = lazy(() => import("./pages/UserAccount"));
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AdminAuditLogs = lazy(() => import("./pages/admin/AdminAuditLogs"));
 const AdminAgeVerification = lazy(() => import("./pages/admin/AdminAgeVerification"));
@@ -109,6 +112,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
+        <DeviceTracker />
         <AdminProvider>
           <CourierProvider>
             <CourierPinProvider>
@@ -178,6 +182,7 @@ const App = () => (
                       {/* Protected User Routes */}
                       <Route path="/order-tracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
                       <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+                      <Route path="/account" element={<ProtectedRoute><UserAccount /></ProtectedRoute>} />
                       <Route path="/settings/notifications" element={
                         <ProtectedRoute><NotificationPreferences /></ProtectedRoute>
                       } />
@@ -194,6 +199,7 @@ const App = () => (
                         <Route path="compliance" element={<AdminCompliance />} />
                         <Route path="users" element={<AdminUsers />} />
                         <Route path="users/:id" element={<AdminUserDetails />} />
+                        <Route path="risk-factors" element={<RiskFactorManagement />} />
                         <Route path="analytics" element={<AdminAnalytics />} />
                         <Route path="audit-logs" element={<AdminAuditLogs />} />
                         <Route path="age-verification" element={<AdminAgeVerification />} />
