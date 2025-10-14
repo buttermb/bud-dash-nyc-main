@@ -14,12 +14,18 @@ import FloatingGiveawayButton from "@/components/FloatingGiveawayButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, Truck, Award } from "lucide-react";
+import { SEOHead } from "@/components/SEOHead";
 
 
 const Index = () => {
   return (
-    <div className="min-h-screen pb-20 md:pb-0">
-      <AgeVerificationModal />
+    <>
+      <SEOHead 
+        title="New York Minute NYC - Premium Cannabis Delivery | Manhattan, Brooklyn, Queens"
+        description="Fast, discreet premium cannabis delivery across NYC. Lab-tested flower, edibles, concentrates from licensed vendors. Same-day delivery to Manhattan, Brooklyn & Queens."
+      />
+      <div className="min-h-screen pb-20 md:pb-0">
+        <AgeVerificationModal />
       <RecentPurchaseNotification />
       <GiveawayBanner />
       <Navigation />
@@ -146,7 +152,8 @@ const Index = () => {
       <InstallPWA />
       
       <Footer />
-    </div>
+      </div>
+    </>
   );
 };
 

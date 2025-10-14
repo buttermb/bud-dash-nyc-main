@@ -3,6 +3,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Plus, Minus, Check, Star, Flame, Sparkles, Loader2, AlertCircle, Award, Clock, TrendingUp } from "lucide-react";
+import { OptimizedProductImage } from "@/components/OptimizedProductImage";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -198,13 +199,11 @@ const ProductCard = ({ product, onAuthRequired, stockLevel }: ProductCardProps) 
             <CarouselContent>
               {productImages.map((image, index) => (
                 <CarouselItem key={index}>
-                  <img
+                  <OptimizedProductImage
                     src={image}
                     alt={`${product.name} - Image ${index + 1}`}
-                    loading="lazy"
-                    width="330"
-                    height="288"
-                    className="w-full h-72 object-cover transition-transform duration-300 group-hover:scale-110"
+                    className="w-full h-72"
+                    priority={index === 0}
                   />
                 </CarouselItem>
               ))}
