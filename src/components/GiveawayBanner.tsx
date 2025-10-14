@@ -31,7 +31,7 @@ export default function GiveawayBanner() {
   if (!isVisible) return null;
 
   return (
-    <div className="relative bg-gradient-to-r from-primary via-emerald-500 to-blue-500 text-white py-2 md:py-3 shadow-lg pt-safe">
+    <div className="relative bg-gradient-to-r from-primary via-emerald-500 to-blue-500 text-white shadow-lg" style={{ paddingTop: 'max(env(safe-area-inset-top), 0.5rem)', paddingBottom: '0.5rem' }}>
       <div className="container mx-auto px-2 sm:px-4">
         <div className="flex items-center justify-between gap-2">
           <Link 
@@ -48,10 +48,10 @@ export default function GiveawayBanner() {
           </Link>
           <button
             onClick={handleDismiss}
-            className="flex-shrink-0 p-2 sm:p-2.5 hover:bg-white/20 rounded-full transition-colors touch-manipulation active:scale-95 min-w-[40px] min-h-[40px] flex items-center justify-center"
+            className="flex-shrink-0 p-2 sm:p-2.5 hover:bg-white/20 rounded-full transition-colors touch-manipulation active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="Dismiss banner"
           >
-            <X className="w-4 h-4 sm:w-5 sm:h-5" />
+            <X className="w-5 h-5" />
           </button>
         </div>
       </div>
