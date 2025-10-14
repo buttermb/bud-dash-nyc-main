@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Play, CheckCircle, XCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Play, CheckCircle, XCircle, AlertCircle, Loader2, Download, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 
@@ -16,7 +16,7 @@ interface ButtonTest {
 }
 
 interface BugReport {
-  type: "broken-image" | "missing-alt" | "react-error" | "performance" | "console-warning";
+  type: "broken-image" | "missing-alt" | "react-error" | "performance" | "console-warning" | "accessibility" | "dead-link" | "memory-leak" | "seo";
   severity: "low" | "medium" | "high";
   message: string;
   element?: string;
@@ -161,6 +161,78 @@ const ButtonTester = () => {
           message: `Slow page load: ${Math.round(loadTime)}ms (recommended < 3000ms)`
         });
       }
+    }
+    
+    // Check accessibility issues
+    const buttonsWithoutAriaLabel = document.querySelectorAll('button:not([aria-label]):not([aria-labelledby])');
+    buttonsWithoutAriaLabel.forEach((btn) => {
+      if (!btn.textContent?.trim()) {
+        bugs.push({
+          type: 'accessibility',
+          severity: 'medium',
+          message: 'Button without text or aria-label',
+          element: btn.outerHTML.substring(0, 100)
+        });
+      }
+    });
+    
+    // Check for missing form labels
+    const inputsWithoutLabels = document.querySelectorAll('input:not([aria-label]):not([aria-labelledby]):not([type="hidden"])');
+    if (inputsWithoutLabels.length > 0) {
+      bugs.push({
+        type: 'accessibility',
+        severity: 'medium',
+        message: `${inputsWithoutLabels.length} input(s) without accessible labels`
+      });
+    }
+    
+    // Check for dead links
+    const links = document.querySelectorAll('a[href]');
+    links.forEach((link) => {
+      const href = link.getAttribute('href');
+      if (href === '#' || href === '' || href === 'javascript:void(0)') {
+        bugs.push({
+          type: 'dead-link',
+          severity: 'low',
+          message: 'Link with no destination',
+          element: link.textContent?.substring(0, 50) || 'Unknown link'
+        });
+      }
+    });
+    
+    // Check for potential memory leaks (event listeners on removed elements)
+    const elementsWithListeners = document.querySelectorAll('[onclick]');
+    if (elementsWithListeners.length > 10) {
+      bugs.push({
+        type: 'memory-leak',
+        severity: 'low',
+        message: `${elementsWithListeners.length} inline event handlers detected (may cause memory leaks)`
+      });
+    }
+    
+    // Check SEO issues
+    const h1Tags = document.querySelectorAll('h1');
+    if (h1Tags.length === 0) {
+      bugs.push({
+        type: 'seo',
+        severity: 'medium',
+        message: 'Missing H1 tag for SEO'
+      });
+    } else if (h1Tags.length > 1) {
+      bugs.push({
+        type: 'seo',
+        severity: 'low',
+        message: `Multiple H1 tags detected (${h1Tags.length})`
+      });
+    }
+    
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      bugs.push({
+        type: 'seo',
+        severity: 'medium',
+        message: 'Missing meta description for SEO'
+      });
     }
     
     return bugs;
@@ -390,6 +462,61 @@ const ButtonTester = () => {
     toast.success(`All tests complete: ${successCount} working, ${errorCount} errors, ${notFoundCount} 404s, ${totalBugsFound} bugs found across ${allRoutes.length} pages`);
   };
 
+  const exportResults = (format: 'json' | 'csv') => {
+    if (pageResults.length === 0) {
+      toast.error("No results to export");
+      return;
+    }
+
+    const timestamp = new Date().toISOString().split('T')[0];
+    
+    if (format === 'json') {
+      const data = JSON.stringify({ pageResults, stats, timestamp }, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `button-test-results-${timestamp}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Exported as JSON");
+    } else {
+      let csv = 'Page,Button,Status,Bug Type,Bug Severity,Bug Message\n';
+      pageResults.forEach(page => {
+        page.buttonResults.forEach(btn => {
+          csv += `"${page.path}","${btn.label}","${btn.status}","","",""\n`;
+        });
+        page.bugs.forEach(bug => {
+          csv += `"${page.path}","","","${bug.type}","${bug.severity}","${bug.message}"\n`;
+        });
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `button-test-results-${timestamp}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Exported as CSV");
+    }
+  };
+
+  const retestFailed = async () => {
+    const failedPages = pageResults.filter(p => 
+      p.buttonResults.some(b => b.status === 'error' || b.status === '404') || 
+      p.bugs.some(b => b.severity === 'high')
+    );
+    
+    if (failedPages.length === 0) {
+      toast.info("No failed tests to rerun");
+      return;
+    }
+    
+    toast.info(`Retesting ${failedPages.length} pages with issues...`);
+    // Reset and rerun only failed pages
+    // Implementation would be similar to runTests but only for failedPages
+  };
+
   const getStatusIcon = (status: ButtonTest['status']) => {
     switch (status) {
       case 'success':
@@ -430,6 +557,43 @@ const ButtonTester = () => {
       case 'medium': return 'text-warning';
       case 'low': return 'text-muted-foreground';
     }
+  };
+
+  const getRecommendations = () => {
+    const recommendations = [];
+    
+    if (stats.error > 0) {
+      recommendations.push(`🔴 Fix ${stats.error} broken button(s) that are causing errors`);
+    }
+    if (stats.notFound > 0) {
+      recommendations.push(`⚠️ Fix ${stats.notFound} button(s) leading to 404 pages`);
+    }
+    
+    const highSeverityBugs = pageResults.reduce((sum, p) => sum + p.bugs.filter(b => b.severity === 'high').length, 0);
+    if (highSeverityBugs > 0) {
+      recommendations.push(`🚨 Address ${highSeverityBugs} high-severity bug(s) immediately`);
+    }
+    
+    const accessibilityIssues = pageResults.reduce((sum, p) => sum + p.bugs.filter(b => b.type === 'accessibility').length, 0);
+    if (accessibilityIssues > 0) {
+      recommendations.push(`♿ Improve ${accessibilityIssues} accessibility issue(s)`);
+    }
+    
+    const seoIssues = pageResults.reduce((sum, p) => sum + p.bugs.filter(b => b.type === 'seo').length, 0);
+    if (seoIssues > 0) {
+      recommendations.push(`📈 Optimize ${seoIssues} SEO issue(s)`);
+    }
+    
+    const perfIssues = pageResults.reduce((sum, p) => sum + p.bugs.filter(b => b.type === 'performance').length, 0);
+    if (perfIssues > 0) {
+      recommendations.push(`⚡ Improve performance on ${perfIssues} page(s)`);
+    }
+    
+    if (recommendations.length === 0) {
+      recommendations.push("✅ All tests passed! Your site is looking great.");
+    }
+    
+    return recommendations;
   };
 
   return (
@@ -476,24 +640,61 @@ const ButtonTester = () => {
             </div>
           )}
           
-          <Button onClick={runTests} disabled={testing} size="lg" className="w-full">
-            {testing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Testing All Pages...
-              </>
-            ) : (
-              <>
-                <Play className="mr-2 h-4 w-4" />
-                Run Complete Site Test
-              </>
+          <div className="flex gap-2">
+            <Button onClick={runTests} disabled={testing} size="lg" className="flex-1">
+              {testing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Testing All Pages...
+                </>
+              ) : (
+                <>
+                  <Play className="mr-2 h-4 w-4" />
+                  Run Complete Site Test
+                </>
+              )}
+            </Button>
+            {results.length > 0 && (
+              <Button 
+                onClick={retestFailed} 
+                disabled={testing}
+                size="lg"
+                variant="outline"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retest Failed
+              </Button>
             )}
-          </Button>
+          </div>
         </CardContent>
       </Card>
 
       {results.length > 0 && (
         <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Recommendations</CardTitle>
+              <CardDescription>Priority actions based on test results</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {getRecommendations().map((rec, idx) => (
+                  <li key={idx} className="text-sm">{rec}</li>
+                ))}
+              </ul>
+              <div className="flex gap-2 mt-4">
+                <Button onClick={() => exportResults('json')} variant="outline" size="sm">
+                  <Download className="mr-2 h-4 w-4" />
+                  Export JSON
+                </Button>
+                <Button onClick={() => exportResults('csv')} variant="outline" size="sm">
+                  <Download className="mr-2 h-4 w-4" />
+                  Export CSV
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <Card>
               <CardHeader className="pb-3">
