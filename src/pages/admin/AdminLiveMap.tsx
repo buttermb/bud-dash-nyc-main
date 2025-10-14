@@ -352,7 +352,7 @@ const AdminLiveMap = () => {
   }
 
   return (
-    <div ref={containerRef} className={`${isFullscreen ? 'h-screen overflow-hidden' : 'min-h-screen'} flex flex-col bg-background`}>
+    <div ref={containerRef} className={isFullscreen ? "h-screen flex flex-col bg-background overflow-hidden" : "min-h-screen bg-background"}>
       <audio ref={audioRef} src="/notification.mp3" preload="auto" />
       
       <AdminAlerts />
@@ -481,9 +481,9 @@ const AdminLiveMap = () => {
       </div>
 
       {/* Main Content */}
-      <div className={`flex flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-6 ${isFullscreen ? 'flex-1 overflow-hidden' : ''}`}>
+      <div className={isFullscreen ? "flex flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-6 flex-1 min-h-0" : "flex flex-col lg:flex-row gap-4 md:gap-6 p-4 md:p-6"}>
         {/* Left Panel - Map & Controls */}
-        <div className={`w-full lg:flex-1 flex flex-col gap-4 ${isFullscreen ? 'overflow-y-auto' : ''}`}>
+        <div className={isFullscreen ? "w-full lg:flex-1 flex flex-col gap-4 min-h-0 overflow-y-auto" : "w-full lg:flex-1 flex flex-col gap-4"}>
           {/* Filters */}
           <Card>
             <CardContent className="p-4">
@@ -618,8 +618,8 @@ const AdminLiveMap = () => {
         </div>
 
         {/* Right Panel - Orders & Activity */}
-        <div className={`w-full lg:w-[400px] flex flex-col gap-4 ${isFullscreen ? 'overflow-y-auto' : ''}`}>
-          <Tabs defaultValue="orders" className={isFullscreen ? 'flex flex-col flex-shrink-0' : ''}>
+        <div className={isFullscreen ? "w-full lg:w-[400px] flex flex-col gap-4 min-h-0 overflow-y-auto" : "w-full lg:w-[400px] flex flex-col gap-4"}>
+          <Tabs defaultValue="orders"  className={isFullscreen ? "flex flex-col min-h-0" : ""}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="orders">
                 Orders ({filteredDeliveries.length})
@@ -629,13 +629,13 @@ const AdminLiveMap = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="orders" className="mt-4">
-              <Card>
-                <CardHeader className="pb-3">
+            <TabsContent value="orders" className={isFullscreen ? "mt-4 flex-1 min-h-0 flex flex-col" : "mt-4"}>
+              <Card className={isFullscreen ? "flex-1 min-h-0 flex flex-col" : ""}>
+                <CardHeader className="pb-3 flex-shrink-0">
                   <CardTitle className="text-lg">Active Orders</CardTitle>
                 </CardHeader>
-                <CardContent className="p-0">
-                  <ScrollArea className={isFullscreen ? 'h-[calc(100vh-28rem)]' : 'h-[500px] md:h-[600px]'}>
+                <CardContent className={isFullscreen ? "p-0 flex-1 min-h-0 overflow-hidden" : "p-0"}>
+                  <ScrollArea className={isFullscreen ? 'h-full' : 'h-[500px] md:h-[600px]'}>
                     <div className="space-y-2 p-4">
                       {filteredDeliveries.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">
@@ -786,13 +786,13 @@ const AdminLiveMap = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="activity" className="mt-4">
-              <Card>
-                <CardHeader className="pb-3">
+            <TabsContent value="activity" className={isFullscreen ? "mt-4 flex-1 min-h-0 flex flex-col" : "mt-4"}>
+              <Card className={isFullscreen ? "flex-1 min-h-0 flex flex-col" : ""}>
+                <CardHeader className="pb-3 flex-shrink-0">
                   <CardTitle className="text-lg">Live Activity Feed</CardTitle>
                 </CardHeader>
-                <CardContent className="p-0">
-                  <ScrollArea className={isFullscreen ? 'h-[calc(100vh-28rem)]' : 'h-[500px] md:h-[600px]'}>
+                <CardContent className={isFullscreen ? "p-0 flex-1 min-h-0 overflow-hidden" : "p-0"}>
+                  <ScrollArea className={isFullscreen ? 'h-full' : 'h-[500px] md:h-[600px]'}>
                     <div className="space-y-2 p-4">
                       {activityFeed.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">
