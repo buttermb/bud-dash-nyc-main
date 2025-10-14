@@ -244,6 +244,31 @@ const ButtonTester = () => {
       let capturedError: string | null = null;
       let is404 = false;
       let networkErrors: string[] = [];
+      let testCompleted = false;
+
+      // Safety timeout to prevent hanging
+      const safetyTimeout = setTimeout(() => {
+        if (!testCompleted) {
+          cleanup();
+          resolve({
+            label: button.label,
+            path: button.path,
+            status: 'error',
+            errorMessage: 'Test timeout - button may have caused navigation or infinite loop'
+          });
+        }
+      }, 5000); // Safety timeout
+
+      const cleanup = () => {
+        testCompleted = true;
+        clearTimeout(safetyTimeout);
+        window.fetch = originalFetch;
+        XMLHttpRequest.prototype.open = originalXHROpen;
+        XMLHttpRequest.prototype.send = originalXHRSend;
+        console.error = originalConsoleError;
+        console.warn = originalConsoleWarn;
+        window.removeEventListener('unhandledrejection', handleRejection);
+      };
 
       // Intercept fetch requests
       window.fetch = async (...args) => {
@@ -337,18 +362,18 @@ const ButtonTester = () => {
       window.addEventListener('unhandledrejection', handleRejection);
 
       try {
-        // Simulate click
-        button.element.click();
+        // Simulate click with error handling
+        try {
+          button.element.click();
+        } catch (clickError) {
+          networkErrors.push(`Click failed: ${clickError instanceof Error ? clickError.message : 'Unknown error'}`);
+        }
 
         // Reduced timeout for faster testing
         setTimeout(() => {
-          // Restore original functions
-          window.fetch = originalFetch;
-          XMLHttpRequest.prototype.open = originalXHROpen;
-          XMLHttpRequest.prototype.send = originalXHRSend;
-          console.error = originalConsoleError;
-          console.warn = originalConsoleWarn;
-          window.removeEventListener('unhandledrejection', handleRejection);
+          if (testCompleted) return;
+          
+          cleanup();
 
           // Compile all errors (include warnings if severe)
           const allErrors = [...networkErrors, ...consoleErrors, ...consoleWarnings];
@@ -367,15 +392,9 @@ const ButtonTester = () => {
             status,
             errorMessage: capturedError || undefined
           });
-        }, 800); // Optimized timeout for faster testing
+        }, 500); // Further reduced timeout
       } catch (error) {
-        // Restore original functions
-        window.fetch = originalFetch;
-        XMLHttpRequest.prototype.open = originalXHROpen;
-        XMLHttpRequest.prototype.send = originalXHRSend;
-        console.error = originalConsoleError;
-        console.warn = originalConsoleWarn;
-        window.removeEventListener('unhandledrejection', handleRejection);
+        cleanup();
 
         resolve({
           label: button.label,
@@ -399,54 +418,109 @@ const ButtonTester = () => {
     toast.info(`Starting tests across ${allRoutes.length} pages...`);
 
     for (let i = 0; i < allRoutes.length; i++) {
-      const route = allRoutes[i];
-      setCurrentPage(route);
-      setProgress(((i + 1) / allRoutes.length) * 100);
-      
-      // Navigate to the page
-      navigate(route);
-      
-      // Reduced wait time for faster testing
-      await new Promise(resolve => setTimeout(resolve, 600));
-      
-      // Get buttons on this page
-      const buttons = getAllButtons();
-      
-      // Find bugs on this page
-      const pageBugs = findBugs();
-      
-      if (buttons.length === 0) {
+      try {
+        const route = allRoutes[i];
+        setCurrentPage(route);
+        setProgress(((i + 1) / allRoutes.length) * 100);
+        
+        // Navigate to the page with error handling
+        try {
+          navigate(route);
+        } catch (navError) {
+          console.error(`Navigation error to ${route}:`, navError);
+          allPageResults.push({
+            path: route,
+            tested: true,
+            buttonResults: [],
+            bugs: [{
+              type: 'react-error',
+              severity: 'high',
+              message: `Failed to navigate to ${route}`
+            }]
+          });
+          continue;
+        }
+        
+        // Minimal wait time for faster testing
+        await new Promise(resolve => setTimeout(resolve, 400));
+        
+        // Get buttons on this page with error handling
+        let buttons: { label: string; path: string; element: HTMLElement }[] = [];
+        try {
+          buttons = getAllButtons();
+        } catch (error) {
+          console.error(`Error getting buttons on ${route}:`, error);
+        }
+        
+        // Find bugs on this page with error handling
+        let pageBugs: BugReport[] = [];
+        try {
+          pageBugs = findBugs();
+        } catch (error) {
+          console.error(`Error finding bugs on ${route}:`, error);
+        }
+        
+        if (buttons.length === 0) {
+          allPageResults.push({
+            path: route,
+            tested: true,
+            buttonResults: [],
+            bugs: pageBugs
+          });
+          setPageResults([...allPageResults]);
+          continue;
+        }
+        
+        toast.info(`Testing ${buttons.length} buttons on ${route}`);
+        
+        const pageTestResults: ButtonTest[] = [];
+        
+        // Test buttons in parallel batches for maximum speed
+        const batchSize = 5; // Increased batch size
+        for (let j = 0; j < buttons.length; j += batchSize) {
+          try {
+            const batch = buttons.slice(j, j + batchSize);
+            const batchResults = await Promise.allSettled(batch.map(btn => testButton(btn)));
+            
+            // Handle both successful and failed promises
+            batchResults.forEach((result, idx) => {
+              if (result.status === 'fulfilled') {
+                pageTestResults.push(result.value);
+                allButtonResults.push(result.value);
+              } else {
+                // Promise rejected - add error result
+                const failedButton = batch[idx];
+                const errorResult: ButtonTest = {
+                  label: failedButton.label,
+                  path: failedButton.path,
+                  status: 'error',
+                  errorMessage: 'Test failed to complete'
+                };
+                pageTestResults.push(errorResult);
+                allButtonResults.push(errorResult);
+              }
+            });
+            
+            setResults([...allButtonResults]);
+          } catch (batchError) {
+            console.error(`Batch test error:`, batchError);
+            // Continue with next batch even if this one fails
+          }
+        }
+        
         allPageResults.push({
           path: route,
           tested: true,
-          buttonResults: [],
+          buttonResults: pageTestResults,
           bugs: pageBugs
         });
+        
+        setPageResults([...allPageResults]);
+      } catch (pageError) {
+        console.error(`Error testing page ${allRoutes[i]}:`, pageError);
+        // Continue with next page even if this one fails
         continue;
       }
-      
-      toast.info(`Testing ${buttons.length} buttons on ${route}`);
-      
-      const pageTestResults: ButtonTest[] = [];
-      
-      // Test buttons in batches for faster execution
-      const batchSize = 3;
-      for (let i = 0; i < buttons.length; i += batchSize) {
-        const batch = buttons.slice(i, i + batchSize);
-        const batchResults = await Promise.all(batch.map(btn => testButton(btn)));
-        pageTestResults.push(...batchResults);
-        allButtonResults.push(...batchResults);
-        setResults([...allButtonResults]);
-      }
-      
-      allPageResults.push({
-        path: route,
-        tested: true,
-        buttonResults: pageTestResults,
-        bugs: pageBugs
-      });
-      
-      setPageResults([...allPageResults]);
     }
     
     const totalBugsFound = allPageResults.reduce((sum, page) => sum + page.bugs.length, 0);
