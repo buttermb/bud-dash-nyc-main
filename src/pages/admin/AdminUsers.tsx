@@ -21,8 +21,6 @@ import {
   Search, 
   CheckCircle2,
   XCircle,
-  ChevronDown,
-  ChevronUp,
   User,
   ShoppingBag,
   DollarSign,
@@ -30,7 +28,10 @@ import {
   Ban,
   Lock,
   Download,
-  AlertTriangle
+  AlertTriangle,
+  UserCheck,
+  Users,
+  TrendingUp
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -53,6 +54,10 @@ interface UserProfile {
   order_count?: number;
   total_spent?: number;
   account_status?: string;
+  risk_score?: number;
+  trust_level?: string;
+  last_sign_in?: string;
+  pending_orders?: number;
 }
 
 export default function AdminUsers() {
@@ -73,7 +78,7 @@ export default function AdminUsers() {
     try {
       const [profilesRes, ordersRes, authRes] = await Promise.all([
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-        supabase.from("orders").select("user_id, total_amount"),
+        supabase.from("orders").select("user_id, total_amount, status"),
         supabase.auth.admin.listUsers().catch(() => ({ data: { users: [] } }))
       ]);
 
@@ -90,11 +95,14 @@ export default function AdminUsers() {
 
       const enriched = profiles.map(p => {
         const userOrders = ordersByUser.get(p.user_id) || [];
+        const authUser = authUserMap.get(p.user_id);
         return {
           ...p,
-          email: authUserMap.get(p.user_id)?.email || "N/A",
+          email: authUser?.email || "N/A",
+          last_sign_in: authUser?.last_sign_in_at,
           order_count: userOrders.length,
           total_spent: userOrders.reduce((s, o) => s + Number(o.total_amount || 0), 0),
+          pending_orders: userOrders.filter(o => ['pending', 'accepted', 'picked_up'].includes(o.status)).length,
         };
       });
 
@@ -120,6 +128,36 @@ export default function AdminUsers() {
     }
   };
 
+  const exportToCSV = () => {
+    const csvData = filteredUsers.map(u => ({
+      Name: u.full_name || "N/A",
+      Email: u.email,
+      Phone: u.phone || "N/A",
+      Verified: u.age_verified ? "Yes" : "No",
+      Orders: u.order_count || 0,
+      "Total Spent": `$${(u.total_spent || 0).toFixed(2)}`,
+      "Risk Score": u.risk_score || "N/A",
+      "Trust Level": u.trust_level || "N/A",
+      Status: u.account_status || "active",
+      "Created At": new Date(u.created_at).toLocaleDateString(),
+    }));
+
+    const headers = Object.keys(csvData[0] || {});
+    const csv = [
+      headers.join(","),
+      ...csvData.map(row => headers.map(h => `"${row[h as keyof typeof row]}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `users-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    toast({ title: "✓ Exported to CSV" });
+  };
+
   const filteredUsers = users.filter(u => {
     const match = u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                   u.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -130,11 +168,80 @@ export default function AdminUsers() {
     return match && filter;
   });
 
+  const metrics = {
+    total: users.length,
+    verified: users.filter(u => u.age_verified).length,
+    unverified: users.filter(u => !u.age_verified).length,
+    flagged: users.filter(u => u.trust_level === 'flagged').length,
+    vip: users.filter(u => u.trust_level === 'vip').length,
+    totalRevenue: users.reduce((sum, u) => sum + (u.total_spent || 0), 0),
+  };
+
   if (loading) return <div className="p-6"><Skeleton className="h-96" /></div>;
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold">User Management</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">User Management</h1>
+        <Button onClick={exportToCSV} variant="outline">
+          <Download className="h-4 w-4 mr-2" />Export CSV
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Total Users
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.total}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <UserCheck className="h-4 w-4 text-green-600" />
+              Verified Users
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{metrics.verified}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {((metrics.verified / metrics.total) * 100).toFixed(1)}% of total
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Shield className="h-4 w-4 text-blue-600" />
+              VIP Users
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{metrics.vip}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-purple-600" />
+              Total Revenue
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">
+              ${metrics.totalRevenue.toFixed(2)}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <Card>
         <CardHeader>
@@ -143,7 +250,10 @@ export default function AdminUsers() {
             <div className="flex gap-2 flex-wrap">
               {selectedUsers.size > 0 && (
                 <>
-                  <Badge>{selectedUsers.size} selected</Badge>
+                  <Badge variant="secondary">{selectedUsers.size} selected</Badge>
+                  <Button size="sm" variant="outline" onClick={() => bulkUpdateStatus("active")}>
+                    <CheckCircle2 className="h-4 w-4 mr-1" />Activate
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => bulkUpdateStatus("suspended")}>
                     <AlertTriangle className="h-4 w-4 mr-1" />Suspend
                   </Button>
@@ -192,8 +302,10 @@ export default function AdminUsers() {
                 </TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Trust Level</TableHead>
                 <TableHead>Orders</TableHead>
                 <TableHead>Total Spent</TableHead>
+                <TableHead>Last Seen</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -224,14 +336,45 @@ export default function AdminUsers() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {user.age_verified ? (
-                      <Badge className="bg-green-600"><CheckCircle2 className="h-3 w-3 mr-1" />Verified</Badge>
-                    ) : (
-                      <Badge variant="secondary"><XCircle className="h-3 w-3 mr-1" />Unverified</Badge>
-                    )}
+                    <div className="flex gap-2">
+                      {user.age_verified ? (
+                        <Badge className="bg-green-600"><CheckCircle2 className="h-3 w-3 mr-1" />Verified</Badge>
+                      ) : (
+                        <Badge variant="secondary"><XCircle className="h-3 w-3 mr-1" />Unverified</Badge>
+                      )}
+                      {user.account_status === 'banned' && (
+                        <Badge variant="destructive"><Ban className="h-3 w-3 mr-1" />Banned</Badge>
+                      )}
+                      {user.account_status === 'suspended' && (
+                        <Badge variant="outline" className="border-orange-500 text-orange-500">
+                          <AlertTriangle className="h-3 w-3 mr-1" />Suspended
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
-                  <TableCell>{user.order_count || 0}</TableCell>
+                  <TableCell>
+                    <Badge variant={
+                      user.trust_level === 'vip' ? 'default' :
+                      user.trust_level === 'regular' ? 'secondary' :
+                      user.trust_level === 'flagged' ? 'destructive' : 'outline'
+                    }>
+                      {user.trust_level || 'new'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{user.order_count || 0}</div>
+                      {user.pending_orders > 0 && (
+                        <div className="text-xs text-muted-foreground">
+                          {user.pending_orders} pending
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="font-semibold text-green-600">${(user.total_spent || 0).toFixed(2)}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {user.last_sign_in ? new Date(user.last_sign_in).toLocaleDateString() : 'Never'}
+                  </TableCell>
                   <TableCell>
                     <Button size="sm" variant="outline" onClick={() => navigate(`/admin/users/${user.user_id}`)}>
                       <Eye className="h-4 w-4 mr-1" />View
