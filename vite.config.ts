@@ -106,6 +106,11 @@ export default defineConfig(({ mode }) => ({
           'maps': ['leaflet', 'react-leaflet', 'mapbox-gl'],
           'supabase': ['@supabase/supabase-js'],
           'query': ['@tanstack/react-query'],
+          'admin': [
+            './src/pages/admin/AdminDashboard.tsx',
+            './src/pages/admin/AdminOrders.tsx',
+            './src/pages/admin/AdminUsers.tsx',
+          ],
         },
       },
     },

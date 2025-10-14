@@ -10,6 +10,8 @@ import { DeviceTracker } from "./components/DeviceTracker";
 import { CourierPinProvider } from "./contexts/CourierPinContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { lazy, Suspense } from "react";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { SkipToContent } from "./components/SkipToContent";
 
 import { NotificationPreferences } from "./components/NotificationPreferences";
 import OfflineBanner from "./components/OfflineBanner";
@@ -112,22 +114,24 @@ const LoadingFallback = () => (
 );
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <AuthProvider>
-        <DeviceTracker />
-        <AdminProvider>
-          <CourierProvider>
-            <CourierPinProvider>
-              <TooltipProvider>
-                <BrowserRouter>
-                  <OfflineBanner />
-                  <InstallPWA />
-                  <CartBadgeAnimation />
-                  
-                  <Toaster />
-                  <Sonner />
-                  <Suspense fallback={<LoadingFallback />}>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <DeviceTracker />
+          <AdminProvider>
+            <CourierProvider>
+              <CourierPinProvider>
+                <TooltipProvider>
+                  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                    <SkipToContent />
+                    <OfflineBanner />
+                    <InstallPWA />
+                    <CartBadgeAnimation />
+                    
+                    <Toaster />
+                    <Sonner />
+                    <Suspense fallback={<LoadingFallback />}>
                     <Routes>
                       <Route path="/" element={<Index />} />
                       <Route path="/product/:id" element={<ProductDetail />} />
@@ -244,6 +248,7 @@ const App = () => (
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

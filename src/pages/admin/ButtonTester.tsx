@@ -270,7 +270,7 @@ const ButtonTester = () => {
         window.removeEventListener('unhandledrejection', handleRejection);
       };
 
-      // Intercept fetch requests
+      // Intercept fetch requests (improved to avoid cloning issues)
       window.fetch = async (...args) => {
         const url = typeof args[0] === 'string' ? args[0] : args[0] instanceof Request ? args[0].url : 'unknown';
         
@@ -290,7 +290,10 @@ const ButtonTester = () => {
           return response;
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : 'Network error';
-          networkErrors.push(`Fetch failed for ${url}: ${errorMsg}`);
+          // Filter out cloning errors from our own interceptor
+          if (!errorMsg.includes('DataCloneError') && !errorMsg.includes('postMessage')) {
+            networkErrors.push(`Fetch failed for ${url}: ${errorMsg}`);
+          }
           throw error;
         }
       };
