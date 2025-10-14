@@ -29,6 +29,7 @@ import { Progress } from "@/components/ui/progress";
 const SystemSettings = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isRunningOperation, setIsRunningOperation] = useState(false);
   
   // Fraud Detection Rules
   const [fraudRules, setFraudRules] = useState({
@@ -123,6 +124,56 @@ const SystemSettings = () => {
       queryClient.invalidateQueries({ queryKey: ["fraud-rules"] });
     },
   });
+
+  const handleDatabaseOperation = async (action: string) => {
+    setIsRunningOperation(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-database-maintenance', {
+        body: { action }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: data.message,
+      });
+    } catch (error) {
+      console.error('Database operation error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to perform database operation';
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsRunningOperation(false);
+    }
+  };
+
+  const handleDatabaseBackup = async () => {
+    setIsRunningOperation(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-database-backup');
+
+      if (error) throw error;
+
+      toast({
+        title: "Backup Initiated",
+        description: data.message,
+      });
+    } catch (error) {
+      console.error('Database backup error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create database backup';
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsRunningOperation(false);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: any; icon: any; label: string }> = {
@@ -464,17 +515,32 @@ const SystemSettings = () => {
               <CardTitle>Database Operations</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => handleDatabaseOperation('vacuum')}
+                disabled={isRunningOperation}
+              >
                 <Database className="mr-2 h-4 w-4" />
-                Run Database Maintenance
+                {isRunningOperation ? 'Running...' : 'Run Database Maintenance'}
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => handleDatabaseOperation('optimize_indexes')}
+                disabled={isRunningOperation}
+              >
                 <Shield className="mr-2 h-4 w-4" />
-                Optimize Indexes
+                {isRunningOperation ? 'Optimizing...' : 'Optimize Indexes'}
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => handleDatabaseBackup()}
+                disabled={isRunningOperation}
+              >
                 <HardDrive className="mr-2 h-4 w-4" />
-                Backup Database
+                {isRunningOperation ? 'Creating Backup...' : 'Backup Database'}
               </Button>
             </CardContent>
           </Card>
