@@ -56,14 +56,12 @@ const SystemSettings = () => {
         ordersLastHour,
         ordersToday,
         errorCount,
-        activeUsers,
         dbSize,
         avgResponseTime
       ] = await Promise.all([
         supabase.from("orders").select("id", { count: "exact", head: true }).gte("created_at", oneHourAgo.toISOString()),
         supabase.from("orders").select("id", { count: "exact", head: true }).gte("created_at", oneDayAgo.toISOString()),
         supabase.from("fraud_flags").select("id", { count: "exact", head: true }).is("resolved_at", null),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).gte("last_sign_in", oneHourAgo.toISOString()),
         // Simulate DB size check
         Promise.resolve({ size_mb: Math.random() * 1000 + 500 }),
         // Simulate response time
@@ -77,7 +75,7 @@ const SystemSettings = () => {
         ordersToday: ordersToday.count || 0,
         errorRate: errorRate.toFixed(2),
         unresolvedErrors: errorCount.count || 0,
-        activeUsers: activeUsers.count || 0,
+        activeUsers: 0, // Active user tracking requires last_sign_in column
         databaseSize: dbSize.size_mb.toFixed(2),
         avgResponseTime: avgResponseTime.avg_ms.toFixed(0),
         status: errorRate > 10 ? "warning" : errorRate > 5 ? "attention" : "healthy",
