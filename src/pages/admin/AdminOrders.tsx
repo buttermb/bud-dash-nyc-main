@@ -23,6 +23,8 @@ interface Order {
   delivery_borough: string;
   customer_name?: string;
   customer_phone?: string;
+  dropoff_lat?: number;
+  dropoff_lng?: number;
   merchants?: {
     business_name: string;
     address: string;
@@ -38,6 +40,8 @@ interface Order {
     full_name: string;
     phone: string;
     email: string;
+    current_lat?: number;
+    current_lng?: number;
   };
   order_items?: Array<{
     quantity: number;
