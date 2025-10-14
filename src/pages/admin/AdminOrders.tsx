@@ -1,12 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Loader2, RefreshCw, AlertTriangle, MapPin, Clock } from 'lucide-react';
 import { getNeighborhoodFromZip, getRiskColor, getRiskLabel, getRiskTextColor } from '@/utils/neighborhoods';
+import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
+import { OrderMap } from '@/components/admin/OrderMap';
+import { CourierDispatchPanel } from '@/components/admin/CourierDispatchPanel';
+import { useETATracking } from '@/hooks/useETATracking';
 
 interface Order {
   id: string;
@@ -55,88 +59,40 @@ const statusOptions = [
 ];
 
 export default function AdminOrders() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [showMap, setShowMap] = useState(true);
 
-  useEffect(() => {
-    fetchOrders();
-
-    // Realtime subscription for instant updates - removed polling since realtime handles it
-    const channel = supabase
-      .channel('admin-orders-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'orders'
-        },
-        () => {
-          fetchOrders();
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [statusFilter]);
-
-  const fetchOrders = async () => {
-    try {
-      let query = supabase
-        .from('orders')
-        .select(`
-          *,
-          merchants (business_name, address, phone),
-          addresses (street, city, state, zip_code),
-          couriers (full_name, phone, email),
-          order_items (
-            quantity,
-            price,
-            products (name, image_url)
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
+  const { orders, loading, refetch } = useRealtimeOrders({
+    statusFilter: statusFilter === 'all' ? undefined : [statusFilter],
+    onUpdate: (order) => {
+      // Show toast for status changes
+      if (selectedOrder?.id === order.id) {
+        toast({
+          title: 'Order Updated',
+          description: `Status changed to ${order.status.replace('_', ' ')}`
+        });
       }
-
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      setOrders(data || []);
-    } catch (error: any) {
-      console.error('Error fetching orders:', error);
-      toast({
-        title: 'Error loading orders',
-        description: error.message,
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
     }
-  };
+  });
+
+  const { eta } = useETATracking(selectedOrder?.id || null);
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     if (!confirm(`Change order status to "${newStatus.replace('_', ' ')}"?`)) return;
 
     setUpdating(true);
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({
+      const { error } = await supabase.functions.invoke('update-order-status', {
+        body: {
+          orderId,
           status: newStatus,
-          ...(newStatus === 'delivered' && { delivered_at: new Date().toISOString() })
-        })
-        .eq('id', orderId);
+          message: `Status updated to ${newStatus.replace('_', ' ')}`
+        }
+      });
 
       if (error) throw error;
 
@@ -145,8 +101,7 @@ export default function AdminOrders() {
         description: `Order status changed to ${newStatus.replace('_', ' ')}`
       });
 
-      // Immediate refetch to show changes
-      await fetchOrders();
+      await refetch();
       
       if (selectedOrder?.id === orderId) {
         setShowDetailModal(false);
@@ -231,11 +186,46 @@ export default function AdminOrders() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="flex-1"
           />
-          <Button onClick={fetchOrders} variant="outline" size="icon">
+          <Button onClick={refetch} variant="outline" size="icon">
             <RefreshCw className="h-4 w-4" />
+          </Button>
+          <Button 
+            onClick={() => setShowMap(!showMap)} 
+            variant="outline"
+          >
+            {showMap ? 'Hide Map' : 'Show Map'}
           </Button>
         </div>
       </div>
+
+      {/* Live Map */}
+      {showMap && (
+        <div className="mb-6">
+          <OrderMap
+            orders={filteredOrders.filter(o => o.dropoff_lat && o.dropoff_lng).map(o => ({
+              id: o.id,
+              tracking_code: o.tracking_code,
+              status: o.status,
+              delivery_address: o.delivery_address || o.addresses?.street || '',
+              dropoff_lat: o.dropoff_lat,
+              dropoff_lng: o.dropoff_lng,
+              courier: o.couriers ? {
+                full_name: o.couriers.full_name,
+                current_lat: (o.couriers as any).current_lat,
+                current_lng: (o.couriers as any).current_lng
+              } : undefined
+            }))}
+            selectedOrderId={selectedOrder?.id}
+            onOrderSelect={(orderId) => {
+              const order = orders.find(o => o.id === orderId);
+              if (order) {
+                setSelectedOrder(order);
+                setShowDetailModal(true);
+              }
+            }}
+          />
+        </div>
+      )}
 
       {/* Orders Table */}
       <div className="bg-card rounded-xl shadow overflow-hidden">
@@ -432,6 +422,20 @@ export default function AdminOrders() {
                     <p className="text-sm text-muted-foreground">
                       {selectedOrder.addresses?.city || 'New York'}, {selectedOrder.addresses?.state || selectedOrder.delivery_borough} {selectedOrder.addresses?.zip_code}
                     </p>
+
+                    {/* ETA Display */}
+                    {eta && selectedOrder.status !== 'delivered' && (
+                      <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex items-center gap-2 text-blue-700">
+                          <Clock className="h-4 w-4" />
+                          <span className="font-semibold">ETA: {eta.eta_minutes} minutes</span>
+                        </div>
+                        <p className="text-xs text-blue-600 mt-1">
+                          Distance: {eta.distance_miles} miles
+                        </p>
+                      </div>
+                    )}
+
                     {neighborhood && (
                       <div className="mt-3 p-3 rounded-lg border-2" style={{ borderColor: `hsl(var(--${neighborhood.risk <= 3 ? 'success' : neighborhood.risk <= 6 ? 'warning' : 'destructive'}))` }}>
                         <div className="flex items-center gap-3">
