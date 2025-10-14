@@ -73,27 +73,39 @@ const AdminLiveMap = () => {
 
   const fetchLiveDeliveries = async () => {
     try {
-      const { data, error } = await supabase
-        .from('deliveries')
+      // Fetch active orders with their delivery info and courier info
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
         .select(`
           *,
-          order:orders (
-            *,
-            items:order_items (*)
-          ),
-          courier:couriers (*)
+          order_items (*),
+          couriers (*)
         `)
-        .in('order.status', ['confirmed', 'preparing', 'out_for_delivery'])
+        .in('status', ['confirmed', 'preparing', 'out_for_delivery'])
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (ordersError) throw ordersError;
+      
+      // Transform to match expected format
+      const deliveriesData = ordersData?.map(order => ({
+        id: order.id,
+        order_id: order.id,
+        order: {
+          ...order,
+          items: order.order_items
+        },
+        courier: order.couriers,
+        created_at: order.created_at,
+        dropoff_lat: order.dropoff_lat,
+        dropoff_lng: order.dropoff_lng
+      })) || [];
       
       const previousCount = deliveries.length;
-      setDeliveries(data || []);
+      setDeliveries(deliveriesData);
       
-      if (data && data.length > previousCount) {
+      if (deliveriesData && deliveriesData.length > previousCount) {
         playNotificationSound();
-        addActivity('order', `New order received! Total active: ${data.length}`, 'success');
+        addActivity('order', `New order received! Total active: ${deliveriesData.length}`, 'success');
       }
     } catch (error) {
       console.error('Error fetching deliveries:', error);
@@ -220,32 +232,36 @@ const AdminLiveMap = () => {
   }, [session, autoRefresh, soundEnabled]);
 
   const filteredDeliveries = deliveries.filter((delivery) => {
-    const statusMatch = statusFilter === "all" || delivery.order?.status === statusFilter;
-    const boroughMatch = boroughFilter === "all" || delivery.order?.delivery_borough === boroughFilter;
+    const order = delivery.order || delivery;
+    const statusMatch = statusFilter === "all" || order.status === statusFilter;
+    const boroughMatch = boroughFilter === "all" || order.delivery_borough === boroughFilter;
     const searchMatch = !searchQuery || 
-      delivery.order?.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      delivery.order?.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       delivery.courier?.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
     
     return statusMatch && boroughMatch && searchMatch;
   });
 
-  const mapOrders = filteredDeliveries.map(d => ({
-    id: d.order?.id || d.id,
-    tracking_code: d.order?.tracking_code || '',
-    status: d.order?.status || 'pending',
-    delivery_address: d.order?.delivery_address || '',
-    dropoff_lat: d.order?.dropoff_lat || d.dropoff_lat,
-    dropoff_lng: d.order?.dropoff_lng || d.dropoff_lng,
-    eta_minutes: d.order?.eta_minutes,
-    courier_id: d.courier?.id,
-    courier: d.courier ? {
-      full_name: d.courier.full_name,
-      current_lat: d.courier.current_lat,
-      current_lng: d.courier.current_lng,
-      vehicle_type: d.courier.vehicle_type
-    } : undefined
-  }));
+  const mapOrders = filteredDeliveries.map(d => {
+    const order = d.order || d;
+    return {
+      id: order.id,
+      tracking_code: order.tracking_code || '',
+      status: order.status || 'pending',
+      delivery_address: order.delivery_address || '',
+      dropoff_lat: order.dropoff_lat || d.dropoff_lat,
+      dropoff_lng: order.dropoff_lng || d.dropoff_lng,
+      eta_minutes: order.eta_minutes,
+      courier_id: d.courier?.id,
+      courier: d.courier ? {
+        full_name: d.courier.full_name,
+        current_lat: d.courier.current_lat,
+        current_lng: d.courier.current_lng,
+        vehicle_type: d.courier.vehicle_type
+      } : undefined
+    };
+  });
 
   const getStatusColor = (status: string) => {
     const colors: { [key: string]: string } = {
@@ -460,14 +476,26 @@ const AdminLiveMap = () => {
 
           {/* Map */}
           <div className="h-[400px] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border shadow-lg">
-            <OrderMap
-              orders={mapOrders}
-              selectedOrderId={selectedDelivery?.order?.id}
-              onOrderSelect={(orderId) => {
-                const delivery = filteredDeliveries.find(d => d.order?.id === orderId);
-                setSelectedDelivery(delivery);
-              }}
-            />
+            {loading ? (
+              <div className="h-full flex items-center justify-center bg-muted/30">
+                <div className="text-center">
+                  <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2 text-primary" />
+                  <p className="text-sm text-muted-foreground">Loading map...</p>
+                </div>
+              </div>
+            ) : (
+              <OrderMap
+                orders={mapOrders}
+                selectedOrderId={selectedDelivery?.order?.id || selectedDelivery?.id}
+                onOrderSelect={(orderId) => {
+                  const delivery = filteredDeliveries.find(d => {
+                    const order = d.order || d;
+                    return order.id === orderId;
+                  });
+                  setSelectedDelivery(delivery);
+                }}
+              />
+            )}
           </div>
         </div>
 
@@ -497,67 +525,70 @@ const AdminLiveMap = () => {
                           <p>No active deliveries</p>
                         </div>
                       ) : (
-                        filteredDeliveries.map((delivery) => (
-                          <Card
-                            key={delivery.id}
-                            className={`cursor-pointer transition-all hover:shadow-md ${
-                              selectedDelivery?.id === delivery.id ? 'ring-2 ring-primary' : ''
-                            }`}
-                            onClick={() => setSelectedDelivery(delivery)}
-                          >
-                            <CardContent className="p-4">
-                              <div className="flex items-start justify-between mb-2">
-                                <div>
-                                  <p className="font-semibold">{delivery.order?.order_number}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {delivery.order?.customer_name || 'Customer'}
-                                  </p>
+                        filteredDeliveries.map((delivery) => {
+                          const order = delivery.order || delivery;
+                          return (
+                            <Card
+                              key={delivery.id}
+                              className={`cursor-pointer transition-all hover:shadow-md ${
+                                selectedDelivery?.id === delivery.id ? 'ring-2 ring-primary' : ''
+                              }`}
+                              onClick={() => setSelectedDelivery(delivery)}
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex items-start justify-between mb-2">
+                                  <div>
+                                    <p className="font-semibold">{order.order_number || 'N/A'}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {order.customer_name || 'Customer'}
+                                    </p>
+                                  </div>
+                                  <Badge className={getStatusColor(order.status)}>
+                                    {order.status?.replace('_', ' ') || 'pending'}
+                                  </Badge>
                                 </div>
-                                <Badge className={getStatusColor(delivery.order?.status)}>
-                                  {delivery.order?.status?.replace('_', ' ')}
-                                </Badge>
-                              </div>
-                              <div className="space-y-1 text-sm">
-                                <div className="flex items-center gap-2">
-                                  <MapPin className="h-3 w-3 text-muted-foreground" />
-                                  <span className="text-muted-foreground truncate">
-                                    {delivery.order?.delivery_borough}
-                                  </span>
-                                </div>
-                                {delivery.courier && (
+                                <div className="space-y-1 text-sm">
                                   <div className="flex items-center gap-2">
-                                    <Truck className="h-3 w-3 text-muted-foreground" />
-                                    <span className="text-muted-foreground">
-                                      {delivery.courier.full_name}
+                                    <MapPin className="h-3 w-3 text-muted-foreground" />
+                                    <span className="text-muted-foreground truncate">
+                                      {order.delivery_borough || 'N/A'}
                                     </span>
                                   </div>
+                                  {delivery.courier && (
+                                    <div className="flex items-center gap-2">
+                                      <Truck className="h-3 w-3 text-muted-foreground" />
+                                      <span className="text-muted-foreground">
+                                        {delivery.courier.full_name}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {order.eta_minutes && (
+                                    <div className="flex items-center gap-2">
+                                      <Clock className="h-3 w-3 text-muted-foreground" />
+                                      <span className="text-muted-foreground">
+                                        ETA: {order.eta_minutes} min
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                                {!delivery.courier && order.status === 'pending' && (
+                                  <Button
+                                    size="sm"
+                                    className="w-full mt-3"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedOrder(order);
+                                      setAssignDialogOpen(true);
+                                    }}
+                                  >
+                                    <UserPlus className="h-3 w-3 mr-2" />
+                                    Assign Courier
+                                  </Button>
                                 )}
-                                {delivery.order?.eta_minutes && (
-                                  <div className="flex items-center gap-2">
-                                    <Clock className="h-3 w-3 text-muted-foreground" />
-                                    <span className="text-muted-foreground">
-                                      ETA: {delivery.order.eta_minutes} min
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                              {!delivery.courier && delivery.order?.status === 'pending' && (
-                                <Button
-                                  size="sm"
-                                  className="w-full mt-3"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedOrder(delivery.order);
-                                    setAssignDialogOpen(true);
-                                  }}
-                                >
-                                  <UserPlus className="h-3 w-3 mr-2" />
-                                  Assign Courier
-                                </Button>
-                              )}
-                            </CardContent>
-                          </Card>
-                        ))
+                              </CardContent>
+                            </Card>
+                          );
+                        })
                       )}
                     </div>
                   </ScrollArea>
