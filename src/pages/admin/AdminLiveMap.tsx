@@ -592,7 +592,7 @@ const AdminLiveMap = () => {
           </Card>
 
           {/* Map */}
-          <div className="h-[400px] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border shadow-lg">
+          <div className={isFullscreen ? "h-[calc(100vh-24rem)] rounded-lg overflow-hidden border shadow-lg" : "h-[400px] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border shadow-lg"}>
             {loading ? (
               <div className="h-full flex items-center justify-center bg-muted/30">
                 <div className="text-center">
