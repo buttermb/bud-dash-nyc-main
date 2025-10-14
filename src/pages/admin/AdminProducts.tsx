@@ -3,11 +3,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Filter, ArrowUpDown, Grid, List } from "lucide-react";
+import { Plus, Search, Filter, ArrowUpDown, Grid, List, Table as TableIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ProductCard } from "@/components/admin/ProductCard";
 import { InlineProductEdit } from "@/components/admin/InlineProductEdit";
-import { BulkActions } from "@/components/admin/BulkActions";
+import { ProductTableView } from "@/components/admin/ProductTableView";
+import { EnhancedBulkActions } from "@/components/admin/EnhancedBulkActions";
+import { AdvancedProductFilters } from "@/components/admin/AdvancedProductFilters";
+import { ColumnVisibilityControl } from "@/components/admin/ColumnVisibilityControl";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -26,10 +29,28 @@ export default function AdminProducts() {
   const [stockFilter, setStockFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortOption>("recent");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [viewMode, setViewMode] = useState<"grid" | "list" | "table">("list");
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([
+    "image", "name", "price", "stock", "status"
+  ]);
+  const [advancedFilters, setAdvancedFilters] = useState<any>({
+    category: [],
+    strainType: [],
+    priceRange: [0, 1000],
+    stockRange: [0, 1000],
+    inStock: null,
+  });
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const availableColumns = [
+    { id: "image", label: "Image" },
+    { id: "name", label: "Name" },
+    { id: "price", label: "Price" },
+    { id: "stock", label: "Stock" },
+    { id: "status", label: "Status" },
+  ];
 
   // Realtime subscription for instant updates
   useEffect(() => {
@@ -111,6 +132,56 @@ export default function AdminProducts() {
     }
   });
 
+  const bulkUpdateProducts = useMutation({
+    mutationFn: async (updates: any) => {
+      for (const id of selectedProducts) {
+        const { error } = await supabase
+          .from("products")
+          .update(updates)
+          .eq("id", id);
+        
+        if (error) throw error;
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ["admin-products"] });
+      toast({ title: `✓ Updated ${selectedProducts.length} products` });
+      setSelectedProducts([]);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update products",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const bulkDeleteProducts = useMutation({
+    mutationFn: async () => {
+      for (const id of selectedProducts) {
+        const { error } = await supabase
+          .from("products")
+          .delete()
+          .eq("id", id);
+        
+        if (error) throw error;
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ["admin-products"] });
+      toast({ title: `✓ Deleted ${selectedProducts.length} products` });
+      setSelectedProducts([]);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to delete products",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
   const deleteProduct = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -143,8 +214,26 @@ export default function AdminProducts() {
     const matchesStock = stockFilter === "all" ||
       (stockFilter === "in-stock" && product.in_stock) ||
       (stockFilter === "out-of-stock" && !product.in_stock);
+
+    // Advanced filters
+    const matchesAdvCategory = advancedFilters.category.length === 0 ||
+      advancedFilters.category.includes(product.category);
     
-    return matchesSearch && matchesCategory && matchesStock;
+    const matchesAdvStrain = advancedFilters.strainType.length === 0 ||
+      advancedFilters.strainType.includes(product.strain_type);
+    
+    const matchesAdvPrice = (product.price || 0) >= advancedFilters.priceRange[0] &&
+      (product.price || 0) <= advancedFilters.priceRange[1];
+    
+    const matchesAdvStock = (product.stock_quantity || 0) >= advancedFilters.stockRange[0] &&
+      (product.stock_quantity || 0) <= advancedFilters.stockRange[1];
+    
+    const matchesAdvInStock = advancedFilters.inStock === null ||
+      (advancedFilters.inStock && product.in_stock);
+    
+    return matchesSearch && matchesCategory && matchesStock &&
+      matchesAdvCategory && matchesAdvStrain && matchesAdvPrice &&
+      matchesAdvStock && matchesAdvInStock;
   }).sort((a, b) => {
     switch (sortBy) {
       case "name-asc":
@@ -244,10 +333,28 @@ export default function AdminProducts() {
           </SelectContent>
         </Select>
 
+        <AdvancedProductFilters
+          activeFilters={advancedFilters}
+          onFilterChange={setAdvancedFilters}
+        />
+
+        <ColumnVisibilityControl
+          visibleColumns={visibleColumns}
+          onToggleColumn={(col) => {
+            setVisibleColumns((prev) =>
+              prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col]
+            );
+          }}
+          availableColumns={availableColumns}
+        />
+
         <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v)}>
           <TabsList>
             <TabsTrigger value="list">
               <List className="h-4 w-4" />
+            </TabsTrigger>
+            <TabsTrigger value="table">
+              <TableIcon className="h-4 w-4" />
             </TabsTrigger>
             <TabsTrigger value="grid">
               <Grid className="h-4 w-4" />
@@ -258,9 +365,12 @@ export default function AdminProducts() {
 
       {/* Bulk Actions */}
       {selectedProducts.length > 0 && (
-        <BulkActions
+        <EnhancedBulkActions
           selectedCount={selectedProducts.length}
           selectedProducts={selectedProducts}
+          products={products || []}
+          onBulkUpdate={(updates) => bulkUpdateProducts.mutate(updates)}
+          onBulkDelete={() => bulkDeleteProducts.mutate()}
           onClearSelection={() => setSelectedProducts([])}
         />
       )}
@@ -288,7 +398,23 @@ export default function AdminProducts() {
                 </span>
               </div>
 
-              {viewMode === "list" ? (
+              {viewMode === "table" ? (
+                <ProductTableView
+                  products={filteredProducts}
+                  selectedProducts={selectedProducts}
+                  onToggleSelect={toggleProductSelection}
+                  onSelectAll={selectAll}
+                  onUpdate={(id, updates) => updateProduct.mutate({ id, updates })}
+                  onDelete={(id) => {
+                    if (confirm("Are you sure you want to delete this product?")) {
+                      deleteProduct.mutate(id);
+                    }
+                  }}
+                  onEdit={(id) => navigate(`/admin/products/${id}/edit`)}
+                  onDuplicate={(id) => navigate(`/admin/products/${id}/duplicate`)}
+                  visibleColumns={visibleColumns}
+                />
+              ) : viewMode === "list" ? (
                 <div className="space-y-3">
                   {filteredProducts.map((product) => (
                     <InlineProductEdit
