@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Play, CheckCircle, XCircle, AlertCircle, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
 
 interface ButtonTest {
   label: string;
@@ -13,9 +15,47 @@ interface ButtonTest {
   errorMessage?: string;
 }
 
+interface PageTest {
+  path: string;
+  tested: boolean;
+  buttonResults: ButtonTest[];
+}
+
 const ButtonTester = () => {
+  const navigate = useNavigate();
   const [testing, setTesting] = useState(false);
   const [results, setResults] = useState<ButtonTest[]>([]);
+  const [pageResults, setPageResults] = useState<PageTest[]>([]);
+  const [currentPage, setCurrentPage] = useState("");
+  const [progress, setProgress] = useState(0);
+  
+  // All routes to test
+  const allRoutes = [
+    // Main public pages
+    "/",
+    "/faq",
+    "/support",
+    "/about",
+    "/blog",
+    "/partner-shops",
+    
+    // Admin pages
+    "/admin/dashboard",
+    "/admin/products",
+    "/admin/inventory",
+    "/admin/orders",
+    "/admin/live-map",
+    "/admin/live-orders",
+    "/admin/couriers",
+    "/admin/users",
+    "/admin/compliance",
+    "/admin/analytics",
+    "/admin/giveaways",
+    "/admin/coupons",
+    "/admin/settings",
+    
+    // Add more routes as needed
+  ];
 
   const getAllButtons = () => {
     const buttons: { label: string; path: string; element: HTMLElement }[] = [];
@@ -206,25 +246,66 @@ const ButtonTester = () => {
   const runTests = async () => {
     setTesting(true);
     setResults([]);
+    setPageResults([]);
+    setProgress(0);
     
-    const buttons = getAllButtons();
-    toast.info(`Found ${buttons.length} buttons to test`);
+    const allPageResults: PageTest[] = [];
+    const allButtonResults: ButtonTest[] = [];
+    
+    toast.info(`Starting tests across ${allRoutes.length} pages...`);
 
-    const testResults: ButtonTest[] = [];
-
-    for (const button of buttons) {
-      const result = await testButton(button);
-      testResults.push(result);
-      setResults([...testResults]);
+    for (let i = 0; i < allRoutes.length; i++) {
+      const route = allRoutes[i];
+      setCurrentPage(route);
+      setProgress(((i + 1) / allRoutes.length) * 100);
+      
+      // Navigate to the page
+      navigate(route);
+      
+      // Wait for page to load
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Get buttons on this page
+      const buttons = getAllButtons();
+      
+      if (buttons.length === 0) {
+        allPageResults.push({
+          path: route,
+          tested: true,
+          buttonResults: []
+        });
+        continue;
+      }
+      
+      toast.info(`Testing ${buttons.length} buttons on ${route}`);
+      
+      const pageTestResults: ButtonTest[] = [];
+      
+      for (const button of buttons) {
+        const result = await testButton(button);
+        pageTestResults.push(result);
+        allButtonResults.push(result);
+        setResults([...allButtonResults]);
+      }
+      
+      allPageResults.push({
+        path: route,
+        tested: true,
+        buttonResults: pageTestResults
+      });
+      
+      setPageResults([...allPageResults]);
     }
 
     setTesting(false);
+    setProgress(100);
+    setCurrentPage("");
     
-    const successCount = testResults.filter(r => r.status === 'success').length;
-    const errorCount = testResults.filter(r => r.status === 'error').length;
-    const notFoundCount = testResults.filter(r => r.status === '404').length;
+    const successCount = allButtonResults.filter(r => r.status === 'success').length;
+    const errorCount = allButtonResults.filter(r => r.status === 'error').length;
+    const notFoundCount = allButtonResults.filter(r => r.status === '404').length;
 
-    toast.success(`Testing complete: ${successCount} working, ${errorCount} errors, ${notFoundCount} 404s`);
+    toast.success(`All tests complete: ${successCount} working, ${errorCount} errors, ${notFoundCount} 404s across ${allRoutes.length} pages`);
   };
 
   const getStatusIcon = (status: ButtonTest['status']) => {
@@ -273,14 +354,18 @@ const ButtonTester = () => {
         <CardHeader>
           <CardTitle>Test Controls</CardTitle>
           <CardDescription>
-            This will simulate clicking all buttons on the current page and report any errors.
+            This will test all buttons across every page in your application and report any errors.
             <br />
             <strong>Safe Mode:</strong> Automatically skips sign out, delete, navigation, and other potentially destructive buttons.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="p-4 bg-muted rounded-lg space-y-2">
-            <h3 className="font-semibold text-sm">Automatically Excluded:</h3>
+            <h3 className="font-semibold text-sm">Pages to Test ({allRoutes.length}):</h3>
+            <p className="text-sm text-muted-foreground">
+              Main pages, Admin pages, and all other routes
+            </p>
+            <h3 className="font-semibold text-sm mt-4">Automatically Excluded:</h3>
             <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
               <li>Sign Out / Logout buttons</li>
               <li>Delete / Remove buttons</li>
@@ -289,16 +374,27 @@ const ButtonTester = () => {
               <li>Clear / Reset buttons</li>
             </ul>
           </div>
-          <Button onClick={runTests} disabled={testing} size="lg">
+          
+          {testing && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Testing: {currentPage}</span>
+                <span>{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} />
+            </div>
+          )}
+          
+          <Button onClick={runTests} disabled={testing} size="lg" className="w-full">
             {testing ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Testing...
+                Testing All Pages...
               </>
             ) : (
               <>
                 <Play className="mr-2 h-4 w-4" />
-                Run Safe Tests
+                Run Complete Site Test
               </>
             )}
           </Button>
@@ -344,36 +440,73 @@ const ButtonTester = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Test Results</CardTitle>
+              <CardTitle>Test Results by Page</CardTitle>
               <CardDescription>
-                {testing ? `Testing ${results.length} buttons...` : `Tested ${results.length} buttons`}
+                {testing ? `Testing buttons across all pages...` : `Tested ${results.length} buttons across ${pageResults.length} pages`}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[600px]">
-                <div className="space-y-2">
-                  {results.map((result, index) => (
-                    <div
-                      key={index}
-                      className="flex items-start gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="mt-0.5">{getStatusIcon(result.status)}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium truncate">{result.label}</span>
-                          {getStatusBadge(result.status)}
+                <div className="space-y-4">
+                  {pageResults.map((page, pageIndex) => {
+                    const pageStats = {
+                      total: page.buttonResults.length,
+                      success: page.buttonResults.filter(r => r.status === 'success').length,
+                      error: page.buttonResults.filter(r => r.status === 'error').length,
+                      notFound: page.buttonResults.filter(r => r.status === '404').length,
+                    };
+                    
+                    return (
+                      <div key={pageIndex} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-lg">{page.path}</h3>
+                          <div className="flex gap-2">
+                            {pageStats.success > 0 && (
+                              <Badge variant="default" className="bg-success">
+                                {pageStats.success} OK
+                              </Badge>
+                            )}
+                            {pageStats.error > 0 && (
+                              <Badge variant="destructive">
+                                {pageStats.error} Errors
+                              </Badge>
+                            )}
+                            {pageStats.notFound > 0 && (
+                              <Badge variant="secondary" className="bg-warning">
+                                {pageStats.notFound} 404s
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          Page: {result.path}
-                        </div>
-                        {result.errorMessage && (
-                          <div className="mt-2 p-2 bg-destructive/10 rounded text-sm text-destructive">
-                            {result.errorMessage}
+                        
+                        {page.buttonResults.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">No testable buttons on this page</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {page.buttonResults.map((result, index) => (
+                              <div
+                                key={index}
+                                className="flex items-start gap-3 p-2 border rounded hover:bg-accent/50 transition-colors"
+                              >
+                                <div className="mt-0.5">{getStatusIcon(result.status)}</div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-medium truncate text-sm">{result.label}</span>
+                                    {getStatusBadge(result.status)}
+                                  </div>
+                                  {result.errorMessage && (
+                                    <div className="mt-2 p-2 bg-destructive/10 rounded text-xs text-destructive">
+                                      {result.errorMessage}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </ScrollArea>
             </CardContent>
