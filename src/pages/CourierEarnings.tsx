@@ -2,8 +2,12 @@ import { useState, useEffect } from 'react';
 import { useCourier } from '@/contexts/CourierContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, ArrowLeft, DollarSign, TrendingUp, Clock } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { EarningsStats } from '@/components/courier/EarningsStats';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useOptimizedQuery } from '@/hooks/useOptimizedQuery';
 
 interface Earning {
   id: string;
@@ -41,177 +45,143 @@ export default function CourierEarnings() {
     deliveries: 0,
     avgPerDelivery: 0
   });
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (courier && earnings.length === 0) {
-      fetchEarnings();
-    }
-  }, [period, courier]);
-
-  const fetchEarnings = async () => {
-    setLoading(true);
-    try {
+  // Use optimized query hook
+  const { data: earningsData, isLoading } = useOptimizedQuery(
+    ['courier-earnings', period],
+    async () => {
       const { data, error } = await supabase.functions.invoke('courier-app', {
         body: { endpoint: 'earnings', period }
       });
-
       if (error) throw error;
-
-      if (data?.earnings) {
-        setEarnings(data.earnings);
-        
-        // Calculate summary
-        const total = data.earnings.reduce((sum: number, e: Earning) => sum + parseFloat(e.total_earned.toString()), 0);
-        const commission = data.earnings.reduce((sum: number, e: Earning) => sum + parseFloat(e.commission_amount.toString()), 0);
-        const tips = data.earnings.reduce((sum: number, e: Earning) => sum + parseFloat((e.tip_amount || 0).toString()), 0);
-        const bonuses = data.earnings.reduce((sum: number, e: Earning) => sum + parseFloat((e.bonus_amount || 0).toString()), 0);
-        const deliveries = data.earnings.length;
-        
-        setSummary({
-          total,
-          commission,
-          tips,
-          bonuses,
-          deliveries,
-          avgPerDelivery: deliveries > 0 ? total / deliveries : 0
-        });
-      }
-    } catch (error) {
-      console.error('Failed to fetch earnings:', error);
-      toast.error('Failed to load earnings');
-    } finally {
-      setLoading(false);
+      return data;
+    },
+    {
+      enabled: !!courier,
+      staleTime: 60000, // 1 minute
     }
-  };
+  );
 
-  if (courierLoading || loading || !courier) {
+  useEffect(() => {
+    if (earningsData?.earnings) {
+      setEarnings(earningsData.earnings);
+      
+      // Calculate summary
+      const total = earningsData.earnings.reduce((sum: number, e: Earning) => sum + parseFloat(e.total_earned.toString()), 0);
+      const commission = earningsData.earnings.reduce((sum: number, e: Earning) => sum + parseFloat(e.commission_amount.toString()), 0);
+      const tips = earningsData.earnings.reduce((sum: number, e: Earning) => sum + parseFloat((e.tip_amount || 0).toString()), 0);
+      const bonuses = earningsData.earnings.reduce((sum: number, e: Earning) => sum + parseFloat((e.bonus_amount || 0).toString()), 0);
+      const deliveries = earningsData.earnings.length;
+      
+      setSummary({
+        total,
+        commission,
+        tips,
+        bonuses,
+        deliveries,
+        avgPerDelivery: deliveries > 0 ? total / deliveries : 0
+      });
+    }
+  }, [earningsData]);
+
+  if (courierLoading || isLoading || !courier) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-background pb-safe">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-green-700 text-white sticky top-0 z-50">
+      <header className="bg-gradient-to-r from-primary/90 to-primary text-primary-foreground sticky top-0 z-50 shadow-md" role="banner">
         <div className="p-6">
           <button
             onClick={() => navigate('/courier/dashboard')}
-            className="flex items-center text-white mb-4"
+            className="flex items-center mb-4 touch-manipulation active:scale-95 transition-transform"
+            aria-label="Back to dashboard"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
-            Back
+            <span>Back</span>
           </button>
           <h1 className="text-2xl font-bold mb-2">💰 Your Earnings</h1>
-          <p className="text-green-100">Track your income and payments</p>
+          <p className="opacity-90">Track your income and payments</p>
         </div>
-      </div>
+      </header>
 
       {/* Period Selector */}
       <div className="p-4">
-        <div className="bg-white rounded-xl shadow p-2 flex gap-2">
+        <Card className="p-2 flex gap-2">
           {(['week', 'month', 'all'] as const).map(p => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
               className={`
-                flex-1 py-2 rounded-lg font-semibold transition
+                flex-1 py-2.5 rounded-lg font-semibold transition-all touch-manipulation active:scale-95
                 ${period === p 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-primary text-primary-foreground shadow-md' 
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 }
               `}
+              aria-label={`View ${p === 'week' ? 'this week' : p === 'month' ? 'this month' : 'all time'} earnings`}
+              aria-pressed={period === p}
             >
               {p === 'week' && 'This Week'}
               {p === 'month' && 'This Month'}
               {p === 'all' && 'All Time'}
             </button>
           ))}
-        </div>
+        </Card>
       </div>
 
       {/* Summary Cards */}
       <div className="px-4 mb-6">
-        {/* Main Total */}
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-xl mb-4">
-          <p className="text-green-100 mb-2">Total Earned</p>
-          <p className="text-5xl font-bold mb-4">${summary.total.toFixed(2)}</p>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <p className="text-2xl font-bold">{summary.deliveries}</p>
-              <p className="text-xs text-green-100">Deliveries</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">${summary.avgPerDelivery.toFixed(2)}</p>
-              <p className="text-xs text-green-100">Avg/Order</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">${summary.tips.toFixed(2)}</p>
-              <p className="text-xs text-green-100">Tips</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Breakdown Cards */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-xl p-4 text-center shadow">
-            <DollarSign className="w-6 h-6 mx-auto mb-2 text-blue-600" />
-            <p className="text-2xl font-bold text-blue-600">${summary.commission.toFixed(2)}</p>
-            <p className="text-xs text-gray-600">Commission</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 text-center shadow">
-            <TrendingUp className="w-6 h-6 mx-auto mb-2 text-green-600" />
-            <p className="text-2xl font-bold text-green-600">${summary.tips.toFixed(2)}</p>
-            <p className="text-xs text-gray-600">Tips</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 text-center shadow">
-            <Clock className="w-6 h-6 mx-auto mb-2 text-purple-600" />
-            <p className="text-2xl font-bold text-purple-600">${summary.bonuses.toFixed(2)}</p>
-            <p className="text-xs text-gray-600">Bonuses</p>
-          </div>
-        </div>
+        <EarningsStats
+          total={summary.total}
+          commission={summary.commission}
+          tips={summary.tips}
+          bonuses={summary.bonuses}
+          deliveries={summary.deliveries}
+          avgPerDelivery={summary.avgPerDelivery}
+          isLoading={isLoading}
+        />
       </div>
 
       {/* Earnings List */}
       <div className="px-4">
         <h3 className="font-bold text-lg mb-3">Recent Earnings</h3>
         {earnings.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             <p>No earnings for this period</p>
           </div>
         ) : (
           <div className="space-y-2">
             {earnings.map(earning => (
-              <div key={earning.id} className="bg-white rounded-xl p-4 shadow">
+              <Card key={earning.id} className="p-4">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p className="font-semibold text-gray-900">
+                    <p className="font-semibold">
                       Order #{earning.order_id.substring(0, 8)}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {new Date(earning.created_at).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-bold text-green-600">
+                    <p className="text-xl font-bold text-primary">
                       ${parseFloat(earning.total_earned.toString()).toFixed(2)}
                     </p>
-                    <span className={`
-                      text-xs px-2 py-1 rounded-full
-                      ${earning.status === 'paid' 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-yellow-100 text-yellow-700'
-                      }
-                    `}>
+                    <Badge 
+                      variant={earning.status === 'paid' ? 'default' : 'secondary'}
+                      className="mt-1"
+                    >
                       {earning.status}
-                    </span>
+                    </Badge>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
                   <span>Commission: ${parseFloat(earning.commission_amount.toString()).toFixed(2)}</span>
                   {earning.tip_amount > 0 && (
                     <span>Tip: ${parseFloat(earning.tip_amount.toString()).toFixed(2)}</span>
@@ -220,7 +190,7 @@ export default function CourierEarnings() {
                     <span className="text-purple-600">Bonus: ${parseFloat(earning.bonus_amount.toString()).toFixed(2)}</span>
                   )}
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         )}
