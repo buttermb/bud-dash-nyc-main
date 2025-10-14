@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Truck, Package, Clock, DollarSign, Users, UserPlus, Bell, BellOff, Maximize, Search, Activity, TrendingUp, Zap, RefreshCw, AlertTriangle, MapIcon } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { MapPin, Truck, Package, Clock, DollarSign, Users, UserPlus, Bell, BellOff, Maximize, Search, Activity, TrendingUp, Zap, RefreshCw, AlertTriangle, MapIcon, ChevronDown, ChevronUp, Phone } from "lucide-react";
 import { AssignCourierDialog } from "@/components/admin/AssignCourierDialog";
 import { useToast } from "@/hooks/use-toast";
 import { OrderMap } from "@/components/admin/OrderMap";
@@ -51,6 +52,7 @@ const AdminLiveMap = () => {
   const [selectedDelivery, setSelectedDelivery] = useState<any>(null);
   const [activityFeed, setActivityFeed] = useState<ActivityItem[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -73,26 +75,48 @@ const AdminLiveMap = () => {
 
   const fetchLiveDeliveries = async () => {
     try {
-      // Fetch active orders with their delivery info and courier info
+      // Fetch active orders with all necessary details
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select(`
           *,
-          order_items (*),
-          couriers (*)
+          order_items (
+            id,
+            product_id,
+            product_name,
+            quantity,
+            price,
+            selected_weight
+          ),
+          couriers (
+            id,
+            full_name,
+            phone,
+            vehicle_type,
+            current_lat,
+            current_lng,
+            rating
+          )
         `)
         .in('status', ['confirmed', 'preparing', 'out_for_delivery'])
         .order('created_at', { ascending: false });
 
       if (ordersError) throw ordersError;
       
-      // Transform to match expected format
+      // Transform to match expected format with all fields
       const deliveriesData = ordersData?.map(order => ({
         id: order.id,
         order_id: order.id,
         order: {
           ...order,
-          items: order.order_items
+          items: order.order_items || [],
+          customer_name: order.customer_name,
+          customer_phone: order.customer_phone,
+          delivery_address: order.delivery_address,
+          delivery_borough: order.delivery_borough,
+          total_amount: order.total_amount,
+          subtotal: order.subtotal,
+          delivery_fee: order.delivery_fee
         },
         courier: order.couriers,
         created_at: order.created_at,
@@ -296,7 +320,7 @@ const AdminLiveMap = () => {
   }
 
   return (
-    <div ref={containerRef} className="min-h-screen flex flex-col bg-background">
+    <div ref={containerRef} className={`min-h-screen flex flex-col bg-background ${isFullscreen ? 'overflow-auto' : ''}`}>
       <audio ref={audioRef} src="/notification.mp3" preload="auto" />
       
       <AdminAlerts />
@@ -527,6 +551,9 @@ const AdminLiveMap = () => {
                       ) : (
                         filteredDeliveries.map((delivery) => {
                           const order = delivery.order || delivery;
+                          const isExpanded = expandedOrders.has(delivery.id);
+                          const items = order.items || [];
+                          
                           return (
                             <Card
                               key={delivery.id}
@@ -537,26 +564,49 @@ const AdminLiveMap = () => {
                             >
                               <CardContent className="p-4">
                                 <div className="flex items-start justify-between mb-2">
-                                  <div>
-                                    <p className="font-semibold">{order.order_number || 'N/A'}</p>
+                                  <div className="flex-1">
+                                    <p className="font-semibold text-base">{order.order_number || 'N/A'}</p>
                                     <p className="text-sm text-muted-foreground">
-                                      {order.customer_name || 'Customer'}
+                                      {order.customer_name || 'No customer name'}
                                     </p>
+                                    {order.customer_phone && (
+                                      <div className="flex items-center gap-1 mt-1">
+                                        <Phone className="h-3 w-3 text-muted-foreground" />
+                                        <span className="text-xs text-muted-foreground">{order.customer_phone}</span>
+                                      </div>
+                                    )}
                                   </div>
                                   <Badge className={getStatusColor(order.status)}>
                                     {order.status?.replace('_', ' ') || 'pending'}
                                   </Badge>
                                 </div>
-                                <div className="space-y-1 text-sm">
+
+                                {/* Order Total */}
+                                <div className="bg-muted/50 rounded-lg p-2 mb-2">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium">Total:</span>
+                                    <span className="text-lg font-bold text-primary">
+                                      ${order.total_amount?.toFixed(2) || '0.00'}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1 text-sm mb-2">
                                   <div className="flex items-center gap-2">
-                                    <MapPin className="h-3 w-3 text-muted-foreground" />
+                                    <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                                     <span className="text-muted-foreground truncate">
+                                      {order.delivery_address || 'No address'}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Package className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                                    <span className="text-muted-foreground">
                                       {order.delivery_borough || 'N/A'}
                                     </span>
                                   </div>
                                   {delivery.courier && (
                                     <div className="flex items-center gap-2">
-                                      <Truck className="h-3 w-3 text-muted-foreground" />
+                                      <Truck className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                                       <span className="text-muted-foreground">
                                         {delivery.courier.full_name}
                                       </span>
@@ -564,13 +614,64 @@ const AdminLiveMap = () => {
                                   )}
                                   {order.eta_minutes && (
                                     <div className="flex items-center gap-2">
-                                      <Clock className="h-3 w-3 text-muted-foreground" />
+                                      <Clock className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                                       <span className="text-muted-foreground">
                                         ETA: {order.eta_minutes} min
                                       </span>
                                     </div>
                                   )}
                                 </div>
+
+                                {/* Expandable Items Section */}
+                                {items.length > 0 && (
+                                  <Collapsible
+                                    open={isExpanded}
+                                    onOpenChange={() => {
+                                      const newExpanded = new Set(expandedOrders);
+                                      if (isExpanded) {
+                                        newExpanded.delete(delivery.id);
+                                      } else {
+                                        newExpanded.add(delivery.id);
+                                      }
+                                      setExpandedOrders(newExpanded);
+                                    }}
+                                  >
+                                    <CollapsibleTrigger 
+                                      className="flex items-center justify-between w-full p-2 hover:bg-muted/50 rounded transition-colors"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <span className="text-sm font-medium">
+                                        Items ({items.length})
+                                      </span>
+                                      {isExpanded ? (
+                                        <ChevronUp className="h-4 w-4" />
+                                      ) : (
+                                        <ChevronDown className="h-4 w-4" />
+                                      )}
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent className="mt-2">
+                                      <div className="space-y-2 pl-2 border-l-2 border-muted">
+                                        {items.map((item: any, idx: number) => (
+                                          <div key={idx} className="text-sm flex justify-between items-start gap-2 py-1">
+                                            <div className="flex-1">
+                                              <p className="font-medium">{item.product_name || 'Product'}</p>
+                                              {item.selected_weight && (
+                                                <p className="text-xs text-muted-foreground">
+                                                  {item.selected_weight}
+                                                </p>
+                                              )}
+                                            </div>
+                                            <div className="text-right">
+                                              <p className="text-muted-foreground">x{item.quantity}</p>
+                                              <p className="font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </CollapsibleContent>
+                                  </Collapsible>
+                                )}
+
                                 {!delivery.courier && order.status === 'pending' && (
                                   <Button
                                     size="sm"
