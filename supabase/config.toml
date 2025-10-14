@@ -3,6 +3,12 @@ project_id = "vltveasdxtfvvqbzxzuf"
 [functions.add-courier]
 verify_jwt = true
 
+[functions.admin-database-maintenance]
+verify_jwt = true
+
+[functions.admin-database-backup]
+verify_jwt = true
+
 [functions.courier-app]
 verify_jwt = true
 
