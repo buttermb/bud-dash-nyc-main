@@ -15,10 +15,18 @@ interface ButtonTest {
   errorMessage?: string;
 }
 
+interface BugReport {
+  type: "broken-image" | "missing-alt" | "react-error" | "performance" | "console-warning";
+  severity: "low" | "medium" | "high";
+  message: string;
+  element?: string;
+}
+
 interface PageTest {
   path: string;
   tested: boolean;
   buttonResults: ButtonTest[];
+  bugs: BugReport[];
 }
 
 const ButtonTester = () => {
@@ -28,6 +36,7 @@ const ButtonTester = () => {
   const [pageResults, setPageResults] = useState<PageTest[]>([]);
   const [currentPage, setCurrentPage] = useState("");
   const [progress, setProgress] = useState(0);
+  const [totalBugs, setTotalBugs] = useState(0);
   
   // All routes to test
   const allRoutes = [
@@ -105,6 +114,58 @@ const ButtonTester = () => {
     return buttons;
   };
 
+  const findBugs = (): BugReport[] => {
+    const bugs: BugReport[] = [];
+    
+    // Check for broken images
+    const images = document.querySelectorAll('img');
+    images.forEach((img) => {
+      if (!img.complete || img.naturalHeight === 0) {
+        bugs.push({
+          type: 'broken-image',
+          severity: 'medium',
+          message: `Broken image: ${img.src}`,
+          element: img.alt || img.src
+        });
+      }
+      
+      // Check for missing alt text
+      if (!img.alt && !img.getAttribute('aria-label')) {
+        bugs.push({
+          type: 'missing-alt',
+          severity: 'low',
+          message: 'Image missing alt text for accessibility',
+          element: img.src
+        });
+      }
+    });
+    
+    // Check for React errors in console
+    const reactErrors = document.querySelectorAll('[data-react-error]');
+    if (reactErrors.length > 0) {
+      bugs.push({
+        type: 'react-error',
+        severity: 'high',
+        message: `${reactErrors.length} React rendering error(s) detected`
+      });
+    }
+    
+    // Check performance
+    const perfEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+    if (perfEntries.length > 0) {
+      const loadTime = perfEntries[0].loadEventEnd - perfEntries[0].fetchStart;
+      if (loadTime > 3000) {
+        bugs.push({
+          type: 'performance',
+          severity: 'medium',
+          message: `Slow page load: ${Math.round(loadTime)}ms (recommended < 3000ms)`
+        });
+      }
+    }
+    
+    return bugs;
+  };
+
   const testButton = async (button: { label: string; path: string; element: HTMLElement }): Promise<ButtonTest> => {
     return new Promise((resolve) => {
       const originalFetch = window.fetch;
@@ -177,15 +238,26 @@ const ButtonTester = () => {
         }
       };
 
-      // Capture console errors
+      // Capture console errors and warnings
       const originalConsoleError = console.error;
+      const originalConsoleWarn = console.warn;
       const consoleErrors: string[] = [];
+      const consoleWarnings: string[] = [];
+      
       console.error = (...args) => {
         const errorMsg = args.map(arg => 
           typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
         ).join(' ');
         consoleErrors.push(errorMsg);
         originalConsoleError(...args);
+      };
+      
+      console.warn = (...args) => {
+        const warnMsg = args.map(arg => 
+          typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+        ).join(' ');
+        consoleWarnings.push(warnMsg);
+        originalConsoleWarn(...args);
       };
 
       // Capture unhandled promise rejections
@@ -205,10 +277,11 @@ const ButtonTester = () => {
           XMLHttpRequest.prototype.open = originalXHROpen;
           XMLHttpRequest.prototype.send = originalXHRSend;
           console.error = originalConsoleError;
+          console.warn = originalConsoleWarn;
           window.removeEventListener('unhandledrejection', handleRejection);
 
-          // Compile all errors
-          const allErrors = [...networkErrors, ...consoleErrors];
+          // Compile all errors (include warnings if severe)
+          const allErrors = [...networkErrors, ...consoleErrors, ...consoleWarnings];
           capturedError = allErrors.length > 0 ? allErrors.join('\n') : null;
 
           let status: ButtonTest['status'] = 'success';
@@ -231,6 +304,7 @@ const ButtonTester = () => {
         XMLHttpRequest.prototype.open = originalXHROpen;
         XMLHttpRequest.prototype.send = originalXHRSend;
         console.error = originalConsoleError;
+        console.warn = originalConsoleWarn;
         window.removeEventListener('unhandledrejection', handleRejection);
 
         resolve({
@@ -268,11 +342,15 @@ const ButtonTester = () => {
       // Get buttons on this page
       const buttons = getAllButtons();
       
+      // Find bugs on this page
+      const pageBugs = findBugs();
+      
       if (buttons.length === 0) {
         allPageResults.push({
           path: route,
           tested: true,
-          buttonResults: []
+          buttonResults: [],
+          bugs: pageBugs
         });
         continue;
       }
@@ -291,11 +369,15 @@ const ButtonTester = () => {
       allPageResults.push({
         path: route,
         tested: true,
-        buttonResults: pageTestResults
+        buttonResults: pageTestResults,
+        bugs: pageBugs
       });
       
       setPageResults([...allPageResults]);
     }
+    
+    const totalBugsFound = allPageResults.reduce((sum, page) => sum + page.bugs.length, 0);
+    setTotalBugs(totalBugsFound);
 
     setTesting(false);
     setProgress(100);
@@ -305,7 +387,7 @@ const ButtonTester = () => {
     const errorCount = allButtonResults.filter(r => r.status === 'error').length;
     const notFoundCount = allButtonResults.filter(r => r.status === '404').length;
 
-    toast.success(`All tests complete: ${successCount} working, ${errorCount} errors, ${notFoundCount} 404s across ${allRoutes.length} pages`);
+    toast.success(`All tests complete: ${successCount} working, ${errorCount} errors, ${notFoundCount} 404s, ${totalBugsFound} bugs found across ${allRoutes.length} pages`);
   };
 
   const getStatusIcon = (status: ButtonTest['status']) => {
@@ -338,7 +420,16 @@ const ButtonTester = () => {
     total: results.length,
     success: results.filter(r => r.status === 'success').length,
     error: results.filter(r => r.status === 'error').length,
-    notFound: results.filter(r => r.status === '404').length
+    notFound: results.filter(r => r.status === '404').length,
+    bugs: totalBugs
+  };
+  
+  const getBugSeverityColor = (severity: BugReport['severity']) => {
+    switch (severity) {
+      case 'high': return 'text-destructive';
+      case 'medium': return 'text-warning';
+      case 'low': return 'text-muted-foreground';
+    }
   };
 
   return (
@@ -403,7 +494,7 @@ const ButtonTester = () => {
 
       {results.length > 0 && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">Total Buttons</CardTitle>
@@ -436,6 +527,14 @@ const ButtonTester = () => {
                 <div className="text-2xl font-bold text-warning">{stats.notFound}</div>
               </CardContent>
             </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Bugs Found</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.bugs}</div>
+              </CardContent>
+            </Card>
           </div>
 
           <Card>
@@ -454,6 +553,7 @@ const ButtonTester = () => {
                       success: page.buttonResults.filter(r => r.status === 'success').length,
                       error: page.buttonResults.filter(r => r.status === 'error').length,
                       notFound: page.buttonResults.filter(r => r.status === '404').length,
+                      bugs: page.bugs.length
                     };
                     
                     return (
@@ -476,8 +576,37 @@ const ButtonTester = () => {
                                 {pageStats.notFound} 404s
                               </Badge>
                             )}
+                            {pageStats.bugs > 0 && (
+                              <Badge variant="outline">
+                                {pageStats.bugs} Bugs
+                              </Badge>
+                            )}
                           </div>
                         </div>
+                        
+                        {/* Show bugs found on this page */}
+                        {page.bugs.length > 0 && (
+                          <div className="bg-muted/50 rounded p-3 space-y-2">
+                            <h4 className="font-semibold text-sm">🐛 Bugs Detected:</h4>
+                            {page.bugs.map((bug, bugIndex) => (
+                              <div key={bugIndex} className="text-xs flex items-start gap-2">
+                                <Badge 
+                                  variant="outline" 
+                                  className={getBugSeverityColor(bug.severity)}
+                                >
+                                  {bug.severity}
+                                </Badge>
+                                <div className="flex-1">
+                                  <p className="font-medium">{bug.type.replace('-', ' ').toUpperCase()}</p>
+                                  <p className="text-muted-foreground">{bug.message}</p>
+                                  {bug.element && (
+                                    <p className="text-muted-foreground truncate">Element: {bug.element}</p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                         
                         {page.buttonResults.length === 0 ? (
                           <p className="text-sm text-muted-foreground">No testable buttons on this page</p>
