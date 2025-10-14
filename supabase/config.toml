@@ -1,5 +1,8 @@
 project_id = "vltveasdxtfvvqbzxzuf"
 
+[functions.customer-chat]
+verify_jwt = false
+
 [functions.add-courier]
 verify_jwt = true
 

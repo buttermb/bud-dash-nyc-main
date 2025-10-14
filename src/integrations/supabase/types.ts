@@ -443,6 +443,82 @@ export type Database = {
           },
         ]
       }
+      chat_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          sender_id: string | null
+          sender_type: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          sender_id?: string | null
+          sender_type: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          sender_id?: string | null
+          sender_type?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_sessions: {
+        Row: {
+          assigned_admin_id: string | null
+          created_at: string | null
+          guest_id: string | null
+          id: string
+          mode: string
+          status: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          assigned_admin_id?: string | null
+          created_at?: string | null
+          guest_id?: string | null
+          id?: string
+          mode?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          assigned_admin_id?: string | null
+          created_at?: string | null
+          guest_id?: string | null
+          id?: string
+          mode?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_sessions_assigned_admin_id_fkey"
+            columns: ["assigned_admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       coupon_codes: {
         Row: {
           auto_apply: boolean | null

@@ -13,6 +13,7 @@ import { lazy, Suspense } from "react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { SkipToContent } from "./components/SkipToContent";
 import { LoadingFallback } from "./components/LoadingFallback";
+import { LiveChatWidget } from "./components/LiveChatWidget";
 
 import { NotificationPreferences } from "./components/NotificationPreferences";
 import OfflineBanner from "./components/OfflineBanner";
@@ -93,6 +94,7 @@ const AdminNotifications = lazy(() => import("./pages/admin/AdminNotifications")
 const GlobalSearch = lazy(() => import("./pages/admin/GlobalSearch"));
 const SystemSettings = lazy(() => import("./pages/admin/SystemSettings"));
 const ButtonTester = lazy(() => import("./pages/admin/ButtonTester"));
+const AdminLiveChat = lazy(() => import("./pages/admin/AdminLiveChat"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -231,12 +233,14 @@ const App = () => (
                 <Route path="search" element={<GlobalSearch />} />
                 <Route path="settings" element={<SystemSettings />} />
                 <Route path="button-tester" element={<ButtonTester />} />
+                <Route path="live-chat" element={<AdminLiveChat />} />
               </Route>
 
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
                 </BrowserRouter>
+                <LiveChatWidget />
               </TooltipProvider>
             </CourierPinProvider>
           </CourierProvider>
