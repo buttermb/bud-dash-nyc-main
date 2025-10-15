@@ -53,40 +53,30 @@ export async function submitGiveawayEntry(
 
     if (!giveaway) throw new Error('Giveaway not found');
 
-    // 3. Validate email
-    const emailValidation = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validate-email`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify({ email: entryData.email })
-      }
-    );
-    const emailResult = await emailValidation.json();
+    // 3. Validate email using Supabase functions
+    const { data: emailResult, error: emailError } = await supabase.functions.invoke('validate-email', {
+      body: { email: entryData.email }
+    });
     
-    if (!emailResult.valid) {
-      throw new Error(emailResult.reason || 'Invalid email address');
+    if (emailError) {
+      throw new Error('Email validation failed');
+    }
+    
+    if (!emailResult?.valid) {
+      throw new Error(emailResult?.reason || 'Invalid email address');
     }
 
-    // 4. Validate phone
-    const phoneValidation = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validate-phone`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify({ phone: entryData.phone })
-      }
-    );
-    const phoneResult = await phoneValidation.json();
+    // 4. Validate phone using Supabase functions
+    const { data: phoneResult, error: phoneError } = await supabase.functions.invoke('validate-phone', {
+      body: { phone: entryData.phone }
+    });
     
-    if (!phoneResult.valid) {
-      throw new Error(phoneResult.reason || 'Invalid phone number');
+    if (phoneError) {
+      throw new Error('Phone validation failed');
+    }
+    
+    if (!phoneResult?.valid) {
+      throw new Error(phoneResult?.reason || 'Invalid phone number');
     }
 
     // 5. Check for duplicate entries

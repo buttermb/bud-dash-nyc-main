@@ -44,6 +44,14 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setIsLoggedIn(!!user);
+      
+      // Pre-fill email for logged-in users
+      if (user?.email) {
+        setFormData(prev => ({
+          ...prev,
+          email: user.email || ''
+        }));
+      }
     });
     
     // Restore draft if exists
