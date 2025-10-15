@@ -82,6 +82,18 @@ function hashString(str: string): string {
   return Math.abs(hash).toString(36);
 }
 
+// Get device fingerprint for fraud prevention
+export async function getDeviceFingerprint(): Promise<string> {
+  const deviceInfo = generateDeviceFingerprint();
+  return deviceInfo.fingerprint;
+}
+
+// Get referral code from URL
+export function getReferralCode(): string | null {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('ref');
+}
+
 export async function recordDeviceFingerprint(userId: string, supabase: any) {
   try {
     const deviceInfo = generateDeviceFingerprint();

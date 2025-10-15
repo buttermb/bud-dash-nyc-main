@@ -82,6 +82,7 @@ const COAManagement = lazy(() => import("./pages/admin/COAManagement"));
 const Giveaway = lazy(() => import("./pages/Giveaway"));
 const AdminGiveaway = lazy(() => import("./pages/admin/AdminGiveaway"));
 const AdminGiveaways = lazy(() => import("./pages/admin/AdminGiveaways"));
+const AdminGiveawayManagement = lazy(() => import("./pages/admin/AdminGiveawayManagement"));
 const AdminGiveawayAnalytics = lazy(() => import("./pages/admin/AdminGiveawayAnalytics"));
 const AdminGiveawayWinners = lazy(() => import("./pages/admin/AdminGiveawayWinners"));
 const AdminGiveawayForm = lazy(() => import("./pages/admin/AdminGiveawayForm"));
@@ -222,6 +223,7 @@ const App = () => (
                         <Route path="coa-management" element={<COAManagement />} />
                 <Route path="giveaway" element={<AdminGiveaway />} />
                 <Route path="giveaways" element={<AdminGiveaways />} />
+                <Route path="giveaways/manage" element={<Suspense fallback={<LoadingFallback />}><AdminGiveawayManagement /></Suspense>} />
                 <Route path="giveaways/new" element={<AdminGiveawayForm />} />
                 <Route path="giveaways/:id/edit" element={<AdminGiveawayForm />} />
                 <Route path="giveaways/:id/analytics" element={<AdminGiveawayAnalytics />} />

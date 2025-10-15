@@ -1344,9 +1344,13 @@ export type Database = {
       giveaway_entries: {
         Row: {
           base_entries: number | null
+          device_fingerprint: string | null
+          email_otp: string | null
+          email_verified: boolean | null
           entered_at: string | null
           entry_number_end: number | null
           entry_number_start: number | null
+          fraud_score: number | null
           giveaway_id: string | null
           id: string
           instagram_handle: string | null
@@ -1354,22 +1358,32 @@ export type Database = {
           instagram_story_entries: number | null
           instagram_tag_url: string | null
           instagram_verified: boolean | null
+          ip_address: string | null
           newsletter_entries: number | null
+          otp_expiry: string | null
+          phone_otp: string | null
+          phone_verified: boolean | null
           referral_entries: number | null
           status: string | null
           total_entries: number | null
+          user_agent: string | null
           user_borough: string | null
           user_email: string | null
           user_first_name: string | null
           user_id: string | null
           user_last_name: string | null
           user_phone: string | null
+          verified_at: string | null
         }
         Insert: {
           base_entries?: number | null
+          device_fingerprint?: string | null
+          email_otp?: string | null
+          email_verified?: boolean | null
           entered_at?: string | null
           entry_number_end?: number | null
           entry_number_start?: number | null
+          fraud_score?: number | null
           giveaway_id?: string | null
           id?: string
           instagram_handle?: string | null
@@ -1377,22 +1391,32 @@ export type Database = {
           instagram_story_entries?: number | null
           instagram_tag_url?: string | null
           instagram_verified?: boolean | null
+          ip_address?: string | null
           newsletter_entries?: number | null
+          otp_expiry?: string | null
+          phone_otp?: string | null
+          phone_verified?: boolean | null
           referral_entries?: number | null
           status?: string | null
           total_entries?: number | null
+          user_agent?: string | null
           user_borough?: string | null
           user_email?: string | null
           user_first_name?: string | null
           user_id?: string | null
           user_last_name?: string | null
           user_phone?: string | null
+          verified_at?: string | null
         }
         Update: {
           base_entries?: number | null
+          device_fingerprint?: string | null
+          email_otp?: string | null
+          email_verified?: boolean | null
           entered_at?: string | null
           entry_number_end?: number | null
           entry_number_start?: number | null
+          fraud_score?: number | null
           giveaway_id?: string | null
           id?: string
           instagram_handle?: string | null
@@ -1400,16 +1424,22 @@ export type Database = {
           instagram_story_entries?: number | null
           instagram_tag_url?: string | null
           instagram_verified?: boolean | null
+          ip_address?: string | null
           newsletter_entries?: number | null
+          otp_expiry?: string | null
+          phone_otp?: string | null
+          phone_verified?: boolean | null
           referral_entries?: number | null
           status?: string | null
           total_entries?: number | null
+          user_agent?: string | null
           user_borough?: string | null
           user_email?: string | null
           user_first_name?: string | null
           user_id?: string | null
           user_last_name?: string | null
           user_phone?: string | null
+          verified_at?: string | null
         }
         Relationships: [
           {
@@ -1420,6 +1450,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      giveaway_failed_attempts: {
+        Row: {
+          created_at: string | null
+          device_fingerprint: string | null
+          email: string | null
+          error_message: string | null
+          error_type: string | null
+          id: string
+          instagram_handle: string | null
+          ip_address: string | null
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_fingerprint?: string | null
+          email?: string | null
+          error_message?: string | null
+          error_type?: string | null
+          id?: string
+          instagram_handle?: string | null
+          ip_address?: string | null
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_fingerprint?: string | null
+          email?: string | null
+          error_message?: string | null
+          error_type?: string | null
+          id?: string
+          instagram_handle?: string | null
+          ip_address?: string | null
+          phone?: string | null
+        }
+        Relationships: []
       }
       giveaway_referrals: {
         Row: {
@@ -2912,6 +2978,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      calculate_fraud_score: {
+        Args: {
+          p_device_fingerprint: string
+          p_email: string
+          p_ip_address: string
+          p_phone: string
+        }
+        Returns: number
+      }
       calculate_risk_score: {
         Args: { p_user_id: string }
         Returns: number
@@ -2925,6 +3000,10 @@ export type Database = {
         Returns: boolean
       }
       generate_admin_pin: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_otp: {
         Args: Record<PropertyKey, never>
         Returns: string
       }

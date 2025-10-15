@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import SimpleDatePicker from './SimpleDatePicker';
+import VerificationStep from './VerificationStep';
 
 interface EntryFormProps {
   giveaway: any;
@@ -16,6 +17,7 @@ interface EntryFormProps {
 export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFormProps) {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
   const [entryResult, setEntryResult] = useState<any>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { toast } = useToast();
@@ -49,19 +51,20 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
         referralCode
       });
 
-      confetti({
-        particleCount: 150,
-        spread: 100,
-        origin: { y: 0.5 },
-        colors: ['#10b981', '#3b82f6', '#8b5cf6']
-      });
-
       setEntryResult(result);
-      setShowSuccess(true);
-
-      setTimeout(() => {
-        onSuccess();
-      }, 5000);
+      
+      if (result.requiresVerification) {
+        setShowVerification(true);
+      } else {
+        confetti({
+          particleCount: 150,
+          spread: 100,
+          origin: { y: 0.5 },
+          colors: ['#10b981', '#3b82f6', '#8b5cf6']
+        });
+        setShowSuccess(true);
+        setTimeout(() => onSuccess(), 5000);
+      }
 
     } catch (error: any) {
       toast({
@@ -73,6 +76,28 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
       setLoading(false);
     }
   };
+
+  if (showVerification && entryResult) {
+    return (
+      <VerificationStep
+        entryId={entryResult.entryId}
+        email={entryResult.email}
+        phone={entryResult.phone}
+        onSuccess={(entry) => {
+          confetti({
+            particleCount: 150,
+            spread: 100,
+            origin: { y: 0.5 },
+            colors: ['#10b981', '#3b82f6', '#8b5cf6']
+          });
+          setEntryResult({ ...entryResult, ...entry });
+          setShowVerification(false);
+          setShowSuccess(true);
+          setTimeout(() => onSuccess(), 5000);
+        }}
+      />
+    );
+  }
 
   if (showSuccess && entryResult) {
     return (

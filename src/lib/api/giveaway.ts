@@ -35,11 +35,16 @@ export async function submitGiveawayEntry(
     instagramHandle: string;
     instagramTagUrl: string;
     newsletterSubscribe: boolean;
+    newsletterOptIn?: boolean;
     referralCode?: string;
   }
 ) {
   try {
-    // 1. Get giveaway config
+    // 1. Get device fingerprint
+    const { getDeviceFingerprint } = await import('@/utils/deviceFingerprint');
+    const deviceFingerprint = await getDeviceFingerprint();
+
+    // 2. Get giveaway config
     const { data: giveaway } = await supabase
       .from('giveaways')
       .select('*')
@@ -48,7 +53,75 @@ export async function submitGiveawayEntry(
 
     if (!giveaway) throw new Error('Giveaway not found');
 
-    // 2. Check if user is already logged in
+    // 3. Validate email
+    const emailValidation = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validate-email`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({ email: entryData.email })
+      }
+    );
+    const emailResult = await emailValidation.json();
+    
+    if (!emailResult.valid) {
+      throw new Error(emailResult.reason || 'Invalid email address');
+    }
+
+    // 4. Validate phone
+    const phoneValidation = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validate-phone`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({ phone: entryData.phone })
+      }
+    );
+    const phoneResult = await phoneValidation.json();
+    
+    if (!phoneResult.valid) {
+      throw new Error(phoneResult.reason || 'Invalid phone number');
+    }
+
+    // 5. Check for duplicate entries
+    const { data: existingEntry } = await supabase
+      .from('giveaway_entries')
+      .select('id')
+      .eq('giveaway_id', giveawayId)
+      .or(`user_email.eq.${entryData.email},user_phone.eq.${phoneResult.cleanPhone},device_fingerprint.eq.${deviceFingerprint}`)
+      .single();
+
+    if (existingEntry) {
+      throw new Error('You have already entered this giveaway');
+    }
+
+    // 6. Calculate fraud score
+    const { data: fraudScore } = await supabase.rpc('calculate_fraud_score', {
+      p_email: entryData.email || '',
+      p_phone: phoneResult.cleanPhone,
+      p_device_fingerprint: deviceFingerprint,
+      p_ip_address: 'unknown'
+    });
+
+    if (fraudScore && fraudScore > 70) {
+      // Log failed attempt
+      await supabase.from('giveaway_failed_attempts').insert({
+        email: entryData.email,
+        phone: phoneResult.cleanPhone,
+        device_fingerprint: deviceFingerprint,
+        error_message: 'High fraud score',
+        error_type: 'fraud_detected'
+      });
+      throw new Error('Entry could not be processed. Please contact support.');
+    }
+
+    // 7. Check if user is already logged in
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     let userId: string;
 
@@ -68,7 +141,7 @@ export async function submitGiveawayEntry(
           data: {
             first_name: entryData.firstName,
             last_name: entryData.lastName,
-            phone: entryData.phone,
+            phone: phoneResult.cleanPhone,
             date_of_birth: entryData.dateOfBirth,
             borough: entryData.borough,
             instagram_handle: entryData.instagramHandle
@@ -88,7 +161,7 @@ export async function submitGiveawayEntry(
       if (!userId) throw new Error('Failed to create user');
     }
 
-    // 3. Calculate entry numbers
+    // 8. Calculate entry numbers
     const { data: lastEntry } = await supabase
       .from('giveaway_entries')
       .select('entry_number_end')
@@ -99,23 +172,16 @@ export async function submitGiveawayEntry(
 
     const entryNumberStart = (lastEntry?.entry_number_end || 0) + 1;
 
-    // 4. Calculate bonus entries
-    let newsletterEntries = 0;
-    let referralEntries = 0;
-
-    if (entryData.newsletterSubscribe) {
-      newsletterEntries = giveaway.newsletter_bonus_entries || 1;
-    }
-
-    // 5. Handle referral (simplified - you can enhance this)
-    if (entryData.referralCode) {
-      referralEntries = giveaway.referral_bonus_entries || 3;
-    }
-
-    const totalEntries = 1 + newsletterEntries + referralEntries;
+    // 9. Calculate bonus entries
+    const baseEntries = giveaway.base_entries || 1;
+    const newsletterEntries = (entryData.newsletterSubscribe || entryData.newsletterOptIn) 
+      ? (giveaway.newsletter_bonus_entries || 1) 
+      : 0;
+    const referralEntries = entryData.referralCode ? (giveaway.referral_bonus_entries || 3) : 0;
+    const totalEntries = baseEntries + newsletterEntries + referralEntries;
     const entryNumberEnd = entryNumberStart + totalEntries - 1;
 
-    // 6. Create entry
+    // 10. Create entry (unverified)
     const { data: entry, error: entryError } = await supabase
       .from('giveaway_entries')
       .insert({
@@ -124,47 +190,59 @@ export async function submitGiveawayEntry(
         user_email: entryData.email,
         user_first_name: entryData.firstName,
         user_last_name: entryData.lastName,
-        user_phone: entryData.phone,
+        user_phone: phoneResult.cleanPhone,
         user_borough: entryData.borough,
         instagram_handle: entryData.instagramHandle,
         instagram_tag_url: entryData.instagramTagUrl,
+        base_entries: baseEntries,
         newsletter_entries: newsletterEntries,
         referral_entries: referralEntries,
         total_entries: totalEntries,
         entry_number_start: entryNumberStart,
-        entry_number_end: entryNumberEnd
+        entry_number_end: entryNumberEnd,
+        device_fingerprint: deviceFingerprint,
+        fraud_score: fraudScore || 0,
+        status: 'pending'
       })
       .select()
       .single();
 
     if (entryError) throw entryError;
 
-    // 7. Generate referral link using user ID
-    const referralLink = `${window.location.origin}/giveaway/nyc-biggest-flower?ref=${userId}`;
-
-    // 8. Reload to get updated totals
-    const { data: updatedGiveaway } = await supabase
-      .from('giveaways')
-      .select('total_entries')
-      .eq('id', giveawayId)
-      .single();
+    // 11. Send OTP codes
+    await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-otp`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          entryId: entry.id,
+          email: entryData.email,
+          phone: phoneResult.cleanPhone
+        })
+      }
+    );
 
     return {
       success: true,
-      userId,
+      requiresVerification: true,
       entryId: entry.id,
+      userId,
+      email: entryData.email,
+      phone: phoneResult.formatted,
       totalEntries,
       entryNumbers: {
         start: entryNumberStart,
         end: entryNumberEnd
       },
       breakdown: {
-        base: 1,
+        base: baseEntries,
         newsletter: newsletterEntries,
         referrals: referralEntries
-      },
-      referralLink,
-      giveawayTotalEntries: updatedGiveaway?.total_entries || 0
+      }
     };
 
   } catch (error) {
