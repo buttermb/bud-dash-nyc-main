@@ -41,6 +41,8 @@ const MobileBottomNav = ({ onCartClick, onAuthClick }: MobileBottomNavProps) => 
       return data;
     },
     enabled: !!user,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const dbCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);

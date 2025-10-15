@@ -34,6 +34,7 @@ const QuickAddToCart = ({ productId, productName, size = "default" }: QuickAddTo
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cart", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       haptics.success(); // Success haptic feedback
       toast.success("🎉 Added to cart!", {

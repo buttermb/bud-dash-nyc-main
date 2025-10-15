@@ -140,6 +140,7 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
       // Success feedback with animation
       setAdded(true);
       haptics.success();
+      queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       sonnerToast.success("🎉 Added to cart!", {
         description: `${quantity}x ${product.name}`,

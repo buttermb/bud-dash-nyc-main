@@ -87,6 +87,7 @@ const ProductDetail = () => {
       setIsAdding(true);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cart", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       toast({ title: "Added to cart!" });
       haptics.success(); // Success haptic

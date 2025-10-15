@@ -42,6 +42,8 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
       return data;
     },
     enabled: !!user,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // Fetch product details for guest cart items
@@ -100,6 +102,7 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
         .eq("id", itemId);
 
       if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["cart", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     } catch (error: any) {
       toast.error(error.message);
@@ -126,6 +129,7 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
 
       if (error) throw error;
       toast.success("Item removed from cart");
+      queryClient.invalidateQueries({ queryKey: ["cart", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     } catch (error: any) {
       toast.error(error.message);

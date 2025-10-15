@@ -98,6 +98,7 @@ const CheckoutUpsells = ({ cartItems }: CheckoutUpsellsProps) => {
 
       toast.success(`${product.name} added to cart!`);
       setAddedProducts(prev => new Set(prev).add(product.id));
+      queryClient.invalidateQueries({ queryKey: ["cart", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     } catch (error: any) {
       toast.error(error.message || "Failed to add product");

@@ -35,6 +35,8 @@ const Cart = () => {
       return data;
     },
     enabled: !!user,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // Fetch product details for guest cart items
@@ -99,6 +101,7 @@ const Cart = () => {
         .eq("id", itemId);
 
       if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["cart", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       toast.success("Cart updated");
     } catch (error: any) {
@@ -124,6 +127,7 @@ const Cart = () => {
 
       if (error) throw error;
       toast.success("Item removed from cart");
+      queryClient.invalidateQueries({ queryKey: ["cart", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     } catch (error: any) {
       toast.error(error.message);

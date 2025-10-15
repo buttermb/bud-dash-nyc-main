@@ -104,8 +104,6 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
 
       // Optimistically update UI
       setAdded(true);
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-      queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
 
       // Authenticated user - use database with upsert for instant response
       const { error } = await supabase.rpc('add_to_cart', {
@@ -116,6 +114,10 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
       });
       
       if (error) throw error;
+
+      // Invalidate cart queries after successful insert
+      queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
 
       // Success feedback with confetti effect
       haptics.success();

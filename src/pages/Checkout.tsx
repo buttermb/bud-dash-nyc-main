@@ -91,6 +91,8 @@ const Checkout = () => {
       return data;
     },
     enabled: !!user,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // Fetch product details for guest cart items
@@ -320,6 +322,7 @@ const Checkout = () => {
       // Clear cart
       if (user) {
         // Authenticated user - edge function handles DB clear in background
+        queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
         queryClient.invalidateQueries({ queryKey: ["cart"] });
       } else {
         // Guest - clear localStorage cart
