@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { UserPlus, Instagram, Mail, Users, CheckCircle2 } from 'lucide-react';
+import { UserPlus, Instagram, Mail, Users, CheckCircle2, ShoppingBag } from 'lucide-react';
 
 interface HowToEnterProps {
   giveaway: any;
@@ -22,6 +22,14 @@ export default function HowToEnter({ giveaway }: HowToEnterProps) {
       entries: 0,
       gradient: 'from-pink-500 to-purple-500',
       required: true
+    },
+    {
+      icon: ShoppingBag,
+      title: 'Make a Purchase',
+      description: 'Every completed order automatically earns you bonus entries',
+      entries: 5,
+      gradient: 'from-violet-500 to-fuchsia-500',
+      badge: 'Best Value'
     },
     {
       icon: Mail,
