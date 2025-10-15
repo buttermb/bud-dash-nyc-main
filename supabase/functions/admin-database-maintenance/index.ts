@@ -55,11 +55,11 @@ Deno.serve(async (req) => {
     })
 
     // Note: Actual VACUUM, REINDEX operations require superuser privileges
-    // These are handled automatically by Lovable Cloud's database management
+    // These are handled automatically by the backend database management system
     const actionMessages: Record<string, string> = {
-      'vacuum': 'Database maintenance scheduled. Lovable Cloud automatically handles table optimization.',
-      'optimize_indexes': 'Index optimization scheduled. Lovable Cloud automatically maintains optimal indexes.',
-      'analyze': 'Table statistics update scheduled. Lovable Cloud continuously monitors and optimizes performance.'
+      'vacuum': 'Database maintenance scheduled. Backend automatically handles table optimization.',
+      'optimize_indexes': 'Index optimization scheduled. Backend automatically maintains optimal indexes.',
+      'analyze': 'Table statistics update scheduled. Backend continuously monitors and optimizes performance.'
     }
 
     const message = actionMessages[action] || 'Database operation scheduled'

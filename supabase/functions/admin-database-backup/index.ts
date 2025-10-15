@@ -78,9 +78,9 @@ Deno.serve(async (req) => {
     // This creates a backup record and triggers Supabase's automatic backups
     return new Response(JSON.stringify({ 
       success: true, 
-      message: 'Database backup initiated. Automatic backups are maintained by Lovable Cloud.',
+      message: 'Database backup initiated. Automatic backups are maintained by the backend service.',
       backup_info: backupInfo,
-      note: 'Point-in-time recovery available through Lovable Cloud dashboard'
+      note: 'Point-in-time recovery available through the database dashboard'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })

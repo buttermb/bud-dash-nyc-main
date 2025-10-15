@@ -6,7 +6,7 @@ Your admin system is **fully functional** with these features:
 
 ### ✅ Completed Features
 
-**Backend (Lovable Cloud/Supabase):**
+**Backend:**
 - Separate admin authentication system
 - Role-based access control (Super Admin, Admin, Compliance Officer, Support)
 - Complete audit trail logging
@@ -57,7 +57,7 @@ Your admin system is **fully functional** with these features:
 
 ### Step 2: Promote to Admin via Database
 
-Access your Lovable Cloud backend and run this SQL:
+Access your backend database and run this SQL:
 
 ```sql
 -- Replace 'your-admin@example.com' with your email
@@ -73,7 +73,7 @@ WHERE email = 'your-admin@example.com';
 
 ### Step 3: Login to Admin Portal
 
-1. Navigate to: `https://your-app.lovable.app/admin/login`
+1. Navigate to: `https://newyorkminutenyc.com/admin/login`
 2. Use the same email and password from Step 1
 3. You'll be redirected to the admin dashboard
 

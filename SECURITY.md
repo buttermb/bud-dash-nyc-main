@@ -120,7 +120,7 @@ Built by WebFlow Studios Team (2024)
    exiftool -all= -overwrite_original ./public/products/*.jpg
    ```
 
-3. **Package.json**: The package.json still references Lovable - consider this if full anonymization is critical.
+3. **Package.json**: All dependencies are publicly available open-source packages.
 
 4. **API Keys**: Ensure no personal API keys or tokens are committed to git history.
 

@@ -42,8 +42,8 @@ This project is now configured with Capacitor for native iOS and Android deploym
    npx cap init
    ```
    The config is already set with:
-   - App ID: `app.lovable.65e491242bb14ef2904b5dcf255784da`
-   - App Name: `bud-dash-nyc`
+   - App ID: `com.newyorkminute.nyc`
+   - App Name: `New York Minute NYC`
 
 3. **Add iOS and/or Android platforms**
    ```bash
@@ -129,9 +129,9 @@ The app requires the following permissions which need to be configured in native
 
 ## 🔄 Hot Reload During Development
 
-The app is configured for hot-reload from the Lovable preview:
+The app is configured for hot-reload from the production server:
 ```
-https://65e49124-2bb1-4ef2-904b-5dcf255784da.lovableproject.com?forceHideBadge=true
+https://newyorkminutenyc.com
 ```
 
 This allows you to develop and test changes without rebuilding the native app.
@@ -140,7 +140,6 @@ This allows you to develop and test changes without rebuilding the native app.
 
 - [Capacitor Documentation](https://capacitorjs.com/docs)
 - [Geolocation Plugin Docs](https://capacitorjs.com/docs/apis/geolocation)
-- [Lovable Mobile Development Guide](https://lovable.dev/blogs/TODO)
 
 ## 🆘 Troubleshooting
 
