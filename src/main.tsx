@@ -17,6 +17,12 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { PerformanceMonitor } from "./utils/performance";
+import { initializeSecurityObfuscation } from "./utils/securityObfuscation";
+
+// Initialize security obfuscation in production
+if (import.meta.env.PROD) {
+  initializeSecurityObfuscation();
+}
 
 // Register service worker for PWA capabilities and caching
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
