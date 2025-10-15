@@ -116,12 +116,12 @@ export default function CourierDashboard() {
     }
   }, [courier, isUnlocked]);
 
-  // Real-time subscription for new orders
+  // Real-time subscription for new orders - Enhanced with multiple triggers
   useEffect(() => {
     if (!courier || !isOnline) return;
 
     const channel = supabase
-      .channel('new-orders')
+      .channel('new-orders-enhanced')
       .on(
         'postgres_changes',
         {
@@ -131,7 +131,7 @@ export default function CourierDashboard() {
           filter: `status=eq.pending`
         },
         (payload) => {
-          console.log('🆕 New order detected:', payload);
+          console.log('🆕 New order detected (INSERT):', payload);
           const newOrder = payload.new as any;
           
           // Play sound and vibrate
@@ -153,11 +153,33 @@ export default function CourierDashboard() {
             duration: 5000
           });
           
-          // Refresh available orders
+          // Immediately refetch available orders
           queryClient.invalidateQueries({ queryKey: ['courier-available-orders'] });
+          setTimeout(() => {
+            queryClient.refetchQueries({ queryKey: ['courier-available-orders'] });
+          }, 100);
         }
       )
-      .subscribe();
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `status=eq.pending`
+        },
+        (payload) => {
+          console.log('🔄 Order updated to pending:', payload);
+          // Also refetch when an order becomes pending again
+          queryClient.invalidateQueries({ queryKey: ['courier-available-orders'] });
+          setTimeout(() => {
+            queryClient.refetchQueries({ queryKey: ['courier-available-orders'] });
+          }, 100);
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -336,7 +358,7 @@ export default function CourierDashboard() {
     };
   }, [courier, refetchMyOrders]);
 
-  // Fetch available orders
+  // Fetch available orders - faster refresh for quicker updates
   const { data: availableOrdersData } = useQuery({
     queryKey: ['courier-available-orders'],
     queryFn: async () => {
@@ -346,8 +368,10 @@ export default function CourierDashboard() {
       if (error) throw error;
       return data;
     },
-    refetchInterval: 15000,
-    enabled: !!courier && isOnline
+    refetchInterval: 3000, // Check every 3 seconds instead of 15
+    enabled: !!courier && isOnline,
+    refetchOnWindowFocus: true, // Also refetch when tab becomes active
+    refetchOnMount: true // Refetch on component mount
   });
 
   // Fetch completed orders
