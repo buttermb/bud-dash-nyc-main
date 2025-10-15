@@ -6,9 +6,9 @@ import { motion, useScroll, useTransform } from "framer-motion";
 
 export function ParallaxHero() {
   const { scrollY } = useScroll();
-  const y1 = useTransform(scrollY, [0, 500], [0, 150]);
-  const y2 = useTransform(scrollY, [0, 500], [0, -50]);
-  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+  const y1 = useTransform(scrollY, [0, 800], [0, 200]);
+  const y2 = useTransform(scrollY, [0, 800], [0, -80]);
+  const opacity = useTransform(scrollY, [0, 600], [1, 0]);
 
   const scrollToProducts = () => {
     const productsSection = document.getElementById('products');
@@ -67,7 +67,7 @@ export function ParallaxHero() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             className="flex justify-center"
           >
             <Badge variant="outline" className="px-6 py-3 text-base border-primary/50 bg-primary/10 backdrop-blur-sm">
@@ -79,17 +79,17 @@ export function ParallaxHero() {
           {/* Main Headline with stagger animation */}
           <div className="space-y-4">
             <motion.h1
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
               className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight leading-tight"
             >
               Premium Flower
             </motion.h1>
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
             >
               <span className="text-5xl sm:text-6xl md:text-7xl font-black bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
                 Delivery NYC
@@ -101,7 +101,7 @@ export function ParallaxHero() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
+            transition={{ duration: 0.8, delay: 0.9, ease: "easeOut" }}
             className="flex flex-wrap justify-center gap-6 text-base"
           >
             {[
@@ -124,7 +124,7 @@ export function ParallaxHero() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
+            transition={{ duration: 0.8, delay: 1.2, ease: "easeOut" }}
             className="text-xl text-muted-foreground max-w-2xl mx-auto"
           >
             Premium flower, pre-rolls, and edibles from licensed NYC cultivators
@@ -132,9 +132,9 @@ export function ParallaxHero() {
           
           {/* Free Shipping Callout */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 1 }}
+            transition={{ duration: 0.8, delay: 1.5, ease: "easeOut" }}
             whileHover={{ scale: 1.05 }}
             className="inline-flex items-center gap-2 bg-primary/10 text-primary px-6 py-3 rounded-full border border-primary/30"
           >
@@ -146,7 +146,7 @@ export function ParallaxHero() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 1.2 }}
+            transition={{ duration: 0.8, delay: 1.8, ease: "easeOut" }}
             className="flex flex-col sm:flex-row gap-4 justify-center pt-4"
           >
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>

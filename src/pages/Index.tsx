@@ -40,8 +40,8 @@ const Index = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
         className="bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 border-y border-primary/30 shadow-inner"
       >
         <div className="container px-4 py-5 mx-auto">
@@ -56,33 +56,69 @@ const Index = () => {
       </motion.div>
 
       {/* Trending Products Carousel */}
-      <Suspense fallback={<EnhancedLoadingState variant="grid" count={4} />}>
-        <TrendingProducts />
-      </Suspense>
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <Suspense fallback={<EnhancedLoadingState variant="grid" count={4} />}>
+          <TrendingProducts />
+        </Suspense>
+      </motion.div>
 
       {/* PRODUCTS */}
-      <section id="products" className="bg-background" aria-label="Product catalog">
+      <motion.section 
+        id="products" 
+        className="bg-background" 
+        aria-label="Product catalog"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
         <Suspense fallback={<EnhancedLoadingState variant="grid" count={8} />}>
           <ProductCatalog />
         </Suspense>
-      </section>
+      </motion.section>
 
       {/* How It Works */}
-      <section id="how-it-works" aria-label="How it works">
+      <motion.section 
+        id="how-it-works" 
+        aria-label="How it works"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
         <Suspense fallback={<EnhancedLoadingState variant="card" count={3} />}>
           <HowItWorks />
         </Suspense>
-      </section>
+      </motion.section>
 
       {/* Trust Elements */}
-      <Suspense fallback={null}>
-        <ProductTrustElements />
-      </Suspense>
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <Suspense fallback={null}>
+          <ProductTrustElements />
+        </Suspense>
+      </motion.div>
       
       {/* PWA Install Prompt */}
-      <Suspense fallback={null}>
-        <InstallPWA />
-      </Suspense>
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <Suspense fallback={null}>
+          <InstallPWA />
+        </Suspense>
+      </motion.div>
       
       <Suspense fallback={null}>
         <Footer />
