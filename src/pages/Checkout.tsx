@@ -192,13 +192,33 @@ const Checkout = () => {
   const deliveryFee = calculateDeliveryFee();
   const guestDeliveryFee = calculateDeliveryFee(true);
   
-  // First order discount for members only (10% off subtotal)
-  const firstOrderDiscount = isFirstOrder ? subtotal * 0.10 : 0;
+  // Welcome discount (10% off for new users who just signed up)
+  const { data: welcomeDiscount } = useQuery({
+    queryKey: ["welcome-discount", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("user_welcome_discounts")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("used", false)
+        .gte("expires_at", new Date().toISOString())
+        .single();
+      if (error) return null;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const welcomeDiscountAmount = welcomeDiscount ? subtotal * (welcomeDiscount.discount_percentage / 100) : 0;
+  
+  // First order discount for members only (10% off subtotal) - only if no welcome discount
+  const firstOrderDiscount = isFirstOrder && !welcomeDiscount ? subtotal * 0.10 : 0;
   
   // Coupon discount
   const couponDiscount = appliedCoupon?.discount || 0;
   
-  const total = subtotal + deliveryFee - firstOrderDiscount - couponDiscount;
+  const total = subtotal + deliveryFee - welcomeDiscountAmount - firstOrderDiscount - couponDiscount;
   const guestTotal = subtotal + guestDeliveryFee - couponDiscount;
 
   const handleCouponApplied = async (discount: number, code: string) => {
@@ -308,6 +328,18 @@ const Checkout = () => {
 
       if (error) throw error;
       if (data.error) throw new Error(data.error);
+
+      // Mark welcome discount as used if applied
+      if (welcomeDiscount && user?.id) {
+        await supabase
+          .from("user_welcome_discounts")
+          .update({
+            used: true,
+            used_at: new Date().toISOString(),
+            order_id: data.orderId
+          })
+          .eq("id", welcomeDiscount.id);
+      }
 
       // Track coupon usage if applied
       if (appliedCoupon?.couponId && user?.id) {
@@ -958,7 +990,18 @@ const Checkout = () => {
                       <div>City surcharge: ${user ? "5.00" : "5.50"}</div>
                     </div>
                   )}
-                  {isFirstOrder && (
+                  {welcomeDiscountAmount > 0 && (
+                    <div className="flex justify-between text-sm text-primary">
+                      <span className="flex items-center gap-2">
+                        Welcome Discount ({welcomeDiscount?.discount_percentage}%)
+                        <span className="text-xs px-1.5 py-0.5 bg-primary/20 rounded font-semibold">
+                          NEW
+                        </span>
+                      </span>
+                      <span>-${welcomeDiscountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {firstOrderDiscount > 0 && (
                     <div className="flex justify-between text-sm text-primary">
                       <span className="flex items-center gap-2">
                         First Order Discount (10%)
@@ -993,13 +1036,14 @@ const Checkout = () => {
                 <Separator />
 
                 {/* Member Savings Display */}
-                {isFirstOrder && (
+                {(welcomeDiscountAmount > 0 || firstOrderDiscount > 0) && (
                   <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg space-y-2">
                     <p className="text-sm font-semibold text-primary flex items-center gap-2">
-                      🎉 You're saving ${(firstOrderDiscount + (guestDeliveryFee - deliveryFee)).toFixed(2)} today!
+                      🎉 You're saving ${((welcomeDiscountAmount || firstOrderDiscount) + (guestDeliveryFee - deliveryFee)).toFixed(2)} today!
                     </p>
                     <div className="text-xs text-primary/80 space-y-1">
-                      <div>• ${firstOrderDiscount.toFixed(2)} first order discount</div>
+                      {welcomeDiscountAmount > 0 && <div>• ${welcomeDiscountAmount.toFixed(2)} welcome discount</div>}
+                      {firstOrderDiscount > 0 && <div>• ${firstOrderDiscount.toFixed(2)} first order discount</div>}
                       <div>• ${(guestDeliveryFee - deliveryFee).toFixed(2)} member delivery rate</div>
                     </div>
                   </div>
