@@ -18,6 +18,26 @@ export default function PurchaseGiveawayEntries() {
 
   useEffect(() => {
     fetchEntries();
+    
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel('giveaway-entries-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'giveaway_entries'
+        },
+        () => {
+          fetchEntries();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchEntries = async () => {

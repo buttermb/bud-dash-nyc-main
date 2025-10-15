@@ -36,6 +36,26 @@ export default function MyGiveawayEntries() {
 
   useEffect(() => {
     loadEntries();
+    
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel('my-giveaway-entries-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'giveaway_entries'
+        },
+        () => {
+          loadEntries();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadEntries = async () => {
