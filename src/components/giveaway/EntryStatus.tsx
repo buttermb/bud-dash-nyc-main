@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { QRCodeSVG } from 'qrcode.react';
+import confetti from 'canvas-confetti';
 import {
   FacebookShareButton,
   TwitterShareButton,
@@ -35,7 +36,31 @@ export default function EntryStatus({ entry, giveaway, onUpdate }: EntryStatusPr
   const copyReferralLink = () => {
     navigator.clipboard.writeText(entry.referralLink);
     setCopied(true);
+    toast.success('Referral link copied to clipboard!');
+    confetti({
+      particleCount: 50,
+      spread: 60,
+      origin: { y: 0.7 }
+    });
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: giveaway.title,
+          text: `🎉 Join me in winning ${giveaway.grand_prize_title}! Enter BudDash NYC's giveaway now!`,
+          url: entry.referralLink
+        });
+        toast.success('Thanks for sharing!');
+      } catch (err) {
+        // User cancelled or error occurred
+        console.log('Share cancelled or failed');
+      }
+    } else {
+      copyReferralLink();
+    }
   };
 
   const handleClaimStoryBonus = async () => {
@@ -182,6 +207,15 @@ export default function EntryStatus({ entry, giveaway, onUpdate }: EntryStatusPr
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={handleNativeShare}
+              className="flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 py-3 rounded-xl font-bold text-sm transition-all text-white shadow-lg"
+            >
+              <Share2 className="w-4 h-4" />
+              Share Link
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => {
                 copyReferralLink();
                 setTimeout(() => {
@@ -192,18 +226,6 @@ export default function EntryStatus({ entry, giveaway, onUpdate }: EntryStatusPr
             >
               <Instagram className="w-4 h-4" />
               Instagram
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                const text = `Join me in Bud Dash NYC's giveaway! 🎉 Win premium flower: ${entry.referralLink}`;
-                window.open(`sms:?&body=${encodeURIComponent(text)}`, '_blank');
-              }}
-              className="flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 py-3 rounded-xl font-bold text-sm transition-all text-white shadow-lg"
-            >
-              <MessageCircle className="w-4 h-4" />
-              SMS
             </motion.button>
           </div>
 
