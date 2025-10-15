@@ -37,7 +37,6 @@ export function usePushNotifications() {
     }
 
     try {
-      // First request notification permission
       const permission = await Notification.requestPermission();
       
       if (permission !== 'granted') {
@@ -49,33 +48,22 @@ export function usePushNotifications() {
         return false;
       }
 
-      // Check if service worker is ready
       if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.ready;
-        
-        // Try to get existing subscription or create new one
-        try {
-          let sub = await registration.pushManager.getSubscription();
-          
-          if (!sub) {
-            // Create new subscription with minimal options (no VAPID needed for basic notifications)
-            const options = {
-              userVisibleOnly: true,
-              applicationServerKey: null
-            };
-            
-            // Note: This will work for showing notifications, but won't work for server push without VAPID keys
-            sub = await registration.pushManager.subscribe(options);
-          }
-          
-          setSubscription(sub);
-        } catch (subError) {
-          console.log('Push subscription not available, using basic notifications only:', subError);
-        }
+        await navigator.serviceWorker.ready;
       }
 
       setIsSubscribed(true);
       localStorage.setItem('notifications_enabled', 'true');
+
+      // Test notification via service worker
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'SHOW_NOTIFICATION',
+          title: 'Notifications Enabled',
+          body: "You'll receive delivery notifications on your home and lock screen",
+          tag: 'notification-enabled'
+        });
+      }
 
       toast({
         title: "Notifications Enabled",

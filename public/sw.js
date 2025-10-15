@@ -189,49 +189,29 @@ self.addEventListener('notificationclick', (event) => {
 
   const data = event.notification.data;
 
-  if (event.action === 'accept') {
-    // Accept delivery
+  if (event.action === 'accept' || event.action === 'view') {
+    // Accept/view delivery
     event.waitUntil(
-      fetch(`${self.registration.scope}functions/v1/courier-app`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'accept_delivery',
-          orderId: data.orderId
-        })
-      }).then(() => {
-        return clients.openWindow(data.url || `/courier/dashboard`);
-      }).catch(err => {
-        console.error('Failed to accept delivery:', err);
-        return clients.openWindow('/courier/dashboard');
-      })
+      clients.openWindow(data.url || '/courier-dashboard')
     );
-  } else if (event.action === 'decline') {
-    // Decline delivery
-    event.waitUntil(
-      fetch(`${self.registration.scope}functions/v1/courier-app`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'decline_delivery',
-          orderId: data.orderId
-        })
-      }).catch(err => {
-        console.error('Failed to decline delivery:', err);
-      })
-    );
+  } else if (event.action === 'decline' || event.action === 'dismiss') {
+    // Just dismiss
+    return;
   } else {
-    // Open app
+    // Default click - open or focus app
     event.waitUntil(
       clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
         // Check if app is already open
         for (let client of clientList) {
-          if (client.url.includes('/courier') && 'focus' in client) {
+          if (client.url.includes(self.location.origin) && 'focus' in client) {
+            if (data.url) {
+              client.postMessage({ type: 'NAVIGATE', url: data.url });
+            }
             return client.focus();
           }
         }
         // Open new window
-        return clients.openWindow(data.url || '/courier/dashboard');
+        return clients.openWindow(data.url || '/courier-dashboard');
       })
     );
   }
@@ -292,9 +272,29 @@ async function syncOrderStatus() {
   }
 }
 
-// Handle messages from the app
+// Message event - Handle messages from the app
 self.addEventListener('message', (event) => {
+  console.log('Service worker received message:', event.data);
+  
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  }
+  
+  // Handle notification requests from the app
+  if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+    const { title, body, tag, icon, badge, data, requireInteraction } = event.data;
+    
+    event.waitUntil(
+      self.registration.showNotification(title, {
+        body: body || '',
+        tag: tag || 'default',
+        icon: icon || '/nym-logo.svg',
+        badge: badge || '/nym-logo.svg',
+        vibrate: [200, 100, 200],
+        data: data || {},
+        requireInteraction: requireInteraction || false,
+        silent: false
+      })
+    );
   }
 });

@@ -1,24 +1,29 @@
-// Notification sound using HTML5 audio (doesn't trigger microphone icon on iOS)
+import { playNotificationSound } from './notificationSound';
+import { 
+  notifyNewOrderPersistent, 
+  notifyDeliveryReminderPersistent, 
+  notifyEarningsUpdatePersistent 
+} from './serviceWorkerNotifications';
+
+// Play order sound
 export const playOrderSound = () => {
   try {
-    // Simple notification sound using HTML5 audio
-    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGmi78N+oVRQLUKbh8LJeHAU7k9bxy3crc');
-    audio.volume = 0.3;
-    audio.play().catch(e => console.log('Audio play failed:', e));
+    const audio = new Audio('/notification.wav');
+    audio.volume = 1.0;
+    audio.play().catch(err => console.log('Audio play failed:', err));
   } catch (error) {
-    console.log('Could not play order sound:', error);
+    console.error('Error playing sound:', error);
   }
 };
 
-// Success sound using HTML5 audio (doesn't trigger microphone icon on iOS)
+// Play success sound
 export const playSuccessSound = () => {
   try {
-    // Simple success sound using HTML5 audio
-    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGmi78N+oVRQLUKbh8LJeHAU7k9bxy3crc');
-    audio.volume = 0.3;
-    audio.play().catch(e => console.log('Audio play failed:', e));
+    const audio = new Audio('/notification.wav');
+    audio.volume = 1.0;
+    audio.play().catch(err => console.log('Audio play failed:', err));
   } catch (error) {
-    console.log('Could not play success sound:', error);
+    console.error('Error playing sound:', error);
   }
 };
 
@@ -52,42 +57,29 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
 export const showBrowserNotification = (title: string, options?: NotificationOptions) => {
   if (Notification.permission === 'granted') {
     new Notification(title, {
-      icon: '/favicon.ico',
-      badge: '/favicon.ico',
+      icon: '/nym-logo.svg',
+      badge: '/nym-logo.svg',
       ...options
     });
   }
 };
 
-// Show new order notification
-export const notifyNewOrder = (orderNumber: string, amount: number, borough: string) => {
+// Notify new order with persistent notification
+export const notifyNewOrder = async (orderNumber: string, amount: number, borough: string) => {
   playOrderSound();
-  vibrateDevice([200, 100, 200]);
-  
-  showBrowserNotification('🚨 New Order Available!', {
-    body: `${orderNumber} - $${amount}\n${borough}`,
-    tag: 'new-order',
-    requireInteraction: true
-  });
+  vibrateDevice([200, 100, 200, 100, 200]);
+  await notifyNewOrderPersistent(orderNumber, amount, borough);
 };
 
-// Show delivery reminder
-export const notifyDeliveryReminder = (orderNumber: string) => {
-  vibrateDevice(200);
-  
-  showBrowserNotification('⏰ Delivery In Progress', {
-    body: `Don't forget to complete ${orderNumber}`,
-    tag: 'delivery-reminder'
-  });
+// Notify delivery reminder with persistent notification
+export const notifyDeliveryReminder = async (orderNumber: string) => {
+  vibrateDevice();
+  await notifyDeliveryReminderPersistent(orderNumber);
 };
 
-// Show earnings update
-export const notifyEarningsUpdate = (amount: number) => {
+// Notify earnings update with persistent notification
+export const notifyEarningsUpdate = async (amount: number) => {
   playSuccessSound();
   vibrateDevice([100, 50, 100]);
-  
-  showBrowserNotification('💰 Earnings Updated', {
-    body: `You earned $${amount.toFixed(2)}!`,
-    tag: 'earnings'
-  });
+  await notifyEarningsUpdatePersistent(amount);
 };
