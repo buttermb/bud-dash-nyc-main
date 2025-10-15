@@ -19,26 +19,15 @@
 
 /**
  * Adds random delays to API calls to make timing analysis harder
+ * DISABLED - Causes noticeable performance impact
  */
 export const obfuscateRequestTiming = async <T>(
   request: () => Promise<T>,
   minDelay: number = 50,
   maxDelay: number = 200
 ): Promise<T> => {
-  // Only in production - don't slow down development
-  if (import.meta.env.DEV) {
-    return request();
-  }
-
-  const delay = Math.random() * (maxDelay - minDelay) + minDelay;
-  
-  // Start request and delay in parallel
-  const [result] = await Promise.all([
-    request(),
-    new Promise(resolve => setTimeout(resolve, delay))
-  ]);
-  
-  return result;
+  // Disabled for performance - just pass through
+  return request();
 };
 
 /**
@@ -141,6 +130,7 @@ export const obfuscateConsole = () => {
 
 /**
  * Initialize all security obfuscation measures
+ * BALANCED MODE - Strong protection without breaking usability
  */
 export const initializeSecurityObfuscation = () => {
   if (import.meta.env.DEV) {
@@ -148,41 +138,21 @@ export const initializeSecurityObfuscation = () => {
     return;
   }
   
-  // Add fingerprint resistance
+  // Add fingerprint resistance (minimal performance impact)
   addFingerprintNoise();
   
-  // Obfuscate console
+  // Obfuscate console (no user impact)
   obfuscateConsole();
   
-  // Start generating decoy traffic
+  // Start generating decoy traffic (background only, no user impact)
   generateDecoyTraffic();
   
-  // Monitor for dev tools
-  setInterval(() => {
-    if (detectDevTools()) {
-      // Clear sensitive data from memory if dev tools detected
-      sessionStorage.clear();
-    }
-  }, 1000);
+  // REMOVED: Dev tools blocking - hurts legitimate users
+  // REMOVED: Right-click blocking - breaks accessibility
+  // REMOVED: Session clearing - can break legitimate use
+  // REMOVED: F12 blocking - users should be able to inspect
   
-  // Disable right-click in production (can be bypassed but adds friction)
-  document.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    return false;
-  });
-  
-  // Disable keyboard shortcuts for opening dev tools
-  document.addEventListener('keydown', (e) => {
-    // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
-    if (
-      e.key === 'F12' ||
-      (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
-      (e.ctrlKey && e.key === 'U')
-    ) {
-      e.preventDefault();
-      return false;
-    }
-  });
+  // Site remains fully usable while code stays obfuscated
 };
 
 /**
