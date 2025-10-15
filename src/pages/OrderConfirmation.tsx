@@ -71,6 +71,12 @@ const OrderConfirmation = () => {
             <p className="text-muted-foreground">
               Your order has been placed successfully
             </p>
+            <div className="mt-4 p-4 bg-gradient-to-r from-primary/20 to-emerald-500/20 border border-primary/30 rounded-lg">
+              <p className="text-sm font-semibold text-primary flex items-center justify-center gap-2">
+                <CheckCircle className="w-4 h-4" />
+                🎉 You earned 5 giveaway entries with this purchase!
+              </p>
+            </div>
           </div>
 
           <Card className="mb-6">

@@ -1350,6 +1350,7 @@ export type Database = {
           entered_at: string | null
           entry_number_end: number | null
           entry_number_start: number | null
+          entry_type: string | null
           fraud_score: number | null
           giveaway_id: string | null
           id: string
@@ -1359,11 +1360,14 @@ export type Database = {
           instagram_tag_url: string | null
           instagram_verified: boolean | null
           ip_address: string | null
+          last_error: string | null
           newsletter_entries: number | null
+          order_id: string | null
           otp_expiry: string | null
           phone_otp: string | null
           phone_verified: boolean | null
           referral_entries: number | null
+          retry_count: number | null
           status: string | null
           total_entries: number | null
           user_agent: string | null
@@ -1383,6 +1387,7 @@ export type Database = {
           entered_at?: string | null
           entry_number_end?: number | null
           entry_number_start?: number | null
+          entry_type?: string | null
           fraud_score?: number | null
           giveaway_id?: string | null
           id?: string
@@ -1392,11 +1397,14 @@ export type Database = {
           instagram_tag_url?: string | null
           instagram_verified?: boolean | null
           ip_address?: string | null
+          last_error?: string | null
           newsletter_entries?: number | null
+          order_id?: string | null
           otp_expiry?: string | null
           phone_otp?: string | null
           phone_verified?: boolean | null
           referral_entries?: number | null
+          retry_count?: number | null
           status?: string | null
           total_entries?: number | null
           user_agent?: string | null
@@ -1416,6 +1424,7 @@ export type Database = {
           entered_at?: string | null
           entry_number_end?: number | null
           entry_number_start?: number | null
+          entry_type?: string | null
           fraud_score?: number | null
           giveaway_id?: string | null
           id?: string
@@ -1425,11 +1434,14 @@ export type Database = {
           instagram_tag_url?: string | null
           instagram_verified?: boolean | null
           ip_address?: string | null
+          last_error?: string | null
           newsletter_entries?: number | null
+          order_id?: string | null
           otp_expiry?: string | null
           phone_otp?: string | null
           phone_verified?: boolean | null
           referral_entries?: number | null
+          retry_count?: number | null
           status?: string | null
           total_entries?: number | null
           user_agent?: string | null
@@ -1450,6 +1462,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      giveaway_errors: {
+        Row: {
+          attempt_data: Json | null
+          created_at: string | null
+          error_message: string
+          error_stack: string | null
+          error_type: string
+          id: string
+          resolved: boolean | null
+        }
+        Insert: {
+          attempt_data?: Json | null
+          created_at?: string | null
+          error_message: string
+          error_stack?: string | null
+          error_type: string
+          id?: string
+          resolved?: boolean | null
+        }
+        Update: {
+          attempt_data?: Json | null
+          created_at?: string | null
+          error_message?: string
+          error_stack?: string | null
+          error_type?: string
+          id?: string
+          resolved?: boolean | null
+        }
+        Relationships: []
       }
       giveaway_failed_attempts: {
         Row: {
@@ -1484,6 +1526,45 @@ export type Database = {
           instagram_handle?: string | null
           ip_address?: string | null
           phone?: string | null
+        }
+        Relationships: []
+      }
+      giveaway_queue: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          email: string | null
+          id: string
+          last_error: string | null
+          order_id: string | null
+          phone: string | null
+          processed_at: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          last_error?: string | null
+          order_id?: string | null
+          phone?: string | null
+          processed_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          last_error?: string | null
+          order_id?: string | null
+          phone?: string | null
+          processed_at?: string | null
+          status?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2995,11 +3076,32 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      create_giveaway_entry_safe: {
+        Args: {
+          p_borough: string
+          p_device_fingerprint: string
+          p_email: string
+          p_entry_type?: string
+          p_first_name: string
+          p_giveaway_id: string
+          p_instagram: string
+          p_ip_address: string
+          p_last_name: string
+          p_order_id?: string
+          p_phone: string
+          p_user_agent: string
+        }
+        Returns: Json
+      }
       decrement_inventory: {
         Args: { _product_id: string; _quantity: number }
         Returns: boolean
       }
       generate_admin_pin: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_entry_number: {
         Args: Record<PropertyKey, never>
         Returns: string
       }

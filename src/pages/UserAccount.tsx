@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { Shield, TrendingUp, CheckCircle, AlertTriangle, FileText } from "lucide-react";
+import PurchaseGiveawayEntries from "@/components/account/PurchaseGiveawayEntries";
 
 export default function UserAccount() {
   const navigate = useNavigate();
@@ -230,6 +231,9 @@ export default function UserAccount() {
               )}
             </CardContent>
           </Card>
+          
+          {/* Giveaway Entries */}
+          <PurchaseGiveawayEntries />
         </div>
 
         {/* Sidebar */}

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { submitGiveawayEntry } from '@/lib/api/giveaway';
 import { supabase } from '@/integrations/supabase/client';
-import { Instagram, Loader2, Sparkles, Check, Mail, Users, Copy } from 'lucide-react';
+import { Instagram, Loader2, Sparkles, Check, Mail, Users, Copy, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import SimpleDatePicker from './SimpleDatePicker';
 import VerificationStep from './VerificationStep';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface EntryFormProps {
   giveaway: any;
@@ -20,7 +22,12 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
   const [showVerification, setShowVerification] = useState(false);
   const [entryResult, setEntryResult] = useState<any>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
+  
+  // Auto-save form data locally
+  const [savedDraft, setSavedDraft] = useLocalStorage('giveaway-draft', null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -38,11 +45,28 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
     supabase.auth.getUser().then(({ data: { user } }) => {
       setIsLoggedIn(!!user);
     });
+    
+    // Restore draft if exists
+    if (savedDraft && typeof savedDraft === 'object') {
+      setFormData(prev => ({
+        ...prev,
+        ...savedDraft,
+        dateOfBirth: savedDraft.dateOfBirth ? new Date(savedDraft.dateOfBirth) : null
+      }));
+      toast({
+        title: "Draft Restored",
+        description: "We recovered your previous entry attempt"
+      });
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
+
+    // Save draft locally
+    setSavedDraft(formData);
 
     try {
       const result = await submitGiveawayEntry(giveaway.id, {
@@ -56,6 +80,8 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
       if (result.requiresVerification) {
         setShowVerification(true);
       } else {
+        // Clear draft on success
+        setSavedDraft(null);
         confetti({
           particleCount: 150,
           spread: 100,
@@ -67,11 +93,27 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
       }
 
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit entry",
-        variant: "destructive"
-      });
+      console.error('Submission error:', error);
+      setError(error.message || "Failed to submit entry");
+      
+      // Auto-retry on network errors
+      if (
+        retryCount < 3 && 
+        (error.message?.includes('Network') || 
+         error.message?.includes('timeout') ||
+         error.message?.includes('connection'))
+      ) {
+        setRetryCount(prev => prev + 1);
+        setTimeout(() => {
+          handleSubmit(e);
+        }, 2000 * (retryCount + 1)); // Exponential backoff
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to submit entry",
+          variant: "destructive"
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -199,6 +241,21 @@ export default function EntryForm({ giveaway, referralCode, onSuccess }: EntryFo
       className="max-w-2xl mx-auto mb-20"
     >
       <div className="relative bg-slate-900/70 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 sm:p-10 shadow-2xl">
+        {/* Error Banner */}
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {error}
+              {retryCount > 0 && (
+                <span className="block text-sm mt-1">
+                  Retry attempt {retryCount} of 3...
+                </span>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {!isLoggedIn && (
           <div className="flex items-center justify-center gap-2 mb-6 px-4 py-2 bg-blue-500/10 border border-blue-400/20 rounded-full w-fit mx-auto">
             <Users className="w-4 h-4 text-blue-400" />

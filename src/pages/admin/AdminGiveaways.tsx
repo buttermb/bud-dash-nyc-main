@@ -94,12 +94,20 @@ export default function AdminGiveaways() {
         </div>
         <div className="flex gap-2">
           {activeGiveaways.length > 0 && (
-            <Link to="/admin/giveaway">
-              <Button variant="outline" className="gap-2">
-                <Eye className="w-4 h-4" />
-                View Active Detail
-              </Button>
-            </Link>
+            <>
+              <Link to="/admin/giveaway">
+                <Button variant="outline" className="gap-2">
+                  <Eye className="w-4 h-4" />
+                  View Active Detail
+                </Button>
+              </Link>
+              <Link to="/admin/giveaways/manage">
+                <Button variant="outline" className="gap-2">
+                  <Users className="w-4 h-4" />
+                  Manage Entries
+                </Button>
+              </Link>
+            </>
           )}
           <Link to="/admin/giveaways/new">
             <Button className="gap-2">
@@ -125,16 +133,16 @@ export default function AdminGiveaways() {
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-2xl font-bold">{giveaway.title}</h3>
-                      {getStatusBadge(giveaway.status)}
-                    </div>
-                    <p className="text-muted-foreground">{giveaway.tagline}</p>
-                  </div>
-                </div>
+          <div className="flex items-center gap-3 mb-2">
+            <h3 className="text-2xl font-bold">{giveaway.title}</h3>
+            {getStatusBadge(giveaway.status)}
+          </div>
+          <p className="text-muted-foreground">{giveaway.tagline}</p>
+        </div>
+      </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-1">
                       <Users className="w-4 h-4 text-blue-400" />
