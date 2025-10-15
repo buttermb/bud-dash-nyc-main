@@ -140,3 +140,161 @@ self.addEventListener('fetch', (event) => {
       .catch(() => caches.match(event.request))
   );
 });
+
+// Push notification handler
+self.addEventListener('push', (event) => {
+  console.log('Push notification received:', event);
+  
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    console.error('Error parsing push data:', e);
+    data = { title: 'New Notification', body: event.data?.text() || '' };
+  }
+
+  const options = {
+    body: data.body || 'You have a new notification',
+    icon: '/placeholder.svg',
+    badge: '/placeholder.svg',
+    vibrate: [200, 100, 200, 100, 200],
+    data: {
+      orderId: data.orderId,
+      type: data.type,
+      url: data.url || '/courier/dashboard'
+    },
+    tag: data.tag || 'default',
+    requireInteraction: data.requireInteraction || false,
+    actions: data.actions || []
+  };
+
+  // Add action buttons for delivery requests
+  if (data.type === 'delivery_request') {
+    options.requireInteraction = true;
+    options.actions = [
+      { action: 'accept', title: '✓ Accept', icon: '/placeholder.svg' },
+      { action: 'decline', title: '✗ Decline', icon: '/placeholder.svg' }
+    ];
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'BudDash Courier', options)
+  );
+});
+
+// Notification click handler
+self.addEventListener('notificationclick', (event) => {
+  console.log('Notification clicked:', event.action);
+  event.notification.close();
+
+  const data = event.notification.data;
+
+  if (event.action === 'accept') {
+    // Accept delivery
+    event.waitUntil(
+      fetch(`${self.registration.scope}functions/v1/courier-app`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'accept_delivery',
+          orderId: data.orderId
+        })
+      }).then(() => {
+        return clients.openWindow(data.url || `/courier/dashboard`);
+      }).catch(err => {
+        console.error('Failed to accept delivery:', err);
+        return clients.openWindow('/courier/dashboard');
+      })
+    );
+  } else if (event.action === 'decline') {
+    // Decline delivery
+    event.waitUntil(
+      fetch(`${self.registration.scope}functions/v1/courier-app`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'decline_delivery',
+          orderId: data.orderId
+        })
+      }).catch(err => {
+        console.error('Failed to decline delivery:', err);
+      })
+    );
+  } else {
+    // Open app
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+        // Check if app is already open
+        for (let client of clientList) {
+          if (client.url.includes('/courier') && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        // Open new window
+        return clients.openWindow(data.url || '/courier/dashboard');
+      })
+    );
+  }
+});
+
+// Background sync for offline actions
+self.addEventListener('sync', (event) => {
+  console.log('Background sync:', event.tag);
+  
+  if (event.tag === 'sync-location') {
+    event.waitUntil(syncLocationData());
+  } else if (event.tag === 'sync-order-status') {
+    event.waitUntil(syncOrderStatus());
+  }
+});
+
+async function syncLocationData() {
+  try {
+    const cache = await caches.open('location-queue');
+    const requests = await cache.keys();
+    
+    for (const request of requests) {
+      const response = await cache.match(request);
+      const data = await response.json();
+      
+      await fetch(request.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      await cache.delete(request);
+    }
+  } catch (error) {
+    console.error('Location sync failed:', error);
+  }
+}
+
+async function syncOrderStatus() {
+  try {
+    const cache = await caches.open('order-queue');
+    const requests = await cache.keys();
+    
+    for (const request of requests) {
+      const response = await cache.match(request);
+      const data = await response.json();
+      
+      await fetch(request.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      await cache.delete(request);
+    }
+  } catch (error) {
+    console.error('Order status sync failed:', error);
+  }
+}
+
+// Handle messages from the app
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});

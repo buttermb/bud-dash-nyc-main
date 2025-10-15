@@ -1,30 +1,32 @@
 import { useState, useEffect } from 'react';
 import { Bell, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { requestNotificationPermission } from '@/utils/courierNotifications';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 export default function NotificationPermissionBanner() {
   const [show, setShow] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const { isSupported, isSubscribed, requestPermission } = usePushNotifications();
 
   useEffect(() => {
     // Check if we should show the banner
     const checkPermission = () => {
-      if ('Notification' in window && Notification.permission === 'default') {
+      if (isSupported && !isSubscribed) {
         const hasSeenBanner = localStorage.getItem('notification_banner_dismissed');
         if (!hasSeenBanner) {
-          setShow(true);
+          setTimeout(() => setShow(true), 2000);
         }
       }
     };
 
     checkPermission();
-  }, []);
+  }, [isSupported, isSubscribed]);
 
   const handleEnable = async () => {
-    const granted = await requestNotificationPermission();
+    const granted = await requestPermission();
     if (granted) {
       setShow(false);
+      localStorage.setItem('notification_banner_dismissed', 'true');
     }
   };
 
@@ -34,16 +36,16 @@ export default function NotificationPermissionBanner() {
     localStorage.setItem('notification_banner_dismissed', 'true');
   };
 
-  if (!show || dismissed) return null;
+  if (!show || dismissed || !isSupported || isSubscribed) return null;
 
   return (
-    <div className="bg-yellow-500/20 border-y border-yellow-500/30 px-4 py-3">
+    <div className="bg-yellow-500/20 border-y border-yellow-500/30 px-4 py-3 animate-in slide-in-from-top">
       <div className="flex items-center justify-between max-w-4xl mx-auto">
         <div className="flex items-center space-x-3 flex-1">
-          <Bell className="text-yellow-500 flex-shrink-0" size={20} />
+          <Bell className="text-yellow-500 flex-shrink-0 animate-pulse" size={20} />
           <div>
-            <div className="font-bold text-sm text-white">Enable Notifications</div>
-            <div className="text-xs text-slate-300">Get instant alerts for new orders</div>
+            <div className="font-bold text-sm">Enable Push Notifications</div>
+            <div className="text-xs text-muted-foreground">Get instant alerts for new delivery orders</div>
           </div>
         </div>
         <div className="flex items-center space-x-2">
@@ -56,9 +58,10 @@ export default function NotificationPermissionBanner() {
           </Button>
           <button
             onClick={handleDismiss}
-            className="p-1 hover:bg-slate-800 rounded"
+            className="p-1 hover:bg-secondary rounded"
+            aria-label="Dismiss"
           >
-            <X size={18} className="text-slate-400" />
+            <X size={18} />
           </button>
         </div>
       </div>
