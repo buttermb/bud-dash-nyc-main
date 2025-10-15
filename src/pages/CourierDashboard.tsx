@@ -20,6 +20,10 @@ import OrderCountdownTimer from '@/components/courier/OrderCountdownTimer';
 import AgeVerificationScanner from '@/components/courier/AgeVerificationScanner';
 import { GeofenceStatus } from '@/components/courier/GeofenceStatus';
 import InstallPWA from '@/components/InstallPWA';
+import OnlineStatusCard from '@/components/courier/OnlineStatusCard';
+import QuickStatsCard from '@/components/courier/QuickStatsCard';
+import AvailableOrdersCard from '@/components/courier/AvailableOrdersCard';
+import DeliveryNotificationModal from '@/components/courier/DeliveryNotificationModal';
 import { 
   requestNotificationPermission, 
   notifyNewOrder, 
@@ -674,11 +678,33 @@ export default function CourierDashboard() {
       {currentView === 'active' && (
         <div className="p-4 space-y-4">
           {!activeOrder ? (
-            <div className="text-center text-slate-400 py-12">
-              <Package size={48} className="mx-auto mb-4 opacity-50" />
-              <div>No active orders</div>
-              <div className="text-sm mt-2">Check "Available" tab for new orders</div>
-            </div>
+            <>
+              {/* Enhanced Online Status Card */}
+              {courier && (
+                <OnlineStatusCard
+                  courierId={courier.id}
+                  isOnline={isOnline}
+                  onStatusChange={handleToggleOnline}
+                />
+              )}
+
+              {/* Quick Stats */}
+              {stats && (
+                <QuickStatsCard
+                  todayDeliveries={stats.deliveries_completed || 0}
+                  todayEarnings={parseFloat(stats.total_earned || '0')}
+                  avgDeliveryTime={25}
+                  completionRate={100}
+                />
+              )}
+
+              {/* No Active Order Message */}
+              <div className="text-center text-slate-400 py-12">
+                <Package size={48} className="mx-auto mb-4 opacity-50" />
+                <div>No active orders</div>
+                <div className="text-sm mt-2">Check "Available" tab for new orders</div>
+              </div>
+            </>
           ) : (
             <>
               {/* Status Progress */}
@@ -1049,6 +1075,9 @@ export default function CourierDashboard() {
         </div>
       )}
 
+      {/* Delivery Notification Modal - Always Rendered */}
+      <DeliveryNotificationModal />
+      
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 px-4 py-3">
         <div className="flex items-center justify-between max-w-md mx-auto">
