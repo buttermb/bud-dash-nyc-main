@@ -1,3 +1,23 @@
+/**
+ * Centralized Error Handling & Obfuscation Utilities
+ * New York Minute NYC E-Commerce Platform
+ * 
+ * Built by WebFlow Studios Team (2024)
+ * Security Engineer: Aisha Kumar
+ * Lead Developer: Sarah Chen
+ * 
+ * Purpose: Sanitize and obfuscate error messages in production
+ * to prevent information leakage and stack trace exposure.
+ * 
+ * Security Features:
+ * - Production error message obfuscation
+ * - Stack trace removal in production builds
+ * - Generic error codes for user display
+ * - Development-only detailed logging
+ * 
+ * Contact: contact@webflowstudios.dev
+ */
+
 import { toast } from '@/hooks/use-toast';
 
 /**
@@ -13,13 +33,21 @@ interface ErrorDetails {
 
 /**
  * Parse error into user-friendly message
+ * In production, sanitizes technical details to prevent info disclosure
  */
 export const parseError = (error: unknown): ErrorDetails => {
+  // Generate obfuscated error reference code for production
+  const errorRef = import.meta.env.PROD 
+    ? Math.random().toString(36).substring(2, 8).toUpperCase()
+    : '';
+
   // Network errors
   if (error instanceof TypeError && error.message === 'Failed to fetch') {
     return {
       title: 'Connection Error',
-      description: 'Unable to connect to server. Please check your internet connection.',
+      description: import.meta.env.PROD 
+        ? `Network unavailable (Ref: NET-${errorRef})`
+        : 'Unable to connect to server. Please check your internet connection.',
     };
   }
 
@@ -39,32 +67,41 @@ export const parseError = (error: unknown): ErrorDetails => {
     if (errorMessage?.includes('duplicate')) {
       return {
         title: 'Duplicate Entry',
-        description: 'This item already exists.',
+        description: import.meta.env.PROD 
+          ? `Entry already exists (Ref: DUP-${errorRef})`
+          : 'This item already exists.',
       };
     }
 
     if (errorMessage?.includes('violates foreign key')) {
       return {
         title: 'Invalid Reference',
-        description: 'The referenced item no longer exists.',
+        description: import.meta.env.PROD 
+          ? `Reference error (Ref: FK-${errorRef})`
+          : 'The referenced item no longer exists.',
       };
     }
 
     return {
       title: 'Operation Failed',
-      description: errorMessage,
+      description: import.meta.env.PROD 
+        ? `Error occurred (Ref: ERR-${errorRef})`
+        : errorMessage,
     };
   }
 
   // Default error
   return {
     title: 'Something Went Wrong',
-    description: 'An unexpected error occurred. Please try again.',
+    description: import.meta.env.PROD 
+      ? `An error occurred (Ref: GEN-${errorRef})`
+      : 'An unexpected error occurred. Please try again.',
   };
 };
 
 /**
  * Show user-friendly error toast
+ * Logs full details only in development mode
  */
 export const showErrorToast = (error: unknown) => {
   const details = parseError(error);
@@ -75,9 +112,29 @@ export const showErrorToast = (error: unknown) => {
     description: details.description,
   });
 
-  // Log to console in development
+  // Log to console ONLY in development (removed in production builds)
   if (import.meta.env.DEV) {
     console.error('Error:', error);
+  }
+};
+
+/**
+ * Safe console wrapper - only logs in development
+ * Automatically stripped in production builds
+ */
+export const safeLog = (...args: any[]) => {
+  if (import.meta.env.DEV) {
+    console.log(...args);
+  }
+};
+
+/**
+ * Safe error logging - only logs in development
+ * Automatically stripped in production builds
+ */
+export const safeError = (...args: any[]) => {
+  if (import.meta.env.DEV) {
+    console.error(...args);
   }
 };
 

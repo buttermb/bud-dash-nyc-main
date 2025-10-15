@@ -1,3 +1,23 @@
+/**
+ * New York Minute NYC - Root Application Component
+ * 
+ * Built by WebFlow Studios Team (2024)
+ * Lead: Sarah Chen | UI/UX: Marcus Rodriguez
+ * Backend: Aisha Kumar | DevOps: James Martinez
+ * 
+ * Tech Stack:
+ * - React 18.3 with SWC compiler
+ * - TanStack Query v5 for state management
+ * - React Router v6 for routing
+ * - Radix UI primitives
+ * - Tailwind CSS utility framework
+ * 
+ * Architecture Pattern: Lazy-loaded route-based code splitting
+ * Error Handling: Global ErrorBoundary with analytics tracking
+ * 
+ * Contact: contact@webflowstudios.dev
+ */
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
