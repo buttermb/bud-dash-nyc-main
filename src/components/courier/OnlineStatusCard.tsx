@@ -152,7 +152,7 @@ export default function OnlineStatusCard({ courierId, isOnline, onStatusChange }
   };
 
   return (
-    <Card className={`${isOnline ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200' : 'bg-secondary'}`}>
+    <Card className={`${isOnline ? 'bg-green-950/30 border-green-500/30' : 'bg-card'}`}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -167,7 +167,7 @@ export default function OnlineStatusCard({ courierId, isOnline, onStatusChange }
               )}
             </motion.div>
             <div>
-              <h3 className="font-bold text-lg">
+              <h3 className="font-bold text-lg text-foreground">
                 {isOnline ? 'Online & Active' : 'Offline'}
               </h3>
               <p className="text-sm text-muted-foreground">
@@ -195,8 +195,8 @@ export default function OnlineStatusCard({ courierId, isOnline, onStatusChange }
               {/* Location Status */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <MapPin className={`w-4 h-4 ${locationEnabled ? 'text-green-600' : 'text-orange-500'}`} />
-                  <span className="text-sm">Location Tracking</span>
+                  <MapPin className={`w-4 h-4 ${locationEnabled ? 'text-green-500' : 'text-orange-400'}`} />
+                  <span className="text-sm text-foreground">Location Tracking</span>
                 </div>
                 <Badge variant={locationEnabled ? 'default' : 'secondary'}>
                   {locationEnabled ? 'Active' : 'Disabled'}
@@ -206,8 +206,8 @@ export default function OnlineStatusCard({ courierId, isOnline, onStatusChange }
               {/* Online Duration */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm">Online for</span>
+                  <Clock className="w-4 h-4 text-primary" />
+                  <span className="text-sm text-foreground">Online for</span>
                 </div>
                 <Badge variant="outline" className="font-mono">
                   {formatTime(onlineTime)}
@@ -218,8 +218,8 @@ export default function OnlineStatusCard({ courierId, isOnline, onStatusChange }
               {lastUpdate && (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Battery className="w-4 h-4 text-purple-600" />
-                    <span className="text-sm">Last sync</span>
+                    <Battery className="w-4 h-4 text-primary" />
+                    <span className="text-sm text-foreground">Last sync</span>
                   </div>
                   <span className="text-xs text-muted-foreground">
                     {Math.floor((Date.now() - lastUpdate.getTime()) / 1000)}s ago
@@ -230,10 +230,10 @@ export default function OnlineStatusCard({ courierId, isOnline, onStatusChange }
               {/* Live Status Indicator */}
               <div className="flex items-center gap-2 pt-2">
                 <div className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                 </div>
-                <span className="text-xs font-medium text-green-600">
+                <span className="text-xs font-medium text-green-500">
                   Live & Ready for Orders
                 </span>
               </div>

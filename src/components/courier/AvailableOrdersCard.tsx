@@ -135,7 +135,7 @@ export default function AvailableOrdersCard({ courierId, isOnline }: { courierId
 
   if (!isOnline) {
     return (
-      <Card>
+      <Card className="bg-card">
         <CardContent className="p-6 text-center">
           <Package className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
           <p className="text-muted-foreground">Go online to see available orders</p>
@@ -145,10 +145,10 @@ export default function AvailableOrdersCard({ courierId, isOnline }: { courierId
   }
 
   return (
-    <Card>
+    <Card className="bg-card">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Available Orders</CardTitle>
+          <CardTitle className="text-lg text-foreground">Available Orders</CardTitle>
           <Badge variant="outline" className="animate-pulse">
             {orders.length} available
           </Badge>
@@ -173,27 +173,27 @@ export default function AvailableOrdersCard({ courierId, isOnline }: { courierId
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                className="border rounded-lg p-4 bg-card hover:bg-accent/5 transition-colors"
+                className="border border-border rounded-lg p-4 bg-card hover:bg-accent/10 transition-colors"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <div className="font-semibold">Order #{order.order_number}</div>
+                    <div className="font-semibold text-foreground">Order #{order.order_number}</div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(order.created_at).toLocaleTimeString()}
                     </div>
                   </div>
-                  <Badge variant="secondary" className="bg-green-100 text-green-700">
+                  <Badge variant="secondary" className="bg-green-500/20 text-green-500 border-green-500/30">
                     ${order.total_amount?.toFixed(2) || '0.00'}
                   </Badge>
                 </div>
 
                 <div className="space-y-2 mb-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="w-4 h-4 text-muted-foreground" />
+                  <div className="flex items-center gap-2 text-sm text-foreground">
+                    <MapPin className="w-4 h-4 text-primary" />
                     <span className="truncate">{order.delivery_address || 'Address pending'}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
+                    <Clock className="w-4 h-4 text-primary" />
                     <span className="text-xs text-muted-foreground">
                       Waiting {Math.floor((Date.now() - new Date(order.created_at).getTime()) / 60000)} min
                     </span>
@@ -203,7 +203,7 @@ export default function AvailableOrdersCard({ courierId, isOnline }: { courierId
                 <Button
                   onClick={() => handleAccept(order.id)}
                   disabled={acceptingId === order.id}
-                  className="w-full bg-green-600 hover:bg-green-700"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
                   size="sm"
                 >
                   {acceptingId === order.id ? 'Accepting...' : 'Accept Order'}
