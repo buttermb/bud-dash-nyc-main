@@ -39,7 +39,13 @@ export default function NotificationPermissionBanner() {
   if (!show || dismissed || !isSupported || isSubscribed) return null;
 
   return (
-    <div className="bg-yellow-500/20 border-y border-yellow-500/30 px-4 py-3 animate-in slide-in-from-top">
+    <div 
+      className="fixed top-[80px] left-4 right-4 bg-yellow-500/20 border border-yellow-500/30 px-4 py-3 rounded-lg shadow-lg backdrop-blur-sm z-40 animate-in slide-in-from-top-2"
+      style={{ 
+        // Safe area for iOS devices with dynamic island/notch
+        top: 'max(80px, env(safe-area-inset-top, 80px))'
+      }}
+    >
       <div className="flex items-center justify-between max-w-4xl mx-auto">
         <div className="flex items-center space-x-3 flex-1">
           <Bell className="text-yellow-500 flex-shrink-0 animate-pulse" size={20} />
