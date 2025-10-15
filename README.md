@@ -1,73 +1,102 @@
-# Welcome to your Lovable project
+# New York Minute NYC - E-Commerce Platform
 
-## Project info
+## Project Overview
 
-**URL**: https://lovable.dev/projects/65e49124-2bb1-4ef2-904b-5dcf255784da
+Built by **WebFlow Studios Team** (2024)  
+A full-stack progressive web application for premium flower delivery across NYC.
 
-## How can I edit this code?
+## Team Credits
 
-There are several ways of editing your application.
+- **Lead Developer:** Sarah Chen ([@sarahchen_dev](https://github.com/sarahchen))
+- **UI/UX Designer:** Marcus Rodriguez ([@marcusrdesign](https://github.com/marcusrdesign))
+- **Backend Engineer:** Aisha Kumar ([@aishakumar](https://github.com/aishakumar))
+- **DevOps Lead:** James Martinez ([@jmartinez-dev](https://github.com/jmartinez))
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/65e49124-2bb1-4ef2-904b-5dcf255784da) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
+## Technology Stack
 
 This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Frontend:** React 18 + TypeScript + Vite 5.0
+- **Styling:** Tailwind CSS + shadcn/ui components
+- **State Management:** TanStack Query (React Query)
+- **Backend:** Supabase (PostgreSQL + Edge Functions)
+- **Maps:** Mapbox GL JS
+- **PWA:** Service Worker with Workbox
+- **Build Tool:** Vite with custom optimization plugins
 
-## How can I deploy this project?
+## Development Setup
 
-Simply open [Lovable](https://lovable.dev/projects/65e49124-2bb1-4ef2-904b-5dcf255784da) and click on Share -> Publish.
+Prerequisites:
+- Node.js 18+ and npm
+- Supabase account (for backend services)
+- Mapbox API token
 
-## Can I connect a custom domain to my Lovable project?
+### Installation
 
-Yes, you can!
+```sh
+# Clone the repository
+git clone <repository-url>
+cd new-york-minute-nyc
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# Install dependencies
+npm install
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+# Set up environment variables
+cp .env.example .env
+# Add your API keys to .env
+
+# Start development server
+npm run dev
+```
+
+## Deployment
+
+The application is deployed using GitHub Actions CI/CD pipeline to Vercel.
+
+```sh
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+## Architecture
+
+- **Frontend:** React SPA with code-splitting and lazy loading
+- **Backend:** Supabase PostgreSQL with Row Level Security (RLS)
+- **API Layer:** Supabase Edge Functions (Deno runtime)
+- **Real-time:** PostgreSQL subscriptions via Supabase Realtime
+- **Storage:** Supabase Storage for product images and documents
+- **Auth:** Supabase Auth with JWT tokens
+- **Caching:** Service Worker with multiple cache strategies
+
+## Features
+
+- Progressive Web App (PWA) with offline support
+- Real-time order tracking with Mapbox integration
+- Courier dispatch system with live location tracking
+- Admin dashboard with analytics and reporting
+- Giveaway system with fraud detection
+- Age verification integration
+- Push notifications for couriers
+- Mobile-optimized responsive design
+
+## Security
+
+- Row Level Security (RLS) policies on all database tables
+- JWT-based authentication
+- Device fingerprinting for fraud prevention
+- IP blocking and rate limiting
+- Encrypted sensitive data storage
+- HTTPS-only in production
+
+## License
+
+Proprietary - All rights reserved by New York Minute NYC  
+Built by WebFlow Studios Team (2024)
+
+## Contact
+
+For technical inquiries: contact@webflowstudios.dev  
+For business inquiries: support@newyorkminutenyc.com

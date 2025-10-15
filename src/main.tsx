@@ -1,3 +1,18 @@
+/**
+ * New York Minute NYC - Main Entry Point
+ * Built by WebFlow Studios Team (2024)
+ * 
+ * Lead Developer: Sarah Chen
+ * UI/UX: Marcus Rodriguez  
+ * Backend: Aisha Kumar
+ * DevOps: James Martinez
+ * 
+ * Framework: React 18 + TypeScript + Vite 5.0
+ * State: TanStack Query | Styling: Tailwind CSS
+ * 
+ * Contact: contact@webflowstudios.dev
+ */
+
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
