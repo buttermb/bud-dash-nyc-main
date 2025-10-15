@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/contexts/AdminContext";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   ShoppingCart, 
@@ -17,11 +15,13 @@ import {
   Activity,
   Bell,
   Zap,
-  Package,
   DollarSign,
-  CheckCircle
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AnimatedMetricCard } from "@/components/admin/AnimatedMetricCard";
+import { RealtimeActivityFeed } from "@/components/admin/RealtimeActivityFeed";
+import { QuickActionGrid } from "@/components/admin/QuickActionGrid";
+import { motion } from "framer-motion";
 
 interface DashboardMetrics {
   totalOrders: number;
@@ -111,28 +111,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const MetricCard = ({ 
-    title, 
-    value, 
-    icon: Icon, 
-    trend 
-  }: { 
-    title: string; 
-    value: number | string; 
-    icon: any; 
-    trend?: string;
-  }) => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {trend && <p className="text-xs text-muted-foreground">{trend}</p>}
-      </CardContent>
-    </Card>
-  );
 
   if (loading) {
     return (
@@ -152,215 +130,103 @@ const AdminDashboard = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex items-center justify-between"
+      >
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
           <p className="text-muted-foreground">
             Real-time metrics and key performance indicators
           </p>
         </div>
-        <Badge variant={systemHealth.status === "healthy" ? "default" : "destructive"} className="gap-1">
-          <Activity className="h-3 w-3" />
-          {systemHealth.status === "healthy" ? "System Healthy" : "Attention Required"}
-        </Badge>
-      </div>
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 500 }}
+        >
+          <Badge variant={systemHealth.status === "healthy" ? "default" : "destructive"} className="gap-1">
+            <Activity className="h-3 w-3" />
+            {systemHealth.status === "healthy" ? "System Healthy" : "Attention Required"}
+          </Badge>
+        </motion.div>
+      </motion.div>
 
-      {/* System Health Snapshot */}
+      {/* System Health Snapshot with Animation */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Orders (Last Hour)</CardTitle>
-            <Zap className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{systemHealth.ordersLastHour}</div>
-            <p className="text-xs text-muted-foreground">Real-time tracking</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unresolved Flags</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-destructive">{systemHealth.unresolvedFlags}</div>
-            <Button
-              variant="link"
-              size="sm"
-              className="p-0 h-auto text-xs"
-              onClick={() => navigate("/admin/users")}
-            >
-              Review now →
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Alerts</CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{systemAlerts.length}</div>
-            <p className="text-xs text-muted-foreground">Active notifications</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenue Today</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${(metrics?.todayRevenue || 0).toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">From {metrics?.todayOrders || 0} orders</p>
-          </CardContent>
-        </Card>
+        <AnimatedMetricCard
+          title="Orders (Last Hour)"
+          value={systemHealth.ordersLastHour}
+          icon={Zap}
+          trend="Real-time tracking"
+          gradient
+          delay={0}
+        />
+        <AnimatedMetricCard
+          title="Unresolved Flags"
+          value={systemHealth.unresolvedFlags}
+          icon={Shield}
+          trend="Review now"
+          onClick={() => navigate("/admin/users")}
+          delay={0.1}
+        />
+        <AnimatedMetricCard
+          title="System Alerts"
+          value={systemAlerts.length}
+          icon={Bell}
+          trend="Active notifications"
+          delay={0.2}
+        />
+        <AnimatedMetricCard
+          title="Revenue Today"
+          value={`$${(metrics?.todayRevenue || 0).toFixed(2)}`}
+          icon={DollarSign}
+          trend={`From ${metrics?.todayOrders || 0} orders`}
+          gradient
+          delay={0.3}
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          title="Total Orders"
-          value={metrics?.totalOrders || 0}
-          icon={ShoppingCart}
-          trend="All time"
-        />
-        <MetricCard
-          title="Today's Orders"
-          value={metrics?.todayOrders || 0}
-          icon={Clock}
-          trend={`$${(metrics?.todayRevenue || 0).toFixed(2)} revenue`}
-        />
-        <MetricCard
-          title="Active Orders"
-          value={metrics?.activeOrders || 0}
-          icon={Truck}
-          trend="In progress"
-        />
-        <MetricCard
-          title="Total Users"
-          value={metrics?.totalUsers || 0}
-          icon={Users}
-          trend="Registered"
-        />
-        <MetricCard
-          title="Active Merchants"
-          value={metrics?.totalMerchants || 0}
-          icon={Store}
-          trend="Verified"
-        />
-        <MetricCard
-          title="Online Couriers"
-          value={metrics?.activeCouriers || 0}
-          icon={Truck}
-          trend="Available now"
-        />
-        <MetricCard
-          title="Pending Verifications"
-          value={metrics?.pendingVerifications || 0}
-          icon={Shield}
-          trend="Awaiting review"
-        />
-        <MetricCard
-          title="Flagged Orders"
-          value={metrics?.flaggedOrders || 0}
-          icon={AlertTriangle}
-          trend="Requires attention"
-        />
+        <AnimatedMetricCard title="Total Orders" value={metrics?.totalOrders || 0} icon={ShoppingCart} trend="All time" delay={0.4} />
+        <AnimatedMetricCard title="Today's Orders" value={metrics?.todayOrders || 0} icon={Clock} trend={`$${(metrics?.todayRevenue || 0).toFixed(2)} revenue`} delay={0.45} />
+        <AnimatedMetricCard title="Active Orders" value={metrics?.activeOrders || 0} icon={Truck} trend="In progress" delay={0.5} />
+        <AnimatedMetricCard title="Total Users" value={metrics?.totalUsers || 0} icon={Users} trend="Registered" delay={0.55} />
+        <AnimatedMetricCard title="Active Merchants" value={metrics?.totalMerchants || 0} icon={Store} trend="Verified" delay={0.6} />
+        <AnimatedMetricCard title="Online Couriers" value={metrics?.activeCouriers || 0} icon={Truck} trend="Available now" delay={0.65} onClick={() => navigate("/admin/couriers")} />
+        <AnimatedMetricCard title="Pending Verifications" value={metrics?.pendingVerifications || 0} icon={Shield} trend="Awaiting review" delay={0.7} />
+        <AnimatedMetricCard title="Flagged Orders" value={metrics?.flaggedOrders || 0} icon={AlertTriangle} trend="Requires attention" delay={0.75} />
       </div>
 
       {/* Real-time Activity & Alerts */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              Real-time Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {realtimeActivity.length > 0 ? (
-                realtimeActivity.map((activity, idx) => (
-                  <div key={idx} className="flex items-center justify-between border-b pb-2 last:border-0">
-                    <div>
-                      <p className="text-sm font-medium">{activity.message}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(activity.timestamp).toLocaleTimeString()}
-                      </p>
-                    </div>
-                    <Badge variant="secondary">{activity.type.replace('_', ' ')}</Badge>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">Waiting for activity...</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+        className="grid gap-4 md:grid-cols-2"
+      >
+        <RealtimeActivityFeed activities={realtimeActivity} />
+        
+        <RealtimeActivityFeed 
+          activities={systemAlerts.map(alert => ({
+            type: alert.type,
+            message: alert.message,
+            timestamp: alert.timestamp,
+            data: alert
+          }))} 
+        />
+      </motion.div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              System Alerts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {systemAlerts.length > 0 ? (
-                systemAlerts.map((alert, idx) => (
-                  <div key={idx} className="flex items-start gap-2 border-b pb-2 last:border-0">
-                    <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{alert.message}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(alert.timestamp).toLocaleTimeString()}
-                      </p>
-                    </div>
-                    <Badge variant="destructive" className="text-xs flex-shrink-0">
-                      {alert.severity}
-                    </Badge>
-                  </div>
-                ))
-              ) : (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center py-4">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  No active alerts
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-2 md:grid-cols-4">
-            <Button variant="outline" onClick={() => navigate("/admin/products")} className="justify-start">
-              <Package className="mr-2 h-4 w-4" />
-              Manage Products
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/admin/users")} className="justify-start">
-              <Users className="mr-2 h-4 w-4" />
-              View Users
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/admin/live-orders")} className="justify-start">
-              <Truck className="mr-2 h-4 w-4" />
-              Live Deliveries
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/admin/analytics")} className="justify-start">
-              <TrendingUp className="mr-2 h-4 w-4" />
-              View Analytics
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Enhanced Quick Actions */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.9 }}
+      >
+        <QuickActionGrid />
+      </motion.div>
     </div>
   );
 };
