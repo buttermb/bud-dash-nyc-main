@@ -294,6 +294,61 @@ export async function getUserEntry(giveawayId: string, userId: string) {
 }
 
 // ============================================
+// GET ALL USER ENTRIES
+// ============================================
+export async function getAllUserEntries(userId: string) {
+  const { data: entries, error } = await supabase
+    .from('giveaway_entries')
+    .select(`
+      id,
+      giveaway_id,
+      entry_type,
+      total_entries,
+      entry_number_start,
+      entry_number_end,
+      status,
+      entered_at,
+      verified_at,
+      order_id,
+      giveaways (
+        title,
+        slug
+      )
+    `)
+    .eq('user_id', userId)
+    .order('entered_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching entries:', error);
+    return [];
+  }
+
+  return entries;
+}
+
+// ============================================
+// GET USER GIVEAWAY SUMMARY
+// ============================================
+export async function getUserGiveawaySummary(userId: string) {
+  const { data: entries } = await supabase
+    .from('giveaway_entries')
+    .select('total_entries, entry_type, status, giveaway_id')
+    .eq('user_id', userId);
+
+  if (!entries) return null;
+
+  const giveawayIds = new Set(entries.map(e => e.giveaway_id));
+
+  return {
+    totalEntries: entries.reduce((sum, e) => sum + (e.total_entries || 0), 0),
+    verifiedEntries: entries.filter(e => e.status === 'verified').reduce((sum, e) => sum + (e.total_entries || 0), 0),
+    manualEntries: entries.filter(e => e.entry_type === 'manual').length,
+    purchaseEntries: entries.filter(e => e.entry_type === 'purchase').length,
+    totalGiveaways: giveawayIds.size
+  };
+}
+
+// ============================================
 // GET RECENT ENTRIES
 // ============================================
 export async function getRecentEntries(giveawayId: string, limit = 10) {
