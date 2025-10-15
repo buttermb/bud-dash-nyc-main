@@ -1,7 +1,8 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, Home } from 'lucide-react';
+import { analytics } from '@/utils/analytics';
 
 interface Props {
   children: ReactNode;
@@ -24,11 +25,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    analytics.trackError('error_boundary', error.message);
   }
 
   private handleReset = () => {
     this.setState({ hasError: false, error: null });
     window.location.reload();
+  };
+
+  private handleGoHome = () => {
+    window.location.href = '/';
   };
 
   public render() {
@@ -56,10 +62,16 @@ export class ErrorBoundary extends Component<Props, State> {
                   </pre>
                 </details>
               )}
-              <Button onClick={this.handleReset} className="w-full">
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Reload Page
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={this.handleReset} className="flex-1">
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Reload
+                </Button>
+                <Button onClick={this.handleGoHome} variant="outline" className="flex-1">
+                  <Home className="mr-2 h-4 w-4" />
+                  Go Home
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

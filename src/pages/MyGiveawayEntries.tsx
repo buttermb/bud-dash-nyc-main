@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Trophy, Copy, Check, Share2, ArrowLeft } from 'lucide-react';
+import { Trophy, Copy, Check, Share2, ArrowLeft, Gift } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { EmptyState } from '@/components/EmptyState';
+import { GiveawayEntrySkeleton } from '@/components/SkeletonLoader';
 
 interface GiveawayEntry {
   id: string;
@@ -124,10 +126,37 @@ export default function MyGiveawayEntries() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Trophy className="w-12 h-12 animate-pulse mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Loading your entries...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="space-y-4 w-full max-w-lg">
+          <GiveawayEntrySkeleton />
+          <GiveawayEntrySkeleton />
+          <GiveawayEntrySkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  if (entries.length === 0) {
+    return (
+      <div className="min-h-screen bg-background py-12">
+        <div className="max-w-5xl mx-auto px-4">
+          <Link 
+            to="/"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Link>
+          
+          <EmptyState
+            icon={Gift}
+            title="No Giveaway Entries Yet"
+            description="Enter our active giveaways for a chance to win amazing prizes!"
+            action={{
+              label: 'View Giveaways',
+              onClick: () => window.location.href = '/giveaway/nyc-biggest-flower'
+            }}
+          />
         </div>
       </div>
     );

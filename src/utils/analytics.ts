@@ -107,6 +107,83 @@ class Analytics {
       is_guest: isGuest
     });
   }
+
+  // User actions
+  trackSignup(method: string) {
+    this.track('signup', { method });
+  }
+
+  trackLogin(method: string) {
+    this.track('login', { method });
+  }
+
+  // Product interactions
+  trackProductView(productId: string, productName: string) {
+    this.track('product_view', { product_id: productId, product_name: productName });
+  }
+
+  trackAddToCart(productId: string, productName: string, quantity: number) {
+    this.track('add_to_cart', { 
+      product_id: productId, 
+      product_name: productName, 
+      quantity 
+    });
+  }
+
+  // Checkout flow
+  trackBeginCheckout(cartValue: number, itemCount: number) {
+    this.track('begin_checkout', { cart_value: cartValue, item_count: itemCount });
+  }
+
+  trackPurchase(orderId: string, totalAmount: number, itemCount: number) {
+    this.track('purchase', { 
+      order_id: orderId, 
+      total_amount: totalAmount, 
+      item_count: itemCount 
+    });
+  }
+
+  // Giveaway
+  trackGiveawayEntry(giveawayId: string, entryCount: number) {
+    this.track('giveaway_entry', { 
+      giveaway_id: giveawayId, 
+      entry_count: entryCount 
+    });
+  }
+
+  trackGiveawayShare(platform: string) {
+    this.track('giveaway_share', { platform });
+  }
+
+  // Courier actions
+  trackCourierOnline() {
+    this.track('courier_online');
+  }
+
+  trackCourierOffline() {
+    this.track('courier_offline');
+  }
+
+  trackOrderAccepted(orderId: string, totalAmount: number) {
+    this.track('order_accepted', { order_id: orderId, total_amount: totalAmount });
+  }
+
+  trackDeliveryCompleted(orderId: string, earnedAmount: number) {
+    this.track('delivery_completed', { 
+      order_id: orderId, 
+      earned_amount: earnedAmount 
+    });
+  }
+
+  // Search
+  trackSearch(query: string, resultCount: number) {
+    this.track('search', { query, result_count: resultCount });
+  }
+
+  // Errors
+  trackError(errorType: string, errorMessage: string) {
+    this.track('error', { error_type: errorType, error_message: errorMessage });
+  }
 }
 
 export const analytics = new Analytics();

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Phone, Mail, Car, Star, TrendingUp, LogOut, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { NotificationTest } from '@/components/NotificationTest';
 
 export default function CourierProfile() {
   const { courier, loading } = useCourier();
@@ -130,6 +131,11 @@ export default function CourierProfile() {
               <p><strong>License:</strong> {courier.license_number}</p>
             </div>
           )}
+        </div>
+
+        {/* Notification Test */}
+        <div className="mb-4">
+          <NotificationTest />
         </div>
 
         {/* Account Actions */}

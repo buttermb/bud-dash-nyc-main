@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { haptics } from "@/utils/haptics";
+import { EmptyState } from "@/components/EmptyState";
+import { OrderCardSkeleton } from "@/components/SkeletonLoader";
 
 export default function MyOrders() {
   const { user } = useAuth();
@@ -140,17 +142,18 @@ export default function MyOrders() {
 
             <TabsContent value={filter}>
               {filteredOrders.length === 0 ? (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-12">
-                    <ShoppingBag className="h-12 w-12 text-muted-foreground mb-4" />
-                    <h2 className="text-2xl font-bold mb-2">No Orders Yet</h2>
-                    <p className="text-muted-foreground mb-4">Start shopping to see your orders here.</p>
-                    <Button onClick={() => {
+                <EmptyState
+                  icon={Package}
+                  title={filter === 'all' ? 'No Orders Yet' : `No ${filter.charAt(0).toUpperCase() + filter.slice(1)} Orders`}
+                  description={filter === 'all' ? 'Start shopping to see your orders here.' : `You don't have any ${filter} orders.`}
+                  action={{
+                    label: 'Start Shopping',
+                    onClick: () => {
                       haptics.medium();
-                      navigate("/");
-                    }}>Start Shopping</Button>
-                  </CardContent>
-                </Card>
+                      navigate('/');
+                    }
+                  }}
+                />
               ) : (
                 <div className="space-y-4">
                   {filteredOrders.map((order) => (

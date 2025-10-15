@@ -49,8 +49,31 @@ export function usePushNotifications() {
         return false;
       }
 
-      // Mark as subscribed without push manager for now
-      // Full push implementation would need server-side VAPID keys
+      // Check if service worker is ready
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        
+        // Try to get existing subscription or create new one
+        try {
+          let sub = await registration.pushManager.getSubscription();
+          
+          if (!sub) {
+            // Create new subscription with minimal options (no VAPID needed for basic notifications)
+            const options = {
+              userVisibleOnly: true,
+              applicationServerKey: null
+            };
+            
+            // Note: This will work for showing notifications, but won't work for server push without VAPID keys
+            sub = await registration.pushManager.subscribe(options);
+          }
+          
+          setSubscription(sub);
+        } catch (subError) {
+          console.log('Push subscription not available, using basic notifications only:', subError);
+        }
+      }
+
       setIsSubscribed(true);
       localStorage.setItem('notifications_enabled', 'true');
 
