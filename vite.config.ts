@@ -110,39 +110,27 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: 'es2020',
     minify: 'terser',
-    sourcemap: mode === 'production' ? false : true, // Disable source maps in production for security
+    sourcemap: mode === 'production' ? false : true,
     terserOptions: {
       compress: {
-        drop_console: mode === 'production', // Remove ALL console statements in production
+        drop_console: mode === 'production',
         drop_debugger: true,
         pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug', 'console.warn', 'console.error'] : [],
-        passes: 2, // Run compression twice for better obfuscation
+        passes: 2,
       },
       mangle: {
-        safari10: true, // Ensure Safari 10+ compatibility
+        safari10: true,
         properties: {
-          regex: /^_/ // Mangle properties starting with underscore
+          regex: /^_/
         }
       },
       format: {
-        comments: false, // Remove all comments in production
+        comments: false,
       }
     },
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-components': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
-          'charts': ['recharts'],
-          'maps': ['leaflet', 'react-leaflet', 'mapbox-gl'],
-          'supabase': ['@supabase/supabase-js'],
-          'query': ['@tanstack/react-query'],
-          'admin': [
-            './src/pages/admin/AdminDashboard.tsx',
-            './src/pages/admin/AdminOrders.tsx',
-            './src/pages/admin/AdminUsers.tsx',
-          ],
-        },
+        manualChunks: undefined, // Let Vite handle chunking automatically
       },
     },
     chunkSizeWarningLimit: 1000,
