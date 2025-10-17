@@ -20,9 +20,16 @@ import { PerformanceMonitor } from "./utils/performance";
 import { initializeSecurityObfuscation } from "./utils/securityObfuscation";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
+// Log app initialization
+console.log('[NYM] Starting app initialization...');
+
 // Initialize security obfuscation in production
 if (import.meta.env.PROD) {
-  initializeSecurityObfuscation();
+  try {
+    initializeSecurityObfuscation();
+  } catch (error) {
+    console.error('[NYM] Security obfuscation failed:', error);
+  }
 }
 
 // Register service worker for PWA capabilities and caching
@@ -30,7 +37,7 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').then(
       (registration) => {
-        console.log('ServiceWorker registered:', registration.scope);
+        console.log('[NYM] ServiceWorker registered:', registration.scope);
         
         // Check for updates every hour
         setInterval(() => {
@@ -38,7 +45,7 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
         }, 60 * 60 * 1000);
       },
       (error) => {
-        console.error('ServiceWorker registration failed:', error);
+        console.error('[NYM] ServiceWorker registration failed:', error);
       }
     );
   });
@@ -46,18 +53,66 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 
 // Initialize performance monitoring
 if (import.meta.env.DEV) {
-  PerformanceMonitor.init();
-  
-  // Log performance report after page load
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      console.log(PerformanceMonitor.getReport());
-    }, 3000);
-  });
+  try {
+    PerformanceMonitor.init();
+    
+    // Log performance report after page load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        console.log('[NYM] Performance Report:', PerformanceMonitor.getReport());
+      }, 3000);
+    });
+  } catch (error) {
+    console.error('[NYM] Performance monitoring failed:', error);
+  }
 }
 
-createRoot(document.getElementById("root")!).render(
-  <ErrorBoundary>
-    <App />
-  </ErrorBoundary>
-);
+// Render application with error handling
+try {
+  console.log('[NYM] Rendering app...');
+  const rootElement = document.getElementById("root");
+  
+  if (!rootElement) {
+    throw new Error('Root element not found');
+  }
+  
+  createRoot(rootElement).render(
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  );
+  
+  console.log('[NYM] App rendered successfully');
+} catch (error) {
+  console.error('[NYM] Fatal initialization error:', error);
+  
+  // Display user-friendly error message
+  const rootElement = document.getElementById("root");
+  if (rootElement) {
+    rootElement.innerHTML = `
+      <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; font-family: system-ui, -apple-system, sans-serif;">
+        <div style="max-width: 500px; padding: 30px; border: 1px solid #e5e7eb; border-radius: 12px; background: white;">
+          <h1 style="color: #dc2626; margin: 0 0 16px 0; font-size: 24px;">⚠️ Failed to Load</h1>
+          <p style="color: #374151; margin: 0 0 20px 0; line-height: 1.5;">
+            We encountered an error while loading the app. Please try:
+          </p>
+          <ul style="color: #374151; margin: 0 0 20px 0; line-height: 1.8;">
+            <li>Refreshing the page</li>
+            <li>Clearing your browser cache</li>
+            <li>Using an incognito/private window</li>
+          </ul>
+          <button 
+            onclick="location.reload()" 
+            style="width: 100%; padding: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer;"
+          >
+            Reload Page
+          </button>
+          <details style="margin-top: 20px; font-size: 12px; color: #6b7280;">
+            <summary style="cursor: pointer;">Technical Details</summary>
+            <pre style="margin-top: 10px; padding: 10px; background: #f3f4f6; border-radius: 6px; overflow: auto;">${error instanceof Error ? error.message : String(error)}</pre>
+          </details>
+        </div>
+      </div>
+    `;
+  }
+}
