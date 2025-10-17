@@ -5,8 +5,8 @@
 /* NYM Design System - Dark Slate & Teal Premium Brand */
 
 @layer base {
-  /* Emergency Fallback - Ensures visibility even without theme class */
-  html {
+  /* Emergency Fallback - Only applies when NO theme class exists */
+  html:not(.light):not(.dark) {
     background: #ffffff;
     color: #1a1f2e;
   }
