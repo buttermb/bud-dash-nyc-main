@@ -105,6 +105,7 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    dedupe: ['react', 'react-dom'], // Force single React instance
   },
   build: {
     target: 'es2020',
