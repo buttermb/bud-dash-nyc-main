@@ -18,6 +18,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { PerformanceMonitor } from "./utils/performance";
 import { initializeSecurityObfuscation } from "./utils/securityObfuscation";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 // Initialize security obfuscation in production
 if (import.meta.env.PROD) {
@@ -55,4 +56,8 @@ if (import.meta.env.DEV) {
   });
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);
