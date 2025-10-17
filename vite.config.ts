@@ -136,40 +136,8 @@ export default defineConfig(({ mode }) => ({
         entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
-        // Smart chunking for optimal loading
-        manualChunks(id) {
-          // Core React libs in one chunk
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-            return 'react-core';
-          }
-          // Router in separate chunk
-          if (id.includes('node_modules/react-router-dom')) {
-            return 'react-router';
-          }
-          // UI components together
-          if (id.includes('node_modules/@radix-ui')) {
-            return 'ui-radix';
-          }
-          // Supabase
-          if (id.includes('node_modules/@supabase')) {
-            return 'supabase';
-          }
-          // TanStack Query
-          if (id.includes('node_modules/@tanstack')) {
-            return 'query';
-          }
-          // Heavy libraries
-          if (id.includes('node_modules/mapbox-gl') || id.includes('node_modules/leaflet')) {
-            return 'maps';
-          }
-          if (id.includes('node_modules/recharts')) {
-            return 'charts';
-          }
-          // Admin pages together
-          if (id.includes('/src/pages/admin/')) {
-            return 'admin-pages';
-          }
-        },
+        // Let Vite handle chunking automatically to prevent React duplication
+        manualChunks: undefined,
       },
     },
     chunkSizeWarningLimit: 600,
