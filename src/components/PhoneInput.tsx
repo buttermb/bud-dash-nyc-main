@@ -27,6 +27,8 @@ export function PhoneInput({ value, onChange, placeholder, className, error }: P
           className
         )}
         numberInputProps={{
+          id: 'phone-number-input',
+          name: 'phone',
           className: cn(
             'flex-1 bg-transparent outline-none',
             'placeholder:text-muted-foreground'

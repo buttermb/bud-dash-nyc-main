@@ -805,6 +805,8 @@ const Checkout = () => {
                   <Label htmlFor="notes">Delivery Notes (Optional)</Label>
                   <Input
                     id="notes"
+                    name="delivery-notes"
+                    autoComplete="off"
                     placeholder="Apt #, building instructions, buzzer code"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
@@ -1080,6 +1082,7 @@ const Checkout = () => {
                     <input 
                       type="checkbox" 
                       id="age-confirm"
+                      name="age-confirmation"
                       required
                       className="mt-1 h-4 w-4 rounded border-gray-300"
                     />
@@ -1092,6 +1095,7 @@ const Checkout = () => {
                     <input 
                       type="checkbox" 
                       id="legal-confirm"
+                      name="legal-confirmation"
                       required
                       className="mt-1 h-4 w-4 rounded border-gray-300"
                     />

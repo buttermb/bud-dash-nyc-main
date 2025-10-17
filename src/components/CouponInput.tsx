@@ -90,7 +90,10 @@ export default function CouponInput({
   return (
     <div className="flex gap-2">
       <Input
+        id="coupon-code-input"
+        name="coupon"
         type="text"
+        autoComplete="off"
         placeholder="Enter coupon code"
         value={code}
         onChange={(e) => setCode(e.target.value.toUpperCase())}

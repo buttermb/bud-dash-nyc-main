@@ -92,6 +92,10 @@ export function SearchBar({ variant = 'full' }: SearchBarProps) {
             <div className="flex items-center border-b px-3">
               <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
               <input
+                id="product-search-input"
+                name="search"
+                type="search"
+                autoComplete="off"
                 placeholder="Search for strains, edibles, concentrates..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

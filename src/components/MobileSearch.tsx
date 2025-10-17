@@ -28,6 +28,8 @@ const MobileSearch = ({ value, onChange, placeholder = "Search products...", cla
           isFocused ? "text-primary" : "text-muted-foreground"
         )} />
         <Input
+          id="mobile-product-search"
+          name="mobile-search"
           type="search"
           value={value}
           onChange={(e) => onChange(e.target.value)}
