@@ -111,9 +111,22 @@
   <meta name="twitter:title" content="New York Minute NYC -">
   <meta property="og:description" content="New York Minute NYC - Premium flower delivery across NYC. Fast, discreet delivery to Manhattan, Brooklyn &amp; Queens. Lab-tested products from licensed vendors. Order online today.">
   <meta name="twitter:description" content="New York Minute NYC - Premium flower delivery across NYC. Fast, discreet delivery to Manhattan, Brooklyn &amp; Queens. Lab-tested products from licensed vendors. Order online today.">
-</head>
+  </head>
 
   <body>
+    <!-- Apply theme BEFORE React loads to prevent flash -->
+    <script>
+      try {
+        const theme = localStorage.getItem('theme') || 
+          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.classList.add(theme);
+        console.log('[PreLoad] Theme applied:', theme);
+      } catch (e) {
+        // Fallback to light mode if error
+        document.documentElement.classList.add('light');
+        console.error('[PreLoad] Theme error, defaulting to light:', e);
+      }
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

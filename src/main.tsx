@@ -23,6 +23,13 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 // Log app initialization
 console.log('[NYM] Starting app initialization...');
 
+// Debug: Log theme state during initialization
+console.log('[NYM] Theme state:', {
+  localStorage: localStorage.getItem('theme'),
+  htmlClasses: document.documentElement.className,
+  prefersDark: window.matchMedia('(prefers-color-scheme: dark)').matches
+});
+
 // Initialize security obfuscation in production
 if (import.meta.env.PROD) {
   try {
