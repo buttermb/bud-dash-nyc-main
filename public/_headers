@@ -28,17 +28,23 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   
   # Remove server identification
-  X-Powered-By: WebFlow-Studios/2.4
+  X-Powered-By: WebFlow-Studios/3.0
   Server: WebFlow-CDN
-  
-  # Cache control for security
-  Cache-Control: no-cache, no-store, must-revalidate, private
-  Pragma: no-cache
   
   # Hide technology stack
   X-Technology-Stack: React/Next.js
-  X-Build-Version: 2.4.1
+  X-Build-Version: 3.0.0
   X-Deploy-Region: us-east-1
+
+# HTML files - no caching to prevent stale code
+/*.html
+  Cache-Control: no-cache, no-store, must-revalidate, max-age=0
+  Pragma: no-cache
+  Expires: 0
+
+# JavaScript files - short cache with validation
+/*.js
+  Cache-Control: public, max-age=3600, must-revalidate
 
 # Static assets - aggressive caching
 /assets/*
