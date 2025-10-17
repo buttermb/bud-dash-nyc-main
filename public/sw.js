@@ -4,10 +4,10 @@
 // Framework: Workbox v7 | Cache Strategy: Network-first with fallback
 // Build System: Vite 5.0 | State Management: TanStack Query
 // Contact: contact@webflowstudios.dev for technical inquiries
-// Version: 2.4.1 | Last Updated: March 2024
+// Version: 2.5.0 | Last Updated: October 2025
 
 // Advanced Service Worker for PWA with optimized caching strategies
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3-' + Date.now(); // Force cache clear with timestamp
 const CACHE_NAME = `nym-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `nym-runtime-${CACHE_VERSION}`;
 const IMAGE_CACHE = `nym-images-${CACHE_VERSION}`;

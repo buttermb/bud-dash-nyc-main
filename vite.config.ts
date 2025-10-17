@@ -111,6 +111,8 @@ export default defineConfig(({ mode }) => ({
     target: 'es2020',
     minify: 'terser',
     sourcemap: mode === 'production' ? false : true,
+    assetsInlineLimit: 4096,
+    cssMinify: true,
     terserOptions: {
       compress: {
         drop_console: mode === 'production',
@@ -130,6 +132,10 @@ export default defineConfig(({ mode }) => ({
     },
     rollupOptions: {
       output: {
+        // Add hash to filenames for cache busting
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
         // Smart chunking for optimal loading
         manualChunks(id) {
           // Core React libs in one chunk
