@@ -105,7 +105,14 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-    dedupe: ['react', 'react-dom'], // Force single React instance
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime'], // Force single React instance
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
+    exclude: [],
+    esbuildOptions: {
+      target: 'es2020',
+    },
   },
   build: {
     target: 'es2020',
@@ -132,13 +139,15 @@ export default defineConfig(({ mode }) => ({
     },
     rollupOptions: {
       output: {
-        // Add hash to filenames for cache busting
-        entryFileNames: 'assets/[name]-[hash].js',
-        chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]',
-        // Let Vite handle chunking automatically to prevent React duplication
+        // Add hash to filenames for cache busting  
+        entryFileNames: 'assets/entry-[hash].js',
+        chunkFileNames: 'assets/chunk-[hash].js',
+        assetFileNames: 'assets/asset-[hash].[ext]',
+        // Disable manual chunking - let Vite optimize automatically
         manualChunks: undefined,
       },
+      // Ensure React is treated as external during SSR
+      external: [],
     },
     chunkSizeWarningLimit: 600,
     cssCodeSplit: true,
