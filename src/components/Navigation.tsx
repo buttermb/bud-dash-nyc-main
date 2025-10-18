@@ -135,7 +135,7 @@ const Navigation = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-8 flex-1 justify-center" aria-label="Primary navigation">
+          <nav className="hidden md:flex items-center gap-8 flex-1 justify-center" aria-label="Primary navigation">
             {navLinks.map((link) => (
               link.scroll ? (
                 <a
@@ -162,13 +162,13 @@ const Navigation = () => {
           </nav>
           
           {/* Search Bar */}
-          <div className="hidden lg:block">
+          <div className="hidden md:block">
             <SearchBar variant="full" />
           </div>
           
           {/* Sign Up / Sign In */}
           {!user ? (
-            <div className="hidden lg:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-3">
               <Button variant="outline" size="lg" onClick={() => openAuth("signin")} className="text-base font-bold px-6">
                 Sign In
               </Button>
