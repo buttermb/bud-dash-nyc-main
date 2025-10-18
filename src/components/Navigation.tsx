@@ -127,11 +127,14 @@ const Navigation = () => {
 
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/98 backdrop-blur-lg supports-[backdrop-filter]:bg-background/95 shadow-soft" role="navigation" aria-label="Main navigation">
         <div className="container flex h-24 items-center justify-between px-6 gap-8">
-          <Link to="/" className="flex items-center gap-4 min-w-fit">
-            <NYMLogo size={48} />
+          <Link to="/" className="flex items-center gap-3 min-w-fit group">
+            <NYMLogo size={45} />
             <div className="flex flex-col gap-0.5">
-              <span className="font-black text-base tracking-wider">NYM</span>
-              <span className="text-[10px] text-muted-foreground tracking-widest uppercase">Premium Delivery</span>
+              <span className="font-black text-lg tracking-tight">
+                <span className="text-foreground">BUD</span>
+                <span className="text-primary">DASH</span>
+              </span>
+              <span className="text-[9px] text-muted-foreground tracking-widest uppercase font-semibold">NYC Premium</span>
             </div>
           </Link>
 

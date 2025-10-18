@@ -12,116 +12,106 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
-      {/* BOLD Animated background */}
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
+      {/* Subtle animated background */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary-magenta/20 to-black opacity-60" />
+        <div className="absolute inset-0 bg-gradient-hero opacity-80" />
         <motion.div
-          className="absolute inset-0"
+          className="absolute inset-0 opacity-30"
           animate={{
             background: [
-              'radial-gradient(circle at 20% 50%, rgba(255,20,147,0.3) 0%, transparent 50%)',
-              'radial-gradient(circle at 80% 50%, rgba(255,0,255,0.3) 0%, transparent 50%)',
-              'radial-gradient(circle at 20% 50%, rgba(255,20,147,0.3) 0%, transparent 50%)',
+              'radial-gradient(circle at 30% 40%, rgba(214,88,118,0.15) 0%, transparent 60%)',
+              'radial-gradient(circle at 70% 60%, rgba(214,88,118,0.15) 0%, transparent 60%)',
+              'radial-gradient(circle at 30% 40%, rgba(214,88,118,0.15) 0%, transparent 60%)',
             ]
           }}
-          transition={{ duration: 10, repeat: Infinity }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-5xl mx-auto text-center space-y-8">
-          {/* BOLD Badge */}
+        <div className="max-w-5xl mx-auto text-center space-y-6 md:space-y-10">
+          {/* Refined Badge */}
           <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, type: "spring" }}
-            className="inline-flex items-center gap-2 px-8 py-3 bg-primary/20 border-2 border-primary backdrop-blur-sm"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary/10 border border-primary/30 backdrop-blur-sm rounded-full"
           >
-            <Sparkles className="w-5 h-5 text-primary animate-float" />
-            <span className="text-sm md:text-base font-black text-primary uppercase tracking-wider">🔥 NYC's Fastest Delivery</span>
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-primary uppercase tracking-wide">NYC's Fastest Service</span>
           </motion.div>
 
-          {/* MASSIVE Heading */}
+          {/* Refined Heading */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <h1 className="heading-massive">
-              <motion.div
-                className="text-white"
-                initial={{ x: -50, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                PREMIUM
-              </motion.div>
-              <motion.div
-                className="text-primary neon-glow"
-                initial={{ x: 50, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.7 }}
-              >
-                CANNABIS
-              </motion.div>
+            <h1 className="heading-massive text-foreground mb-4">
+              PREMIUM
+              <br />
+              <span className="text-primary text-glow-subtle">
+                DELIVERY
+              </span>
             </h1>
           </motion.div>
 
-          {/* BOLD Subheading */}
+          {/* Refined Subheading */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.9 }}
-            className="text-2xl md:text-3xl text-white/90 max-w-3xl mx-auto font-bold"
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto font-medium"
           >
-            Delivered in 45 minutes or less
+            NYC's most trusted same-day service
           </motion.p>
 
-          {/* Trust Indicators - BOLD */}
+          {/* Trust Indicators */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.1 }}
-            className="flex flex-wrap items-center justify-center gap-8 text-base md:text-lg"
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="flex flex-wrap items-center justify-center gap-6 text-sm md:text-base"
           >
-            <div className="flex items-center gap-3 text-white font-bold">
-              <div className="w-3 h-3 bg-primary rounded-full animate-pulse shadow-glow" />
-              <span>Same-Day Delivery</span>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+              <span className="font-medium">45 Min Delivery</span>
             </div>
-            <div className="flex items-center gap-3 text-white font-bold">
-              <div className="w-3 h-3 bg-primary rounded-full animate-pulse shadow-glow" />
-              <span>Licensed & Lab Tested</span>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+              <span className="font-medium">Licensed & Tested</span>
             </div>
-            <div className="flex items-center gap-3 text-white font-bold">
-              <div className="w-3 h-3 bg-primary rounded-full animate-pulse shadow-glow" />
-              <span>Discreet Packaging</span>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+              <span className="font-medium">Discreet Service</span>
             </div>
           </motion.div>
 
-          {/* BOLD CTA Buttons */}
+          {/* Refined CTA Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.3 }}
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center pt-6"
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4"
           >
             <Button 
               size="xl" 
-              variant="premium"
+              variant="default"
               onClick={scrollToProducts}
-              className="text-xl px-14 py-7 font-black shadow-glow hover:shadow-neon animate-glow-pulse"
+              className="text-lg px-12 py-6 font-bold"
             >
-              SHOP NOW →
+              Shop Now
+              <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             <Button 
               size="xl" 
-              variant="bold"
+              variant="outline"
               asChild
-              className="text-xl px-14 py-7"
+              className="text-lg px-12 py-6 font-bold"
             >
               <Link to="/track-order">
-                TRACK ORDER
+                Track Order
               </Link>
             </Button>
           </motion.div>
@@ -130,11 +120,10 @@ const Hero = () => {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 1.5 }}
-            className="text-sm text-white/40 max-w-2xl mx-auto hidden md:block pt-6"
+            transition={{ duration: 1, delay: 1 }}
+            className="text-xs text-muted-foreground/60 max-w-2xl mx-auto hidden md:block pt-4"
           >
-            Must be 21+ with valid ID. Products contain THC. For adult use only. 
-            Not for sale to minors. Keep out of reach of children.
+            Licensed NY Retailer • Must be 21+ with valid ID • All products lab-tested
           </motion.p>
         </div>
       </div>
