@@ -38,7 +38,7 @@ const FAQ = () => {
     {
       question: "What are the delivery fees?",
       answer:
-        "FREE delivery on orders over $100. $10 delivery fee for orders $50-$99. $15 for orders under $50. All fees are transparently displayed at checkout before you confirm your order.",
+        "FREE delivery on orders over $100. For orders under $100: $5 delivery fee in Brooklyn/Queens, $10 in Manhattan. Express delivery (25-45 min): FREE on orders $500+, 30% off delivery fee for orders $100-$499, 30% extra for orders under $100. All fees are transparently displayed at checkout.",
     },
     {
       question: "What payment methods do you accept?",
