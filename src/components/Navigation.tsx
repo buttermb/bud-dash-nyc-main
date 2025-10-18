@@ -110,51 +110,39 @@ const Navigation = () => {
   };
 
   const navLinks = [
-    { label: "Products", href: "#products", scroll: true },
-    { label: "How It Works", href: "#how-it-works", scroll: true },
-    { label: "Track Order", href: "/track-order", scroll: false },
-    { label: "Support", href: "/support", scroll: false },
+    { label: "Shop", href: "#products", scroll: true },
+    { label: "How-It-Works", href: "#how-it-works", scroll: true },
+    { label: "FAQ", href: "/faq", scroll: false },
   ];
 
   return (
     <>
-      {/* Free Shipping Banner */}
-      <div className="bg-card border-b border-border py-2" role="banner" aria-label="Promotional banner">
-        <div className="container mx-auto px-4 text-center text-sm font-medium">
-          <span>Licensed & Lab Tested | Same-Day Delivery | Free Shipping $100+</span>
+      {/* Premium Banner */}
+      <div className="bg-gradient-primary py-2.5" role="banner" aria-label="Promotional banner">
+        <div className="container mx-auto px-4 text-center text-sm font-semibold text-white tracking-wide">
+          <span>Licensed & Lab Tested • Same-Day Delivery • 100% Discreet Packaging</span>
         </div>
       </div>
 
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/98 backdrop-blur-lg supports-[backdrop-filter]:bg-background/95 shadow-soft" role="navigation" aria-label="Main navigation">
-        <div className="container flex h-24 items-center justify-between px-6 gap-8">
-          <Link to="/" className="flex items-center gap-4 min-w-fit">
-            <NYMLogo size={48} />
+      <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/90 shadow-sm" role="navigation" aria-label="Main navigation">
+        <div className="container flex h-20 items-center justify-between px-6 gap-8">
+          <Link to="/" className="flex items-center gap-3 min-w-fit group">
+            <NYMLogo size={42} />
             <div className="flex flex-col gap-0.5">
-              <span className="font-black text-base tracking-wider">NYM</span>
+              <span className="font-black text-base tracking-wider group-hover:text-primary transition-colors">NYM NYC</span>
               <span className="text-[10px] text-muted-foreground tracking-widest uppercase">Premium Delivery</span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6 flex-1 justify-center" aria-label="Primary navigation">
-            <Link 
-              to="/giveaway/nyc-biggest-flower" 
-              className="relative text-sm font-semibold transition-colors group"
-            >
-              <span className="relative flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/30 group-hover:border-primary/50 group-hover:shadow-glow transition-all">
-                <span className="relative">
-                  LIVE GIVEAWAY
-                  <span className="absolute -top-1 -right-2 w-2 h-2 bg-accent rounded-full animate-pulse shadow-[0_0_8px_hsl(var(--accent))]"></span>
-                </span>
-              </span>
-            </Link>
+          <nav className="hidden md:flex items-center gap-8 flex-1 justify-center" aria-label="Primary navigation">
             {navLinks.map((link) => (
               link.scroll ? (
                 <a
                   key={link.label}
                   href={link.href}
                   onClick={handleNavClick(link.href, link.scroll)}
-                  className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors cursor-pointer whitespace-nowrap"
+                  className="text-sm font-bold uppercase tracking-wide text-foreground/70 hover:text-primary transition-colors cursor-pointer"
                 >
                   {link.label}
                 </a>
@@ -165,7 +153,7 @@ const Navigation = () => {
                   onClick={() => {
                     setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0);
                   }}
-                  className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors cursor-pointer whitespace-nowrap"
+                  className="text-sm font-bold uppercase tracking-wide text-foreground/70 hover:text-primary transition-colors cursor-pointer"
                 >
                   {link.label}
                 </Link>

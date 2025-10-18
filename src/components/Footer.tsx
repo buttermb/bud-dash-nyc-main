@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import NYMLogo from "./NYMLogo";
+import NewsletterSignup from "./NewsletterSignup";
 
 const Footer = () => {
   const [legalOpen, setLegalOpen] = useState(false);
@@ -26,35 +27,40 @@ const Footer = () => {
   };
   
   return (
-    <footer className="bg-[hsl(222_47%_8%)] border-t border-border py-8 md:py-12">
+    <footer className="bg-[hsl(0_0%_8%)] border-t border-border py-12 md:py-16">
       <div className="container px-4 mx-auto">
+        {/* Newsletter Section */}
+        <div className="mb-12 max-w-4xl mx-auto">
+          <NewsletterSignup />
+        </div>
+
         {/* Compliance Badges Section */}
-        <div className="mb-8 pb-8 border-b">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
-            <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-lg border border-primary/20">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Shield className="w-5 h-5 text-primary" />
+        <div className="mb-10 pb-10 border-b border-border/50">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="flex items-center gap-3 p-5 bg-primary/5 rounded-xl border border-primary/20 hover:border-primary/30 transition-colors">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Shield className="w-6 h-6 text-primary" />
               </div>
               <div className="text-sm">
-                <p className="font-semibold">Licensed Vendors</p>
+                <p className="font-bold text-foreground">Licensed Vendors</p>
                 <p className="text-xs text-muted-foreground">NY State Compliant</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-lg border border-primary/20">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Award className="w-5 h-5 text-primary" />
+            <div className="flex items-center gap-3 p-5 bg-primary/5 rounded-xl border border-primary/20 hover:border-primary/30 transition-colors">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Award className="w-6 h-6 text-primary" />
               </div>
               <div className="text-sm">
-                <p className="font-semibold">Lab Tested</p>
+                <p className="font-bold text-foreground">Lab Tested</p>
                 <p className="text-xs text-muted-foreground">Third-Party Verified</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-lg border border-primary/20">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Lock className="w-5 h-5 text-primary" />
+            <div className="flex items-center gap-3 p-5 bg-primary/5 rounded-xl border border-primary/20 hover:border-primary/30 transition-colors">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Lock className="w-6 h-6 text-primary" />
               </div>
               <div className="text-sm">
-                <p className="font-semibold">21+ Only</p>
+                <p className="font-bold text-foreground">21+ Only</p>
                 <p className="text-xs text-muted-foreground">Age Verified</p>
               </div>
             </div>

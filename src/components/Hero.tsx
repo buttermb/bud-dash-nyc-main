@@ -8,91 +8,89 @@ const Hero = () => {
   
   return (
     <section className="relative min-h-[85vh] md:min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Bold gradient background - TBD Pink Style */}
-      <div className="absolute inset-0 bg-gradient-mega z-0" />
+      {/* Sophisticated gradient background - Charcoal to Purple/Pink */}
+      <div className="absolute inset-0 bg-gradient-hero z-0" />
       
-      {/* Animated glow effect - Hot Pink */}
-      <div className="absolute inset-0 z-0 animate-glow-pulse opacity-40">
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/50 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-primary-glow/40 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary-hot/30 rounded-full blur-[100px]" />
+      {/* Subtle animated glow effect */}
+      <div className="absolute inset-0 z-0 animate-glow-pulse opacity-20">
+        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/30 rounded-full blur-[150px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent/25 rounded-full blur-[130px]" />
       </div>
 
       {/* Content */}
       <div className="container relative z-10 px-4 py-16 md:py-32 mx-auto">
-        <div className="max-w-4xl mx-auto text-center space-y-6 md:space-y-12">
+        <div className="max-w-5xl mx-auto text-center space-y-6 md:space-y-10">
           {/* Badge */}
           <div className="flex justify-center animate-fade-in">
-            <Badge variant="outline" className="px-4 md:px-6 py-2 md:py-3 text-sm md:text-base border-primary/50 bg-primary/10 backdrop-blur-sm">
-              <Leaf className="w-4 md:w-5 h-4 md:h-5 mr-2" />
-              Licensed & Lab Tested
+            <Badge variant="outline" className="px-5 md:px-7 py-2.5 md:py-3.5 text-sm md:text-base border-primary/40 bg-primary/5 backdrop-blur-md">
+              <Leaf className="w-4 md:w-5 h-4 md:h-5 mr-2 text-primary" />
+              <span className="font-semibold">Licensed & Lab Tested</span>
             </Badge>
           </div>
 
-          {/* Main Heading - BOLD & IMPACTFUL */}
-          <h1 className="heading-massive animate-fade-in drop-shadow-[0_0_50px_rgba(255,20,147,0.6)]">
-            <span className="text-white">NYC'S</span>{" "}
-            <span className="bg-gradient-vibrant bg-clip-text text-transparent drop-shadow-[0_0_60px_rgba(255,20,147,0.8)]">
-              FASTEST
+          {/* Main Heading - Premium & Sophisticated */}
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black uppercase tracking-tight animate-fade-in leading-none">
+            <span className="text-white">Premium.</span>{" "}
+            <span className="bg-gradient-primary bg-clip-text text-transparent">
+              Discreet.
             </span>
             <br />
-            <span className="text-white">DELIVERY</span>
+            <span className="text-white">NYC-Fast.</span>
           </h1>
 
-          {/* Subheading - Bold & Clear */}
-          <p className="text-xl sm:text-2xl md:text-3xl text-foreground/90 max-w-3xl mx-auto font-black animate-fade-in tracking-wide">
-            Premium Quality • Same-Day • NYC Wide
+          {/* Subheading - Elegant & Clear */}
+          <p className="text-lg sm:text-xl md:text-2xl text-white/80 max-w-2xl mx-auto font-medium animate-fade-in leading-relaxed">
+            Your elevated experience, delivered in under an hour.
           </p>
 
-          {/* Trust Indicators - Simplified for Mobile */}
-          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 md:gap-8 pt-4 md:pt-8">
-            <div className="flex items-center gap-2 md:gap-3 text-foreground">
-              <div className="w-10 md:w-12 h-10 md:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Clock className="w-5 md:w-6 h-5 md:h-6 text-primary" />
+          {/* Trust Indicators - Clean & Professional */}
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-5 md:gap-10 pt-6 md:pt-10">
+            <div className="flex items-center gap-3 text-white/90">
+              <div className="w-11 md:w-14 h-11 md:h-14 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
+                <Clock className="w-5 md:w-7 h-5 md:h-7 text-accent" />
               </div>
-              <span className="text-sm md:text-base font-semibold">Same-Day Delivery</span>
+              <span className="text-sm md:text-base font-semibold tracking-wide">Under 60 Mins</span>
             </div>
-            <div className="flex items-center gap-2 md:gap-3 text-foreground">
-              <div className="w-10 md:w-12 h-10 md:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <ShieldCheck className="w-5 md:w-6 h-5 md:h-6 text-primary" />
+            <div className="flex items-center gap-3 text-white/90">
+              <div className="w-11 md:w-14 h-11 md:h-14 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
+                <ShieldCheck className="w-5 md:w-7 h-5 md:h-7 text-primary" />
               </div>
-              <span className="text-sm md:text-base font-semibold">Licensed & Lab Tested</span>
+              <span className="text-sm md:text-base font-semibold tracking-wide">100% Discreet</span>
             </div>
-            <div className="flex items-center gap-2 md:gap-3 text-foreground">
-              <div className="w-10 md:w-12 h-10 md:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Leaf className="w-5 md:w-6 h-5 md:h-6 text-primary" />
+            <div className="flex items-center gap-3 text-white/90">
+              <div className="w-11 md:w-14 h-11 md:h-14 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
+                <Leaf className="w-5 md:w-7 h-5 md:h-7 text-primary-glow" />
               </div>
-              <span className="text-sm md:text-base font-semibold">21+ Verification</span>
+              <span className="text-sm md:text-base font-semibold tracking-wide">Lab Tested</span>
             </div>
           </div>
 
-          {/* CTA Buttons - Premium & Bold */}
-          <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center pt-6 md:pt-8">
+          {/* CTA Buttons - Premium & Elegant */}
+          <div className="flex flex-col sm:flex-row gap-4 md:gap-5 justify-center pt-8 md:pt-12">
             <Button 
-              variant="premium" 
               size="lg" 
-              className="text-lg md:text-2xl px-10 md:px-16 py-7 md:py-10 min-h-[60px]"
+              className="text-base md:text-xl px-10 md:px-14 py-6 md:py-8 min-h-[56px] md:min-h-[64px] bg-accent hover:bg-accent-dark text-white font-bold uppercase tracking-wider shadow-accent transition-all hover:scale-105"
               onClick={() => {
                 const productsSection = document.getElementById('products');
                 productsSection?.scrollIntoView({ behavior: 'smooth' });
               }}
             >
-              SHOP NOW →
+              Browse Products
             </Button>
             <Button 
-              variant="bold" 
+              variant="outline"
               size="lg" 
-              className="text-lg md:text-2xl px-10 md:px-16 py-7 md:py-10 min-h-[60px]"
+              className="text-base md:text-xl px-10 md:px-14 py-6 md:py-8 min-h-[56px] md:min-h-[64px] border-2 border-white/30 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider backdrop-blur-md transition-all hover:scale-105"
               onClick={() => navigate('/track-order')}
             >
-              TRACK ORDER
+              Track Order
             </Button>
           </div>
 
-          {/* Legal Notice - Hidden on Mobile, visible on desktop */}
-          <div className="hidden md:block text-xs text-muted-foreground/70 pt-8 space-y-1 max-w-3xl mx-auto">
-            <p>Licensed NY Cannabinoid Hemp Retailer | All products lab-tested for quality</p>
-            <p>Must be 21+ with valid ID | Professional, discreet delivery</p>
+          {/* Legal Notice - Subtle & Professional */}
+          <div className="hidden md:block text-xs text-white/50 pt-10 space-y-1 max-w-3xl mx-auto font-light">
+            <p>Licensed NY Cannabinoid Hemp Retailer | All products third-party lab tested</p>
+            <p>Must be 21+ with valid government ID | Professional, discreet packaging</p>
           </div>
         </div>
       </div>
