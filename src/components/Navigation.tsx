@@ -118,39 +118,39 @@ const Navigation = () => {
   return (
     <>
       {/* Premium Banner */}
-      <div className="bg-primary py-3" role="banner" aria-label="Promotional banner">
-        <div className="container mx-auto px-4 text-center text-base font-bold text-white tracking-wide">
+      <div className="bg-gradient-primary relative overflow-hidden py-3" role="banner" aria-label="Promotional banner">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_6s_ease-in-out_infinite]" />
+        <div className="container mx-auto px-4 text-center text-sm font-black text-white tracking-widest uppercase relative z-10">
           <span>Licensed & Lab Tested • Same-Day Delivery • 100% Discreet Packaging</span>
         </div>
       </div>
 
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-card backdrop-blur-lg shadow-md relative overflow-hidden" role="navigation" aria-label="Main navigation">
-        {/* Subtle animated shine effect */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute inset-0 -translate-x-full animate-[shimmer_4s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
-        </div>
+      <header className="sticky top-0 z-50 w-full border-b-2 border-primary/20 bg-card/95 backdrop-blur-xl shadow-elegant relative overflow-hidden" role="navigation" aria-label="Main navigation">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
         
         <div className="container flex h-20 items-center px-6 relative z-10">
           {/* Left: Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <NYMLogo size={48} />
+            <NYMLogo size={50} />
             <div className="flex flex-col gap-0.5">
-              <span className="font-black text-lg tracking-wider text-foreground group-hover:text-primary transition-colors">NYM NYC</span>
-              <span className="text-xs text-muted-foreground tracking-widest uppercase font-semibold">Premium Delivery</span>
+              <span className="font-black text-xl tracking-wider text-foreground group-hover:text-primary transition-all duration-300">NYM NYC</span>
+              <span className="text-[10px] text-primary/80 tracking-[0.15em] uppercase font-black">Premium Delivery</span>
             </div>
           </Link>
 
           {/* Center: Navigation Links */}
-          <nav className="hidden md:flex items-center justify-center gap-8 flex-1" aria-label="Primary navigation">
+          <nav className="hidden md:flex items-center justify-center gap-10 flex-1" aria-label="Primary navigation">
             {navLinks.map((link) => (
               link.scroll ? (
                 <a
                   key={link.label}
                   href={link.href}
                   onClick={handleNavClick(link.href, link.scroll)}
-                  className="text-base font-bold uppercase tracking-wide text-foreground hover:text-primary transition-colors cursor-pointer whitespace-nowrap"
+                  className="relative text-sm font-black uppercase tracking-widest text-foreground/90 hover:text-primary transition-all duration-300 cursor-pointer whitespace-nowrap group"
                 >
                   {link.label}
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-primary group-hover:w-full transition-all duration-300" />
                 </a>
               ) : (
                 <Link
@@ -159,9 +159,10 @@ const Navigation = () => {
                   onClick={() => {
                     setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0);
                   }}
-                  className="text-base font-bold uppercase tracking-wide text-foreground hover:text-primary transition-colors cursor-pointer whitespace-nowrap"
+                  className="relative text-sm font-black uppercase tracking-widest text-foreground/90 hover:text-primary transition-all duration-300 cursor-pointer whitespace-nowrap group"
                 >
                   {link.label}
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-primary group-hover:w-full transition-all duration-300" />
                 </Link>
               )
             ))}
@@ -177,7 +178,7 @@ const Navigation = () => {
                   variant="ghost" 
                   size="default" 
                   onClick={() => openAuth("signin")} 
-                  className="text-sm font-bold uppercase tracking-wide hover:text-primary"
+                  className="text-xs font-black uppercase tracking-widest hover:text-primary transition-all duration-300"
                 >
                   Sign In
                 </Button>
@@ -185,7 +186,7 @@ const Navigation = () => {
                   variant="default" 
                   size="default" 
                   onClick={() => openAuth("signup")} 
-                  className="text-sm font-bold uppercase tracking-wide px-6 bg-primary hover:bg-primary-dark text-white shadow-glow hover:shadow-elegant transition-all"
+                  className="text-xs font-black uppercase tracking-widest px-6 bg-gradient-primary border-2 border-primary/30 text-white shadow-glow hover:shadow-elegant hover:scale-105 transition-all duration-300"
                 >
                   Sign Up
                 </Button>
@@ -201,26 +202,26 @@ const Navigation = () => {
             {/* Sticky Cart Preview */}
             <Button
               variant="outline"
-              className="relative gap-3 hidden sm:flex h-11 px-4"
+              className="relative gap-3 hidden sm:flex h-12 px-5 border-2 border-primary/20 hover:border-primary/40 hover:shadow-glow transition-all duration-300 hover:scale-105"
               onClick={() => {
                 haptics.light();
                 setShowCart(true);
               }}
               aria-label={`Shopping cart with ${cartCount} items and total $${cartTotal.toFixed(2)}`}
             >
-              <ShoppingCart className="w-4 h-4" />
+              <ShoppingCart className="w-5 h-5 text-primary" />
               <div className="flex flex-col items-start gap-0.5">
-                <span className="text-xs font-semibold leading-none">
+                <span className="text-xs font-black leading-none">
                   {cartCount} {cartCount === 1 ? 'item' : 'items'}
                 </span>
                 {cartTotal > 0 && (
-                  <span className="text-[10px] text-muted-foreground leading-none">
+                  <span className="text-[10px] text-primary/80 font-bold leading-none">
                     ${cartTotal.toFixed(2)}
                   </span>
                 )}
               </div>
               {cartCount > 0 && (
-                <Badge variant="default" className="absolute -top-1.5 -right-1.5 h-5 w-5 flex items-center justify-center p-0 text-[10px]">
+                <Badge variant="default" className="absolute -top-2 -right-2 h-6 w-6 flex items-center justify-center p-0 text-xs font-black bg-gradient-primary border-2 border-card shadow-glow">
                   {cartCount}
                 </Badge>
               )}
