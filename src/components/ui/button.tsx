@@ -16,12 +16,15 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground hover:scale-105",
         link: "text-primary underline-offset-4 hover:underline hover:brightness-110",
         hero: "bg-gradient-to-r from-primary via-primary to-primary bg-[length:200%_100%] text-primary-foreground hover:bg-[position:100%_0] shadow-strong hover:shadow-elegant hover:scale-105 hover:brightness-110 font-semibold relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent before:translate-x-[-200%] hover:before:translate-x-[200%] before:transition-transform before:duration-700",
+        premium: "bg-gradient-vibrant text-primary-foreground font-black uppercase shadow-glow hover:shadow-neon hover:scale-110 transition-bounce relative overflow-hidden",
+        bold: "bg-card text-primary border-2 border-primary font-black uppercase hover:bg-primary hover:text-primary-foreground hover:scale-105 shadow-md hover:shadow-glow transition-all",
       },
       size: {
-        default: "h-11 px-4 py-2 min-h-[44px]", // 44px minimum for touch targets
+        default: "h-11 px-4 py-2 min-h-[44px]",
         sm: "h-10 rounded-md px-3 min-h-[40px]",
         lg: "h-12 rounded-md px-8 min-h-[48px]",
-        icon: "h-11 w-11 min-h-[44px] min-w-[44px]", // 44px minimum for touch
+        xl: "h-14 rounded-md px-10 text-lg min-h-[56px]",
+        icon: "h-11 w-11 min-h-[44px] min-w-[44px]",
       },
     },
     defaultVariants: {
