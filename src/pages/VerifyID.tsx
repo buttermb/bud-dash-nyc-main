@@ -60,17 +60,17 @@ export default function VerifyID() {
 
     const { error: uploadError } = await supabase.storage
       .from('id-documents')
-      .upload(filePath, file);
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
 
     if (uploadError) {
       throw uploadError;
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('id-documents')
-      .getPublicUrl(filePath);
-
-    return publicUrl;
+    // Return the path instead of URL for secure private storage
+    return filePath;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -19,6 +19,9 @@ interface VerificationRequest {
   id_back_url?: string;
   selfie_url?: string;
   user_email?: string;
+  id_front_signed?: string;
+  id_back_signed?: string;
+  selfie_signed?: string;
 }
 
 const AdminAgeVerification = () => {
@@ -72,13 +75,44 @@ const AdminAgeVerification = () => {
       const { data } = await supabase.auth.admin.listUsers();
       const users = data?.users || [];
       
-      const enrichedRequests = verifications?.map((v: any) => {
-        const user = users.find((u: any) => u.id === v.user_id);
-        return {
-          ...v,
-          user_email: user?.email || "Unknown"
-        };
-      }) || [];
+      // Generate signed URLs for document access (valid for 1 hour)
+      const enrichedRequests = await Promise.all(
+        (verifications || []).map(async (v: any) => {
+          const user = users.find((u: any) => u.id === v.user_id);
+          
+          let id_front_signed, id_back_signed, selfie_signed;
+          
+          // Generate signed URLs for secure document access
+          if (v.id_front_url) {
+            const { data } = await supabase.storage
+              .from('id-documents')
+              .createSignedUrl(v.id_front_url, 3600);
+            id_front_signed = data?.signedUrl;
+          }
+          
+          if (v.id_back_url) {
+            const { data } = await supabase.storage
+              .from('id-documents')
+              .createSignedUrl(v.id_back_url, 3600);
+            id_back_signed = data?.signedUrl;
+          }
+          
+          if (v.selfie_url) {
+            const { data } = await supabase.storage
+              .from('id-documents')
+              .createSignedUrl(v.selfie_url, 3600);
+            selfie_signed = data?.signedUrl;
+          }
+          
+          return {
+            ...v,
+            user_email: user?.email || "Unknown",
+            id_front_signed,
+            id_back_signed,
+            selfie_signed
+          };
+        })
+      );
 
       setRequests(enrichedRequests);
     } catch (error) {
@@ -230,31 +264,31 @@ const AdminAgeVerification = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {request.id_front_url && (
+                  {request.id_front_signed && (
                     <div>
                       <p className="text-sm font-medium mb-2">ID Front</p>
                       <img
-                        src={request.id_front_url}
+                        src={request.id_front_signed}
                         alt="ID Front"
                         className="w-full rounded border"
                       />
                     </div>
                   )}
-                  {request.id_back_url && (
+                  {request.id_back_signed && (
                     <div>
                       <p className="text-sm font-medium mb-2">ID Back</p>
                       <img
-                        src={request.id_back_url}
+                        src={request.id_back_signed}
                         alt="ID Back"
                         className="w-full rounded border"
                       />
                     </div>
                   )}
-                  {request.selfie_url && (
+                  {request.selfie_signed && (
                     <div>
                       <p className="text-sm font-medium mb-2">Selfie</p>
                       <img
-                        src={request.selfie_url}
+                        src={request.selfie_signed}
                         alt="Selfie"
                         className="w-full rounded border"
                       />
