@@ -1,9 +1,8 @@
-import { useState, memo, useMemo } from "react";
+import { useState, memo, useCallback, useMemo } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Star, AlertCircle, Award, TrendingUp, ShoppingCart, Check, Flame, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
+import { ShoppingCart, Plus, Minus, Check, Star, Flame, Sparkles, Loader2, AlertCircle, Award, Clock, TrendingUp } from "lucide-react";
 import { OptimizedProductImage } from "@/components/OptimizedProductImage";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -29,17 +28,18 @@ interface ProductCardProps {
   stockLevel?: number;
 }
 
-const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLevel, index }: ProductCardProps & { index?: number; stockLevel?: number }) {
+const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLevel }: ProductCardProps) {
   const { user } = useAuth();
   const { addToRecentlyViewed } = useRecentlyViewed();
   const { addToGuestCart } = useGuestCart();
-  const [loading, setLoading] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
-  const [added, setAdded] = useState(false);
+  const viewCount = useProductViewCount(product.id);
   const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [added, setAdded] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const queryClient = useQueryClient();
-  
+
+  // Use provided stockLevel instead of making individual API call
   const actualStockLevel = stockLevel !== undefined ? stockLevel : 0;
   const isLowStock = actualStockLevel > 0 && actualStockLevel <= 5;
 
@@ -76,47 +76,62 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
       return;
     }
 
-    setIsAdding(true);
+    setLoading(true);
     haptics.light();
     
     try {
+      // Get default weight for products with weight options (always starts at 3.5g)
       const defaultWeight = getDefaultWeight(product.prices);
 
       if (!user) {
-        addToGuestCart(product.id, 1, defaultWeight);
+        // Guest cart - use localStorage
+        addToGuestCart(product.id, quantity, defaultWeight);
+        
+        // Success feedback
         haptics.success();
         toast.success("Added to cart!", {
-          description: product.name,
+          description: `${quantity}x ${product.name}`,
           duration: 2000,
         });
+        
+        setAdded(true);
+        setTimeout(() => setAdded(false), 2000);
         queryClient.invalidateQueries({ queryKey: ["cart"] });
         queryClient.invalidateQueries({ queryKey: ["guest-cart-products"] });
-        setIsAdding(false);
+        setLoading(false);
         return;
       }
 
+      // Optimistically update UI
+      setAdded(true);
+
+      // Authenticated user - use database with upsert for instant response
       const { error } = await supabase.rpc('add_to_cart', {
         p_user_id: user.id,
         p_product_id: product.id,
-        p_quantity: 1,
+        p_quantity: quantity,
         p_selected_weight: defaultWeight
       });
       
       if (error) throw error;
 
+      // Invalidate cart queries after successful insert
       queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
       queryClient.invalidateQueries({ queryKey: ["cart"] });
 
+      // Success feedback with confetti effect
       haptics.success();
       toast.success("🎉 Added to cart!", {
-        description: product.name,
+        description: `${quantity}x ${product.name}`,
         duration: 2000,
       });
+      setTimeout(() => setAdded(false), 2500);
+      setQuantity(1);
     } catch (error: any) {
       haptics.error();
       toast.error(error.message || "Failed to add to cart");
     } finally {
-      setIsAdding(false);
+      setLoading(false);
     }
   };
 

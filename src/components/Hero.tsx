@@ -1,130 +1,99 @@
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
-import { Sparkles, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { ShieldCheck, Clock, Leaf } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Hero = () => {
-  const scrollToProducts = () => {
-    const productsSection = document.getElementById('products');
-    if (productsSection) {
-      productsSection.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
+  const navigate = useNavigate();
+  
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
-      {/* Subtle animated background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-hero opacity-80" />
-        <motion.div
-          className="absolute inset-0 opacity-30"
-          animate={{
-            background: [
-              'radial-gradient(circle at 30% 40%, rgba(214,88,118,0.15) 0%, transparent 60%)',
-              'radial-gradient(circle at 70% 60%, rgba(214,88,118,0.15) 0%, transparent 60%)',
-              'radial-gradient(circle at 30% 40%, rgba(214,88,118,0.15) 0%, transparent 60%)',
-            ]
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        />
+    <section className="relative min-h-[85vh] md:min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Bold gradient background */}
+      <div className="absolute inset-0 bg-gradient-hero z-0" />
+      
+      {/* Animated glow effect */}
+      <div className="absolute inset-0 z-0 animate-glow-pulse opacity-30">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/40 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary-glow/30 rounded-full blur-3xl" />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-5xl mx-auto text-center space-y-6 md:space-y-10">
-          {/* Refined Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary/10 border border-primary/30 backdrop-blur-sm rounded-full"
-          >
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-primary uppercase tracking-wide">NYC's Fastest Service</span>
-          </motion.div>
+      {/* Content */}
+      <div className="container relative z-10 px-4 py-16 md:py-32 mx-auto">
+        <div className="max-w-4xl mx-auto text-center space-y-6 md:space-y-12">
+          {/* Badge */}
+          <div className="flex justify-center animate-fade-in">
+            <Badge variant="outline" className="px-4 md:px-6 py-2 md:py-3 text-sm md:text-base border-primary/50 bg-primary/10 backdrop-blur-sm">
+              <Leaf className="w-4 md:w-5 h-4 md:h-5 mr-2" />
+              Licensed & Lab Tested
+            </Badge>
+          </div>
 
-          {/* Refined Heading */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <h1 className="heading-massive text-foreground mb-4">
-              PREMIUM
-              <br />
-              <span className="text-primary text-glow-subtle">
-                DELIVERY
-              </span>
-            </h1>
-          </motion.div>
+          {/* Main Heading - BOLD & IMPACTFUL */}
+          <h1 className="heading-massive animate-fade-in drop-shadow-[0_0_35px_rgba(45,212,191,0.4)]">
+            NYC'S BOLDEST{" "}
+            <span className="bg-gradient-vibrant bg-clip-text text-transparent text-glow">
+              Flower Delivery
+            </span>
+          </h1>
 
-          {/* Refined Subheading */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto font-medium"
-          >
-            NYC's most trusted same-day service
-          </motion.p>
+          {/* Subheading - Bold & Clear */}
+          <p className="text-xl sm:text-2xl md:text-4xl text-foreground/90 max-w-3xl mx-auto font-bold animate-fade-in tracking-tight">
+            Premium Cannabis • Same-Day • NYC Wide
+          </p>
 
-          {/* Trust Indicators */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex flex-wrap items-center justify-center gap-6 text-sm md:text-base"
-          >
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              <span className="font-medium">45 Min Delivery</span>
+          {/* Trust Indicators - Simplified for Mobile */}
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 md:gap-8 pt-4 md:pt-8">
+            <div className="flex items-center gap-2 md:gap-3 text-foreground">
+              <div className="w-10 md:w-12 h-10 md:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Clock className="w-5 md:w-6 h-5 md:h-6 text-primary" />
+              </div>
+              <span className="text-sm md:text-base font-semibold">Same-Day Delivery</span>
             </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              <span className="font-medium">Licensed & Tested</span>
+            <div className="flex items-center gap-2 md:gap-3 text-foreground">
+              <div className="w-10 md:w-12 h-10 md:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <ShieldCheck className="w-5 md:w-6 h-5 md:h-6 text-primary" />
+              </div>
+              <span className="text-sm md:text-base font-semibold">Licensed & Lab Tested</span>
             </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              <span className="font-medium">Discreet Service</span>
+            <div className="flex items-center gap-2 md:gap-3 text-foreground">
+              <div className="w-10 md:w-12 h-10 md:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Leaf className="w-5 md:w-6 h-5 md:h-6 text-primary" />
+              </div>
+              <span className="text-sm md:text-base font-semibold">21+ Verification</span>
             </div>
-          </motion.div>
+          </div>
 
-          {/* Refined CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4"
-          >
+          {/* CTA Buttons - Premium & Bold */}
+          <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center pt-6 md:pt-8">
             <Button 
-              size="xl" 
-              variant="default"
-              onClick={scrollToProducts}
-              className="text-lg px-12 py-6 font-bold"
+              variant="hero" 
+              size="lg" 
+              className="text-lg md:text-2xl px-10 md:px-16 py-7 md:py-10 min-h-[60px] font-black uppercase
+                       shadow-glow hover:shadow-neon hover:scale-110 transition-bounce animate-float"
+              onClick={() => {
+                const productsSection = document.getElementById('products');
+                productsSection?.scrollIntoView({ behavior: 'smooth' });
+              }}
             >
               Shop Now
-              <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             <Button 
-              size="xl" 
-              variant="outline"
-              asChild
-              className="text-lg px-12 py-6 font-bold"
+              variant="outline" 
+              size="lg" 
+              className="text-lg md:text-2xl px-10 md:px-16 py-7 md:py-10 min-h-[60px] font-black uppercase
+                       border-2 hover:bg-primary hover:text-primary-foreground hover:scale-110 transition-bounce
+                       hover:shadow-glow"
+              onClick={() => navigate('/track-order')}
             >
-              <Link to="/track-order">
-                Track Order
-              </Link>
+              Track Order
             </Button>
-          </motion.div>
+          </div>
 
-          {/* Legal Notice */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 1 }}
-            className="text-xs text-muted-foreground/60 max-w-2xl mx-auto hidden md:block pt-4"
-          >
-            Licensed NY Retailer • Must be 21+ with valid ID • All products lab-tested
-          </motion.p>
+          {/* Legal Notice - Hidden on Mobile, visible on desktop */}
+          <div className="hidden md:block text-xs text-muted-foreground/70 pt-8 space-y-1 max-w-3xl mx-auto">
+            <p>Licensed NY Cannabinoid Hemp Retailer | All products lab-tested for quality</p>
+            <p>Must be 21+ with valid ID | Professional, discreet delivery</p>
+          </div>
         </div>
       </div>
     </section>
