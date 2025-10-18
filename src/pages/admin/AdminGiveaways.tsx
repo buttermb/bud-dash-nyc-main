@@ -53,7 +53,7 @@ export default function AdminGiveaways() {
     
     return (
       <Badge className={`${variants[status as keyof typeof variants] || variants.draft} border`}>
-        {status.replace('_', ' ').toUpperCase()}
+        {status?.replace('_', ' ').toUpperCase() || 'UNKNOWN'}
       </Badge>
     );
   };

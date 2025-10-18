@@ -27,10 +27,7 @@ export function AnimatedProductCard({ product, onAddToCart, onQuickView }: Anima
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -8, scale: 1.02 }}
       transition={{ duration: 0.3 }}
-      onHoverStart={() => {
-        setIsHovered(true);
-        haptics.light();
-      }}
+      onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
     >
       <Card className={cn(

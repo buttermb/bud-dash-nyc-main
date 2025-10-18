@@ -1,13 +1,30 @@
 /**
  * Haptic feedback utilities for mobile devices
+ * Only triggers after user interaction to prevent browser intervention
  */
+
+let userHasInteracted = false;
+
+// Set up one-time listener for any user interaction
+if (typeof window !== 'undefined') {
+  const markInteraction = () => {
+    userHasInteracted = true;
+    window.removeEventListener('click', markInteraction);
+    window.removeEventListener('touchstart', markInteraction);
+    window.removeEventListener('keydown', markInteraction);
+  };
+  
+  window.addEventListener('click', markInteraction, { once: true, passive: true });
+  window.addEventListener('touchstart', markInteraction, { once: true, passive: true });
+  window.addEventListener('keydown', markInteraction, { once: true, passive: true });
+}
 
 export const haptics = {
   /**
    * Light tap feedback (button press)
    */
   light: () => {
-    if ('vibrate' in navigator) {
+    if (userHasInteracted && 'vibrate' in navigator) {
       navigator.vibrate(10);
     }
   },
@@ -16,7 +33,7 @@ export const haptics = {
    * Medium impact feedback (selection change)
    */
   medium: () => {
-    if ('vibrate' in navigator) {
+    if (userHasInteracted && 'vibrate' in navigator) {
       navigator.vibrate(20);
     }
   },
@@ -25,7 +42,7 @@ export const haptics = {
    * Heavy impact feedback (important action)
    */
   heavy: () => {
-    if ('vibrate' in navigator) {
+    if (userHasInteracted && 'vibrate' in navigator) {
       navigator.vibrate(30);
     }
   },
@@ -34,7 +51,7 @@ export const haptics = {
    * Success feedback (order placed, item added)
    */
   success: () => {
-    if ('vibrate' in navigator) {
+    if (userHasInteracted && 'vibrate' in navigator) {
       navigator.vibrate([10, 50, 10]);
     }
   },
@@ -43,7 +60,7 @@ export const haptics = {
    * Error feedback (failed action)
    */
   error: () => {
-    if ('vibrate' in navigator) {
+    if (userHasInteracted && 'vibrate' in navigator) {
       navigator.vibrate([50, 100, 50]);
     }
   },
@@ -52,7 +69,7 @@ export const haptics = {
    * Selection feedback (toggle, checkbox)
    */
   selection: () => {
-    if ('vibrate' in navigator) {
+    if (userHasInteracted && 'vibrate' in navigator) {
       navigator.vibrate(5);
     }
   },

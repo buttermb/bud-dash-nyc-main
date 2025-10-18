@@ -142,7 +142,7 @@ const AdminCourierApplications = () => {
 
     return (
       <Badge variant={variants[status] || "default"}>
-        {status.replace('_', ' ').toUpperCase()}
+        {status?.replace('_', ' ').toUpperCase() || 'UNKNOWN'}
       </Badge>
     );
   };

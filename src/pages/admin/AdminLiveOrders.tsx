@@ -263,7 +263,7 @@ const AdminLiveOrders = () => {
                         className="flex items-center gap-2"
                       >
                         <CheckCircle className="h-4 w-4" />
-                        Mark as {nextStatus.replace('_', ' ')}
+                        Mark as {nextStatus?.replace('_', ' ') || 'next status'}
                       </Button>
                     </div>
                   )}

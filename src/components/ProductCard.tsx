@@ -53,7 +53,6 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
 
   const handleMouseEnter = () => {
     setIsHovered(true);
-    haptics.light();
   };
 
   const handleMouseLeave = () => {
