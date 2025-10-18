@@ -8,13 +8,14 @@ const Hero = () => {
   
   return (
     <section className="relative min-h-[85vh] md:min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Bold gradient background */}
-      <div className="absolute inset-0 bg-gradient-hero z-0" />
+      {/* Bold gradient background - TBD Pink Style */}
+      <div className="absolute inset-0 bg-gradient-mega z-0" />
       
-      {/* Animated glow effect */}
-      <div className="absolute inset-0 z-0 animate-glow-pulse opacity-30">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/40 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary-glow/30 rounded-full blur-3xl" />
+      {/* Animated glow effect - Hot Pink */}
+      <div className="absolute inset-0 z-0 animate-glow-pulse opacity-40">
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/50 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-primary-glow/40 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary-hot/30 rounded-full blur-[100px]" />
       </div>
 
       {/* Content */}
@@ -29,16 +30,18 @@ const Hero = () => {
           </div>
 
           {/* Main Heading - BOLD & IMPACTFUL */}
-          <h1 className="heading-massive animate-fade-in drop-shadow-[0_0_35px_rgba(45,212,191,0.4)]">
-            NYC'S BOLDEST{" "}
-            <span className="bg-gradient-vibrant bg-clip-text text-transparent text-glow">
-              Flower Delivery
+          <h1 className="heading-massive animate-fade-in drop-shadow-[0_0_50px_rgba(255,20,147,0.6)]">
+            <span className="text-white">NYC'S</span>{" "}
+            <span className="bg-gradient-vibrant bg-clip-text text-transparent drop-shadow-[0_0_60px_rgba(255,20,147,0.8)]">
+              FASTEST
             </span>
+            <br />
+            <span className="text-white">DELIVERY</span>
           </h1>
 
           {/* Subheading - Bold & Clear */}
-          <p className="text-xl sm:text-2xl md:text-4xl text-foreground/90 max-w-3xl mx-auto font-bold animate-fade-in tracking-tight">
-            Premium Cannabis • Same-Day • NYC Wide
+          <p className="text-xl sm:text-2xl md:text-3xl text-foreground/90 max-w-3xl mx-auto font-black animate-fade-in tracking-wide">
+            Premium Quality • Same-Day • NYC Wide
           </p>
 
           {/* Trust Indicators - Simplified for Mobile */}
@@ -66,26 +69,23 @@ const Hero = () => {
           {/* CTA Buttons - Premium & Bold */}
           <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center pt-6 md:pt-8">
             <Button 
-              variant="hero" 
+              variant="premium" 
               size="lg" 
-              className="text-lg md:text-2xl px-10 md:px-16 py-7 md:py-10 min-h-[60px] font-black uppercase
-                       shadow-glow hover:shadow-neon hover:scale-110 transition-bounce animate-float"
+              className="text-lg md:text-2xl px-10 md:px-16 py-7 md:py-10 min-h-[60px]"
               onClick={() => {
                 const productsSection = document.getElementById('products');
                 productsSection?.scrollIntoView({ behavior: 'smooth' });
               }}
             >
-              Shop Now
+              SHOP NOW →
             </Button>
             <Button 
-              variant="outline" 
+              variant="bold" 
               size="lg" 
-              className="text-lg md:text-2xl px-10 md:px-16 py-7 md:py-10 min-h-[60px] font-black uppercase
-                       border-2 hover:bg-primary hover:text-primary-foreground hover:scale-110 transition-bounce
-                       hover:shadow-glow"
+              className="text-lg md:text-2xl px-10 md:px-16 py-7 md:py-10 min-h-[60px]"
               onClick={() => navigate('/track-order')}
             >
-              Track Order
+              TRACK ORDER
             </Button>
           </div>
 
