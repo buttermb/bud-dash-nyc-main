@@ -129,11 +129,11 @@ const Navigation = () => {
         {/* Subtle glow effect */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
         
-        <div className="container flex h-20 items-center px-6 relative z-10">
+        <div className="container flex h-20 items-center justify-between px-6 relative z-10 gap-6">
           {/* Left: Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link to="/" className="flex items-center gap-3 group shrink-0">
             <NYMLogo size={50} />
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-0.5 justify-center">
               <span className="font-black text-xl tracking-wider text-foreground group-hover:text-primary transition-all duration-300">NYM NYC</span>
               <span className="text-[10px] text-primary/80 tracking-[0.15em] uppercase font-black">Premium Delivery</span>
             </div>
@@ -169,7 +169,7 @@ const Navigation = () => {
           </nav>
           
           {/* Right: Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 shrink-0">
             {/* Search Icon */}
             <SearchBar variant="icon" />
             
