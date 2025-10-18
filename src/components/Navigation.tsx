@@ -125,9 +125,9 @@ const Navigation = () => {
       </div>
 
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-card backdrop-blur-lg shadow-md" role="navigation" aria-label="Main navigation">
-        <div className="container h-20 px-6 grid grid-cols-3 items-center">
+        <div className="container flex h-20 items-center px-6">
           {/* Left: Logo */}
-          <Link to="/" className="flex items-center gap-3 group justify-self-start">
+          <Link to="/" className="flex items-center gap-3 group">
             <NYMLogo size={48} />
             <div className="flex flex-col gap-0.5">
               <span className="font-black text-lg tracking-wider text-foreground group-hover:text-primary transition-colors">NYM NYC</span>
@@ -136,7 +136,7 @@ const Navigation = () => {
           </Link>
 
           {/* Center: Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 justify-self-center" aria-label="Primary navigation">
+          <nav className="hidden md:flex items-center justify-center gap-8 flex-1" aria-label="Primary navigation">
             {navLinks.map((link) => (
               link.scroll ? (
                 <a
@@ -163,7 +163,7 @@ const Navigation = () => {
           </nav>
           
           {/* Right: Search & Auth */}
-          <div className="flex items-center gap-4 justify-self-end">
+          <div className="flex items-center gap-4">
             <SearchBar variant="icon" />
             
             {!user ? (
