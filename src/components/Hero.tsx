@@ -1,7 +1,8 @@
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, Clock, Leaf } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { GlowButton } from "@/components/premium/GlowButton";
+import { FloatingBadge } from "@/components/premium/FloatingBadge";
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -70,26 +71,29 @@ const Hero = () => {
             </div>
           </div>
 
+          {/* Floating Badge for promotions */}
+          <FloatingBadge className="fixed top-24 right-4 z-50">
+            🎉 First Order 15% OFF
+          </FloatingBadge>
+
           {/* CTA Buttons - Premium & Elegant */}
           <div className="flex flex-col sm:flex-row gap-4 md:gap-5 justify-center pt-8 md:pt-12">
-            <Button 
-              size="lg" 
-              className="text-base md:text-xl px-10 md:px-14 py-6 md:py-8 min-h-[56px] md:min-h-[64px] bg-primary hover:bg-primary-dark text-white font-bold uppercase tracking-wider shadow-glow transition-all hover:scale-105"
+            <GlowButton
+              className="text-base md:text-xl px-10 md:px-14 py-6 md:py-8 min-h-[56px] md:min-h-[64px] rounded-lg"
               onClick={() => {
                 const productsSection = document.getElementById('products');
                 productsSection?.scrollIntoView({ behavior: 'smooth' });
               }}
             >
               Browse Products
-            </Button>
-            <Button 
-              variant="outline"
-              size="lg" 
-              className="text-base md:text-xl px-10 md:px-14 py-6 md:py-8 min-h-[56px] md:min-h-[64px] border-2 border-white/40 bg-white/10 hover:bg-white/20 text-white font-bold uppercase tracking-wider backdrop-blur-md transition-all hover:scale-105"
+            </GlowButton>
+            <GlowButton
+              className="text-base md:text-xl px-10 md:px-14 py-6 md:py-8 min-h-[56px] md:min-h-[64px] bg-white/10 hover:bg-white/20 backdrop-blur-md border-2 border-white/40 rounded-lg"
+              glowColor="hsl(0 0% 100%)"
               onClick={() => navigate('/track-order')}
             >
               Track Order
-            </Button>
+            </GlowButton>
           </div>
 
           {/* Legal Notice - Subtle & Professional */}

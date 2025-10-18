@@ -124,8 +124,13 @@ const Navigation = () => {
         </div>
       </div>
 
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-card backdrop-blur-lg shadow-md" role="navigation" aria-label="Main navigation">
-        <div className="container flex h-20 items-center px-6">
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-card backdrop-blur-lg shadow-md relative overflow-hidden" role="navigation" aria-label="Main navigation">
+        {/* Subtle animated shine effect */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 -translate-x-full animate-[shimmer_4s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
+        </div>
+        
+        <div className="container flex h-20 items-center px-6 relative z-10">
           {/* Left: Logo */}
           <Link to="/" className="flex items-center gap-3 group">
             <NYMLogo size={48} />

@@ -8,6 +8,9 @@ import { motion } from "framer-motion";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import { SparkleEffect } from "@/components/SparkleEffect";
+import { ParallaxSection } from "@/components/premium/ParallaxSection";
+import { PageTransition } from "@/components/premium/PageTransition";
+import { AnimatedSection } from "@/components/premium/AnimatedSection";
 
 // Lazy load non-critical components for better initial page load
 const ProductCatalog = lazy(() => import("@/components/ProductCatalog"));
@@ -24,7 +27,7 @@ const SocialSection = lazy(() => import("@/components/SocialSection"));
 
 const Index = () => {
   return (
-    <>
+    <PageTransition>
       <SEOHead 
         title="New York Minute NYC - Premium Delivery | Manhattan, Brooklyn, Queens"
         description="Fast, discreet premium delivery across NYC. Lab-tested products from licensed vendors. Same-day delivery to Manhattan, Brooklyn & Queens."
@@ -46,14 +49,12 @@ const Index = () => {
         <Hero />
       </motion.div>
 
-      {/* Benefits/Trust Section with stagger */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-      >
-        <Features />
-      </motion.div>
+      {/* Benefits/Trust Section with parallax */}
+      <ParallaxSection>
+        <AnimatedSection delay={0.2}>
+          <Features />
+        </AnimatedSection>
+      </ParallaxSection>
       
       {/* First-Time Buyer Banner with Animation */}
       <motion.div
@@ -75,59 +76,69 @@ const Index = () => {
       </motion.div>
 
       {/* PRODUCTS */}
-      <motion.section 
-        id="products" 
-        className="bg-background" 
-        aria-label="Product catalog"
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-        <Suspense fallback={<EnhancedLoadingState variant="grid" count={8} />}>
-          <ProductCatalog />
-        </Suspense>
-      </motion.section>
+      <ParallaxSection>
+        <motion.section 
+          id="products" 
+          className="bg-background" 
+          aria-label="Product catalog"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <Suspense fallback={<EnhancedLoadingState variant="grid" count={8} />}>
+            <ProductCatalog />
+          </Suspense>
+        </motion.section>
+      </ParallaxSection>
 
       {/* How It Works */}
-      <motion.section 
-        id="how-it-works" 
-        aria-label="How it works"
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-        <Suspense fallback={<EnhancedLoadingState variant="card" count={3} />}>
-          <HowItWorks />
-        </Suspense>
-      </motion.section>
+      <AnimatedSection delay={0.1}>
+        <motion.section 
+          id="how-it-works" 
+          aria-label="How it works"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <Suspense fallback={<EnhancedLoadingState variant="card" count={3} />}>
+            <HowItWorks />
+          </Suspense>
+        </motion.section>
+      </AnimatedSection>
 
       {/* Testimonials / Social Proof */}
-      <motion.section
-        aria-label="Customer testimonials"
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-        <Suspense fallback={<EnhancedLoadingState variant="card" count={4} />}>
-          <Testimonials />
-        </Suspense>
-      </motion.section>
+      <AnimatedSection delay={0.2}>
+        <motion.section
+          aria-label="Customer testimonials"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <Suspense fallback={<EnhancedLoadingState variant="card" count={4} />}>
+            <Testimonials />
+          </Suspense>
+        </motion.section>
+      </AnimatedSection>
 
       {/* Lifestyle/Packaging Section */}
-      <motion.section
-        aria-label="NYC Lifestyle"
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-        <Suspense fallback={<EnhancedLoadingState variant="card" count={2} />}>
-          <LifestyleSection />
-        </Suspense>
-      </motion.section>
+      <ParallaxSection>
+        <AnimatedSection delay={0.1}>
+          <motion.section
+            aria-label="NYC Lifestyle"
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <Suspense fallback={<EnhancedLoadingState variant="card" count={2} />}>
+              <LifestyleSection />
+            </Suspense>
+          </motion.section>
+        </AnimatedSection>
+      </ParallaxSection>
 
       {/* Loyalty/Referral Program */}
       <motion.section
@@ -183,7 +194,7 @@ const Index = () => {
         <Footer />
       </Suspense>
       </div>
-    </>
+    </PageTransition>
   );
 };
 
