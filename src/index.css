@@ -293,7 +293,7 @@
   }
   
   .premium-card {
-    background: linear-gradient(135deg, hsl(328 100% 54%) 0%, hsl(330 100% 60%) 100%);
+    background: linear-gradient(135deg, hsl(256 100% 62%) 0%, hsl(333 100% 59%) 100%);
     position: relative;
   }
   
@@ -301,7 +301,7 @@
     content: '';
     position: absolute;
     inset: -2px;
-    background: linear-gradient(135deg, hsl(330 100% 60%), hsl(328 100% 54%), hsl(300 100% 50%));
+    background: linear-gradient(135deg, hsl(256 100% 72%), hsl(333 100% 59%), hsl(256 100% 52%));
     border-radius: inherit;
     z-index: -1;
     opacity: 0;
@@ -321,10 +321,10 @@
   .holographic {
     background: linear-gradient(
       45deg,
-      hsl(328 100% 54%),
-      hsl(330 100% 60%),
-      hsl(300 100% 50%),
-      hsl(328 100% 54%)
+      hsl(256 100% 62%),
+      hsl(333 100% 59%),
+      hsl(256 100% 72%),
+      hsl(256 100% 62%)
     );
     background-size: 400% 400%;
     animation: holographic-shift 10s ease infinite;
