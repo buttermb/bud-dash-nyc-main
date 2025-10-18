@@ -20,19 +20,26 @@ export function GlowButton({ children, className, glowColor = 'hsl(173 100% 50%)
       className={cn(
         "relative px-8 py-4 bg-primary text-primary-foreground font-black uppercase overflow-hidden group",
         "shadow-glow hover:shadow-neon transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed",
+        "before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent",
+        "before:-translate-x-full hover:before:translate-x-full before:transition-transform before:duration-700",
         className
       )}
       whileHover={!disabled ? "hover" : undefined}
       whileTap={!disabled ? "tap" : undefined}
+      variants={{
+        hover: { scale: 1.05 },
+        tap: { scale: 0.98 }
+      }}
     >
       {/* Animated background gradient */}
       <motion.div
         className="absolute inset-0 bg-gradient-vibrant"
         variants={{
-          hover: { x: '100%' },
-          tap: { scale: 0.95 }
+          hover: { 
+            rotate: [0, 5, -5, 0],
+            transition: { duration: 0.5 }
+          }
         }}
-        transition={{ duration: 0.5 }}
       />
       
       {/* Glow effect on hover */}
@@ -45,7 +52,8 @@ export function GlowButton({ children, className, glowColor = 'hsl(173 100% 50%)
         transition={{ duration: 0.3 }}
       />
       
-      <span className="relative z-10">{children}</span>
+      {/* Content */}
+      {children}
     </motion.button>
   );
 }
