@@ -69,11 +69,23 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
   // Helper function to check admin role using RPC
   const has_role = async (userId: string, role: string): Promise<boolean> => {
-    const { data, error } = await supabase.rpc('has_role', {
-      _user_id: userId,
-      _role: role as 'admin' | 'courier' | 'user'
-    });
-    return !error && data === true;
+    try {
+      const { data, error } = await supabase.rpc('has_role', {
+        _user_id: userId,
+        _role: role as any // Cast to bypass type checking for database enum
+      });
+      
+      if (error) {
+        console.error("RPC has_role error:", error);
+        return false;
+      }
+      
+      console.log("has_role check result:", { userId, role, data });
+      return data === true;
+    } catch (error) {
+      console.error("has_role exception:", error);
+      return false;
+    }
   };
 
   useEffect(() => {
@@ -104,17 +116,40 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log("Starting admin sign in for:", email);
+      
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error("Auth error:", authError);
+        throw authError;
+      }
       if (!authData.session) throw new Error("No session returned");
+
+      console.log("Auth successful, checking admin role for user:", authData.user.id);
 
       // Check admin role using RPC function
       const isAdmin = await has_role(authData.user.id, 'admin');
-      if (!isAdmin) throw new Error("You don't have admin access");
+      
+      console.log("Admin role check result:", isAdmin);
+      
+      if (!isAdmin) {
+        // Double-check by querying user_roles directly
+        const { data: roleData, error: roleError } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", authData.user.id)
+          .eq("role", "admin");
+        
+        console.log("Direct role check:", { roleData, roleError });
+        
+        if (!roleData || roleData.length === 0) {
+          throw new Error("You don't have admin access");
+        }
+      }
 
       // Get admin details
       const { data: adminData, error: adminError } = await supabase
@@ -123,6 +158,8 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         .eq("user_id", authData.user.id)
         .eq("is_active", true)
         .maybeSingle();
+
+      console.log("Admin user lookup:", { adminData, adminError });
 
       if (adminError) throw adminError;
       if (!adminData) throw new Error("Admin account is not active");
