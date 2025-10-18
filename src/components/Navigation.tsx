@@ -111,38 +111,37 @@ const Navigation = () => {
 
   const navLinks = [
     { label: "Shop", href: "#products", scroll: true },
-    { label: "How-It-Works", href: "#how-it-works", scroll: true },
-    { label: "FAQ", href: "/faq", scroll: false },
+    { label: "Track Order", href: "/track-order", scroll: false },
   ];
 
   return (
     <>
       {/* Premium Banner */}
-      <div className="bg-gradient-primary py-2.5" role="banner" aria-label="Promotional banner">
-        <div className="container mx-auto px-4 text-center text-sm font-semibold text-white tracking-wide">
+      <div className="bg-gradient-primary py-3" role="banner" aria-label="Promotional banner">
+        <div className="container mx-auto px-4 text-center text-base font-semibold text-white tracking-wide">
           <span>Licensed & Lab Tested • Same-Day Delivery • 100% Discreet Packaging</span>
         </div>
       </div>
 
       <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/90 shadow-sm" role="navigation" aria-label="Main navigation">
-        <div className="container flex h-20 items-center justify-between px-6 gap-8">
+        <div className="container flex h-20 items-center justify-between px-6 gap-6">
           <Link to="/" className="flex items-center gap-3 min-w-fit group">
-            <NYMLogo size={42} />
+            <NYMLogo size={50} />
             <div className="flex flex-col gap-0.5">
-              <span className="font-black text-base tracking-wider group-hover:text-primary transition-colors">NYM NYC</span>
-              <span className="text-[10px] text-muted-foreground tracking-widest uppercase">Premium Delivery</span>
+              <span className="font-black text-lg tracking-wider group-hover:text-primary transition-colors">NYM NYC</span>
+              <span className="text-xs text-muted-foreground tracking-widest uppercase">Premium Delivery</span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8 flex-1 justify-center" aria-label="Primary navigation">
+          <nav className="hidden md:flex items-center gap-6 flex-1 justify-center" aria-label="Primary navigation">
             {navLinks.map((link) => (
               link.scroll ? (
                 <a
                   key={link.label}
                   href={link.href}
                   onClick={handleNavClick(link.href, link.scroll)}
-                  className="text-sm font-bold uppercase tracking-wide text-foreground/70 hover:text-primary transition-colors cursor-pointer"
+                  className="text-base font-bold uppercase tracking-wide text-foreground hover:text-primary transition-colors cursor-pointer"
                 >
                   {link.label}
                 </a>
@@ -153,12 +152,24 @@ const Navigation = () => {
                   onClick={() => {
                     setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0);
                   }}
-                  className="text-sm font-bold uppercase tracking-wide text-foreground/70 hover:text-primary transition-colors cursor-pointer"
+                  className="text-base font-bold uppercase tracking-wide text-foreground hover:text-primary transition-colors cursor-pointer"
                 >
                   {link.label}
                 </Link>
               )
             ))}
+            
+            {/* Sign Up / Sign In */}
+            {!user ? (
+              <>
+                <Button variant="outline" size="default" onClick={() => openAuth("signin")} className="text-base font-bold">
+                  Sign In
+                </Button>
+                <Button variant="default" size="default" onClick={() => openAuth("signup")} className="text-base font-bold bg-primary">
+                  Sign Up
+                </Button>
+              </>
+            ) : null}
           </nav>
 
           {/* Actions */}
@@ -251,12 +262,6 @@ const Navigation = () => {
               </div>
             ) : (
               <div className="hidden sm:flex items-center gap-3">
-                <Button variant="outline" size="sm" className="h-10" onClick={() => openAuth("signin")}>
-                  Sign In
-                </Button>
-                <Button variant="hero" size="sm" className="h-10" onClick={() => openAuth("signup")}>
-                  Sign Up
-                </Button>
                 <ThemeToggle />
               </div>
             )}
