@@ -70,33 +70,29 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* CTA Buttons - Premium & Elegant */}
+          {/* CTA Buttons - Premium & Sophisticated */}
           <div className="flex flex-col sm:flex-row gap-4 md:gap-5 justify-center pt-8 md:pt-12">
             <GlowButton
-              className="group relative text-base md:text-xl px-10 md:px-14 py-6 md:py-8 min-h-[56px] md:min-h-[64px] rounded-xl overflow-hidden"
+              className="group text-base md:text-xl px-10 md:px-14 py-7 md:py-8 min-h-[60px] md:min-h-[68px] rounded-xl"
               onClick={() => {
                 const productsSection = document.getElementById('products');
                 productsSection?.scrollIntoView({ behavior: 'smooth' });
               }}
             >
-              <span className="relative z-10 flex items-center gap-3 font-black uppercase tracking-wider">
-                <ShoppingBag className="w-5 h-5 md:w-6 md:h-6 group-hover:rotate-12 transition-transform duration-300" />
-                Browse Products
-                <span className="absolute -right-2 -top-2 flex h-5 w-5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/30 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-5 w-5 bg-white/20"></span>
-                </span>
+              <span className="flex items-center gap-3 font-bold uppercase tracking-wide">
+                <ShoppingBag className="w-5 h-5 md:w-6 md:h-6 transition-transform duration-300 group-hover:scale-110" />
+                Shop Premium Products
               </span>
             </GlowButton>
             
             <GlowButton
-              className="group relative text-base md:text-xl px-10 md:px-14 py-6 md:py-8 min-h-[56px] md:min-h-[64px] bg-white/10 hover:bg-white/20 backdrop-blur-md border-2 border-white/40 rounded-xl"
+              className="group text-base md:text-xl px-10 md:px-14 py-7 md:py-8 min-h-[60px] md:min-h-[68px] bg-white/10 hover:bg-white/20 backdrop-blur-xl border-2 border-white/30 rounded-xl"
               glowColor="hsl(0 0% 100%)"
               onClick={() => navigate('/track-order')}
             >
-              <span className="relative z-10 flex items-center gap-3 font-black uppercase tracking-wider">
-                <MapPin className="w-5 h-5 md:w-6 md:h-6 group-hover:scale-110 transition-transform duration-300" />
-                Track Order
+              <span className="flex items-center gap-3 font-bold uppercase tracking-wide">
+                <MapPin className="w-5 h-5 md:w-6 md:h-6 transition-transform duration-300 group-hover:scale-110" />
+                Track My Order
               </span>
             </GlowButton>
           </div>

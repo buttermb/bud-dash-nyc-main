@@ -18,42 +18,30 @@ export function GlowButton({ children, className, glowColor = 'hsl(173 100% 50%)
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "relative px-8 py-4 bg-primary text-primary-foreground font-black uppercase overflow-hidden group",
-        "shadow-glow hover:shadow-neon transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed",
-        "before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent",
-        "before:-translate-x-full hover:before:translate-x-full before:transition-transform before:duration-700",
+        "relative px-8 py-4 bg-primary text-primary-foreground font-bold overflow-hidden group",
+        "shadow-elegant hover:shadow-glow transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed",
+        "before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent",
+        "before:-translate-x-full hover:before:translate-x-full before:transition-transform before:duration-1000",
         className
       )}
-      whileHover={!disabled ? "hover" : undefined}
-      whileTap={!disabled ? "tap" : undefined}
-      variants={{
-        hover: { scale: 1.05 },
-        tap: { scale: 0.98 }
-      }}
+      whileHover={!disabled ? { scale: 1.03 } : undefined}
+      whileTap={!disabled ? { scale: 0.98 } : undefined}
+      transition={{ duration: 0.2, ease: "easeOut" }}
     >
-      {/* Animated background gradient */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-vibrant"
-        variants={{
-          hover: { 
-            rotate: [0, 5, -5, 0],
-            transition: { duration: 0.5 }
-          }
-        }}
-      />
+      {/* Subtle animated background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-dark opacity-90" />
       
-      {/* Glow effect on hover */}
+      {/* Soft glow on hover */}
       <motion.div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none"
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-500"
         style={{
-          background: `radial-gradient(circle at center, ${glowColor}30, transparent)`,
-          filter: 'blur(20px)'
+          background: `radial-gradient(circle at center, ${glowColor}20, transparent)`,
+          filter: 'blur(30px)'
         }}
-        transition={{ duration: 0.3 }}
       />
       
       {/* Content */}
-      {children}
+      <span className="relative z-10">{children}</span>
     </motion.button>
   );
 }
