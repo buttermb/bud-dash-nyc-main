@@ -23,7 +23,7 @@ const AdminLogin = () => {
   }
 
   // Redirect authenticated admins
-  if (admin && !loading) {
+  if (admin) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
@@ -33,11 +33,10 @@ const AdminLogin = () => {
     
     try {
       await signIn(email, password);
-      // Wait a bit for state to update, then redirect
-      setTimeout(() => {
-        navigate("/admin/dashboard", { replace: true });
-      }, 100);
+      // Don't set loading to false - let the Navigate component handle the redirect
+      // The admin state will be updated and trigger the Navigate
     } catch (error) {
+      // Only set loading to false on error
       setLoading(false);
     }
   };
