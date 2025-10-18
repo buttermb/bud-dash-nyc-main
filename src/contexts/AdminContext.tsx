@@ -14,6 +14,7 @@ interface AdminContextType {
   admin: AdminUser | null;
   session: Session | null;
   loading: boolean;
+  error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -24,10 +25,12 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
   const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const verifyAdmin = async (currentSession: Session) => {
     try {
+      setError(null);
       // Get admin details directly
       const { data: adminData, error: adminError } = await supabase
         .from("admin_users")
@@ -36,7 +39,10 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         .eq("is_active", true)
         .maybeSingle();
 
-      if (adminError) throw adminError;
+      if (adminError) {
+        console.error("Admin lookup error:", adminError);
+        throw adminError;
+      }
 
       if (adminData) {
         setAdmin({
@@ -46,14 +52,17 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
           role: adminData.role
         });
         setSession(currentSession);
+        setError(null);
       } else {
         setAdmin(null);
         setSession(null);
+        setError("Admin account not found or inactive");
       }
-    } catch (error) {
-      console.error("Admin verification failed:", error);
+    } catch (err: any) {
+      console.error("Admin verification failed:", err);
       setAdmin(null);
       setSession(null);
+      setError(err.message || "Admin verification failed");
     } finally {
       setLoading(false);
     }
@@ -61,29 +70,58 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
 
   useEffect(() => {
-    // Check existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        verifyAdmin(session);
-      } else {
-        setLoading(false);
+    let mounted = true;
+    
+    const initAuth = async () => {
+      try {
+        // Check existing session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Session fetch error:", error);
+          if (mounted) {
+            setError(error.message);
+            setLoading(false);
+          }
+          return;
+        }
+
+        if (session && mounted) {
+          await verifyAdmin(session);
+        } else if (mounted) {
+          setLoading(false);
+        }
+      } catch (err: any) {
+        console.error("Auth initialization error:", err);
+        if (mounted) {
+          setError(err.message || "Failed to initialize auth");
+          setLoading(false);
+        }
       }
-    });
+    };
+
+    initAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        if (!mounted) return;
+        
         if (session) {
           verifyAdmin(session);
         } else {
           setAdmin(null);
           setSession(null);
+          setError(null);
           setLoading(false);
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -162,7 +200,7 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AdminContext.Provider value={{ admin, session, loading, signIn, signOut }}>
+    <AdminContext.Provider value={{ admin, session, loading, error, signIn, signOut }}>
       {children}
     </AdminContext.Provider>
   );
