@@ -1,109 +1,138 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Leaf, Shield, Truck, Users } from "lucide-react";
+import { SEOHead } from "@/components/SEOHead";
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
+    <>
+      <SEOHead
+        title="About NYM NYC - Premium Delivery Service | All Five Boroughs"
+        description="Learn about New York's premier delivery service. Licensed, lab-tested, and serving Manhattan, Brooklyn, Queens, Bronx & Staten Island. Fast, discreet, premium quality."
+      />
+      <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Navigation />
-      <main className="container mx-auto px-4 py-16">
+      <main className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-6">About New York Minute NYC</h1>
-          
-          <p className="text-lg text-muted-foreground mb-12">
-            New York Minute NYC is New York's trusted premium flower delivery service. We partner with licensed NYC cultivators
-            to bring you the finest selection of flower, pre-rolls, and edibles—delivered fast and discreetly to 
-            Manhattan, Brooklyn, and Queens.
-          </p>
+          {/* Header */}
+          <div className="text-center mb-16">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight mb-6">
+              About NYM NYC
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+              New York's premium delivery service. Fast, discreet, and licensed.
+              <br className="hidden md:block" />
+              Serving all five boroughs with elevated experiences.
+            </p>
+          </div>
 
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
+          <div className="grid md:grid-cols-2 gap-8 mb-16">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Leaf className="w-6 h-6 text-primary" />
+                <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center">
+                  <Leaf className="w-7 h-7 text-white" />
                 </div>
-              <h2 className="text-xl font-semibold">Premium Quality</h2>
+              <h2 className="text-2xl font-bold uppercase tracking-wide">Premium Quality</h2>
               </div>
-              <p className="text-muted-foreground">
-                We work exclusively with licensed NYC cultivators who grow premium indoor flower. Every product 
-                is third-party lab tested for potency, purity, and contaminants before it reaches you.
+              <p className="text-muted-foreground leading-relaxed">
+                Exclusively licensed NYC vendors. Every product is third-party lab tested for 
+                potency, purity, and safety. Only the finest selections make it to your door.
               </p>
             </div>
 
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-primary" />
+                <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center">
+                  <Shield className="w-7 h-7 text-white" />
                 </div>
-              <h2 className="text-xl font-semibold">Licensed & Compliant</h2>
+              <h2 className="text-2xl font-bold uppercase tracking-wide">Licensed & Compliant</h2>
               </div>
-              <p className="text-muted-foreground">
-                Licensed Cannabinoid Hemp Retailer by the NY Office of Cannabis Management. All products are 
-                derived from hemp and comply with federal and state regulations.
+              <p className="text-muted-foreground leading-relaxed">
+                Licensed Cannabinoid Hemp Retailer by the NY Office of Cannabis Management. 
+                All products comply with federal and New York State regulations.
               </p>
             </div>
 
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Truck className="w-6 h-6 text-primary" />
+                <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center">
+                  <Truck className="w-7 h-7 text-white" />
                 </div>
-              <h2 className="text-xl font-semibold">Fast Delivery</h2>
+              <h2 className="text-2xl font-bold uppercase tracking-wide">Lightning Delivery</h2>
               </div>
-              <p className="text-muted-foreground">
-                Same-day delivery across NYC, typically within 30-45 minutes. Professional drivers, discreet 
-                packaging, and real-time order tracking.
+              <p className="text-muted-foreground leading-relaxed">
+                Under 60 minutes across all five boroughs. Professional drivers, 100% discreet 
+                packaging, and real-time tracking. NYC speed meets premium service.
               </p>
             </div>
 
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-primary" />
+                <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center">
+                  <Users className="w-7 h-7 text-white" />
                 </div>
-              <h2 className="text-xl font-semibold">Curated Selection</h2>
+              <h2 className="text-2xl font-bold uppercase tracking-wide">Curated Selection</h2>
               </div>
-              <p className="text-muted-foreground">
-                We carefully select strains and products from cultivators who prioritize quality. Hand-trimmed flower,
-                properly cured, and consistently potent.
+              <p className="text-muted-foreground leading-relaxed">
+                Hand-picked from licensed cultivators who prioritize quality. Indoor-grown, 
+                properly cured, and consistently premium. No compromises.
               </p>
             </div>
           </div>
 
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
-            <p className="text-muted-foreground">
-              We started New York Minute with a simple mission: make premium products accessible to New Yorkers who want 
-              quality, consistency, and convenience. No hassle, no compromise—just great flower delivered fast.
+          <section className="mb-16 p-8 md:p-10 bg-gradient-primary/5 rounded-2xl border border-primary/20">
+            <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight mb-4">Our Mission</h2>
+            <p className="text-muted-foreground text-lg leading-relaxed">
+              Built by New Yorkers, for New Yorkers. We're making premium products accessible 
+              to everyone who values quality, consistency, and convenience. From the Upper West Side 
+              to Red Hook, Astoria to Park Slope—we're here for the city that never sleeps.
             </p>
           </section>
 
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-4">Our Standards</h2>
-            <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-              <li>Work only with licensed, compliant vendors</li>
-              <li>Third-party lab test every batch</li>
-              <li>Premium indoor-grown products only</li>
-              <li>Proper curing and quality control</li>
-              <li>Professional, discreet delivery</li>
-              <li>21+ age verification on every order</li>
-              <li>Transparent pricing—no hidden fees</li>
-              <li>Dedicated customer support</li>
-            </ul>
-          </section>
-
-          <section className="bg-muted/30 p-8 rounded-lg">
-            <h2 className="text-2xl font-semibold mb-4">Questions?</h2>
-            <p className="text-muted-foreground mb-4">
-              Our team is here to help.
-            </p>
-            <div className="space-y-2 text-muted-foreground">
-              <p>Email: support@newyorkminutenyc.com</p>
-              <p>Phone: (212) 555-DASH</p>
-              <p>Hours: 8 AM - 10 PM, 7 Days a Week</p>
+          <section className="mb-16">
+            <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight mb-6">Our Standards</h2>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[
+                "Licensed & compliant vendors only",
+                "Third-party lab testing on every batch",
+                "Premium indoor-grown products",
+                "Professional quality control",
+                "100% discreet delivery",
+                "21+ age verification enforced",
+                "Transparent pricing, no hidden fees",
+                "Dedicated NYC customer support"
+              ].map((standard, index) => (
+                <div key={index} className="flex items-start gap-3 p-4 rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-xs text-primary font-bold">✓</span>
+                  </div>
+                  <span className="text-sm font-medium">{standard}</span>
+                </div>
+              ))}
             </div>
-            <div className="mt-4 pt-4 border-t text-xs text-muted-foreground">
-              <p className="font-semibold">Licensed Cannabinoid Hemp Retailer</p>
+          </section>
+
+          <section className="bg-card border-2 border-primary/20 p-8 md:p-10 rounded-2xl">
+            <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight mb-4">Questions?</h2>
+            <p className="text-muted-foreground mb-6 text-lg">
+              Our NYC-based team is here to help.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-6 mb-6">
+              <div className="space-y-2">
+                <p className="font-bold text-sm uppercase tracking-wide text-primary">Email</p>
+                <p className="text-foreground">support@newyorkminutenyc.com</p>
+              </div>
+              <div className="space-y-2">
+                <p className="font-bold text-sm uppercase tracking-wide text-primary">Phone</p>
+                <p className="text-foreground">(212) 555-DASH</p>
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <p className="font-bold text-sm uppercase tracking-wide text-primary">Hours</p>
+                <p className="text-foreground">8 AM - 10 PM, Every Day</p>
+              </div>
+            </div>
+            <div className="pt-6 border-t border-border/50 text-sm text-muted-foreground">
+              <p className="font-bold text-foreground mb-1">Licensed Cannabinoid Hemp Retailer</p>
               <p>NY Office of Cannabis Management License #[Pending]</p>
             </div>
           </section>
@@ -111,6 +140,7 @@ const About = () => {
       </main>
       <Footer />
     </div>
+    </>
   );
 };
 
