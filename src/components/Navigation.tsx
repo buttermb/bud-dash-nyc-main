@@ -123,13 +123,13 @@ const Navigation = () => {
         </div>
       </div>
 
-      <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/90 shadow-sm" role="navigation" aria-label="Main navigation">
+      <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white shadow-sm" role="navigation" aria-label="Main navigation" style={{ backgroundColor: '#ffffff' }}>
         <div className="container flex h-20 items-center justify-between px-6 gap-6">
           <Link to="/" className="flex items-center gap-3 min-w-fit group">
             <NYMLogo size={50} />
             <div className="flex flex-col gap-0.5">
-              <span className="font-black text-lg tracking-wider group-hover:text-primary transition-colors">NYM NYC</span>
-              <span className="text-xs text-muted-foreground tracking-widest uppercase">Premium Delivery</span>
+              <span className="font-black text-lg tracking-wider text-gray-900 group-hover:text-primary transition-colors">NYM NYC</span>
+              <span className="text-xs text-gray-600 tracking-widest uppercase">Premium Delivery</span>
             </div>
           </Link>
 
@@ -141,7 +141,7 @@ const Navigation = () => {
                   key={link.label}
                   href={link.href}
                   onClick={handleNavClick(link.href, link.scroll)}
-                  className="text-base font-bold uppercase tracking-wide text-foreground hover:text-primary transition-colors cursor-pointer"
+                  className="text-base font-bold uppercase tracking-wide text-gray-900 hover:text-primary transition-colors cursor-pointer"
                 >
                   {link.label}
                 </a>
@@ -152,7 +152,7 @@ const Navigation = () => {
                   onClick={() => {
                     setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0);
                   }}
-                  className="text-base font-bold uppercase tracking-wide text-foreground hover:text-primary transition-colors cursor-pointer"
+                  className="text-base font-bold uppercase tracking-wide text-gray-900 hover:text-primary transition-colors cursor-pointer"
                 >
                   {link.label}
                 </Link>
@@ -162,10 +162,10 @@ const Navigation = () => {
             {/* Sign Up / Sign In */}
             {!user ? (
               <>
-                <Button variant="outline" size="default" onClick={() => openAuth("signin")} className="text-base font-bold">
+                <Button variant="outline" size="default" onClick={() => openAuth("signin")} className="text-base font-bold border-2 border-gray-300 text-gray-900 hover:bg-gray-50">
                   Sign In
                 </Button>
-                <Button variant="default" size="default" onClick={() => openAuth("signup")} className="text-base font-bold bg-primary">
+                <Button variant="default" size="default" onClick={() => openAuth("signup")} className="text-base font-bold bg-primary hover:bg-primary-dark text-white">
                   Sign Up
                 </Button>
               </>
