@@ -298,7 +298,7 @@ export default function UserAccount() {
                 View All Orders
               </Button>
               {!profile.id_verified && (
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/verify-id")}>
                   <Shield className="w-4 h-4 mr-2" />
                   Verify Identity
                 </Button>

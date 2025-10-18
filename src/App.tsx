@@ -86,6 +86,7 @@ const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminUserDetails = lazy(() => import("./pages/admin/AdminUserDetails"));
 const RiskFactorManagement = lazy(() => import("./pages/admin/RiskFactorManagement"));
 const UserAccount = lazy(() => import("./pages/UserAccount"));
+const VerifyID = lazy(() => import("./pages/VerifyID"));
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AdminAuditLogs = lazy(() => import("./pages/admin/AdminAuditLogs"));
 const AdminAgeVerification = lazy(() => import("./pages/admin/AdminAgeVerification"));
@@ -209,6 +210,7 @@ const App = () => (
                       <Route path="/order-tracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
                       <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
                       <Route path="/account" element={<ProtectedRoute><UserAccount /></ProtectedRoute>} />
+                      <Route path="/verify-id" element={<ProtectedRoute><VerifyID /></ProtectedRoute>} />
                       <Route path="/settings/notifications" element={
                         <ProtectedRoute><NotificationPreferences /></ProtectedRoute>
                       } />
