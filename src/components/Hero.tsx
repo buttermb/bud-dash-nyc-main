@@ -40,28 +40,36 @@ const Hero = () => {
 
           {/* Subheading - Elegant & Clear */}
           <p className="text-lg sm:text-xl md:text-2xl text-white/80 max-w-2xl mx-auto font-medium animate-fade-in leading-relaxed">
-            Your elevated experience, delivered in under an hour.
+            Your elevated experience, delivered across all five boroughs in under an hour.
           </p>
 
-          {/* Trust Indicators - Clean & Professional */}
           <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-5 md:gap-10 pt-6 md:pt-10">
             <div className="flex items-center gap-3 text-white/90">
               <div className="w-11 md:w-14 h-11 md:h-14 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
                 <Clock className="w-5 md:w-7 h-5 md:h-7 text-accent" />
               </div>
-              <span className="text-sm md:text-base font-semibold tracking-wide">Under 60 Mins</span>
+              <div className="text-left">
+                <span className="text-sm md:text-base font-bold tracking-wide block">Under 60 Mins</span>
+                <span className="text-xs text-white/60">All NYC Boroughs</span>
+              </div>
             </div>
             <div className="flex items-center gap-3 text-white/90">
               <div className="w-11 md:w-14 h-11 md:h-14 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
                 <ShieldCheck className="w-5 md:w-7 h-5 md:h-7 text-primary" />
               </div>
-              <span className="text-sm md:text-base font-semibold tracking-wide">100% Discreet</span>
+              <div className="text-left">
+                <span className="text-sm md:text-base font-bold tracking-wide block">100% Discreet</span>
+                <span className="text-xs text-white/60">Premium Packaging</span>
+              </div>
             </div>
             <div className="flex items-center gap-3 text-white/90">
               <div className="w-11 md:w-14 h-11 md:h-14 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
                 <Leaf className="w-5 md:w-7 h-5 md:h-7 text-primary-glow" />
               </div>
-              <span className="text-sm md:text-base font-semibold tracking-wide">Lab Tested</span>
+              <div className="text-left">
+                <span className="text-sm md:text-base font-bold tracking-wide block">Lab Tested</span>
+                <span className="text-xs text-white/60">Quality Guaranteed</span>
+              </div>
             </div>
           </div>
 
@@ -90,7 +98,7 @@ const Hero = () => {
           {/* Legal Notice - Subtle & Professional */}
           <div className="hidden md:block text-xs text-white/50 pt-10 space-y-1 max-w-3xl mx-auto font-light">
             <p>Licensed NY Cannabinoid Hemp Retailer | All products third-party lab tested</p>
-            <p>Must be 21+ with valid government ID | Professional, discreet packaging</p>
+            <p>Must be 21+ with valid government ID | Serving Manhattan, Brooklyn, Queens, Bronx & Staten Island</p>
           </div>
         </div>
       </div>

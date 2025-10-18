@@ -98,12 +98,12 @@ const ProductCatalog = () => {
   };
 
   return (
-    <section id="products" className="py-16 md:py-32 bg-gradient-subtle overflow-hidden">
+    <section id="products" className="py-16 md:py-24 bg-background">
       <div className="container px-4 mx-auto max-w-full">
-        <div className="text-center space-y-4 md:space-y-6 mb-12 md:mb-20">
-          <h2 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-wider">Shop Premium Flower</h2>
-          <p className="text-lg md:text-2xl text-muted-foreground max-w-3xl mx-auto font-medium">
-            Premium indoor-grown flower from licensed NYC cultivators
+        <div className="text-center space-y-4 md:space-y-6 mb-12 md:mb-16">
+          <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tight">Shop Premium Products</h2>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+            Curated selection from licensed NYC vendors
           </p>
         </div>
 
@@ -152,11 +152,11 @@ const ProductCatalog = () => {
                   {/* Category Header */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Icon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+                      <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center">
+                        <Icon className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-2xl md:text-3xl font-bold">{category.label}</h3>
+                        <h3 className="text-2xl md:text-3xl font-bold uppercase tracking-wide">{category.label}</h3>
                         <p className="text-sm text-muted-foreground">{category.desc}</p>
                       </div>
                     </div>

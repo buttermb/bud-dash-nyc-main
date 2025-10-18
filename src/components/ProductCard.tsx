@@ -161,10 +161,10 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
   return (
     <>
       <Card 
-        className="group overflow-hidden hover:ring-2 hover:ring-primary/50 hover:shadow-glow 
-                   transition-all duration-500 cursor-pointer relative bg-card 
-                   hover:-translate-y-3 hover:brightness-105 animate-scale-in
-                   border-2 border-primary/10 hover:border-primary/30"
+        className="group overflow-hidden hover:ring-2 hover:ring-primary/40 hover:shadow-elegant 
+                   transition-all duration-300 cursor-pointer relative bg-card/95 backdrop-blur-sm
+                   hover:-translate-y-2 animate-scale-in
+                   border border-border/50 hover:border-primary/30"
         onClick={handleCardClick}
       >
         {/* Out of Stock Overlay */}
@@ -287,12 +287,11 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
               handleAddToCart();
             }}
             disabled={loading || !product.in_stock || added}
-            className={`w-full h-14 text-base font-black uppercase relative overflow-hidden
-                       transition-bounce hover:shadow-glow ${
-              added ? 'animate-pulse bg-green-600 hover:bg-green-600' : ''
+            className={`w-full h-14 text-base font-bold uppercase relative overflow-hidden
+                       transition-all hover:shadow-accent hover:scale-105 ${
+              added ? 'animate-pulse bg-green-600 hover:bg-green-600' : 'bg-accent hover:bg-accent-dark'
             }`}
             size="lg"
-            variant={added ? "secondary" : "hero"}
           >
             {loading ? (
               <>
@@ -315,8 +314,8 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
           <Button
             type="button"
             variant="outline"
-            className="w-full hover:bg-primary/10 hover:border-primary font-bold
-                       transition-smooth hover:scale-105"
+            className="w-full hover:bg-primary/10 hover:border-primary font-semibold uppercase text-sm
+                       transition-all hover:scale-105"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
