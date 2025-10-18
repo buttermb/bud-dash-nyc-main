@@ -129,28 +129,28 @@ const Navigation = () => {
         {/* Subtle glow effect */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
         
-        <div className="container flex h-24 items-center justify-between px-6 py-4 relative z-10 gap-6">
+        <div className="container mx-auto flex h-24 items-center justify-between px-6 relative z-10 gap-6">
           {/* Left: Logo */}
           <Link to="/" className="flex items-center gap-3 group shrink-0">
-            <NYMLogo size={50} />
+            <NYMLogo size={48} />
             <div className="flex flex-col gap-0.5 justify-center">
-              <span className="font-black text-xl tracking-wider text-foreground group-hover:text-primary transition-all duration-300">NYM NYC</span>
-              <span className="text-[10px] text-primary/80 tracking-[0.15em] uppercase font-black">Premium Delivery</span>
+              <span className="font-black text-xl tracking-wider text-foreground group-hover:text-primary transition-all duration-300 leading-none">NYM NYC</span>
+              <span className="text-[10px] text-primary/80 tracking-[0.15em] uppercase font-black leading-none">Premium Delivery</span>
             </div>
           </Link>
 
           {/* Center: Navigation Links */}
-          <nav className="hidden md:flex items-center justify-center gap-10 flex-1" aria-label="Primary navigation">
+          <nav className="hidden md:flex items-center justify-center gap-10 flex-1 h-full" aria-label="Primary navigation">
             {navLinks.map((link) => (
               link.scroll ? (
                 <a
                   key={link.label}
                   href={link.href}
                   onClick={handleNavClick(link.href, link.scroll)}
-                  className="relative text-sm font-black uppercase tracking-widest text-foreground/90 hover:text-primary transition-all duration-300 cursor-pointer whitespace-nowrap group"
+                  className="relative flex items-center h-full text-sm font-black uppercase tracking-widest text-foreground/90 hover:text-primary transition-all duration-300 cursor-pointer whitespace-nowrap group"
                 >
                   {link.label}
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-primary group-hover:w-full transition-all duration-300" />
+                  <span className="absolute bottom-6 left-0 w-0 h-0.5 bg-gradient-primary group-hover:w-full transition-all duration-300" />
                 </a>
               ) : (
                 <Link
@@ -159,10 +159,10 @@ const Navigation = () => {
                   onClick={() => {
                     setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0);
                   }}
-                  className="relative text-sm font-black uppercase tracking-widest text-foreground/90 hover:text-primary transition-all duration-300 cursor-pointer whitespace-nowrap group"
+                  className="relative flex items-center h-full text-sm font-black uppercase tracking-widest text-foreground/90 hover:text-primary transition-all duration-300 cursor-pointer whitespace-nowrap group"
                 >
                   {link.label}
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-primary group-hover:w-full transition-all duration-300" />
+                  <span className="absolute bottom-6 left-0 w-0 h-0.5 bg-gradient-primary group-hover:w-full transition-all duration-300" />
                 </Link>
               )
             ))}
