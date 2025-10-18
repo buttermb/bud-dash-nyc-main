@@ -168,17 +168,19 @@ const Navigation = () => {
             ))}
           </nav>
           
-          {/* Right: Search & Auth */}
+          {/* Right: Actions */}
           <div className="flex items-center gap-4">
+            {/* Search Icon */}
             <SearchBar variant="icon" />
             
+            {/* Auth Buttons or User Menu */}
             {!user ? (
               <div className="hidden md:flex items-center gap-3">
                 <Button 
                   variant="ghost" 
                   size="default" 
                   onClick={() => openAuth("signin")} 
-                  className="text-xs font-black uppercase tracking-widest hover:text-primary transition-all duration-300"
+                  className="h-12 text-xs font-black uppercase tracking-widest hover:text-primary transition-all duration-300"
                 >
                   Sign In
                 </Button>
@@ -186,72 +188,17 @@ const Navigation = () => {
                   variant="default" 
                   size="default" 
                   onClick={() => openAuth("signup")} 
-                  className="text-xs font-black uppercase tracking-widest px-6 bg-gradient-primary border-2 border-primary/30 text-white shadow-glow hover:shadow-elegant hover:scale-105 transition-all duration-300"
+                  className="h-12 text-xs font-black uppercase tracking-widest px-8 bg-gradient-primary border-2 border-primary/30 text-white shadow-glow hover:shadow-elegant hover:scale-105 transition-all duration-300"
                 >
                   Sign Up
                 </Button>
               </div>
-            ) : null}
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-3 min-w-fit">
-            {/* Search Icon */}
-            <SearchBar variant="icon" />
-            
-            {/* Sticky Cart Preview */}
-            <Button
-              variant="outline"
-              className="relative gap-3 hidden sm:flex h-12 px-5 border-2 border-primary/20 hover:border-primary/40 hover:shadow-glow transition-all duration-300 hover:scale-105"
-              onClick={() => {
-                haptics.light();
-                setShowCart(true);
-              }}
-              aria-label={`Shopping cart with ${cartCount} items and total $${cartTotal.toFixed(2)}`}
-            >
-              <ShoppingCart className="w-5 h-5 text-primary" />
-              <div className="flex flex-col items-start gap-0.5">
-                <span className="text-xs font-black leading-none">
-                  {cartCount} {cartCount === 1 ? 'item' : 'items'}
-                </span>
-                {cartTotal > 0 && (
-                  <span className="text-[10px] text-primary/80 font-bold leading-none">
-                    ${cartTotal.toFixed(2)}
-                  </span>
-                )}
-              </div>
-              {cartCount > 0 && (
-                <Badge variant="default" className="absolute -top-2 -right-2 h-6 w-6 flex items-center justify-center p-0 text-xs font-black bg-gradient-primary border-2 border-card shadow-glow">
-                  {cartCount}
-                </Badge>
-              )}
-            </Button>
-
-            {/* Mobile Cart Icon */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative sm:hidden h-12 w-12 touch-manipulation active:scale-95 transition-transform"
-              onClick={() => {
-                haptics.light();
-                setShowCart(true);
-              }}
-              aria-label={`Shopping cart with ${cartCount} items`}
-            >
-              <ShoppingCart className="w-6 h-6" />
-              {cartCount > 0 && (
-                <Badge variant="default" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
-                  {cartCount}
-                </Badge>
-              )}
-            </Button>
-
-            {user ? (
+            ) : (
               <div className="hidden sm:flex items-center gap-3">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-10 w-10" aria-label="User account menu">
-                      <User className="w-5 h-5" />
+                    <Button variant="outline" size="icon" className="h-12 w-12 border-2 border-primary/20 hover:border-primary/40 hover:shadow-glow transition-all duration-300" aria-label="User account menu">
+                      <User className="w-5 h-5 text-primary" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
@@ -282,8 +229,58 @@ const Navigation = () => {
                 </DropdownMenu>
                 <ThemeToggle />
               </div>
-            ) : (
-              <div className="hidden sm:flex items-center gap-3">
+            )}
+            
+            {/* Cart Preview */}
+            <Button
+              variant="outline"
+              className="relative gap-3 hidden sm:flex h-12 px-5 border-2 border-primary/20 hover:border-primary/40 hover:shadow-glow transition-all duration-300 hover:scale-105"
+              onClick={() => {
+                haptics.light();
+                setShowCart(true);
+              }}
+              aria-label={`Shopping cart with ${cartCount} items and total $${cartTotal.toFixed(2)}`}
+            >
+              <ShoppingCart className="w-5 h-5 text-primary" />
+              <div className="flex flex-col items-start gap-0.5">
+                <span className="text-xs font-black leading-none">
+                  {cartCount} {cartCount === 1 ? 'item' : 'items'}
+                </span>
+                {cartTotal > 0 && (
+                  <span className="text-[10px] text-primary/80 font-bold leading-none">
+                    ${cartTotal.toFixed(2)}
+                  </span>
+                )}
+              </div>
+              {cartCount > 0 && (
+                <Badge variant="default" className="absolute -top-2 -right-2 h-6 w-6 flex items-center justify-center p-0 text-xs font-black bg-gradient-primary border-2 border-card shadow-glow">
+                  {cartCount}
+                </Badge>
+              )}
+            </Button>
+
+            {/* Mobile Cart Icon */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="relative sm:hidden h-12 w-12 border-2 border-primary/20 hover:border-primary/40 hover:shadow-glow transition-all duration-300 touch-manipulation active:scale-95"
+              onClick={() => {
+                haptics.light();
+                setShowCart(true);
+              }}
+              aria-label={`Shopping cart with ${cartCount} items`}
+            >
+              <ShoppingCart className="w-6 h-6 text-primary" />
+              {cartCount > 0 && (
+                <Badge variant="default" className="absolute -top-2 -right-2 h-6 w-6 flex items-center justify-center p-0 text-xs font-black bg-gradient-primary border-2 border-card shadow-glow">
+                  {cartCount}
+                </Badge>
+              )}
+            </Button>
+
+            {/* Theme Toggle */}
+            {!user && (
+              <div className="hidden sm:flex">
                 <ThemeToggle />
               </div>
             )}
