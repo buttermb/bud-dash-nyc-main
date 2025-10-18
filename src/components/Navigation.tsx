@@ -125,7 +125,8 @@ const Navigation = () => {
       </div>
 
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-card/95 backdrop-blur-lg shadow-md" role="navigation" aria-label="Main navigation">
-        <div className="container flex h-20 items-center justify-between px-6 gap-4">
+        <div className="container flex h-20 items-center px-6 gap-6">
+          {/* Left: Logo */}
           <Link to="/" className="flex items-center gap-3 min-w-fit group">
             <NYMLogo size={48} />
             <div className="flex flex-col gap-0.5">
@@ -134,15 +135,15 @@ const Navigation = () => {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8 flex-1 justify-center" aria-label="Primary navigation">
+          {/* Center: Navigation Links */}
+          <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2" aria-label="Primary navigation">
             {navLinks.map((link) => (
               link.scroll ? (
                 <a
                   key={link.label}
                   href={link.href}
                   onClick={handleNavClick(link.href, link.scroll)}
-                  className="text-base font-bold uppercase tracking-wide text-foreground hover:text-primary transition-colors cursor-pointer"
+                  className="text-base font-bold uppercase tracking-wide text-foreground hover:text-primary transition-colors cursor-pointer whitespace-nowrap"
                 >
                   {link.label}
                 </a>
@@ -153,7 +154,7 @@ const Navigation = () => {
                   onClick={() => {
                     setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0);
                   }}
-                  className="text-base font-bold uppercase tracking-wide text-foreground hover:text-primary transition-colors cursor-pointer"
+                  className="text-base font-bold uppercase tracking-wide text-foreground hover:text-primary transition-colors cursor-pointer whitespace-nowrap"
                 >
                   {link.label}
                 </Link>
@@ -161,30 +162,31 @@ const Navigation = () => {
             ))}
           </nav>
           
-          {/* Search Icon */}
-          <SearchBar variant="icon" />
-          
-          {/* Sign Up / Sign In */}
-          {!user ? (
-            <div className="hidden md:flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                size="default" 
-                onClick={() => openAuth("signin")} 
-                className="text-sm font-bold uppercase tracking-wide hover:text-primary"
-              >
-                Sign In
-              </Button>
-              <Button 
-                variant="default" 
-                size="default" 
-                onClick={() => openAuth("signup")} 
-                className="text-sm font-bold uppercase tracking-wide px-6 bg-primary hover:bg-primary-dark text-white shadow-glow hover:shadow-elegant transition-all"
-              >
-                Sign Up
-              </Button>
-            </div>
-          ) : null}
+          {/* Right: Search & Auth */}
+          <div className="flex items-center gap-4 ml-auto">
+            <SearchBar variant="icon" />
+            
+            {!user ? (
+              <div className="hidden md:flex items-center gap-3">
+                <Button 
+                  variant="ghost" 
+                  size="default" 
+                  onClick={() => openAuth("signin")} 
+                  className="text-sm font-bold uppercase tracking-wide hover:text-primary"
+                >
+                  Sign In
+                </Button>
+                <Button 
+                  variant="default" 
+                  size="default" 
+                  onClick={() => openAuth("signup")} 
+                  className="text-sm font-bold uppercase tracking-wide px-6 bg-primary hover:bg-primary-dark text-white shadow-glow hover:shadow-elegant transition-all"
+                >
+                  Sign Up
+                </Button>
+              </div>
+            ) : null}
+          </div>
 
           {/* Actions */}
           <div className="flex items-center gap-3 min-w-fit">
