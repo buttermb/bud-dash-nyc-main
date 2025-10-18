@@ -124,8 +124,8 @@ const Navigation = () => {
         </div>
       </div>
 
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-card/95 backdrop-blur-lg shadow-md" role="navigation" aria-label="Main navigation">
-        <div className="container flex h-20 items-center px-6 gap-6">
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-card backdrop-blur-lg shadow-md" role="navigation" aria-label="Main navigation">
+        <div className="container flex h-20 items-center justify-between px-6">
           {/* Left: Logo */}
           <Link to="/" className="flex items-center gap-3 min-w-fit group">
             <NYMLogo size={48} />
@@ -136,7 +136,7 @@ const Navigation = () => {
           </Link>
 
           {/* Center: Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2" aria-label="Primary navigation">
+          <nav className="hidden md:flex items-center gap-8" aria-label="Primary navigation">
             {navLinks.map((link) => (
               link.scroll ? (
                 <a
@@ -163,7 +163,7 @@ const Navigation = () => {
           </nav>
           
           {/* Right: Search & Auth */}
-          <div className="flex items-center gap-4 ml-auto">
+          <div className="flex items-center gap-4">
             <SearchBar variant="icon" />
             
             {!user ? (
