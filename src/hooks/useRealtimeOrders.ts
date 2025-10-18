@@ -27,9 +27,25 @@ export const useRealtimeOrders = (options: UseRealtimeOrdersOptions = {}) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
+  const [isReady, setIsReady] = useState(false);
   const { statusFilter } = options;
 
+  // Check auth status before subscribing
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setIsReady(true);
+      } else {
+        setLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
   const fetchOrders = useCallback(async () => {
+    if (!isReady) return;
+    
     try {
       let query = supabase
         .from('orders')
@@ -61,12 +77,14 @@ export const useRealtimeOrders = (options: UseRealtimeOrdersOptions = {}) => {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter?.join(',')]);
+  }, [statusFilter?.join(','), isReady]);
 
   useEffect(() => {
+    if (!isReady) return;
+
     fetchOrders();
 
-    // Set up realtime subscription
+    // Set up realtime subscription only after auth is ready
     const newChannel = supabase
       .channel('orders-realtime')
       .on(
@@ -88,7 +106,11 @@ export const useRealtimeOrders = (options: UseRealtimeOrdersOptions = {}) => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.error('Realtime subscription error for orders');
+        }
+      });
 
     setChannel(newChannel);
 
@@ -97,7 +119,7 @@ export const useRealtimeOrders = (options: UseRealtimeOrdersOptions = {}) => {
         supabase.removeChannel(newChannel);
       }
     };
-  }, [statusFilter?.join(',')]); // Only re-run if filter changes
+  }, [statusFilter?.join(','), isReady]); // Re-run when filter changes or auth is ready
 
   return {
     orders,

@@ -11,9 +11,19 @@ interface ETAData {
 export const useETATracking = (orderId: string | null) => {
   const [eta, setEta] = useState<ETAData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+
+  // Check auth status before subscribing
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsReady(!!session);
+    };
+    checkAuth();
+  }, []);
 
   const calculateETA = async (courierLat?: number, courierLng?: number) => {
-    if (!orderId) return;
+    if (!orderId || !isReady) return;
     
     setLoading(true);
     try {
@@ -41,7 +51,7 @@ export const useETATracking = (orderId: string | null) => {
   };
 
   useEffect(() => {
-    if (!orderId) return;
+    if (!orderId || !isReady) return;
 
     // Subscribe to courier location updates for this order
     const channel = supabase
@@ -65,7 +75,11 @@ export const useETATracking = (orderId: string | null) => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.error('ETA tracking subscription error');
+        }
+      });
 
     // Initial ETA calculation
     calculateETA();
@@ -77,7 +91,7 @@ export const useETATracking = (orderId: string | null) => {
       supabase.removeChannel(channel);
       clearInterval(interval);
     };
-  }, [orderId]);
+  }, [orderId, isReady]);
 
   return {
     eta,

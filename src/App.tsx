@@ -43,6 +43,7 @@ import { CartBadgeAnimation } from "./components/CartBadgeAnimation";
 // Eager load critical pages
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import AdminLayout from "./pages/admin/AdminLayout"; // Eager load AdminLayout to avoid context issues
 
 // Lazy load non-critical pages
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
@@ -74,7 +75,7 @@ const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const MyOrders = lazy(() => import("./pages/MyOrders"));
 const AdminProtectedRoute = lazy(() => import("./components/admin/AdminProtectedRoute"));
-const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+// AdminLayout is now eagerly imported above
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminLiveMap = lazy(() => import("./pages/admin/AdminLiveMap"));
