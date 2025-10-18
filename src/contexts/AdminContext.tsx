@@ -28,32 +28,24 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
   const verifyAdmin = async (currentSession: Session) => {
     try {
-      // Check if user has admin role - use RPC function for efficiency
-      const isAdmin = await has_role(currentSession.user.id, 'admin');
-      
-      if (isAdmin) {
-        // Get admin details
-        const { data: adminData, error: adminError } = await supabase
-          .from("admin_users")
-          .select("id, email, full_name, role")
-          .eq("user_id", currentSession.user.id)
-          .eq("is_active", true)
-          .maybeSingle();
+      // Get admin details directly
+      const { data: adminData, error: adminError } = await supabase
+        .from("admin_users")
+        .select("id, email, full_name, role")
+        .eq("user_id", currentSession.user.id)
+        .eq("is_active", true)
+        .maybeSingle();
 
-        if (adminError) throw adminError;
+      if (adminError) throw adminError;
 
-        if (adminData) {
-          setAdmin({
-            id: adminData.id,
-            email: adminData.email,
-            full_name: adminData.full_name,
-            role: adminData.role
-          });
-          setSession(currentSession);
-        } else {
-          setAdmin(null);
-          setSession(null);
-        }
+      if (adminData) {
+        setAdmin({
+          id: adminData.id,
+          email: adminData.email,
+          full_name: adminData.full_name,
+          role: adminData.role
+        });
+        setSession(currentSession);
       } else {
         setAdmin(null);
         setSession(null);
@@ -67,26 +59,6 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Helper function to check admin role using RPC
-  const has_role = async (userId: string, role: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase.rpc('has_role', {
-        _user_id: userId,
-        _role: role as any // Cast to bypass type checking for database enum
-      });
-      
-      if (error) {
-        console.error("RPC has_role error:", error);
-        return false;
-      }
-      
-      console.log("has_role check result:", { userId, role, data });
-      return data === true;
-    } catch (error) {
-      console.error("has_role exception:", error);
-      return false;
-    }
-  };
 
   useEffect(() => {
     // Check existing session
@@ -116,42 +88,15 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log("Starting admin sign in for:", email);
-      
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (authError) {
-        console.error("Auth error:", authError);
-        throw authError;
-      }
+      if (authError) throw authError;
       if (!authData.session) throw new Error("No session returned");
 
-      console.log("Auth successful, checking admin role for user:", authData.user.id);
-
-      // Check admin role using RPC function
-      const isAdmin = await has_role(authData.user.id, 'admin');
-      
-      console.log("Admin role check result:", isAdmin);
-      
-      if (!isAdmin) {
-        // Double-check by querying user_roles directly
-        const { data: roleData, error: roleError } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", authData.user.id)
-          .eq("role", "admin");
-        
-        console.log("Direct role check:", { roleData, roleError });
-        
-        if (!roleData || roleData.length === 0) {
-          throw new Error("You don't have admin access");
-        }
-      }
-
-      // Get admin details
+      // Get admin details directly
       const { data: adminData, error: adminError } = await supabase
         .from("admin_users")
         .select("id, email, full_name, role")
@@ -159,10 +104,8 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         .eq("is_active", true)
         .maybeSingle();
 
-      console.log("Admin user lookup:", { adminData, adminError });
-
       if (adminError) throw adminError;
-      if (!adminData) throw new Error("Admin account is not active");
+      if (!adminData) throw new Error("You don't have admin access");
 
       setSession(authData.session);
       setAdmin({
