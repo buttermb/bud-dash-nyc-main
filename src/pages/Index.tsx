@@ -31,7 +31,6 @@ const Index = () => {
       <SEOHead 
         title="BUDDASH NYC - Premium Cannabis Delivery | Order Weed Online"
         description="NYC's premier cannabis delivery service. Order premium THC products online and get same-day delivery in Manhattan. Lab-tested, licensed, and discreet."
-        keywords="cannabis delivery NYC, weed delivery Manhattan, THC delivery, order weed online, premium cannabis NYC"
       />
       
       <AgeVerificationModal />
