@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Building2, MapPin, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import packagingImage from "@/assets/premium-packaging.jpg";
 
 const LifestyleSection = () => {
   return (
@@ -93,32 +94,20 @@ const LifestyleSection = () => {
             transition={{ duration: 0.8 }}
             className="relative"
           >
-            {/* Packaging Visual Placeholder */}
-            <div className="relative rounded-2xl overflow-hidden border-2 border-primary/20 shadow-elegant bg-gradient-to-br from-primary/10 to-accent/10 backdrop-blur-sm">
-              <div className="aspect-square flex items-center justify-center p-12">
-                <div className="text-center space-y-4">
-                  <div className="w-32 h-32 mx-auto rounded-full bg-gradient-primary flex items-center justify-center">
-                    <Building2 className="w-16 h-16 text-white" />
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-2xl font-black text-white uppercase tracking-wide">
-                      Premium Packaging
-                    </p>
-                    <p className="text-sm text-white/70 max-w-xs mx-auto">
-                      Sophisticated, discreet delivery designed for NYC living
-                    </p>
-                  </div>
-                  <div className="flex justify-center gap-3 pt-4">
-                    <div className="w-3 h-3 rounded-full bg-primary" />
-                    <div className="w-3 h-3 rounded-full bg-accent" />
-                    <div className="w-3 h-3 rounded-full bg-primary-glow" />
-                  </div>
-                </div>
-              </div>
+            {/* Premium Packaging Image */}
+            <div className="relative rounded-2xl overflow-hidden border-2 border-primary/30 shadow-2xl">
+              <img 
+                src={packagingImage} 
+                alt="Premium discreet packaging with NYC skyline" 
+                className="w-full h-full object-cover"
+              />
               
-              {/* Decorative Elements */}
-              <div className="absolute top-4 right-4 w-20 h-20 rounded-full bg-accent/20 blur-3xl" />
-              <div className="absolute bottom-4 left-4 w-32 h-32 rounded-full bg-primary/20 blur-3xl" />
+              {/* Subtle overlay for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+              
+              {/* Decorative glow effects */}
+              <div className="absolute top-4 right-4 w-24 h-24 rounded-full bg-primary/30 blur-3xl" />
+              <div className="absolute bottom-4 left-4 w-32 h-32 rounded-full bg-accent/20 blur-3xl" />
             </div>
 
             {/* Floating Badge */}
