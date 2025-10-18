@@ -110,38 +110,39 @@ const Navigation = () => {
   };
 
   const navLinks = [
-    { label: "Shop", href: "#products", scroll: true },
+    { label: "Products", href: "#products", scroll: true },
     { label: "Track Order", href: "/track-order", scroll: false },
+    { label: "Support", href: "/support", scroll: false },
   ];
 
   return (
     <>
       {/* Premium Banner */}
-      <div className="bg-gradient-primary py-3" role="banner" aria-label="Promotional banner">
-        <div className="container mx-auto px-4 text-center text-base font-semibold text-white tracking-wide">
+      <div className="bg-primary py-3" role="banner" aria-label="Promotional banner">
+        <div className="container mx-auto px-4 text-center text-base font-bold text-white tracking-wide">
           <span>Licensed & Lab Tested • Same-Day Delivery • 100% Discreet Packaging</span>
         </div>
       </div>
 
-      <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white shadow-sm" role="navigation" aria-label="Main navigation" style={{ backgroundColor: '#ffffff' }}>
-        <div className="container flex h-20 items-center justify-between px-6 gap-6">
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-card/95 backdrop-blur-lg shadow-md" role="navigation" aria-label="Main navigation">
+        <div className="container flex h-24 items-center justify-between px-6 gap-4">
           <Link to="/" className="flex items-center gap-3 min-w-fit group">
-            <NYMLogo size={50} />
-            <div className="flex flex-col gap-0.5">
-              <span className="font-black text-lg tracking-wider text-gray-900 group-hover:text-primary transition-colors">NYM NYC</span>
-              <span className="text-xs text-gray-600 tracking-widest uppercase">Premium Delivery</span>
+            <NYMLogo size={56} />
+            <div className="flex flex-col gap-1">
+              <span className="font-black text-xl tracking-wider text-foreground group-hover:text-primary transition-colors">NYM NYC</span>
+              <span className="text-xs text-muted-foreground tracking-widest uppercase font-semibold">Premium Delivery</span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6 flex-1 justify-center" aria-label="Primary navigation">
+          <nav className="hidden lg:flex items-center gap-8 flex-1 justify-center" aria-label="Primary navigation">
             {navLinks.map((link) => (
               link.scroll ? (
                 <a
                   key={link.label}
                   href={link.href}
                   onClick={handleNavClick(link.href, link.scroll)}
-                  className="text-base font-bold uppercase tracking-wide text-gray-900 hover:text-primary transition-colors cursor-pointer"
+                  className="text-lg font-bold uppercase tracking-wide text-foreground hover:text-primary transition-colors cursor-pointer"
                 >
                   {link.label}
                 </a>
@@ -152,25 +153,30 @@ const Navigation = () => {
                   onClick={() => {
                     setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0);
                   }}
-                  className="text-base font-bold uppercase tracking-wide text-gray-900 hover:text-primary transition-colors cursor-pointer"
+                  className="text-lg font-bold uppercase tracking-wide text-foreground hover:text-primary transition-colors cursor-pointer"
                 >
                   {link.label}
                 </Link>
               )
             ))}
-            
-            {/* Sign Up / Sign In */}
-            {!user ? (
-              <>
-                <Button variant="outline" size="default" onClick={() => openAuth("signin")} className="text-base font-bold border-2 border-gray-300 text-gray-900 hover:bg-gray-50">
-                  Sign In
-                </Button>
-                <Button variant="default" size="default" onClick={() => openAuth("signup")} className="text-base font-bold bg-primary hover:bg-primary-dark text-white">
-                  Sign Up
-                </Button>
-              </>
-            ) : null}
           </nav>
+          
+          {/* Search Bar */}
+          <div className="hidden lg:block">
+            <SearchBar variant="full" />
+          </div>
+          
+          {/* Sign Up / Sign In */}
+          {!user ? (
+            <div className="hidden lg:flex items-center gap-3">
+              <Button variant="outline" size="lg" onClick={() => openAuth("signin")} className="text-base font-bold px-6">
+                Sign In
+              </Button>
+              <Button variant="default" size="lg" onClick={() => openAuth("signup")} className="text-base font-bold px-6 bg-primary hover:bg-primary-dark">
+                Sign Up
+              </Button>
+            </div>
+          ) : null}
 
           {/* Actions */}
           <div className="flex items-center gap-3 min-w-fit">

@@ -11,24 +11,24 @@
   }
   
   html.light, html.light body {
-    background: #ffffff !important;
-    color: #1a202c !important;
+    background: hsl(210 20% 98%) !important;
+    color: hsl(222 47% 11%) !important;
   }
   
   html.dark, html.dark body {
-    background: #1a202c !important;
-    color: #fafafa !important;
+    background: hsl(222 47% 11%) !important;
+    color: hsl(210 40% 98%) !important;
   }
   
   /* Fallback when no theme class */
   html:not(.light):not(.dark) {
-    background: #ffffff;
-    color: #1a202c;
+    background: hsl(210 20% 98%);
+    color: hsl(222 47% 11%);
   }
   
   :root {
-    /* Light Mode - Clean & Professional */
-    --background: 0 0% 100%;
+    /* Light Mode - Clean & Modern */
+    --background: 210 20% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -48,7 +48,7 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 214 32% 91%;
-    --input: 214 32% 91%;
+    --input: 0 0% 100%;
     --ring: 173 80% 40%;
     --radius: 0.5rem;
     --chart-1: 173 80% 40%;
