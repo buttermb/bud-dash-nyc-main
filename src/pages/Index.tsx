@@ -1,128 +1,51 @@
-import { lazy, Suspense } from "react";
-import Navigation from "@/components/Navigation";
-import AgeVerificationModal from "@/components/AgeVerificationModal";
-import GiveawayBanner from "@/components/GiveawayBanner";
-import { Badge } from "@/components/ui/badge";
+import Hero from "@/components/Hero";
+import ProductCatalog from "@/components/ProductCatalog";
+import Features from "@/components/Features";
+import HowItWorks from "@/components/HowItWorks";
+import CTA from "@/components/CTA";
+import TrustBanner from "@/components/TrustBanner";
+import SubtleTopBar from "@/components/SubtleTopBar";
 import { SEOHead } from "@/components/SEOHead";
-import { EnhancedLoadingState } from "@/components/EnhancedLoadingState";
-import { ParallaxHero } from "@/components/home/ParallaxHero";
-import { motion } from "framer-motion";
-
-// Lazy load non-critical components for better initial page load
-const ProductCatalog = lazy(() => import("@/components/ProductCatalog"));
-const Footer = lazy(() => import("@/components/Footer"));
-const RecentPurchaseNotification = lazy(() => import("@/components/RecentPurchaseNotification"));
-const ProductTrustElements = lazy(() => import("@/components/ProductTrustElements"));
-const HowItWorks = lazy(() => import("@/components/HowItWorks"));
-const TrendingProducts = lazy(() => import("@/components/TrendingProducts"));
-const InstallPWA = lazy(() => import("@/components/InstallPWA"));
-
+import GiveawayBanner from "@/components/sections/GiveawayBanner";
+import InstagramFeed from "@/components/sections/InstagramFeed";
+import { useState, useEffect } from "react";
+import AgeVerificationModal from "@/components/AgeVerificationModal";
 
 const Index = () => {
+  const [showAgeVerification, setShowAgeVerification] = useState(false);
+
+  useEffect(() => {
+    const ageVerified = localStorage.getItem("ageVerified");
+    if (!ageVerified) {
+      setShowAgeVerification(true);
+    }
+  }, []);
+
+  const handleAgeVerified = () => {
+    localStorage.setItem("ageVerified", "true");
+    setShowAgeVerification(false);
+  };
+
   return (
     <>
       <SEOHead 
-        title="New York Minute NYC - Premium Cannabis Delivery | Manhattan, Brooklyn, Queens"
-        description="Fast, discreet premium cannabis delivery across NYC. Lab-tested flower, edibles, concentrates from licensed vendors. Same-day delivery to Manhattan, Brooklyn & Queens."
+        title="BUDDASH NYC - Premium Cannabis Delivery | Order Weed Online"
+        description="NYC's premier cannabis delivery service. Order premium THC products online and get same-day delivery in Manhattan. Lab-tested, licensed, and discreet."
+        keywords="cannabis delivery NYC, weed delivery Manhattan, THC delivery, order weed online, premium cannabis NYC"
       />
-      <div className="min-h-screen pb-20 md:pb-0">
+      
       <AgeVerificationModal />
-      <Suspense fallback={null}>
-        <RecentPurchaseNotification />
-      </Suspense>
-      <GiveawayBanner />
-      <Navigation />
       
-      {/* Enhanced Parallax Hero */}
-      <ParallaxHero />
-      
-      {/* First-Time Buyer Banner with Animation */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.3 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 border-y border-primary/30 shadow-inner"
-      >
-        <div className="container px-4 py-5 mx-auto">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-center">
-            <span className="text-3xl">🎁</span>
-            <p className="text-lg font-semibold">
-              New customer? Get <span className="text-primary font-black text-xl">10% off</span> your first order
-            </p>
-            <Badge variant="outline" className="bg-primary/10 border-primary/50">+ Free Delivery</Badge>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Trending Products Carousel */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-        <Suspense fallback={<EnhancedLoadingState variant="grid" count={4} />}>
-          <TrendingProducts />
-        </Suspense>
-      </motion.div>
-
-      {/* PRODUCTS */}
-      <motion.section 
-        id="products" 
-        className="bg-background" 
-        aria-label="Product catalog"
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-        <Suspense fallback={<EnhancedLoadingState variant="grid" count={8} />}>
-          <ProductCatalog />
-        </Suspense>
-      </motion.section>
-
-      {/* How It Works */}
-      <motion.section 
-        id="how-it-works" 
-        aria-label="How it works"
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-        <Suspense fallback={<EnhancedLoadingState variant="card" count={3} />}>
-          <HowItWorks />
-        </Suspense>
-      </motion.section>
-
-      {/* Trust Elements */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-        <Suspense fallback={null}>
-          <ProductTrustElements />
-        </Suspense>
-      </motion.div>
-      
-      {/* PWA Install Prompt */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-        <Suspense fallback={null}>
-          <InstallPWA />
-        </Suspense>
-      </motion.div>
-      
-      <Suspense fallback={null}>
-        <Footer />
-      </Suspense>
+      <div className="min-h-screen bg-black">
+        <SubtleTopBar />
+        <Hero />
+        <TrustBanner />
+        <ProductCatalog />
+        <Features />
+        <HowItWorks />
+        <GiveawayBanner />
+        <InstagramFeed />
+        <CTA />
       </div>
     </>
   );
