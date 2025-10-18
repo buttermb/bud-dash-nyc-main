@@ -29,7 +29,7 @@ const Support = () => {
     <div className="min-h-screen flex flex-col pb-20 md:pb-0">
       <SEOHead 
         title="Support - New York Minute NYC"
-        description="Get help with your cannabis delivery order. Contact our support team via live chat, email, or phone. Available 8 AM - 10 PM EST daily."
+        description="Get help with your delivery order. Contact our support team via live chat, email, or phone. Available 8 AM - 10 PM EST daily."
       />
       <Navigation />
       

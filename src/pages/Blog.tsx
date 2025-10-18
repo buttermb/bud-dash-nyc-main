@@ -34,14 +34,14 @@ const Blog = () => {
     <div className="min-h-screen bg-background">
       <SEOHead 
         title="Blog - New York Minute NYC"
-        description="Cannabis education, NYC delivery insights, and wellness tips from New York Minute NYC's expert team."
+        description="Product education, NYC delivery insights, and wellness tips from New York Minute NYC's expert team."
       />
       <Navigation />
       <main className="container mx-auto px-4 py-20 md:py-24">
         <div className="max-w-4xl mx-auto">
-          <h1 className="heading-bold mb-4">Cannabis Education & News</h1>
+          <h1 className="heading-bold mb-4">Product Education & News</h1>
           <p className="text-lg text-muted-foreground mb-12">
-            Learn about cannabis wellness, NYC delivery laws, and more from our expert team.
+            Learn about wellness, NYC delivery laws, and more from our expert team.
           </p>
 
           <div className="space-y-6">

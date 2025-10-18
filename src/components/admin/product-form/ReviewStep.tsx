@@ -14,7 +14,7 @@ export function ReviewStep({ formData, updateFormData }: ReviewStepProps) {
   const requiredFields = [
     { field: "name", label: "Product name" },
     { field: "category", label: "Category" },
-    { field: "thca_percentage", label: "Cannabinoid percentage" },
+    { field: "thca_percentage", label: "Active ingredient percentage" },
     { field: "image_url", label: "Main image" },
     { field: "price", label: "Price" },
     { field: "description", label: "Description" },

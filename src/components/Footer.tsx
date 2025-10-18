@@ -168,8 +168,8 @@ const Footer = () => {
                   <Badge variant="outline" className="mt-1 flex-shrink-0">21+</Badge>
                   <div className="text-[11px] text-muted-foreground space-y-2 leading-relaxed">
                     <p className="font-semibold text-foreground">Legal & Compliance Information:</p>
-                    <p><strong>Licensed Cannabinoid Hemp Retailer</strong><br/>
-                    NY Office of Cannabis Management License #[Pending]</p>
+                    <p><strong>Licensed Premium Retailer</strong><br/>
+                    NYC Department of Consumer Affairs License</p>
                     <p>All products are derived from hemp and contain less than 0.3% Delta-9 THC on a dry-weight basis, complying with federal and New York State regulations.</p>
                     <p><strong>Age Restriction:</strong> Must be 21+ with valid government ID. ID verification required at delivery.</p>
                     <p><strong>Health Notice:</strong> Products may produce intoxicating effects when heated or consumed. Do not use if pregnant, nursing, or operating vehicles/machinery. May result in positive drug test results.</p>

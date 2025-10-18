@@ -13,7 +13,7 @@ const FAQ = () => {
     {
       question: "Are your products legal in NYC?",
       answer:
-        "Yes. All products are derived from hemp and contain less than 0.3% Delta-9 THC, complying with federal and New York State regulations. We are a licensed cannabinoid hemp retailer by the NY Office of Cannabis Management.",
+        "Yes. All products are derived from hemp and contain less than 0.3% Delta-9 THC, complying with federal and New York State regulations. We are a licensed premium retailer by the NYC Department of Consumer Affairs.",
     },
     {
       question: "Are your products lab tested?",

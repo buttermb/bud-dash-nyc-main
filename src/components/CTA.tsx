@@ -25,7 +25,7 @@ const CTA = () => {
               </h2>
               
               <p className="text-lg md:text-2xl text-foreground/80 max-w-2xl mx-auto font-bold">
-                Premium cannabis delivered to your door in under 45 minutes.
+                Premium products delivered to your door in under 45 minutes.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">

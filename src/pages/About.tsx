@@ -48,7 +48,7 @@ const About = () => {
               <h2 className="text-2xl font-bold uppercase tracking-wide">Licensed & Compliant</h2>
               </div>
               <p className="text-muted-foreground leading-relaxed">
-                Licensed Cannabinoid Hemp Retailer by the NY Office of Cannabis Management. 
+                Licensed Premium Retailer by NYC Department of Consumer Affairs. 
                 All products comply with federal and New York State regulations.
               </p>
             </div>
@@ -132,8 +132,8 @@ const About = () => {
               </div>
             </div>
             <div className="pt-6 border-t border-border/50 text-sm text-muted-foreground">
-              <p className="font-bold text-foreground mb-1">Licensed Cannabinoid Hemp Retailer</p>
-              <p>NY Office of Cannabis Management License #[Pending]</p>
+              <p className="font-bold text-foreground mb-1">Licensed Premium Retailer</p>
+              <p>NYC Department of Consumer Affairs</p>
             </div>
           </section>
         </div>

@@ -7,7 +7,7 @@ const Privacy = () => {
     <div className="min-h-screen bg-background">
       <SEOHead 
         title="Privacy Policy - New York Minute NYC"
-        description="Learn how New York Minute NYC protects your privacy and handles your personal information for cannabis delivery in NYC."
+        description="Learn how New York Minute NYC protects your privacy and handles your personal information for delivery in NYC."
       />
       <Navigation />
       <main className="container mx-auto px-4 py-20 md:py-24">

@@ -72,7 +72,7 @@ const BecomeCourier = () => {
           <h1 className="text-4xl font-bold mb-6">Become a New York Minute Courier</h1>
           <p className="text-lg text-muted-foreground mb-12">
             Join New York Minute NYC's network of independent couriers and earn money delivering premium products 
-            across New York City. Set your own schedule and be part of the growing legal cannabis industry.
+            across New York City. Set your own schedule and be part of the growing industry.
           </p>
 
           <div className="grid md:grid-cols-2 gap-6 mb-12">

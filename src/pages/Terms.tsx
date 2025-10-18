@@ -7,7 +7,7 @@ const Terms = () => {
     <div className="min-h-screen bg-background">
       <SEOHead 
         title="Terms of Service - New York Minute NYC"
-        description="Terms and conditions for using New York Minute NYC's premium cannabis delivery service in Brooklyn, Manhattan, and Queens."
+        description="Terms and conditions for using New York Minute NYC's premium delivery service in Brooklyn, Manhattan, and Queens."
       />
       <Navigation />
       <main className="container mx-auto px-4 py-20 md:py-24">
@@ -38,7 +38,7 @@ const Terms = () => {
             <section className="space-y-3">
               <h2 className="text-2xl font-bold">3. Product Information</h2>
               <p className="text-muted-foreground leading-relaxed">
-                All products sold through our platform comply with New York state cannabis regulations. 
+                All products sold through our platform comply with New York state regulations. 
                 Products are sourced from licensed vendors and are third-party lab tested. Lab results are 
                 available upon request for all products.
               </p>

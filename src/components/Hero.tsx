@@ -99,7 +99,7 @@ const Hero = () => {
 
           {/* Legal Notice - Subtle & Professional */}
           <div className="hidden md:block text-xs text-white/50 pt-10 space-y-1 max-w-3xl mx-auto font-light">
-            <p>Licensed NY Cannabinoid Hemp Retailer | All products third-party lab tested</p>
+            <p>Licensed Premium Retailer | All products third-party lab tested</p>
             <p>Must be 21+ with valid government ID | Serving Manhattan, Brooklyn, Queens, Bronx & Staten Island</p>
           </div>
         </div>

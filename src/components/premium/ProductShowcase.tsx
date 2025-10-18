@@ -113,7 +113,7 @@ export function ProductShowcase({ product, onShopNow }: ProductShowcaseProps) {
               viewport={{ once: true }}
               transition={{ delay: 0.4 }}
             >
-              Premium cannabis product. Lab-tested, quality-guaranteed, and 
+              Premium product. Lab-tested, quality-guaranteed, and 
               ready to elevate your experience.
             </motion.p>
             

@@ -358,7 +358,7 @@ const Admin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="thca">Cannabinoid Percentage</Label>
+                  <Label htmlFor="thca">Active Ingredient Percentage</Label>
                   <Input
                     id="thca"
                     type="number"

@@ -74,7 +74,7 @@ export default function GiveawayRules() {
               <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                 <h3 className="font-bold text-lg mb-2">🥇 Grand Prize - 1 Winner</h3>
                 <p className="text-muted-foreground">1 LB Premium Flower - Retail Value: $4,000</p>
-                <p className="text-muted-foreground mt-2">Full pound of premium cannabis flower delivered same-day to your door</p>
+                <p className="text-muted-foreground mt-2">Full pound of premium flower delivered same-day to your door</p>
               </div>
               <div className="p-4 bg-gray-500/10 border border-gray-500/20 rounded-lg">
                 <h3 className="font-bold text-lg mb-2">🥈 Second Prize - 1 Winner</h3>
