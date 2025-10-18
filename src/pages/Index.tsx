@@ -7,6 +7,7 @@ import { EnhancedLoadingState } from "@/components/EnhancedLoadingState";
 import { motion } from "framer-motion";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
+import { SparkleEffect } from "@/components/SparkleEffect";
 
 // Lazy load non-critical components for better initial page load
 const ProductCatalog = lazy(() => import("@/components/ProductCatalog"));
@@ -28,6 +29,7 @@ const Index = () => {
         title="New York Minute NYC - Premium Delivery | Manhattan, Brooklyn, Queens"
         description="Fast, discreet premium delivery across NYC. Lab-tested products from licensed vendors. Same-day delivery to Manhattan, Brooklyn & Queens."
       />
+      <SparkleEffect />
       <div className="min-h-screen pb-20 md:pb-0">
       <AgeVerificationModal />
       <Suspense fallback={null}>
@@ -35,11 +37,23 @@ const Index = () => {
       </Suspense>
       <Navigation />
       
-      {/* Hero Section */}
-      <Hero />
+      {/* Hero Section with entrance animation */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <Hero />
+      </motion.div>
 
-      {/* Benefits/Trust Section */}
-      <Features />
+      {/* Benefits/Trust Section with stagger */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+      >
+        <Features />
+      </motion.div>
       
       {/* First-Time Buyer Banner with Animation */}
       <motion.div
