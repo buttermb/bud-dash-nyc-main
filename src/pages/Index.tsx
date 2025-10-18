@@ -1,11 +1,9 @@
 import { lazy, Suspense } from "react";
 import Navigation from "@/components/Navigation";
 import AgeVerificationModal from "@/components/AgeVerificationModal";
-import GiveawayBanner from "@/components/GiveawayBanner";
 import { Badge } from "@/components/ui/badge";
 import { SEOHead } from "@/components/SEOHead";
 import { EnhancedLoadingState } from "@/components/EnhancedLoadingState";
-import { ParallaxHero } from "@/components/home/ParallaxHero";
 import { motion } from "framer-motion";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
@@ -16,9 +14,11 @@ const Footer = lazy(() => import("@/components/Footer"));
 const RecentPurchaseNotification = lazy(() => import("@/components/RecentPurchaseNotification"));
 const ProductTrustElements = lazy(() => import("@/components/ProductTrustElements"));
 const HowItWorks = lazy(() => import("@/components/HowItWorks"));
-const TrendingProducts = lazy(() => import("@/components/TrendingProducts"));
-const InstallPWA = lazy(() => import("@/components/InstallPWA"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
+const InstallPWA = lazy(() => import("@/components/InstallPWA"));
+const LifestyleSection = lazy(() => import("@/components/LifestyleSection"));
+const LoyaltySection = lazy(() => import("@/components/LoyaltySection"));
+const SocialSection = lazy(() => import("@/components/SocialSection"));
 
 
 const Index = () => {
@@ -99,6 +99,45 @@ const Index = () => {
       >
         <Suspense fallback={<EnhancedLoadingState variant="card" count={4} />}>
           <Testimonials />
+        </Suspense>
+      </motion.section>
+
+      {/* Lifestyle/Packaging Section */}
+      <motion.section
+        aria-label="NYC Lifestyle"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <Suspense fallback={<EnhancedLoadingState variant="card" count={2} />}>
+          <LifestyleSection />
+        </Suspense>
+      </motion.section>
+
+      {/* Loyalty/Referral Program */}
+      <motion.section
+        aria-label="Loyalty Program"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <Suspense fallback={<EnhancedLoadingState variant="card" count={1} />}>
+          <LoyaltySection />
+        </Suspense>
+      </motion.section>
+
+      {/* Social Media Section */}
+      <motion.section
+        aria-label="Social Media"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <Suspense fallback={null}>
+          <SocialSection />
         </Suspense>
       </motion.section>
 
