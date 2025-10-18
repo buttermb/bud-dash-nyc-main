@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
-import { Building2, MapPin, Sparkles } from "lucide-react";
+import { Building2, MapPin, Sparkles, Package, Clock, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import packagingImage from "@/assets/premium-packaging.jpg";
 
 const LifestyleSection = () => {
   return (
@@ -94,26 +93,54 @@ const LifestyleSection = () => {
             transition={{ duration: 0.8 }}
             className="relative"
           >
-            {/* Premium Packaging Image */}
-            <div className="relative rounded-2xl overflow-hidden border-2 border-primary/30 shadow-2xl">
-              <img 
-                src={packagingImage} 
-                alt="Premium discreet packaging with NYC skyline" 
-                className="w-full h-full object-cover"
-              />
-              
-              {/* Subtle overlay for text readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-              
-              {/* Decorative glow effects */}
-              <div className="absolute top-4 right-4 w-24 h-24 rounded-full bg-primary/30 blur-3xl" />
-              <div className="absolute bottom-4 left-4 w-32 h-32 rounded-full bg-accent/20 blur-3xl" />
+            {/* Premium Features Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { icon: Package, title: "Premium", desc: "Packaging", color: "from-primary to-primary-dark" },
+                { icon: Clock, title: "<60min", desc: "Delivery", color: "from-accent to-accent-dark" },
+                { icon: Shield, title: "100%", desc: "Discreet", color: "from-primary-glow to-primary" },
+                { icon: Building2, title: "NYC", desc: "Licensed", color: "from-accent to-primary" }
+              ].map((feature, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  className="relative group"
+                >
+                  <div className="relative rounded-2xl overflow-hidden border-2 border-primary/20 bg-card/50 backdrop-blur-sm p-8 hover:border-primary/40 transition-all duration-300">
+                    {/* Animated background gradient */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-5 group-hover:opacity-10 transition-opacity`} />
+                    
+                    {/* Content */}
+                    <div className="relative z-10 text-center space-y-3">
+                      <div className="mx-auto w-16 h-16 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+                        <feature.icon className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-black text-foreground">{feature.title}</p>
+                        <p className="text-sm text-muted-foreground font-semibold">{feature.desc}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Decorative glow */}
+                    <div className="absolute -bottom-4 -right-4 w-24 h-24 rounded-full bg-primary/20 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </motion.div>
+              ))}
             </div>
 
-            {/* Floating Badge */}
-            <div className="absolute -bottom-4 -right-4 bg-card border-2 border-primary rounded-xl p-4 shadow-elegant">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">NYC Delivery</p>
-              <p className="text-2xl font-black text-primary">&lt;60min</p>
+            {/* Floating Badge - moved to better position */}
+            <div className="mt-6 bg-card/80 backdrop-blur-md border-2 border-primary/30 rounded-xl p-6 shadow-elegant">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Average Delivery Time</p>
+                  <p className="text-3xl font-black text-primary">45 Minutes</p>
+                </div>
+                <Clock className="w-12 h-12 text-primary/40" />
+              </div>
             </div>
           </motion.div>
         </div>
