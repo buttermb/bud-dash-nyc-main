@@ -2,7 +2,6 @@ import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, Clock, Leaf } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { GlowButton } from "@/components/premium/GlowButton";
-import { FloatingBadge } from "@/components/premium/FloatingBadge";
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -70,11 +69,6 @@ const Hero = () => {
               </div>
             </div>
           </div>
-
-          {/* Floating Badge for promotions */}
-          <FloatingBadge className="fixed top-24 right-4 z-50">
-            🎉 First Order 15% OFF
-          </FloatingBadge>
 
           {/* CTA Buttons - Premium & Elegant */}
           <div className="flex flex-col sm:flex-row gap-4 md:gap-5 justify-center pt-8 md:pt-12">
