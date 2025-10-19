@@ -163,7 +163,7 @@ export default function MyOrders() {
                           Order #{order.id.slice(0, 8).toUpperCase()}
                         </CardTitle>
                         <Badge variant={getStatusColor(order.status) as any}>
-                          {order.status.replace("_", " ")}
+                          {order.status?.replace("_", " ") || "Pending"}
                         </Badge>
                       </CardHeader>
                       <CardContent>

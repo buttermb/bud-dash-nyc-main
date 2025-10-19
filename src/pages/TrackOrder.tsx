@@ -202,7 +202,7 @@ export default function TrackOrder() {
                 </div>
                 <div>
                   <p className="font-semibold text-lg capitalize">
-                    {order.status.replace('_', ' ')}
+                    {order.status?.replace('_', ' ') || 'Pending'}
                   </p>
                   {order.estimated_delivery && (
                     <p className="text-sm text-muted-foreground">

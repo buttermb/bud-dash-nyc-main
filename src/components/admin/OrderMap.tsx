@@ -219,7 +219,7 @@ export const OrderMap = ({ orders, activeCouriers = [], selectedOrderId, onOrder
               📍 ${order.delivery_address}
             </div>
             <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
-              Status: <span style="color: ${statusColor}; font-weight: 600;">${order.status.replace('_', ' ').toUpperCase()}</span>
+              Status: <span style="color: ${statusColor}; font-weight: 600;">${order.status?.replace('_', ' ').toUpperCase() || 'PENDING'}</span>
             </div>
             ${order.eta_minutes ? `
               <div style="font-size: 12px; background: #eff6ff; padding: 6px; border-radius: 4px; border-left: 3px solid #3b82f6;">
