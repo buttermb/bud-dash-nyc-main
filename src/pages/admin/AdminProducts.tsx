@@ -52,26 +52,45 @@ export default function AdminProducts() {
     { id: "status", label: "Status" },
   ];
 
-  // Realtime subscription for instant updates
+  // Realtime subscription for instant updates with proper cleanup
   useEffect(() => {
-    const channel = supabase
-      .channel('admin-products-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'products'
-        },
-        (payload) => {
-          console.log('Product changed:', payload);
-          queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-        }
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
+    const setupChannel = async () => {
+      channel = supabase
+        .channel('admin-products-changes', {
+          config: {
+            broadcast: { self: false },
+            presence: { key: '' }
+          }
+        })
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'products'
+          },
+          (payload) => {
+            console.log('Product changed:', payload);
+            queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Failed to subscribe to products channel');
+          }
+        });
+    };
+
+    setupChannel();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel).then(() => {
+          channel = null;
+        });
+      }
     };
   }, [queryClient]);
 

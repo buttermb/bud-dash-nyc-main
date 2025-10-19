@@ -28,26 +28,45 @@ export default function InventoryManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Setup realtime subscription
+  // Setup realtime subscription with proper cleanup
   useEffect(() => {
-    const channel = supabase
-      .channel('inventory-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'products'
-        },
-        (payload) => {
-          console.log('Inventory updated:', payload);
-          queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-        }
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
+    const setupChannel = async () => {
+      channel = supabase
+        .channel('inventory-changes', {
+          config: {
+            broadcast: { self: false },
+            presence: { key: '' }
+          }
+        })
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'products'
+          },
+          (payload) => {
+            console.log('Inventory updated:', payload);
+            queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Failed to subscribe to inventory channel');
+          }
+        });
+    };
+
+    setupChannel();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel).then(() => {
+          channel = null;
+        });
+      }
     };
   }, [queryClient]);
 

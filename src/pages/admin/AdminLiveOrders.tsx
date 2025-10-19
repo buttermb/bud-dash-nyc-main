@@ -23,12 +23,20 @@ const AdminLiveOrders = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (session) {
-      fetchLiveOrders();
-      
-      // Set up real-time subscription (no polling needed)
-      const channel = supabase
-        .channel("live-orders-updates")
+    if (!session) return;
+    
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
+    fetchLiveOrders();
+    
+    const setupChannel = async () => {
+      channel = supabase
+        .channel("live-orders-updates", {
+          config: {
+            broadcast: { self: false },
+            presence: { key: '' }
+          }
+        })
         .on(
           "postgres_changes",
           {
@@ -43,12 +51,22 @@ const AdminLiveOrders = () => {
             }
           }
         )
-        .subscribe();
-      
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Failed to subscribe to live orders channel');
+          }
+        });
+    };
+    
+    setupChannel();
+    
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel).then(() => {
+          channel = null;
+        });
+      }
+    };
   }, [session]);
 
   const fetchLiveOrders = async () => {

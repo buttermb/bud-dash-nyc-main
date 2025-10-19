@@ -24,26 +24,45 @@ export default function MediaLibrary() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Setup realtime subscription
+  // Setup realtime subscription with proper cleanup
   useEffect(() => {
-    const channel = supabase
-      .channel('products-media-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'products'
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-          queryClient.invalidateQueries({ queryKey: ["media-library"] });
-        }
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
+    const setupChannel = async () => {
+      channel = supabase
+        .channel('products-media-changes', {
+          config: {
+            broadcast: { self: false },
+            presence: { key: '' }
+          }
+        })
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'products'
+          },
+          () => {
+            queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+            queryClient.invalidateQueries({ queryKey: ["media-library"] });
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Failed to subscribe to products media channel');
+          }
+        });
+    };
+
+    setupChannel();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel).then(() => {
+          channel = null;
+        });
+      }
     };
   }, [queryClient]);
 

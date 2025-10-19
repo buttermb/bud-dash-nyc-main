@@ -20,26 +20,45 @@ export default function ImportExport() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Setup realtime subscription for products
+  // Setup realtime subscription for products with proper cleanup
   useEffect(() => {
-    const channel = supabase
-      .channel('products-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'products'
-        },
-        (payload) => {
-          console.log('Products updated:', payload);
-          queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-        }
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
+    const setupChannel = async () => {
+      channel = supabase
+        .channel('products-changes', {
+          config: {
+            broadcast: { self: false },
+            presence: { key: '' }
+          }
+        })
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'products'
+          },
+          (payload) => {
+            console.log('Products updated:', payload);
+            queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Failed to subscribe to products channel');
+          }
+        });
+    };
+
+    setupChannel();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel).then(() => {
+          channel = null;
+        });
+      }
     };
   }, [queryClient]);
 

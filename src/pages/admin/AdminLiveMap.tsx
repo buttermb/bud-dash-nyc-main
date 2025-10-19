@@ -240,6 +240,8 @@ const AdminLiveMap = () => {
   useEffect(() => {
     if (!session) return;
 
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     fetchLiveDeliveries();
     fetchRealtimeStats();
 
@@ -248,42 +250,59 @@ const AdminLiveMap = () => {
       fetchRealtimeStats();
     }, 5000) : null;
 
-    const channel = supabase
-      .channel("live-map-updates")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "orders" },
-        (payload) => {
-          const newRecord = payload.new as any;
-          const oldRecord = payload.old as any;
+    const setupChannel = async () => {
+      channel = supabase
+        .channel("live-map-updates", {
+          config: {
+            broadcast: { self: false },
+            presence: { key: '' }
+          }
+        })
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "orders" },
+          (payload) => {
+            const newRecord = payload.new as any;
+            const oldRecord = payload.old as any;
 
-          if (payload.eventType === 'INSERT') {
-            addActivity('order', `New order: ${newRecord.order_number}`, 'success');
-            playNotificationSound();
-          } else if (payload.eventType === 'UPDATE' && newRecord.status !== oldRecord?.status) {
-            addActivity('order', `Order ${newRecord.order_number} → ${newRecord.status}`, 'info');
+            if (payload.eventType === 'INSERT') {
+              addActivity('order', `New order: ${newRecord.order_number}`, 'success');
+              playNotificationSound();
+            } else if (payload.eventType === 'UPDATE' && newRecord.status !== oldRecord?.status) {
+              addActivity('order', `Order ${newRecord.order_number} → ${(newRecord.status || 'pending').replace(/_/g, ' ')}`, 'info');
+            }
+            
+            fetchLiveDeliveries();
+            fetchRealtimeStats();
           }
-          
-          fetchLiveDeliveries();
-          fetchRealtimeStats();
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "couriers" },
-        (payload) => {
-          const courier = payload.new as any;
-          if (courier.is_online && !payload.old?.is_online) {
-            addActivity('courier', `${courier.full_name} is now online`, 'success');
+        )
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "couriers" },
+          (payload) => {
+            const courier = payload.new as any;
+            if (courier.is_online && !payload.old?.is_online) {
+              addActivity('courier', `${courier.full_name} is now online`, 'success');
+            }
+            fetchLiveDeliveries();
           }
-          fetchLiveDeliveries();
-        }
-      )
-      .subscribe();
+        )
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Failed to subscribe to live map channel');
+          }
+        });
+    };
+
+    setupChannel();
 
     return () => {
       if (interval) clearInterval(interval);
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel).then(() => {
+          channel = null;
+        });
+      }
     };
   }, [session, autoRefresh, soundEnabled]);
 
