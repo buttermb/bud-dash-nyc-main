@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -99,37 +98,15 @@ const menuGroups = [
 ];
 
 export function AdminSidebar() {
-  const [mounted, setMounted] = useState(false);
   const { state } = useSidebar();
   const { admin, signOut } = useAdmin();
   const navigate = useNavigate();
   const location = useLocation();
   const isCollapsed = state === "collapsed";
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const isGroupActive = (items: typeof menuGroups[0]['items']) => {
     return items.some(item => location.pathname === item.url);
   };
-
-  if (!mounted) {
-    return (
-      <Sidebar className="w-60">
-        <SidebarHeader className="border-b p-4">
-          <div className="h-16 bg-muted rounded animate-pulse" />
-        </SidebarHeader>
-        <SidebarContent>
-          <div className="space-y-2 p-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-10 bg-muted rounded animate-pulse" />
-            ))}
-          </div>
-        </SidebarContent>
-      </Sidebar>
-    );
-  }
 
   return (
     <Sidebar className={isCollapsed ? "w-14" : "w-60"} collapsible="icon">
