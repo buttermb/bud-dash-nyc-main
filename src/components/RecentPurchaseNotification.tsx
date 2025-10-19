@@ -56,13 +56,14 @@ const RecentPurchaseNotification = () => {
     };
   }, []);
 
-  // Randomly show a purchase from recent history every 10-20 seconds
+  // Cycle through purchases in stable order
   useEffect(() => {
     if (recentPurchases.length === 0) return;
 
+    let currentIndex = 0;
     const showRandomPurchase = () => {
-      const randomIndex = Math.floor(Math.random() * Math.min(recentPurchases.length, 5));
-      const purchase = recentPurchases[randomIndex];
+      const purchase = recentPurchases[currentIndex % Math.min(recentPurchases.length, 5)];
+      currentIndex++;
       
       if (purchase) {
         setVisiblePurchase(purchase);
@@ -77,11 +78,8 @@ const RecentPurchaseNotification = () => {
     // Show first notification after 5 seconds
     const initialTimeout = setTimeout(showRandomPurchase, 5000);
     
-    // Then show randomly every 15-25 seconds
-    const interval = setInterval(() => {
-      const randomDelay = 15000 + Math.random() * 10000;
-      setTimeout(showRandomPurchase, randomDelay);
-    }, 25000);
+    // Then show every 20 seconds (stable interval)
+    const interval = setInterval(showRandomPurchase, 20000);
 
     return () => {
       clearTimeout(initialTimeout);

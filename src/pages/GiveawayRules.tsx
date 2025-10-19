@@ -1,7 +1,14 @@
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
 export default function GiveawayRules() {
+  const [dateStr, setDateStr] = useState('');
+  
+  useEffect(() => {
+    setDateStr(new Date().toLocaleDateString());
+  }, []);
+
   return (
     <div className="min-h-screen bg-background py-12">
       <div className="max-w-4xl mx-auto px-4">
@@ -16,7 +23,7 @@ export default function GiveawayRules() {
         <div className="bg-card border border-border rounded-lg p-8 space-y-8">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-black mb-2">Official Giveaway Rules</h1>
-            <p className="text-muted-foreground">Last Updated: {new Date().toLocaleDateString()}</p>
+            <p className="text-muted-foreground">Last Updated: {dateStr || 'Loading...'}</p>
           </div>
 
           <section>

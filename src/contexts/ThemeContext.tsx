@@ -10,33 +10,34 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [theme, setTheme] = useState<Theme>(() => {
-    // Get stored theme or determine default
+  const [theme, setTheme] = useState<Theme>("light"); // Start with stable default
+  const [mounted, setMounted] = useState(false);
+
+  // Load theme after mount to prevent hydration mismatch
+  useEffect(() => {
     const stored = localStorage.getItem("theme");
-    let initialTheme: Theme = "light"; // Default to light mode
+    let loadedTheme: Theme = "light";
     
     if (stored === "light" || stored === "dark") {
-      initialTheme = stored;
+      loadedTheme = stored;
     } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      initialTheme = "dark";
+      loadedTheme = "dark";
     }
     
-    // Apply theme IMMEDIATELY before React renders
-    const root = document.documentElement;
-    root.classList.remove("light", "dark");
-    root.classList.add(initialTheme);
-    
-    console.log('[Theme] Initialized:', initialTheme);
-    return initialTheme;
-  });
+    setTheme(loadedTheme);
+    setMounted(true);
+    console.log('[Theme] Loaded:', loadedTheme);
+  }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+    
     const root = document.documentElement;
     root.classList.remove("light", "dark");
     root.classList.add(theme);
     localStorage.setItem("theme", theme);
     console.log('[Theme] Applied:', theme);
-  }, [theme]);
+  }, [theme, mounted]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));

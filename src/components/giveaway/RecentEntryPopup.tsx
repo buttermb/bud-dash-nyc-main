@@ -23,17 +23,22 @@ const FAKE_NAMES = [
 
 const BOROUGHS = ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island'];
 
-const generateEntry = (): Entry => {
-  const person = FAKE_NAMES[Math.floor(Math.random() * FAKE_NAMES.length)];
-  const borough = BOROUGHS[Math.floor(Math.random() * BOROUGHS.length)];
-  const entries = Math.random() < 0.7 ? Math.floor(Math.random() * 3) + 1 : Math.floor(Math.random() * 8) + 3;
-  
-  return {
-    name: `${person.first} ${person.last}`,
-    borough,
-    entries
+// Generate stable fake entries per session
+const generateEntry = (() => {
+  let index = 0;
+  return (): Entry => {
+    const person = FAKE_NAMES[index % FAKE_NAMES.length];
+    const borough = BOROUGHS[index % BOROUGHS.length];
+    const entries = (index % 3) + 1; // Stable: 1, 2, or 3
+    index++;
+    
+    return {
+      name: `${person.first} ${person.last}`,
+      borough,
+      entries
+    };
   };
-};
+})();
 
 export function RecentEntryPopup() {
   const [currentEntry, setCurrentEntry] = useState<Entry | null>(null);
@@ -49,14 +54,11 @@ export function RecentEntryPopup() {
       }, 4000);
     };
 
-    // Show first notification after 3-8 seconds
-    const initialDelay = 3000 + Math.random() * 5000;
-    const initialTimer = setTimeout(showNotification, initialDelay);
+    // Show first notification after stable 5 seconds
+    const initialTimer = setTimeout(showNotification, 5000);
 
-    // Then show every 8-15 seconds
-    const interval = setInterval(() => {
-      showNotification();
-    }, 8000 + Math.random() * 7000);
+    // Then show every 12 seconds (stable interval)
+    const interval = setInterval(showNotification, 12000);
 
     return () => {
       clearTimeout(initialTimer);

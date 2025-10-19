@@ -12,30 +12,29 @@ export function SocialProofIndicators({ totalEntries }: SocialProofIndicatorsPro
   const [entriesPerMinute, setEntriesPerMinute] = useState(0);
 
   useEffect(() => {
-    // Generate realistic viewer count (3-8% of total entries, min 18, max 200)
+    // Generate stable initial values based on total entries
     const baseViewers = Math.floor(totalEntries * 0.05);
-    const viewers = Math.max(18, Math.min(200, baseViewers + Math.floor(Math.random() * 20)));
+    const viewers = Math.max(18, Math.min(200, baseViewers + 15));
     setCurrentViewers(viewers);
 
-    // Generate recent entries (1-3% of total, min 8)
-    const recent = Math.max(8, Math.floor(totalEntries * 0.02) + Math.floor(Math.random() * 10));
+    // Generate stable recent entries
+    const recent = Math.max(8, Math.floor(totalEntries * 0.02) + 8);
     setRecentEntries(recent);
 
-    // Calculate entries per minute (realistic rate: 2-8 per minute for active giveaway)
-    const perMinute = Math.max(2, Math.min(8, Math.floor(totalEntries / 1000) + Math.floor(Math.random() * 4) + 2));
+    // Calculate stable entries per minute
+    const perMinute = Math.max(2, Math.min(8, Math.floor(totalEntries / 1000) + 4));
     setEntriesPerMinute(perMinute);
 
-    // Update viewers every 8-15 seconds
+    // Update viewers every 10 seconds with small stable variations
+    let viewerDelta = 1;
     const interval = setInterval(() => {
-      const variation = Math.floor(Math.random() * 7) - 3; // -3 to +3
-      setCurrentViewers(prev => Math.max(18, Math.min(200, prev + variation)));
-      
-      // Occasionally update entries per minute
-      if (Math.random() > 0.7) {
-        const rateVariation = Math.floor(Math.random() * 3) - 1;
-        setEntriesPerMinute(prev => Math.max(2, Math.min(8, prev + rateVariation)));
-      }
-    }, 8000 + Math.random() * 7000);
+      setCurrentViewers(prev => {
+        const newVal = prev + viewerDelta;
+        // Reverse direction at boundaries
+        if (newVal >= 200 || newVal <= 18) viewerDelta *= -1;
+        return Math.max(18, Math.min(200, newVal));
+      });
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [totalEntries]);

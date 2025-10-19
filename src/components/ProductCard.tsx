@@ -1,4 +1,4 @@
-import { useState, memo, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo, memo, useCallback } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +39,13 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
   const [added, setAdded] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [soldCount, setSoldCount] = useState(0);
   const queryClient = useQueryClient();
+
+  // Generate stable sold count on mount
+  useEffect(() => {
+    setSoldCount(Math.floor(Math.random() * 30) + 15);
+  }, [product.id]);
 
   // Use provided stockLevel instead of making individual API call
   const actualStockLevel = stockLevel !== undefined ? stockLevel : 0;
@@ -302,7 +308,7 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
             )}
             <Badge variant="secondary" className="text-xs">
               <TrendingUp className="h-3 w-3 mr-1" />
-              {Math.floor(Math.random() * 30) + 15} sold this week
+              {soldCount} sold this week
             </Badge>
           </div>
         </CardContent>

@@ -20,30 +20,39 @@ const FAKE_NAMES = ['Sarah', 'Michael', 'Jessica', 'David', 'Emily', 'James', 'A
 const FAKE_LAST_INITIALS = ['M', 'R', 'K', 'T', 'L', 'W', 'B', 'P', 'H', 'C'];
 const BOROUGHS = ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island'];
 
-// Generate realistic fake entries
-const generateFakeEntry = (): Entry => {
-  const firstName = FAKE_NAMES[Math.floor(Math.random() * FAKE_NAMES.length)];
-  const lastInitial = FAKE_LAST_INITIALS[Math.floor(Math.random() * FAKE_LAST_INITIALS.length)];
-  const borough = BOROUGHS[Math.floor(Math.random() * BOROUGHS.length)];
+// Generate realistic fake entries - STABLE per session
+const generateFakeEntry = (() => {
+  let cachedEntries: Entry[] = [];
   
-  // Weighted toward 1-3 entries (70%), some higher (30%)
-  const rand = Math.random();
-  const entries = rand < 0.4 ? 1 : rand < 0.7 ? Math.floor(Math.random() * 3) + 2 : Math.floor(Math.random() * 10) + 3;
-  
-  // Recent timestamps (within last 30 minutes)
-  const minutesAgo = Math.floor(Math.random() * 30);
-  const timeAgo = minutesAgo === 0 ? 'just now' : 
-                  minutesAgo === 1 ? '1 minute ago' : 
-                  `${minutesAgo} minutes ago`;
-  
-  return {
-    id: `fake-${Date.now()}-${Math.random()}`,
-    firstName: `${firstName} ${lastInitial}.`,
-    borough,
-    entries,
-    timeAgo
+  return (): Entry => {
+    if (cachedEntries.length === 0) {
+      // Generate batch of stable entries once
+      for (let i = 0; i < 20; i++) {
+        const firstName = FAKE_NAMES[i % FAKE_NAMES.length];
+        const lastInitial = FAKE_LAST_INITIALS[i % FAKE_LAST_INITIALS.length];
+        const borough = BOROUGHS[i % BOROUGHS.length];
+        const entries = (i % 3) + 1; // Stable: 1, 2, or 3
+        const minutesAgo = i * 2;
+        const timeAgo = minutesAgo === 0 ? 'just now' : 
+                        minutesAgo === 1 ? '1 minute ago' : 
+                        `${minutesAgo} minutes ago`;
+        
+        cachedEntries.push({
+          id: `entry-${i}`,
+          firstName: `${firstName} ${lastInitial}.`,
+          borough,
+          entries,
+          timeAgo
+        });
+      }
+    }
+    
+    // Return entries in rotation
+    const entry = cachedEntries.shift()!;
+    cachedEntries.push(entry);
+    return entry;
   };
-};
+})();
 
 export function LiveFeed({ giveawayId }: LiveFeedProps) {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -90,8 +99,11 @@ export function LiveFeed({ giveawayId }: LiveFeedProps) {
         allEntries.push(generateFakeEntry());
       }
       
-      // Shuffle to mix real and fake naturally
-      allEntries = allEntries.sort(() => Math.random() - 0.5);
+      // Shuffle to mix real and fake - but keep stable per render
+      const sortKey = allEntries.map(() => Math.random()).join('');
+      allEntries = allEntries.sort((a, b) => {
+        return a.id.localeCompare(b.id);
+      });
 
       setEntries(allEntries.slice(0, 15)); // Show 15 entries
     } catch (error) {
