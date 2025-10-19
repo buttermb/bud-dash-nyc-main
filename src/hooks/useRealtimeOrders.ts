@@ -66,9 +66,14 @@ export const useRealtimeOrders = (options: UseRealtimeOrdersOptions = {}) => {
   useEffect(() => {
     fetchOrders();
 
-    // Set up realtime subscription
+    // Set up realtime subscription with proper error handling
     const newChannel = supabase
-      .channel('orders-realtime')
+      .channel('orders-realtime', {
+        config: {
+          broadcast: { self: false },
+          presence: { key: '' },
+        },
+      })
       .on(
         'postgres_changes',
         {
@@ -88,12 +93,20 @@ export const useRealtimeOrders = (options: UseRealtimeOrdersOptions = {}) => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Realtime orders subscription active');
+        }
+        if (status === 'CHANNEL_ERROR') {
+          console.error('Realtime orders subscription error');
+        }
+      });
 
     setChannel(newChannel);
 
     return () => {
       if (newChannel) {
+        newChannel.unsubscribe();
         supabase.removeChannel(newChannel);
       }
     };
