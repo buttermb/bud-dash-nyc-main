@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { safeUpperCase } from "@/utils/stringHelpers";
 
 interface RiskScoreBadgeProps {
   score: number;
@@ -43,7 +44,7 @@ export function TrustLevelBadge({ level }: TrustLevelBadgeProps) {
 
   return (
     <Badge variant={getVariant(level)}>
-      {(level || 'unknown').toUpperCase()}
+      {safeUpperCase(level || 'unknown')}
     </Badge>
   );
 }
@@ -66,7 +67,7 @@ export function AccountStatusBadge({ status }: AccountStatusBadgeProps) {
 
   return (
     <Badge variant={getVariant(status)}>
-      {(status || 'unknown').toUpperCase()}
+      {safeUpperCase(status || 'unknown')}
     </Badge>
   );
 }

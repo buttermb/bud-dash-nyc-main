@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { capitalize } from '@/utils/stringHelpers';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Users, ShieldAlert, CheckCircle, XCircle, Mail, Phone, 
@@ -239,7 +240,7 @@ function EntriesTable({ entries }: { entries: any[] }) {
                   </td>
                   <td className="py-3 px-4">
                     <Badge variant={entry.status === 'verified' ? 'default' : 'secondary'}>
-                      {entry.status}
+                      {capitalize(entry.status || 'pending')}
                     </Badge>
                   </td>
                   <td className="py-3 px-4">

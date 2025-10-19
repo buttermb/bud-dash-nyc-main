@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatActionType } from "@/utils/stringHelpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -691,7 +692,7 @@ export default function AdminUserDetails() {
                     <TableRow key={log.id}>
                       <TableCell>{new Date(log.created_at).toLocaleString()}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{log.action_type}</Badge>
+                        <Badge variant="outline">{formatActionType(log.action_type)}</Badge>
                       </TableCell>
                       <TableCell>{log.description}</TableCell>
                       <TableCell className="font-mono text-xs">{log.ip_address || "N/A"}</TableCell>

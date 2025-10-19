@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, DollarSign, Clock, Package } from 'lucide-react';
+import { formatStatus } from '@/utils/stringHelpers';
 
 interface Order {
   id: string;
@@ -51,7 +52,7 @@ export const CourierOrderCard = memo(({
         <div>
           <h3 className="font-bold text-lg">#{order.order_number}</h3>
           <Badge variant={isActive ? 'default' : 'secondary'} className="mt-1">
-            {(order.status || 'pending').replace('_', ' ')}
+            {formatStatus(order.status)}
           </Badge>
         </div>
         {showEarnings && (

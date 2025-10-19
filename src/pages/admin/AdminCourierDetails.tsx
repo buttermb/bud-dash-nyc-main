@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { formatStatus } from '@/utils/stringHelpers';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -367,7 +368,7 @@ export default function AdminCourierDetails() {
                       <TableCell className="font-semibold">${order.total_amount}</TableCell>
                       <TableCell>
                         <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
-                          {(order.status || 'pending').replace(/_/g, ' ')}
+                          {formatStatus(order.status)}
                         </Badge>
                       </TableCell>
                     </TableRow>

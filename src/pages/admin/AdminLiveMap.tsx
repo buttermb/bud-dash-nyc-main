@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminAlerts } from "@/components/admin/AdminAlerts";
+import { formatStatus } from "@/utils/stringHelpers";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -690,7 +691,7 @@ const AdminLiveMap = () => {
                                     )}
                                   </div>
                                   <Badge className={getStatusColor(order.status)}>
-                                    {(order.status || 'pending').replace(/_/g, ' ')}
+                                    {formatStatus(order.status)}
                                   </Badge>
                                 </div>
 

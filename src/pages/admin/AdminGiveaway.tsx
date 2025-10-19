@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { safeUpperCase, capitalize } from '@/utils/stringHelpers';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Users, TrendingUp, Download, Shuffle, List } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -166,7 +167,7 @@ export default function AdminGiveaway() {
           <div className="flex items-center gap-4 mb-2">
             <h1 className="text-3xl font-bold">{giveaway.title}</h1>
             <Badge variant={giveaway.status === 'active' ? 'default' : 'secondary'} className="text-sm">
-              {(giveaway.status || 'active').toUpperCase()}
+              {safeUpperCase(giveaway.status || 'active')}
             </Badge>
           </div>
           <p className="text-muted-foreground">
@@ -329,7 +330,7 @@ export default function AdminGiveaway() {
                       </div>
                     </div>
                     <Badge variant={winner.status === 'claimed' ? 'default' : 'secondary'}>
-                      {winner.status}
+                      {capitalize(winner.status || 'pending')}
                     </Badge>
                   </div>
                 </Card>
