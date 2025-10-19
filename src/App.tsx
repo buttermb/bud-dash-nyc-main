@@ -38,6 +38,9 @@ import { LiveChatWidget } from "./components/LiveChatWidget";
 import { DevTools } from "./components/dev/DevTools";
 import { setupGlobalErrorHandlers, handleQueryError, handleMutationError } from "./utils/reactErrorHandler";
 import { useVersionCheck } from "./hooks/useVersionCheck";
+import { runProductionHealthCheck } from "@/utils/productionHealthCheck";
+import { productionLogger } from "@/utils/productionLogger";
+import { toast } from "./hooks/use-toast";
 
 import { NotificationPreferences } from "./components/NotificationPreferences";
 import OfflineBanner from "./components/OfflineBanner";
@@ -145,6 +148,35 @@ setupGlobalErrorHandlers();
 
 const App = () => {
   useVersionCheck();
+
+  // Run production health check on mount
+  useEffect(() => {
+    if (import.meta.env.PROD) {
+      const runHealthCheck = async () => {
+        try {
+          const result = await runProductionHealthCheck();
+          
+          if (result.issues.length > 0) {
+            productionLogger.warning('Production health check found issues', result);
+            
+            // Show toast for critical issues
+            if (!result.supabase || !result.realtime) {
+              toast({
+                title: 'Connection Issues Detected',
+                description: 'Some features may not work properly. Please refresh the page.',
+                variant: 'destructive',
+              });
+            }
+          }
+        } catch (error) {
+          productionLogger.error('Health check failed', { error });
+        }
+      };
+
+      // Run after a short delay to not block initial render
+      setTimeout(runHealthCheck, 2000);
+    }
+  }, []);
   
   return (
     <ErrorBoundary>

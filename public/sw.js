@@ -16,9 +16,26 @@ const API_CACHE = `nym-api-${CACHE_VERSION}`;
 // Cache durations (in seconds)
 const CACHE_DURATION = {
   images: 7 * 24 * 60 * 60, // 7 days
-  api: 5 * 60, // 5 minutes
+  api: 30, // 30 seconds (reduced for production freshness)
   static: 30 * 24 * 60 * 60, // 30 days
 };
+
+// Endpoints that should always fetch fresh data
+const REALTIME_BYPASS_PATTERNS = [
+  '/rest/v1/',           // Supabase REST API
+  '/realtime/v1/',       // Supabase Realtime
+  '/functions/v1/',      // Edge functions
+];
+
+// Critical admin endpoints that need fresh data
+const ADMIN_ENDPOINTS = [
+  'products',
+  'orders',
+  'couriers',
+  'giveaways',
+  'chat_sessions',
+  'audit_logs',
+];
 
 // Assets to cache on install
 const PRECACHE_URLS = [
@@ -82,27 +99,65 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Network first with cache fallback for API calls
+  // Check if this is a realtime/critical endpoint - always bypass cache
+  const shouldBypassCache = REALTIME_BYPASS_PATTERNS.some(pattern => 
+    url.pathname.includes(pattern)
+  ) || ADMIN_ENDPOINTS.some(endpoint => 
+    url.pathname.includes(endpoint)
+  );
+
+  // Network first with cache fallback and validation for API calls
   if (url.pathname.includes('/rest/v1/') || url.pathname.includes('/functions/v1/')) {
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
+      (async () => {
+        try {
+          // Always fetch fresh for critical endpoints
+          if (shouldBypassCache) {
+            return await fetch(event.request);
+          }
+
+          const response = await fetch(event.request);
           if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(API_CACHE).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
+            const cache = await caches.open(API_CACHE);
+            const clonedResponse = response.clone();
+            
+            // Validate response has complete data before caching
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              try {
+                const data = await clonedResponse.clone().json();
+                
+                // Basic validation - ensure data has expected structure
+                if (Array.isArray(data)) {
+                  // For arrays, check items have id and required fields
+                  const hasValidStructure = data.every(item => 
+                    item && typeof item === 'object' && item.id
+                  );
+                  if (!hasValidStructure) {
+                    console.warn('[SW] Invalid data structure, not caching', url.pathname);
+                    return response;
+                  }
+                }
+              } catch (e) {
+                // If JSON parsing fails, don't cache
+                return response;
+              }
+            }
+            
+            await cache.put(event.request, clonedResponse);
           }
           return response;
-        })
-        .catch(() => {
-          return caches.match(event.request).then((cached) => {
+        } catch (error) {
+          // Only use cache if not a critical endpoint
+          if (!shouldBypassCache) {
+            const cached = await caches.match(event.request);
             if (cached && !isCacheExpired(cached, CACHE_DURATION.api)) {
               return cached;
             }
-            return new Response('Offline', { status: 503 });
-          });
-        })
+          }
+          return new Response('Offline', { status: 503 });
+        }
+      })()
     );
     return;
   }

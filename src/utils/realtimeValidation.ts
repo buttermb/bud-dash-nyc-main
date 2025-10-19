@@ -1,18 +1,32 @@
 /**
  * Realtime Data Validation Utilities
  * Validates incoming realtime payloads to prevent undefined errors
+ * Enhanced for production with partial/cached response handling
  */
 
 import { isValidOrder, isValidActivity, isValidAuditLog, isValidCourier } from './typeGuards';
+import { productionLogger } from './productionLogger';
 
 /**
  * Validates and sanitizes an order object from realtime payload
  */
 export const validateOrder = (order: any): boolean => {
   if (!isValidOrder(order)) {
-    console.error('Invalid order received from realtime:', order);
+    productionLogger.error('Invalid order received from realtime', { 
+      order,
+      hasId: !!order?.id,
+      hasStatus: !!order?.status,
+      type: typeof order,
+    });
     return false;
   }
+  
+  // Check for incomplete cached data
+  if (!order.status || typeof order.status !== 'string') {
+    productionLogger.warning('Order missing status field', { orderId: order?.id });
+    return false;
+  }
+  
   return true;
 };
 
@@ -21,9 +35,16 @@ export const validateOrder = (order: any): boolean => {
  */
 export const validateActivity = (activity: any): boolean => {
   if (!isValidActivity(activity)) {
-    console.error('Invalid activity received from realtime:', activity);
+    productionLogger.error('Invalid activity received from realtime', { activity });
     return false;
   }
+  
+  // Validate action type field
+  if (!activity.action || typeof activity.action !== 'string') {
+    productionLogger.warning('Activity missing action field', { activityId: activity?.id });
+    return false;
+  }
+  
   return true;
 };
 
@@ -32,9 +53,16 @@ export const validateActivity = (activity: any): boolean => {
  */
 export const validateAuditLog = (log: any): boolean => {
   if (!isValidAuditLog(log)) {
-    console.error('Invalid audit log received from realtime:', log);
+    productionLogger.error('Invalid audit log received from realtime', { log });
     return false;
   }
+  
+  // Validate action_type field
+  if (!log.action_type || typeof log.action_type !== 'string') {
+    productionLogger.warning('Audit log missing action_type field', { logId: log?.id });
+    return false;
+  }
+  
   return true;
 };
 
@@ -43,9 +71,16 @@ export const validateAuditLog = (log: any): boolean => {
  */
 export const validateCourier = (courier: any): boolean => {
   if (!isValidCourier(courier)) {
-    console.error('Invalid courier received from realtime:', courier);
+    productionLogger.error('Invalid courier received from realtime', { courier });
     return false;
   }
+  
+  // Validate status field
+  if (courier.status && typeof courier.status !== 'string') {
+    productionLogger.warning('Courier invalid status field', { courierId: courier?.id });
+    return false;
+  }
+  
   return true;
 };
 
@@ -54,12 +89,12 @@ export const validateCourier = (courier: any): boolean => {
  */
 export const validateGiveaway = (giveaway: any): boolean => {
   if (!giveaway || typeof giveaway !== 'object') {
-    console.error('Invalid giveaway received from realtime:', giveaway);
+    productionLogger.error('Invalid giveaway received from realtime', { giveaway });
     return false;
   }
   
-  if (typeof giveaway.status !== 'string') {
-    console.error('Giveaway missing valid status:', giveaway);
+  if (!giveaway.status || typeof giveaway.status !== 'string') {
+    productionLogger.warning('Giveaway missing valid status', { giveawayId: giveaway?.id });
     return false;
   }
   
@@ -71,12 +106,18 @@ export const validateGiveaway = (giveaway: any): boolean => {
  */
 export const validateProduct = (product: any): boolean => {
   if (!product || typeof product !== 'object') {
-    console.error('Invalid product received from realtime:', product);
+    productionLogger.error('Invalid product received from realtime', { product });
     return false;
   }
   
   if (typeof product.id !== 'string' && typeof product.id !== 'number') {
-    console.error('Product missing valid id:', product);
+    productionLogger.warning('Product missing valid id', { product });
+    return false;
+  }
+  
+  // Validate required fields aren't undefined
+  if (product.status !== undefined && typeof product.status !== 'string') {
+    productionLogger.warning('Product invalid status field', { productId: product?.id });
     return false;
   }
   
@@ -88,12 +129,18 @@ export const validateProduct = (product: any): boolean => {
  */
 export const validateChatSession = (session: any): boolean => {
   if (!session || typeof session !== 'object') {
-    console.error('Invalid chat session received from realtime:', session);
+    productionLogger.error('Invalid chat session received from realtime', { session });
     return false;
   }
   
   if (typeof session.id !== 'string') {
-    console.error('Chat session missing valid id:', session);
+    productionLogger.warning('Chat session missing valid id', { session });
+    return false;
+  }
+  
+  // Validate status field if present
+  if (session.status !== undefined && typeof session.status !== 'string') {
+    productionLogger.warning('Chat session invalid status field', { sessionId: session?.id });
     return false;
   }
   
@@ -105,12 +152,12 @@ export const validateChatSession = (session: any): boolean => {
  */
 export const validateChatMessage = (message: any): boolean => {
   if (!message || typeof message !== 'object') {
-    console.error('Invalid chat message received from realtime:', message);
+    productionLogger.error('Invalid chat message received from realtime', { message });
     return false;
   }
   
-  if (typeof message.message !== 'string') {
-    console.error('Chat message missing valid message text:', message);
+  if (!message.message || typeof message.message !== 'string') {
+    productionLogger.warning('Chat message missing valid message text', { messageId: message?.id });
     return false;
   }
   

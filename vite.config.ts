@@ -27,6 +27,7 @@ import { deferCssPlugin } from "./vite-plugins/defer-css";
 import viteCompression from 'vite-plugin-compression';
 import { VitePWA } from 'vite-plugin-pwa';
 import { buildTimestampPlugin } from './vite-plugins/build-timestamp';
+import { realtimeValidationPlugin } from './vite-plugins/realtime-validation';
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
@@ -40,6 +41,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     buildTimestampPlugin(),
     deferCssPlugin(),
+    realtimeValidationPlugin(),
     viteCompression({
       algorithm: 'brotliCompress',
       ext: '.br',
@@ -125,14 +127,13 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: 'es2020',
     minify: 'terser',
-    sourcemap: mode === 'production' ? false : true,
     assetsInlineLimit: 4096,
     cssMinify: true,
     terserOptions: {
       compress: {
-        drop_console: mode === 'production',
+        drop_console: ['log', 'debug', 'info'], // Keep console.warn and console.error for production debugging
         drop_debugger: true,
-        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug', 'console.warn', 'console.error'] : [],
+        pure_funcs: ['console.log', 'console.debug', 'console.info'],
         passes: 2,
       },
       mangle: {
@@ -145,6 +146,7 @@ export default defineConfig(({ mode }) => ({
         comments: false,
       }
     },
+    sourcemap: 'hidden', // Generate hidden source maps for production debugging
     rollupOptions: {
       output: {
         // Add hash to filenames for cache busting  
