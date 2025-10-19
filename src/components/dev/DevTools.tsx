@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bug, X, Trash2, Download, Filter, Terminal, Network, AlertTriangle } from 'lucide-react';
+import { Bug, X, Trash2, Download, Terminal, Network, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -25,143 +25,143 @@ interface NetworkEntry {
   error?: string;
 }
 
+// Global stores for logs and network requests
+const globalLogs: LogEntry[] = [];
+const globalNetwork: NetworkEntry[] = [];
+let logId = 0;
+let networkId = 0;
+let intercepted = false;
+
+// Initialize interception once globally
+if (!intercepted) {
+  intercepted = true;
+  
+  const originalLog = console.log;
+  const originalWarn = console.warn;
+  const originalError = console.error;
+  const originalInfo = console.info;
+
+  const addLog = (type: LogEntry['type'], args: any[]) => {
+    const message = args.map(arg => 
+      typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+    ).join(' ');
+
+    globalLogs.push({
+      id: logId++,
+      timestamp: new Date(),
+      type,
+      message,
+      args,
+      stack: type === 'error' ? new Error().stack : undefined,
+    });
+    
+    // Keep only last 1000 logs
+    if (globalLogs.length > 1000) {
+      globalLogs.shift();
+    }
+  };
+
+  console.log = (...args) => {
+    originalLog(...args);
+    addLog('log', args);
+  };
+
+  console.warn = (...args) => {
+    originalWarn(...args);
+    addLog('warn', args);
+  };
+
+  console.error = (...args) => {
+    originalError(...args);
+    addLog('error', args);
+  };
+
+  console.info = (...args) => {
+    originalInfo(...args);
+    addLog('info', args);
+  };
+
+  // Intercept fetch
+  const originalFetch = window.fetch;
+  window.fetch = async (...args) => {
+    const [url, options] = args;
+    const startTime = Date.now();
+    const id = networkId++;
+
+    const networkEntry: NetworkEntry = {
+      id,
+      timestamp: new Date(),
+      method: (options as any)?.method || 'GET',
+      url: typeof url === 'string' ? url : url.toString(),
+    };
+
+    try {
+      const response = await originalFetch(...args);
+      const duration = Date.now() - startTime;
+
+      globalNetwork.push({
+        ...networkEntry,
+        status: response.status,
+        duration,
+      });
+      
+      if (globalNetwork.length > 100) {
+        globalNetwork.shift();
+      }
+
+      return response;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      globalNetwork.push({
+        ...networkEntry,
+        duration,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      
+      if (globalNetwork.length > 100) {
+        globalNetwork.shift();
+      }
+      
+      throw error;
+    }
+  };
+
+  // Global error handlers
+  window.addEventListener('error', (event: ErrorEvent) => {
+    addLog('error', [event.message, event.error]);
+  });
+
+  window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+    addLog('error', ['Unhandled Promise Rejection:', event.reason]);
+  });
+}
+
 export const DevTools = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [network, setNetwork] = useState<NetworkEntry[]>([]);
+  const [logs, setLogs] = useState<LogEntry[]>([...globalLogs]);
+  const [network, setNetwork] = useState<NetworkEntry[]>([...globalNetwork]);
   const [filter, setFilter] = useState('');
   const [activeTab, setActiveTab] = useState('logs');
-  const logIdRef = useRef(0);
-  const networkIdRef = useRef(0);
-  const interceptedRef = useRef(false);
 
-  // Start intercepting immediately, before any effects
-  if (!interceptedRef.current) {
-    interceptedRef.current = true;
-    
-    // Store original methods
-    const originalLog = console.log;
-    const originalWarn = console.warn;
-    const originalError = console.error;
-    const originalInfo = console.info;
-
-    const addLog = (type: LogEntry['type'], args: any[]) => {
-      const message = args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-      ).join(' ');
-
-      setLogs(prev => {
-        const newLog: LogEntry = {
-          id: logIdRef.current++,
-          timestamp: new Date(),
-          type,
-          message,
-          args,
-          stack: type === 'error' ? new Error().stack : undefined,
-        };
-        return [...prev.slice(-999), newLog];
-      });
-    };
-
-    console.log = (...args) => {
-      originalLog(...args);
-      addLog('log', args);
-    };
-
-    console.warn = (...args) => {
-      originalWarn(...args);
-      addLog('warn', args);
-    };
-
-    console.error = (...args) => {
-      originalError(...args);
-      addLog('error', args);
-    };
-
-    console.info = (...args) => {
-      originalInfo(...args);
-      addLog('info', args);
-    };
-  }
-
+  // Sync global stores to local state every 500ms
   useEffect(() => {
-    // Intercept fetch and error handlers
+    const interval = setInterval(() => {
+      setLogs([...globalLogs]);
+      setNetwork([...globalNetwork]);
+    }, 500);
 
-    // Intercept fetch
-    const originalFetch = window.fetch;
-    window.fetch = async (...args) => {
-      const [url, options] = args;
-      const startTime = Date.now();
-      const id = networkIdRef.current++;
-
-      const networkEntry: NetworkEntry = {
-        id,
-        timestamp: new Date(),
-        method: (options as any)?.method || 'GET',
-        url: typeof url === 'string' ? url : url.toString(),
-      };
-
-      try {
-        const response = await originalFetch(...args);
-        const duration = Date.now() - startTime;
-
-        setNetwork(prev => [...prev.slice(-99), {
-          ...networkEntry,
-          status: response.status,
-          duration,
-        }]);
-
-        return response;
-      } catch (error) {
-        const duration = Date.now() - startTime;
-        setNetwork(prev => [...prev.slice(-99), {
-          ...networkEntry,
-          duration,
-          error: error instanceof Error ? error.message : String(error),
-        }]);
-        throw error;
-      }
-    };
-
-    // Global error handler
-    const addLog = (type: LogEntry['type'], args: any[]) => {
-      const message = args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-      ).join(' ');
-
-      setLogs(prev => {
-        const newLog: LogEntry = {
-          id: logIdRef.current++,
-          timestamp: new Date(),
-          type,
-          message,
-          args,
-          stack: type === 'error' ? new Error().stack : undefined,
-        };
-        return [...prev.slice(-999), newLog];
-      });
-    };
-
-    const handleError = (event: ErrorEvent) => {
-      addLog('error', [event.message, event.error]);
-    };
-
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      addLog('error', ['Unhandled Promise Rejection:', event.reason]);
-    };
-
-    window.addEventListener('error', handleError);
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
-
-    return () => {
-      window.fetch = originalFetch;
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
-    };
+    return () => clearInterval(interval);
   }, []);
 
-  const clearLogs = () => setLogs([]);
-  const clearNetwork = () => setNetwork([]);
+  const clearLogs = () => {
+    globalLogs.length = 0;
+    setLogs([]);
+  };
+  
+  const clearNetwork = () => {
+    globalNetwork.length = 0;
+    setNetwork([]);
+  };
 
   const exportLogs = () => {
     const data = JSON.stringify(logs, null, 2);
