@@ -114,8 +114,8 @@ export function AdminSidebar() {
         {!isCollapsed && (
           <div className="space-y-1">
             <h2 className="text-lg font-semibold">Admin Portal</h2>
-            <p className="text-sm text-muted-foreground">{admin?.full_name}</p>
-            <p className="text-xs text-muted-foreground capitalize">{admin?.role?.replace('_', ' ')}</p>
+            <p className="text-sm text-muted-foreground">{admin?.full_name || 'Admin'}</p>
+            <p className="text-xs text-muted-foreground capitalize">{admin?.role ? admin.role.replace('_', ' ') : 'Administrator'}</p>
           </div>
         )}
         {isCollapsed && (

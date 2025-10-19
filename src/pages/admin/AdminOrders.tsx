@@ -293,7 +293,7 @@ export default function AdminOrders() {
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <p className="font-semibold">${parseFloat(order.total_amount.toString()).toFixed(2)}</p>
+                    <p className="font-semibold">${parseFloat((order.total_amount || 0).toString()).toFixed(2)}</p>
                   </td>
                   <td className="px-6 py-4">{getStatusBadge(order.status)}</td>
                   <td className="px-6 py-4">
@@ -465,19 +465,19 @@ export default function AdminOrders() {
                     <div className="space-y-2">
                       {selectedOrder.order_items?.map((item, idx) => (
                         <div key={idx} className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-                          {item.products.image_url && (
+                          {item.products?.image_url && (
                             <img 
                               src={item.products.image_url} 
-                              alt={item.products.name}
+                              alt={item.products.name || 'Product'}
                               className="w-12 h-12 rounded object-cover"
                             />
                           )}
                           <div className="flex-1">
                             <p className="font-semibold">
-                              {item.quantity}x {item.products.name}
+                              {item.quantity}x {item.products?.name || 'Unknown product'}
                             </p>
                           </div>
-                          <p className="font-semibold">${parseFloat(item.price.toString()).toFixed(2)}</p>
+                          <p className="font-semibold">${parseFloat((item.price || 0).toString()).toFixed(2)}</p>
                         </div>
                       ))}
                     </div>
@@ -486,7 +486,7 @@ export default function AdminOrders() {
                   <div className="pt-4 border-t">
                     <div className="flex justify-between text-xl font-bold">
                       <span>Total:</span>
-                      <span>${parseFloat(selectedOrder.total_amount.toString()).toFixed(2)}</span>
+                      <span>${parseFloat((selectedOrder.total_amount || 0).toString()).toFixed(2)}</span>
                     </div>
                     {selectedOrder.delivered_at && (
                       <p className="text-sm text-muted-foreground mt-2">

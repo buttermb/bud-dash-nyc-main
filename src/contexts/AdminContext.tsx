@@ -44,11 +44,11 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         throw adminError;
       }
 
-      if (adminData) {
+      if (adminData && adminData.role) {
         setAdmin({
           id: adminData.id,
           email: adminData.email,
-          full_name: adminData.full_name,
+          full_name: adminData.full_name || 'Admin',
           role: adminData.role
         });
         setSession(currentSession);
