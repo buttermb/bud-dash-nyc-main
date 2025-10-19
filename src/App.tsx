@@ -246,7 +246,7 @@ const App = () => (
                         <Route path="coa-management" element={<COAManagement />} />
                 <Route path="giveaway" element={<AdminGiveaway />} />
                 <Route path="giveaways" element={<AdminGiveaways />} />
-                <Route path="giveaways/manage" element={<Suspense fallback={<LoadingFallback />}><AdminGiveawayManagement /></Suspense>} />
+                <Route path="giveaways/manage" element={<AdminGiveawayManagement />} />
                 <Route path="giveaways/new" element={<AdminGiveawayForm />} />
                 <Route path="giveaways/:id/edit" element={<AdminGiveawayForm />} />
                 <Route path="giveaways/:id/analytics" element={<AdminGiveawayAnalytics />} />
