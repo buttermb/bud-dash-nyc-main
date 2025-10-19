@@ -97,3 +97,27 @@ export const truncate = (
   }
   return str.substring(0, maxLength - suffix.length) + suffix;
 };
+
+/**
+ * Safely handle status display with null checks
+ */
+export const safeStatus = (status: string | null | undefined): string => {
+  if (!status || typeof status !== 'string' || status.trim() === '') {
+    return 'pending';
+  }
+  return status.replace(/_/g, ' ').toLowerCase();
+};
+
+/**
+ * Safely handle action type display with null checks
+ */
+export const safeAction = (action: string | null | undefined): string => {
+  if (!action || typeof action !== 'string' || action.trim() === '') {
+    return 'unknown';
+  }
+  return action
+    .replace(/_/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};

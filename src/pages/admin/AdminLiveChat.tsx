@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Send } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { validateChatSession, validateChatMessage } from '@/utils/realtimeValidation';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface ChatSession {
   id: string;
@@ -32,112 +34,179 @@ const AdminLiveChat = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Load sessions with proper cleanup
-  useEffect(() => {
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-    
-    const loadSessions = async () => {
-      const { data } = await supabase
+  // Debounced session loading to prevent rapid re-renders
+  const debouncedLoadSessions = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
         .from('chat_sessions')
         .select('*')
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
-      if (data) setSessions(data as ChatSession[]);
-    };
+      if (error) throw error;
+      
+      if (data) {
+        // Validate sessions before setting state
+        const validSessions = data.filter(validateChatSession);
+        setSessions(validSessions as ChatSession[]);
+      }
+    } catch (error) {
+      console.error('Error loading chat sessions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load chat sessions",
+        variant: "destructive"
+      });
+    }
+  }, [toast]);
 
-    loadSessions();
+  // Load sessions with proper cleanup and error recovery
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let retryTimeout: NodeJS.Timeout;
+    
+    debouncedLoadSessions();
 
-    const setupChannel = async () => {
-      channel = supabase
-        .channel('admin_chat_sessions', {
-          config: {
-            broadcast: { self: false },
-            presence: { key: '' }
-          }
-        })
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'chat_sessions'
-          },
-          () => loadSessions()
-        )
-        .subscribe((status) => {
-          if (status === 'CHANNEL_ERROR') {
-            console.error('Failed to subscribe to chat sessions channel');
-          }
-        });
+    const setupChannel = () => {
+      try {
+        channel = supabase
+          .channel('admin_chat_sessions', {
+            config: {
+              broadcast: { self: false },
+              presence: { key: '' }
+            }
+          })
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'chat_sessions'
+            },
+            (payload) => {
+              try {
+                // Only refetch if valid data
+                if (payload.new && validateChatSession(payload.new)) {
+                  debouncedLoadSessions();
+                }
+              } catch (error) {
+                console.error('Error processing chat session update:', error);
+              }
+            }
+          )
+          .subscribe((status) => {
+            if (status === 'CHANNEL_ERROR') {
+              console.error('Failed to subscribe to chat sessions channel, retrying...');
+              retryTimeout = setTimeout(setupChannel, 5000);
+            } else if (status === 'SUBSCRIBED') {
+              console.log('Chat sessions subscription active');
+            }
+          });
+      } catch (error) {
+        console.error('Error setting up chat sessions channel:', error);
+        retryTimeout = setTimeout(setupChannel, 5000);
+      }
     };
 
     setupChannel();
 
     return () => {
+      clearTimeout(retryTimeout);
       if (channel) {
         supabase.removeChannel(channel).then(() => {
           channel = null;
-        });
+        }).catch(console.error);
       }
     };
-  }, []);
+  }, [debouncedLoadSessions]);
 
-  // Load messages for selected session with proper cleanup
+  // Load messages for selected session with proper cleanup and validation
   useEffect(() => {
     if (!selectedSession) return;
 
     let channel: ReturnType<typeof supabase.channel> | null = null;
+    let retryTimeout: NodeJS.Timeout;
 
     const loadMessages = async () => {
-      const { data } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .eq('session_id', selectedSession)
-        .order('created_at', { ascending: true });
+      try {
+        const { data, error } = await supabase
+          .from('chat_messages')
+          .select('*')
+          .eq('session_id', selectedSession)
+          .order('created_at', { ascending: true });
 
-      if (data) setMessages(data as Message[]);
+        if (error) throw error;
+        
+        if (data) {
+          // Validate messages before setting state
+          const validMessages = data.filter(validateChatMessage);
+          setMessages(validMessages as Message[]);
+        }
+      } catch (error) {
+        console.error('Error loading messages:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load messages",
+          variant: "destructive"
+        });
+      }
     };
 
     loadMessages();
 
-    const setupChannel = async () => {
-      channel = supabase
-        .channel(`admin_chat_${selectedSession}`, {
-          config: {
-            broadcast: { self: false },
-            presence: { key: '' }
-          }
-        })
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'chat_messages',
-            filter: `session_id=eq.${selectedSession}`
-          },
-          (payload) => {
-            setMessages(prev => [...prev, payload.new as Message]);
-          }
-        )
-        .subscribe((status) => {
-          if (status === 'CHANNEL_ERROR') {
-            console.error('Failed to subscribe to chat messages channel');
-          }
-        });
+    const setupChannel = () => {
+      try {
+        channel = supabase
+          .channel(`admin_chat_${selectedSession}`, {
+            config: {
+              broadcast: { self: false },
+              presence: { key: '' }
+            }
+          })
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'chat_messages',
+              filter: `session_id=eq.${selectedSession}`
+            },
+            (payload) => {
+              try {
+                const newMessage = payload.new as Message;
+                if (validateChatMessage(newMessage)) {
+                  setMessages(prev => [...prev, newMessage]);
+                }
+              } catch (error) {
+                console.error('Error processing new message:', error);
+              }
+            }
+          )
+          .subscribe((status) => {
+            if (status === 'CHANNEL_ERROR') {
+              console.error('Failed to subscribe to chat messages channel, retrying...');
+              retryTimeout = setTimeout(setupChannel, 5000);
+            } else if (status === 'SUBSCRIBED') {
+              console.log(`Chat messages subscription active for session ${selectedSession}`);
+            }
+          });
+      } catch (error) {
+        console.error('Error setting up chat messages channel:', error);
+        retryTimeout = setTimeout(setupChannel, 5000);
+      }
     };
 
     setupChannel();
 
     return () => {
+      clearTimeout(retryTimeout);
       if (channel) {
         supabase.removeChannel(channel).then(() => {
           channel = null;
-        });
+        }).catch(console.error);
       }
     };
-  }, [selectedSession]);
+  }, [selectedSession, toast]);
 
   // Auto scroll
   useEffect(() => {

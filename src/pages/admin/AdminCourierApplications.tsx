@@ -29,6 +29,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { CheckCircle, XCircle, MessageSquare, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { safeStatus, safeUpperCase } from "@/utils/stringHelpers";
 
 interface CourierApplication {
   id: string;
@@ -158,9 +159,10 @@ const AdminCourierApplications = () => {
       needs_info: "outline",
     };
 
+    const safeStatusValue = safeStatus(status);
     return (
-      <Badge variant={variants[status] || "default"}>
-        {(status || 'pending').replace(/_/g, ' ').toUpperCase()}
+      <Badge variant={variants[safeStatusValue] || "default"}>
+        {safeUpperCase(safeStatusValue)}
       </Badge>
     );
   };

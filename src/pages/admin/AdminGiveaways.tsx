@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { safeStatus, safeUpperCase } from '@/utils/stringHelpers';
 
 interface Giveaway {
   id: string;
@@ -51,9 +52,10 @@ export default function AdminGiveaways() {
       winners_selected: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
     };
     
+    const safeStatusValue = safeStatus(status);
     return (
-      <Badge className={`${variants[status as keyof typeof variants] || variants.draft} border`}>
-        {(status || 'draft').replace(/_/g, ' ').toUpperCase()}
+      <Badge className={`${variants[safeStatusValue as keyof typeof variants] || variants.draft} border`}>
+        {safeUpperCase(safeStatusValue)}
       </Badge>
     );
   };

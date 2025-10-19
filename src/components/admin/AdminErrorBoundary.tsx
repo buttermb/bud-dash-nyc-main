@@ -33,12 +33,38 @@ export class AdminErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    console.error('Admin Error Boundary caught error:', error, errorInfo);
+    // Log error details for debugging
+    console.error('Admin Error Boundary caught an error:', error, errorInfo);
+    
+    // Detect specific error types
+    const isWebSocketError = error.message?.includes('WebSocket') || 
+                             error.message?.includes('realtime') ||
+                             error.message?.includes('connection');
+    
+    const isDataError = error.message?.includes('undefined') || 
+                        error.message?.includes('null') ||
+                        error.message?.includes('Cannot read');
+    
+    // Log error context
+    console.error('Error context:', {
+      isWebSocketError,
+      isDataError,
+      errorType: error.name,
+      stack: errorInfo?.componentStack
+    });
     
     this.setState({
       error,
       errorInfo: errorInfo?.componentStack || 'No stack trace available',
     });
+    
+    // Try to recover from WebSocket errors automatically
+    if (isWebSocketError) {
+      console.log('WebSocket error detected, attempting recovery in 3s...');
+      setTimeout(() => {
+        this.handleReset();
+      }, 3000);
+    }
   }
 
   handleReset = () => {

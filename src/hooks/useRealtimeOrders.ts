@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { validateOrder } from '@/utils/realtimeValidation';
 
 interface Order {
   id: string;
@@ -66,48 +67,70 @@ export const useRealtimeOrders = (options: UseRealtimeOrdersOptions = {}) => {
   useEffect(() => {
     fetchOrders();
 
-    // Set up realtime subscription with proper error handling
-    const newChannel = supabase
-      .channel('orders-realtime', {
-        config: {
-          broadcast: { self: false },
-          presence: { key: '' },
-        },
-      })
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'orders'
-        },
-        (payload) => {
-          const newOrder = payload.new as Order;
-
-          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            // Refetch to get complete data with joins
-            fetchOrders();
-          } else if (payload.eventType === 'DELETE') {
-            const oldOrder = payload.old as Order;
-            setOrders(prev => prev.filter(order => order.id !== oldOrder.id));
+    let connectionTimeout: NodeJS.Timeout;
+    
+    // Wait for connection to be ready before subscribing
+    connectionTimeout = setTimeout(() => {
+      const newChannel = supabase
+        .channel('orders-realtime', {
+          config: {
+            broadcast: { self: false },
+            presence: { key: '' },
+          },
+        })
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'orders'
+          },
+          (payload) => {
+            try {
+              if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                const newOrder = payload.new as Order;
+                
+                // Validate before processing
+                if (!validateOrder(newOrder)) {
+                  console.error('Received invalid order data, refetching...');
+                  fetchOrders();
+                  return;
+                }
+                
+                // Refetch to get complete data with joins
+                fetchOrders();
+              } else if (payload.eventType === 'DELETE') {
+                const oldOrder = payload.old as Order;
+                if (oldOrder?.id) {
+                  setOrders(prev => prev.filter(order => order.id !== oldOrder.id));
+                }
+              }
+            } catch (error) {
+              console.error('Error processing realtime order update:', error);
+              fetchOrders();
+            }
           }
-        }
-      )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Realtime orders subscription active');
-        }
-        if (status === 'CHANNEL_ERROR') {
-          console.error('Realtime orders subscription error');
-        }
-      });
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('Realtime orders subscription active');
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('Realtime orders subscription error, retrying...');
+            setTimeout(() => fetchOrders(), 5000);
+          } else if (status === 'TIMED_OUT') {
+            console.error('Realtime orders subscription timed out');
+            fetchOrders();
+          }
+        });
 
-    setChannel(newChannel);
+      setChannel(newChannel);
+    }, 500);
 
     return () => {
-      if (newChannel) {
-        newChannel.unsubscribe();
-        supabase.removeChannel(newChannel);
+      clearTimeout(connectionTimeout);
+      if (channel) {
+        channel.unsubscribe();
+        supabase.removeChannel(channel);
       }
     };
   }, [statusFilter?.join(',')]); // Only re-run if filter changes

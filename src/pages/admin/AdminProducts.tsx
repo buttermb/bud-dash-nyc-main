@@ -52,40 +52,68 @@ export default function AdminProducts() {
     { id: "status", label: "Status" },
   ];
 
-  // Realtime subscription for instant updates with proper cleanup
+  // Set up realtime subscription for products with proper error handling
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
-    
-    const setupChannel = async () => {
-      channel = supabase
-        .channel('admin-products-changes', {
-          config: {
-            broadcast: { self: false },
-            presence: { key: '' }
-          }
-        })
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'products'
-          },
-          (payload) => {
-            console.log('Product changed:', payload);
-            queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-          }
-        )
-        .subscribe((status) => {
-          if (status === 'CHANNEL_ERROR') {
-            console.error('Failed to subscribe to products channel');
-          }
-        });
+    let retryTimeout: NodeJS.Timeout;
+    let isSubscribing = false;
+
+    const setupSubscription = () => {
+      if (isSubscribing) return;
+      
+      isSubscribing = true;
+      
+      // Wait a bit before subscribing to ensure connection is ready
+      setTimeout(() => {
+        try {
+          channel = supabase
+            .channel('products-realtime', {
+              config: {
+                broadcast: { self: false },
+                presence: { key: '' }
+              }
+            })
+            .on(
+              'postgres_changes',
+              {
+                event: '*',
+                schema: 'public',
+                table: 'products'
+              },
+              (payload) => {
+                try {
+                  console.log('Product update received:', payload.eventType);
+                  queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+                } catch (error) {
+                  console.error('Error processing product update:', error);
+                }
+              }
+            )
+            .subscribe((status) => {
+              isSubscribing = false;
+              
+              if (status === 'SUBSCRIBED') {
+                console.log('Successfully subscribed to products realtime');
+              } else if (status === 'CHANNEL_ERROR') {
+                console.error('Failed to subscribe to products channel, retrying in 5s...');
+                retryTimeout = setTimeout(setupSubscription, 5000);
+              } else if (status === 'TIMED_OUT') {
+                console.error('Products subscription timed out, retrying...');
+                retryTimeout = setTimeout(setupSubscription, 3000);
+              }
+            });
+        } catch (error) {
+          console.error('Error setting up products subscription:', error);
+          isSubscribing = false;
+          retryTimeout = setTimeout(setupSubscription, 5000);
+        }
+      }, 500);
     };
 
-    setupChannel();
+    setupSubscription();
 
     return () => {
+      clearTimeout(retryTimeout);
       if (channel) {
         supabase.removeChannel(channel).then(() => {
           channel = null;
