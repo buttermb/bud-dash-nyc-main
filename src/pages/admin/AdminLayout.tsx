@@ -3,6 +3,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { ChevronRight } from "lucide-react";
 import InstallPWA from "@/components/InstallPWA";
+import { Suspense } from "react";
+import { LoadingFallback } from "@/components/LoadingFallback";
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -48,7 +50,9 @@ const AdminLayout = () => {
             </nav>
           </header>
           <main className="flex-1 overflow-auto bg-muted/10 pb-safe">
-            <Outlet />
+            <Suspense fallback={<LoadingFallback />}>
+              <Outlet />
+            </Suspense>
           </main>
         </div>
       </div>
