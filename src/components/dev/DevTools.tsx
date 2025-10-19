@@ -33,12 +33,13 @@ export const DevTools = () => {
   const [activeTab, setActiveTab] = useState('logs');
   const logIdRef = useRef(0);
   const networkIdRef = useRef(0);
+  const interceptedRef = useRef(false);
 
-  // Temporarily visible on all environments for debugging
-  // TODO: Add admin toggle to disable this
-
-  useEffect(() => {
-    // Intercept console methods
+  // Start intercepting immediately, before any effects
+  if (!interceptedRef.current) {
+    interceptedRef.current = true;
+    
+    // Store original methods
     const originalLog = console.log;
     const originalWarn = console.warn;
     const originalError = console.error;
@@ -81,6 +82,10 @@ export const DevTools = () => {
       originalInfo(...args);
       addLog('info', args);
     };
+  }
+
+  useEffect(() => {
+    // Intercept fetch and error handlers
 
     // Intercept fetch
     const originalFetch = window.fetch;
@@ -119,6 +124,24 @@ export const DevTools = () => {
     };
 
     // Global error handler
+    const addLog = (type: LogEntry['type'], args: any[]) => {
+      const message = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+      ).join(' ');
+
+      setLogs(prev => {
+        const newLog: LogEntry = {
+          id: logIdRef.current++,
+          timestamp: new Date(),
+          type,
+          message,
+          args,
+          stack: type === 'error' ? new Error().stack : undefined,
+        };
+        return [...prev.slice(-999), newLog];
+      });
+    };
+
     const handleError = (event: ErrorEvent) => {
       addLog('error', [event.message, event.error]);
     };
@@ -131,10 +154,6 @@ export const DevTools = () => {
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
 
     return () => {
-      console.log = originalLog;
-      console.warn = originalWarn;
-      console.error = originalError;
-      console.info = originalInfo;
       window.fetch = originalFetch;
       window.removeEventListener('error', handleError);
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
