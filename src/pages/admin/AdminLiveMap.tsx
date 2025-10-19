@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminAlerts } from "@/components/admin/AdminAlerts";
-import { formatStatus } from "@/utils/stringHelpers";
+import { formatStatus, safeStatus } from "@/utils/stringHelpers";
+import { validateOrder } from "@/utils/realtimeValidation";
+import { productionLogger } from "@/utils/productionLogger";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -263,29 +265,43 @@ const AdminLiveMap = () => {
           "postgres_changes",
           { event: "*", schema: "public", table: "orders" },
           (payload) => {
-            const newRecord = payload.new as any;
-            const oldRecord = payload.old as any;
+            try {
+              const newRecord = payload.new as any;
+              const oldRecord = payload.old as any;
 
-            if (payload.eventType === 'INSERT') {
-              addActivity('order', `New order: ${newRecord.order_number}`, 'success');
-              playNotificationSound();
-            } else if (payload.eventType === 'UPDATE' && newRecord.status !== oldRecord?.status) {
-              addActivity('order', `Order ${newRecord.order_number} → ${(newRecord.status || 'pending').replace(/_/g, ' ')}`, 'info');
+              // Validate payload before processing
+              if (!validateOrder(newRecord)) {
+                productionLogger.warning('Invalid order payload in realtime', { payload });
+                return;
+              }
+
+              if (payload.eventType === 'INSERT') {
+                addActivity('order', `New order: ${newRecord.order_number}`, 'success');
+                playNotificationSound();
+              } else if (payload.eventType === 'UPDATE' && newRecord.status !== oldRecord?.status) {
+                addActivity('order', `Order ${newRecord.order_number} → ${safeStatus(newRecord.status)}`, 'info');
+              }
+              
+              fetchLiveDeliveries();
+              fetchRealtimeStats();
+            } catch (error) {
+              productionLogger.error('Error processing order realtime update', { payload, error: error instanceof Error ? error.message : 'Unknown error' });
             }
-            
-            fetchLiveDeliveries();
-            fetchRealtimeStats();
           }
         )
         .on(
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "couriers" },
           (payload) => {
-            const courier = payload.new as any;
-            if (courier.is_online && !payload.old?.is_online) {
-              addActivity('courier', `${courier.full_name} is now online`, 'success');
+            try {
+              const courier = payload.new as any;
+              if (courier?.is_online && !payload.old?.is_online && courier.full_name) {
+                addActivity('courier', `${courier.full_name} is now online`, 'success');
+              }
+              fetchLiveDeliveries();
+            } catch (error) {
+              productionLogger.error('Error processing courier realtime update', { payload, error: error instanceof Error ? error.message : 'Unknown error' });
             }
-            fetchLiveDeliveries();
           }
         )
         .subscribe((status) => {
