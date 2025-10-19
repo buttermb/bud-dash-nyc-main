@@ -34,6 +34,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { SkipToContent } from "./components/SkipToContent";
 import { LoadingFallback } from "./components/LoadingFallback";
 import { LiveChatWidget } from "./components/LiveChatWidget";
+import { DevTools } from "./components/dev/DevTools";
 
 import { NotificationPreferences } from "./components/NotificationPreferences";
 import OfflineBanner from "./components/OfflineBanner";
@@ -261,8 +262,9 @@ const App = () => (
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
-                </BrowserRouter>
+                 </BrowserRouter>
                 <LiveChatWidget />
+                <DevTools />
               </TooltipProvider>
             </CourierPinProvider>
           </CourierProvider>
