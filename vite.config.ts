@@ -26,14 +26,19 @@ import { componentTagger } from "lovable-tagger";
 import { deferCssPlugin } from "./vite-plugins/defer-css";
 import viteCompression from 'vite-plugin-compression';
 import { VitePWA } from 'vite-plugin-pwa';
+import { buildTimestampPlugin } from './vite-plugins/build-timestamp';
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
   },
+  define: {
+    'BUILD_TIMESTAMP': JSON.stringify(Date.now().toString())
+  },
   plugins: [
     react(), 
     mode === "development" && componentTagger(),
+    buildTimestampPlugin(),
     deferCssPlugin(),
     viteCompression({
       algorithm: 'brotliCompress',

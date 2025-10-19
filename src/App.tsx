@@ -37,6 +37,7 @@ import { LoadingFallback } from "./components/LoadingFallback";
 import { LiveChatWidget } from "./components/LiveChatWidget";
 import { DevTools } from "./components/dev/DevTools";
 import { setupGlobalErrorHandlers, handleQueryError, handleMutationError } from "./utils/reactErrorHandler";
+import { useVersionCheck } from "./hooks/useVersionCheck";
 
 import { NotificationPreferences } from "./components/NotificationPreferences";
 import OfflineBanner from "./components/OfflineBanner";
@@ -142,21 +143,24 @@ const queryClient = new QueryClient({
 setupGlobalErrorHandlers();
 
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <AdminAuthProvider>
-            <DeviceTracker />
-            <CourierProvider>
-              <CourierPinProvider>
-                <TooltipProvider>
-                    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                      <SkipToContent />
-                      <OfflineBanner />
-                      <InstallPWA />
-                      <CartBadgeAnimation />
+const App = () => {
+  useVersionCheck();
+  
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <AdminAuthProvider>
+              <DeviceTracker />
+              <CourierProvider>
+                <CourierPinProvider>
+                  <TooltipProvider>
+                      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                        <SkipToContent />
+                        <OfflineBanner />
+                        <InstallPWA />
+                        <CartBadgeAnimation />
                     
                     <Toaster />
                     <Sonner />
@@ -280,8 +284,9 @@ const App = () => (
           </AdminAuthProvider>
         </AuthProvider>
     </ThemeProvider>
-  </QueryClientProvider>
-  </ErrorBoundary>
-);
+    </QueryClientProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;
