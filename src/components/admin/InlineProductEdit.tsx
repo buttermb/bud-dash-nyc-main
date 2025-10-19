@@ -86,9 +86,9 @@ export function InlineProductEdit({
           <div className="flex-1">
             <h3 className="font-semibold truncate">{product.name}</h3>
             <div className="flex items-center gap-2 mt-1">
-              <Badge variant="outline">{product.category}</Badge>
+              <Badge variant="outline">{(product.category || 'uncategorized')}</Badge>
               {product.strain_type && (
-                <Badge variant="secondary">{product.strain_type}</Badge>
+                <Badge variant="secondary">{(product.strain_type || 'unknown')}</Badge>
               )}
             </div>
           </div>

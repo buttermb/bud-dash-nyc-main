@@ -143,7 +143,7 @@ export function AdvancedProductFilters({
                   size="sm"
                   onClick={() => toggleCategory(cat)}
                 >
-                  {cat}
+                  {(cat || 'unknown')}
                 </Button>
               ))}
             </div>
@@ -160,7 +160,7 @@ export function AdvancedProductFilters({
                   size="sm"
                   onClick={() => toggleStrainType(strain)}
                 >
-                  {strain}
+                  {(strain || 'unknown')}
                 </Button>
               ))}
             </div>

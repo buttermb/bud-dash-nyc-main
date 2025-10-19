@@ -104,7 +104,7 @@ export function ProductTableView({
             onClick={() => startEdit(product.id, field, product[field])}
           >
             <p className="font-medium">{product.name}</p>
-            <p className="text-xs text-muted-foreground">{product.category}</p>
+            <p className="text-xs text-muted-foreground">{(product.category || 'uncategorized')}</p>
           </div>
         );
       case "price":
