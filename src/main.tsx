@@ -18,6 +18,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { PerformanceMonitor } from "./utils/performance";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { validateAndCleanSession } from "./utils/sessionValidator";
 
 // Log app initialization
 console.log('[NYM] Starting app initialization...');
@@ -65,6 +66,13 @@ if (import.meta.env.DEV) {
     console.error('[NYM] Performance monitoring failed:', error);
   }
 }
+
+// Validate session before rendering (fixes production token issues)
+validateAndCleanSession().then(() => {
+  console.log('[NYM] Session validated');
+}).catch(err => {
+  console.error('[NYM] Session validation failed:', err);
+});
 
 // Render application with error handling
 try {
