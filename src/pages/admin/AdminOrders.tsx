@@ -79,7 +79,7 @@ export default function AdminOrders() {
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     if (!newStatus) return;
     
-    const statusLabel = newStatus.replace('_', ' ');
+    const statusLabel = newStatus?.replace('_', ' ') || newStatus;
     if (!confirm(`Change order status to "${statusLabel}"?`)) return;
 
     setUpdating(true);

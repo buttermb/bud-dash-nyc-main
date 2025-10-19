@@ -76,39 +76,20 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     try {
-      const [profilesRes, ordersRes, authRes] = await Promise.all([
-        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-        supabase.from("orders").select("user_id, total_amount, status"),
-        supabase.auth.admin.listUsers().catch(() => ({ data: { users: [] } }))
-      ]);
+      // Call edge function to get users with emails (requires service_role)
+      const { data, error } = await supabase.functions.invoke('get-admin-users');
+      
+      if (error) throw error;
+      if (!data?.users) throw new Error('No users data returned');
 
-      const profiles = profilesRes.data || [];
-      const orders = ordersRes.data || [];
-      const authUsers = authRes?.data?.users || [];
-
-      const authUserMap = new Map(authUsers.map((u: any) => [u.id, u]));
-      const ordersByUser = new Map<string, any[]>();
-      orders.forEach(order => {
-        if (!ordersByUser.has(order.user_id)) ordersByUser.set(order.user_id, []);
-        ordersByUser.get(order.user_id)!.push(order);
-      });
-
-      const enriched = profiles.map(p => {
-        const userOrders = ordersByUser.get(p.user_id) || [];
-        const authUser = authUserMap.get(p.user_id);
-        return {
-          ...p,
-          email: authUser?.email || "N/A",
-          last_sign_in: authUser?.last_sign_in_at,
-          order_count: userOrders.length,
-          total_spent: userOrders.reduce((s, o) => s + Number(o.total_amount || 0), 0),
-          pending_orders: userOrders.filter(o => ['pending', 'accepted', 'picked_up'].includes(o.status)).length,
-        };
-      });
-
-      setUsers(enriched);
+      setUsers(data.users);
     } catch (error: any) {
-      toast({ title: "Error loading users", description: error.message, variant: "destructive" });
+      console.error('Error fetching users:', error);
+      toast({ 
+        title: "Error loading users", 
+        description: error.message || 'Failed to load user data', 
+        variant: "destructive" 
+      });
     } finally {
       setLoading(false);
     }
