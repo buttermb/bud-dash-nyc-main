@@ -34,8 +34,8 @@ export const DevTools = () => {
   const logIdRef = useRef(0);
   const networkIdRef = useRef(0);
 
-  // Only show in development
-  if (import.meta.env.PROD) return null;
+  // Temporarily visible on all environments for debugging
+  // TODO: Add admin toggle to disable this
 
   useEffect(() => {
     // Intercept console methods
