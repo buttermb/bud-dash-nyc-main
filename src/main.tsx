@@ -74,19 +74,21 @@ validateAndCleanSession().then(() => {
   console.error('[NYM] Session validation failed:', err);
 });
 
-// Initialize LogRocket after DOM is ready
-if (import.meta.env.PROD) {
-  Promise.all([
-    import('logrocket'),
-    import('logrocket-react')
-  ]).then(([LogRocket, setupLogRocketReact]) => {
-    LogRocket.default.init('r9hn2j/bb');
-    setupLogRocketReact.default(LogRocket.default);
-    console.log('[NYM] LogRocket initialized with React integration');
-  }).catch(err => {
-    console.error('[NYM] LogRocket initialization failed:', err);
-  });
-}
+// LogRocket disabled - causes same React hook errors as Sentry
+// Both tools patch browser APIs in ways incompatible with Vite + React
+// Alternative: Use ErrorBoundary components with manual error logging
+// if (import.meta.env.PROD) {
+//   Promise.all([
+//     import('logrocket'),
+//     import('logrocket-react')
+//   ]).then(([LogRocket, setupLogRocketReact]) => {
+//     LogRocket.default.init('r9hn2j/bb');
+//     setupLogRocketReact.default(LogRocket.default);
+//     console.log('[NYM] LogRocket initialized with React integration');
+//   }).catch(err => {
+//     console.error('[NYM] LogRocket initialization failed:', err);
+//   });
+// }
 
 // Render application with error handling
 try {
