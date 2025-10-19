@@ -7,7 +7,6 @@ interface ErrorContext {
   userId?: string;
   page?: string;
   action?: string;
-  componentStack?: string;
   metadata?: Record<string, any>;
 }
 
@@ -137,63 +136,19 @@ class MonitoringService {
   }
 
   /**
-   * Send data to remote monitoring service and database
+   * Send data to monitoring service
    */
   private async sendToMonitoring(type: string, data: any) {
-    // Log to console in development
-    if (import.meta.env.DEV) {
-      console.log(`[Monitoring] ${type}:`, data);
-    }
-    
-    // Store locally for debugging
-    this.storeLocally(type, data);
-
-    // Send to database
     try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      
-      if (type === 'error') {
-        await supabase.from('error_logs').insert({
-          error_type: data.name || 'Error',
-          error_message: data.message || 'Unknown error',
-          error_stack: data.stack,
-          user_id: data.userId,
-          page_url: data.page || data.url || window.location.href,
-          user_agent: navigator.userAgent,
-          severity: this.determineSeverity(data),
-          context: data.metadata || data.context || {},
-        });
-      } else if (type === 'performance') {
-        await supabase.from('application_logs').insert({
-          log_level: 'info',
-          message: `Performance: ${data.name}`,
-          page_url: window.location.href,
-          data: { metric: data },
-        });
-      } else if (type === 'interaction') {
-        await supabase.from('application_logs').insert({
-          log_level: 'info',
-          message: `User interaction: ${data.action}`,
-          page_url: window.location.href,
-          data: data.details || {},
-        });
-      }
+      // In production, send to your monitoring service
+      // await fetch('/api/monitoring', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ type, data }),
+      // });
     } catch (error) {
       console.error('Failed to send monitoring data:', error);
     }
-  }
-
-  /**
-   * Determine error severity based on error type and context
-   */
-  private determineSeverity(error: any): 'low' | 'medium' | 'high' | 'critical' {
-    const message = error.message?.toLowerCase() || '';
-    
-    if (message.includes('network') || message.includes('fetch')) return 'medium';
-    if (message.includes('auth') || message.includes('permission')) return 'high';
-    if (message.includes('crash') || message.includes('fatal')) return 'critical';
-    
-    return 'medium';
   }
 
   /**

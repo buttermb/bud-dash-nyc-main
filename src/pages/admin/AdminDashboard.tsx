@@ -53,43 +53,27 @@ const AdminDashboard = () => {
   }, [session]);
 
   const setupRealtimeSubscription = () => {
-    try {
-      const channel = supabase
-        .channel('admin-realtime')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
-          // Use setTimeout to prevent render loop
-          setTimeout(() => {
-            setRealtimeActivity(prev => [{
-              type: 'new_order',
-              message: `New order #${payload.new.order_number}`,
-              timestamp: new Date(),
-              data: payload.new
-            }, ...prev].slice(0, 10));
-          }, 0);
-        })
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'fraud_flags' }, (payload) => {
-          setTimeout(() => {
-            setSystemAlerts(prev => [{
-              type: 'fraud_alert',
-              severity: 'high',
-              message: `Fraud detected: ${payload.new.flag_type}`,
-              timestamp: new Date()
-            }, ...prev].slice(0, 5));
-          }, 0);
-        })
-        .subscribe();
+    const channel = supabase
+      .channel('admin-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
+        setRealtimeActivity(prev => [{
+          type: 'new_order',
+          message: `New order #${payload.new.order_number}`,
+          timestamp: new Date(),
+          data: payload.new
+        }, ...prev].slice(0, 10));
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'fraud_flags' }, (payload) => {
+        setSystemAlerts(prev => [{
+          type: 'fraud_alert',
+          severity: 'high',
+          message: `Fraud detected: ${payload.new.flag_type}`,
+          timestamp: new Date()
+        }, ...prev].slice(0, 5));
+      })
+      .subscribe();
 
-      return () => { 
-        try {
-          supabase.removeChannel(channel);
-        } catch (e) {
-          console.error('Error removing channel:', e);
-        }
-      };
-    } catch (error) {
-      console.error('Error setting up realtime:', error);
-      return () => {};
-    }
+    return () => { supabase.removeChannel(channel); };
   };
 
   const fetchSystemHealth = async () => {
@@ -146,18 +130,29 @@ const AdminDashboard = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex items-center justify-between"
+      >
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
           <p className="text-muted-foreground">
             Real-time metrics and key performance indicators
           </p>
         </div>
-        <Badge variant={systemHealth.status === "healthy" ? "default" : "destructive"} className="gap-1">
-          <Activity className="h-3 w-3" />
-          {systemHealth.status === "healthy" ? "System Healthy" : "Attention Required"}
-        </Badge>
-      </div>
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 500 }}
+        >
+          <Badge variant={systemHealth.status === "healthy" ? "default" : "destructive"} className="gap-1">
+            <Activity className="h-3 w-3" />
+            {systemHealth.status === "healthy" ? "System Healthy" : "Attention Required"}
+          </Badge>
+        </motion.div>
+      </motion.div>
 
       {/* System Health Snapshot with Animation */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -206,7 +201,12 @@ const AdminDashboard = () => {
       </div>
 
       {/* Real-time Activity & Alerts */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+        className="grid gap-4 md:grid-cols-2"
+      >
         <RealtimeActivityFeed activities={realtimeActivity} />
         
         <RealtimeActivityFeed 
@@ -217,10 +217,16 @@ const AdminDashboard = () => {
             data: alert
           }))} 
         />
-      </div>
+      </motion.div>
 
       {/* Enhanced Quick Actions */}
-      <QuickActionGrid />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.9 }}
+      >
+        <QuickActionGrid />
+      </motion.div>
     </div>
   );
 };

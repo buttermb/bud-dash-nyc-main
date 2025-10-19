@@ -229,10 +229,10 @@ const ProductDetail = () => {
               </div>
               
               <div className="pt-3 border-t space-y-2">
-                <p className="font-semibold text-sm">Product Profile:</p>
+                <p className="font-semibold text-sm">Cannabinoid Profile:</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="p-2 bg-muted rounded">
-                    <p className="text-xs text-muted-foreground">Total Active Ingredients</p>
+                    <p className="text-xs text-muted-foreground">Total Cannabinoids</p>
                     <p className="font-bold">{product.thca_percentage || 0}%</p>
                   </div>
                   <div className="p-2 bg-muted rounded">
@@ -278,7 +278,7 @@ const ProductDetail = () => {
               <div className="space-y-2">
                 <p className="font-semibold">Effects Notice:</p>
                 <p className="text-muted-foreground">
-                  This product contains active ingredients that may produce intoxicating effects when heated or consumed. 
+                  This product contains cannabinoids that may produce intoxicating effects when heated or consumed. 
                   Do not operate vehicles or machinery after use.
                 </p>
               </div>

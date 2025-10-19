@@ -22,8 +22,7 @@ import {
   Bell,
   Search,
   Bug,
-  MessageCircle,
-  AlertCircle
+  MessageCircle
 } from "lucide-react";
 import {
   Sidebar,
@@ -93,7 +92,6 @@ const menuGroups = [
       { title: "Current Giveaway", url: "/admin/giveaway", icon: Gift },
       { title: "Coupon Codes", url: "/admin/coupons", icon: Ticket },
       { title: "Test Notifications", url: "/admin/notifications", icon: Bell },
-      { title: "Error Logs", url: "/admin/error-logs", icon: AlertCircle },
       { title: "Button Tester", url: "/admin/button-tester", icon: Bug },
     ]
   }
@@ -116,8 +114,8 @@ export function AdminSidebar() {
         {!isCollapsed && (
           <div className="space-y-1">
             <h2 className="text-lg font-semibold">Admin Portal</h2>
-            <p className="text-sm text-muted-foreground">{admin?.full_name || 'Admin'}</p>
-            <p className="text-xs text-muted-foreground capitalize">{admin?.role ? admin.role.replace('_', ' ') : 'Administrator'}</p>
+            <p className="text-sm text-muted-foreground">{admin?.full_name}</p>
+            <p className="text-xs text-muted-foreground capitalize">{admin?.role?.replace('_', ' ')}</p>
           </div>
         )}
         {isCollapsed && (

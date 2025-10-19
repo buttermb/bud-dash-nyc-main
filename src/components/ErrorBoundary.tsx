@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode, useEffect } from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
@@ -11,66 +11,25 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
-  errorInfo: ErrorInfo | null;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
     error: null,
-    errorInfo: null,
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error, errorInfo: null };
+    return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
-    this.setState({ errorInfo });
-    
-    // Check if this is an auth error
-    const isAuthError = error.message?.includes('JWT') || 
-                        error.message?.includes('auth') || 
-                        error.message?.includes('User from sub claim');
-    
-    if (isAuthError) {
-      // Clear all auth data
-      try {
-        localStorage.removeItem('sb-vltveasdxtfvvqbzxzuf-auth-token');
-        sessionStorage.clear();
-        
-        // Redirect to login after a brief delay
-        setTimeout(() => {
-          window.location.href = '/admin/login';
-        }, 1500);
-      } catch (e) {
-        console.error('Failed to clear auth data:', e);
-      }
-    }
-    
-    // Track to analytics
-    try {
-      analytics.trackError('error_boundary', error.message);
-    } catch (e) {
-      console.error('Failed to track to analytics:', e);
-    }
-    
-    // Track to monitoring service
-    try {
-      import('@/lib/monitoring').then(({ monitoring }) => {
-        monitoring.trackError(error, {
-          page: window.location.pathname,
-          componentStack: errorInfo.componentStack || '',
-        });
-      }).catch(e => console.error('Failed to import monitoring:', e));
-    } catch (e) {
-      console.error('Failed to track to monitoring:', e);
-    }
+    analytics.trackError('error_boundary', error.message);
   }
 
   private handleReset = () => {
-    this.setState({ hasError: false, error: null, errorInfo: null });
+    this.setState({ hasError: false, error: null });
     window.location.reload();
   };
 
@@ -98,14 +57,8 @@ export class ErrorBoundary extends Component<Props, State> {
                   <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
                     Error details
                   </summary>
-                  <pre className="mt-2 p-3 bg-muted rounded text-xs overflow-auto max-h-48">
+                  <pre className="mt-2 p-3 bg-muted rounded text-xs overflow-auto">
                     {this.state.error.message}
-                    {import.meta.env.DEV && this.state.errorInfo && (
-                      <>
-                        {'\n\n'}
-                        {this.state.errorInfo.componentStack}
-                      </>
-                    )}
                   </pre>
                 </details>
               )}

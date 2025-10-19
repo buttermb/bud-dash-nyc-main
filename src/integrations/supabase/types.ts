@@ -282,36 +282,6 @@ export type Database = {
         }
         Relationships: []
       }
-      application_logs: {
-        Row: {
-          created_at: string | null
-          data: Json | null
-          id: string
-          log_level: string | null
-          message: string
-          page_url: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          data?: Json | null
-          id?: string
-          log_level?: string | null
-          message: string
-          page_url?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          data?: Json | null
-          id?: string
-          log_level?: string | null
-          message?: string
-          page_url?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       audit_logs: {
         Row: {
           action: string
@@ -962,38 +932,6 @@ export type Database = {
           },
         ]
       }
-      courier_pin_sessions: {
-        Row: {
-          courier_id: string
-          created_at: string | null
-          expires_at: string
-          id: string
-          session_token: string
-        }
-        Insert: {
-          courier_id: string
-          created_at?: string | null
-          expires_at?: string
-          id?: string
-          session_token: string
-        }
-        Update: {
-          courier_id?: string
-          created_at?: string | null
-          expires_at?: string
-          id?: string
-          session_token?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "courier_pin_sessions_courier_id_fkey"
-            columns: ["courier_id"]
-            isOneToOne: false
-            referencedRelation: "couriers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       courier_shifts: {
         Row: {
           courier_id: string | null
@@ -1292,48 +1230,6 @@ export type Database = {
           multiple_accounts?: boolean | null
           os?: string | null
           user_id?: string
-        }
-        Relationships: []
-      }
-      error_logs: {
-        Row: {
-          context: Json | null
-          created_at: string | null
-          error_message: string
-          error_stack: string | null
-          error_type: string
-          id: string
-          page_url: string | null
-          resolved: boolean | null
-          severity: string | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          context?: Json | null
-          created_at?: string | null
-          error_message: string
-          error_stack?: string | null
-          error_type: string
-          id?: string
-          page_url?: string | null
-          resolved?: boolean | null
-          severity?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          context?: Json | null
-          created_at?: string | null
-          error_message?: string
-          error_stack?: string | null
-          error_type?: string
-          id?: string
-          page_url?: string | null
-          resolved?: boolean | null
-          severity?: string | null
-          user_agent?: string | null
-          user_id?: string | null
         }
         Relationships: []
       }
@@ -3180,10 +3076,6 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
-      create_courier_pin_session: {
-        Args: { p_courier_id: string }
-        Returns: string
-      }
       create_giveaway_entry_safe: {
         Args: {
           p_borough: string
@@ -3357,10 +3249,6 @@ export type Database = {
           _user_id: string
         }
         Returns: undefined
-      }
-      validate_courier_pin_session: {
-        Args: { p_courier_id: string; p_session_token: string }
-        Returns: boolean
       }
       verify_admin_pin: {
         Args: { courier_user_id: string; pin: string }

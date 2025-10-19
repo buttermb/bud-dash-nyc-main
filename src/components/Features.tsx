@@ -3,54 +3,64 @@ import { ShieldCheck, Zap, Leaf, Lock, DollarSign, MapPin } from "lucide-react";
 
 const features = [
   {
+    icon: ShieldCheck,
+    title: "Age Verified",
+    description: "Strict 21+ enforcement with ID verification at signup and delivery.",
+  },
+  {
     icon: Zap,
-    title: "Lightning Quick",
-    description: "From the Upper West Side to Red Hook, we deliver across all five boroughs in under 60 minutes.",
+    title: "Lightning Fast",
+    description: "Average delivery time under 45 minutes across Brooklyn, Queens, and Manhattan.",
+  },
+  {
+    icon: Leaf,
+    title: "100% Legal",
+    description: "Licensed Cannabinoid Hemp Retailer. All products comply with federal and state regulations.",
   },
   {
     icon: Lock,
-    title: "100% Discreet",
-    description: "No markings, complete privacy. Professional delivery that respects your discretion in the city that never sleeps.",
+    title: "Licensed Vendors",
+    description: "Only verified, licensed NYC smoke shops and dispensaries on our platform.",
+  },
+  {
+    icon: DollarSign,
+    title: "Flexible Payment",
+    description: "Pay with cash on delivery or cryptocurrency (Bitcoin, USDC).",
   },
   {
     icon: MapPin,
-    title: "NYC-Exclusive",
-    description: "Built for New Yorkers, by New Yorkers. We know every neighborhood and deliver with precision.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Lab-Tested",
-    description: "Only premium selections, every time. Third-party tested for purity and potency you can trust.",
+    title: "Track Your Order",
+    description: "Real-time updates from order placement to doorstep delivery.",
   },
 ];
 
 const Features = () => {
   return (
-    <section className="py-16 md:py-24 bg-background">
+    <section className="py-32">
       <div className="container px-4 mx-auto">
-        <div className="text-center space-y-3 md:space-y-4 mb-12 md:mb-16">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight">Why Choose Us</h2>
-          <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto">
-            Premium service that sets the NYC standard
+        <div className="text-center space-y-6 mb-24">
+          <h2 className="text-6xl md:text-7xl font-black uppercase tracking-wider">Why Choose Us</h2>
+          <p className="text-2xl text-muted-foreground max-w-3xl mx-auto font-medium">
+            Safe, legal, and convenient delivery you can trust
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
               <Card 
                 key={index} 
-                className="border border-border/50 hover:border-primary/40 transition-all duration-300 hover:shadow-elegant hover:-translate-y-1 bg-card/90 backdrop-blur-sm group"
+                className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-elegant hover:-translate-y-2 bg-card/50 backdrop-blur-sm p-8"
               >
-                <CardHeader className="pb-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Icon className="w-6 h-6 text-white" />
+                <CardHeader>
+                  <div className="w-16 h-16 rounded-lg bg-gradient-primary flex items-center justify-center mb-6">
+                    <Icon className="w-8 h-8 text-primary-foreground" />
                   </div>
-                  <CardTitle className="text-xl font-bold uppercase tracking-wide">{feature.title}</CardTitle>
+                  <CardTitle className="text-2xl font-black uppercase tracking-wide">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                  <p className="text-muted-foreground text-lg">{feature.description}</p>
                 </CardContent>
               </Card>
             );

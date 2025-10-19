@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Open Sans', 'system-ui', 'sans-serif'],
-        heading: ['Montserrat', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -56,14 +56,13 @@ export default {
         'gradient-primary': 'var(--gradient-primary)',
         'gradient-hero': 'var(--gradient-hero)',
         'gradient-vibrant': 'var(--gradient-vibrant)',
-        'gradient-subtle': 'var(--gradient-subtle)',
-        'gradient-accent': 'var(--gradient-accent)',
+        'gradient-neon': 'var(--gradient-neon)',
+        'gradient-bold': 'var(--gradient-bold)',
       },
       boxShadow: {
         'elegant': 'var(--shadow-elegant)',
         'strong': 'var(--shadow-strong)',
         'glow': 'var(--shadow-glow)',
-        'accent': 'var(--shadow-accent)',
         'neon': 'var(--neon-glow)',
       },
       transitionProperty: {

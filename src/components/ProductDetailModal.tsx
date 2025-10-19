@@ -325,7 +325,7 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
                 <Card>
                   <CardContent className="p-4 text-center">
                     <p className="text-3xl font-bold text-primary">{product.thca_percentage}%</p>
-                    <p className="text-xs text-muted-foreground">Active Ingredient %</p>
+                    <p className="text-xs text-muted-foreground">Cannabinoid %</p>
                   </CardContent>
                 </Card>
               )}
@@ -618,7 +618,7 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
               <div>
                 <h3 className="text-xl font-bold mb-4">Terpene Profile</h3>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Terpenes are aromatic compounds that contribute to the unique flavor, aroma, and effects of the product.
+                  Terpenes are aromatic compounds that contribute to the unique flavor, aroma, and effects of cannabis.
                 </p>
                 <div className="space-y-4">
                   {(Array.isArray(product.terpenes) ? product.terpenes : Object.entries(product.terpenes)).map((terpene: any, index: number) => {
@@ -710,11 +710,11 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
               </div>
 
               <div className="p-6 bg-muted/50 rounded-lg space-y-4">
-                <p className="font-semibold">Product Profile:</p>
+                <p className="font-semibold">Cannabinoid Profile:</p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <p className="text-xs text-muted-foreground mb-1">Total Active Ingredients</p>
+                      <p className="text-xs text-muted-foreground mb-1">Total Cannabinoids</p>
                       <p className="text-2xl font-bold text-primary">{product.thca_percentage || 0}%</p>
                     </CardContent>
                   </Card>
@@ -755,7 +755,7 @@ export const ProductDetailModal = ({ product, open, onOpenChange, onAuthRequired
                   </div>
                   <div>
                     <p className="font-semibold text-foreground">Effects Notice:</p>
-                    <p>This product contains active ingredients that may produce intoxicating effects when heated or consumed. Do not operate vehicles or machinery after use.</p>
+                    <p>This product contains cannabinoids that may produce intoxicating effects when heated or consumed. Do not operate vehicles or machinery after use.</p>
                   </div>
                   <div>
                     <p className="font-semibold text-foreground">Drug Testing:</p>

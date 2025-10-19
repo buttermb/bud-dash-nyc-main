@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import NYMLogo from "./NYMLogo";
-import NewsletterSignup from "./NewsletterSignup";
 
 const Footer = () => {
   const [legalOpen, setLegalOpen] = useState(false);
@@ -27,40 +26,35 @@ const Footer = () => {
   };
   
   return (
-    <footer className="bg-[hsl(0_0%_8%)] border-t border-border py-12 md:py-16">
+    <footer className="bg-[hsl(222_47%_8%)] border-t border-border py-8 md:py-12">
       <div className="container px-4 mx-auto">
-        {/* Newsletter Section */}
-        <div className="mb-12 max-w-4xl mx-auto">
-          <NewsletterSignup />
-        </div>
-
         {/* Compliance Badges Section */}
-        <div className="mb-10 pb-10 border-b border-border/50">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div className="flex items-center gap-3 p-5 bg-primary/5 rounded-xl border border-primary/20 hover:border-primary/30 transition-colors">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Shield className="w-6 h-6 text-primary" />
+        <div className="mb-8 pb-8 border-b">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+            <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-lg border border-primary/20">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Shield className="w-5 h-5 text-primary" />
               </div>
               <div className="text-sm">
-                <p className="font-bold text-foreground">Licensed Vendors</p>
+                <p className="font-semibold">Licensed Vendors</p>
                 <p className="text-xs text-muted-foreground">NY State Compliant</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-5 bg-primary/5 rounded-xl border border-primary/20 hover:border-primary/30 transition-colors">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Award className="w-6 h-6 text-primary" />
+            <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-lg border border-primary/20">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Award className="w-5 h-5 text-primary" />
               </div>
               <div className="text-sm">
-                <p className="font-bold text-foreground">Lab Tested</p>
+                <p className="font-semibold">Lab Tested</p>
                 <p className="text-xs text-muted-foreground">Third-Party Verified</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-5 bg-primary/5 rounded-xl border border-primary/20 hover:border-primary/30 transition-colors">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Lock className="w-6 h-6 text-primary" />
+            <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-lg border border-primary/20">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Lock className="w-5 h-5 text-primary" />
               </div>
               <div className="text-sm">
-                <p className="font-bold text-foreground">21+ Only</p>
+                <p className="font-semibold">21+ Only</p>
                 <p className="text-xs text-muted-foreground">Age Verified</p>
               </div>
             </div>
@@ -168,8 +162,8 @@ const Footer = () => {
                   <Badge variant="outline" className="mt-1 flex-shrink-0">21+</Badge>
                   <div className="text-[11px] text-muted-foreground space-y-2 leading-relaxed">
                     <p className="font-semibold text-foreground">Legal & Compliance Information:</p>
-                    <p><strong>Licensed Premium Retailer</strong><br/>
-                    NYC Department of Consumer Affairs License</p>
+                    <p><strong>Licensed Cannabinoid Hemp Retailer</strong><br/>
+                    NY Office of Cannabis Management License #[Pending]</p>
                     <p>All products are derived from hemp and contain less than 0.3% Delta-9 THC on a dry-weight basis, complying with federal and New York State regulations.</p>
                     <p><strong>Age Restriction:</strong> Must be 21+ with valid government ID. ID verification required at delivery.</p>
                     <p><strong>Health Notice:</strong> Products may produce intoxicating effects when heated or consumed. Do not use if pregnant, nursing, or operating vehicles/machinery. May result in positive drug test results.</p>

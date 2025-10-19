@@ -69,7 +69,7 @@ export default function ImportExport() {
         "Category",
         "Price",
         "Stock",
-        "Active%",
+        "Cannabinoid%",
         "CBD%",
         "Strain Type",
         "Description",
@@ -206,12 +206,12 @@ export default function ImportExport() {
               case "stock quantity":
                 product.stock_quantity = Math.max(0, parseInt(value) || 0);
                 break;
-              case "active%":
+              case "cannabinoid%":
               case "thca%":
               case "thca":
                 const thca = parseFloat(value);
                 if (isNaN(thca) || thca < 0 || thca > 100) {
-                  throw new Error("Active ingredient % must be between 0 and 100");
+                  throw new Error("Cannabinoid % must be between 0 and 100");
                 }
                 product.thca_percentage = thca;
                 break;
@@ -325,7 +325,7 @@ export default function ImportExport() {
       if (error.code === "23505") {
         errorMessage = "Duplicate product detected. Some products may already exist in the database.";
       } else if (error.code === "23502") {
-        errorMessage = "Missing required field. Ensure all products have Name, Category, Price, and Active%.";
+        errorMessage = "Missing required field. Ensure all products have Name, Category, Price, and Cannabinoid%.";
       }
       
       toast({
@@ -450,7 +450,7 @@ export default function ImportExport() {
               id="csv-data"
               value={csvData}
               onChange={(e) => setCsvData(e.target.value)}
-              placeholder="Paste CSV data here or use the upload button below...&#10;&#10;Example:&#10;Name,Category,Price,Stock,Active%,Description,In Stock&#10;Purple Haze,flower,45,15,24.5,Premium indoor flower,Yes"
+              placeholder="Paste CSV data here or use the upload button below...&#10;&#10;Example:&#10;Name,Category,Price,Stock,Cannabinoid%,Description,In Stock&#10;Purple Haze,flower,45,15,24.5,Premium indoor flower,Yes"
               rows={12}
               className="mt-1.5 font-mono text-sm"
             />
@@ -516,7 +516,7 @@ export default function ImportExport() {
               CSV Format Example
             </h3>
             <pre className="text-xs overflow-x-auto p-3 bg-background rounded border">
-{`Name,Category,Price,Stock,Active%,CBD%,Strain Type,Description,In Stock,Image URL
+{`Name,Category,Price,Stock,Cannabinoid%,CBD%,Strain Type,Description,In Stock,Image URL
 Purple Haze,flower,45,15,24.5,0.5,sativa,"Premium indoor flower",Yes,https://example.com/img1.jpg
 Gelato Pre-Rolls,pre-rolls,35,28,22.8,0.3,hybrid,"Hand-rolled joints",Yes,https://example.com/img2.jpg
 Blue Dream Vape,vapes,55,42,28.2,0.1,sativa,"Premium distillate",Yes,https://example.com/img3.jpg`}

@@ -51,7 +51,7 @@ export const CourierOrderCard = memo(({
         <div>
           <h3 className="font-bold text-lg">#{order.order_number}</h3>
           <Badge variant={isActive ? 'default' : 'secondary'} className="mt-1">
-            {order.status?.replace('_', ' ') || 'Pending'}
+            {order.status.replace('_', ' ')}
           </Badge>
         </div>
         {showEarnings && (

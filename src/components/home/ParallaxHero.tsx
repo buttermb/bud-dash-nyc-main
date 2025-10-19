@@ -39,19 +39,19 @@ export function ParallaxHero() {
             key={i}
             className="absolute w-2 h-2 bg-primary/20 rounded-full"
             animate={{
-              x: [0, (i % 5) * 20 - 50],
-              y: [0, (i % 7) * 15 - 50],
+              x: [0, Math.random() * 100 - 50],
+              y: [0, Math.random() * 100 - 50],
               scale: [1, 1.5, 1],
               opacity: [0.2, 0.5, 0.2],
             }}
             transition={{
-              duration: 3 + (i % 3),
+              duration: Math.random() * 3 + 2,
               repeat: Infinity,
               ease: "easeInOut",
             }}
             style={{
-              left: `${(i * 5) % 100}%`,
-              top: `${(i * 7) % 100}%`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
             }}
           />
         ))}

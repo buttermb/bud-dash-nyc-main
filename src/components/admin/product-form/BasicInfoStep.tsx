@@ -101,7 +101,7 @@ export function BasicInfoStep({ formData, updateFormData }: BasicInfoStepProps) 
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="thca">Active Ingredient Percentage *</Label>
+            <Label htmlFor="thca">Cannabinoid Percentage *</Label>
             <div className="flex items-center mt-1.5">
               <Input
                 id="thca"

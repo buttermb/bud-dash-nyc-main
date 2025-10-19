@@ -14,10 +14,9 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Show loading state
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -34,10 +33,11 @@ const AdminLogin = () => {
     
     try {
       await signIn(email, password);
-      // Redirect will happen automatically when admin state updates
-      navigate("/admin/dashboard");
+      // Wait a bit for state to update, then redirect
+      setTimeout(() => {
+        navigate("/admin/dashboard", { replace: true });
+      }, 100);
     } catch (error) {
-      console.error("Login error:", error);
       setLoading(false);
     }
   };

@@ -80,7 +80,7 @@ const EmailCaptureSection = () => {
                 ✓ New product alerts
               </span>
               <span className="flex items-center gap-1">
-                ✓ Product education
+                ✓ Cannabis education
               </span>
             </div>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, memo, useCallback } from "react";
+import { useState, memo, useCallback, useMemo } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,6 @@ import { getDefaultWeight } from "@/utils/productHelpers";
 import { useProductViewCount } from "@/hooks/useProductViewCount";
 import { useGuestCart } from "@/hooks/useGuestCart";
 import { haptics } from "@/utils/haptics";
-import { motion } from "framer-motion";
 import {
   Carousel,
   CarouselContent,
@@ -38,14 +37,7 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
   const [loading, setLoading] = useState(false);
   const [added, setAdded] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [soldCount, setSoldCount] = useState(0);
   const queryClient = useQueryClient();
-
-  // Generate stable sold count on mount
-  useEffect(() => {
-    setSoldCount(Math.floor(Math.random() * 30) + 15);
-  }, [product.id]);
 
   // Use provided stockLevel instead of making individual API call
   const actualStockLevel = stockLevel !== undefined ? stockLevel : 0;
@@ -55,14 +47,6 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
     haptics.light();
     addToRecentlyViewed(product.id);
     setShowDetailModal(true);
-  };
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
   };
 
   const getProductBadge = () => {
@@ -176,20 +160,13 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -8, scale: 1.02 }}
-        transition={{ duration: 0.3 }}
-        onHoverStart={handleMouseEnter}
-        onHoverEnd={handleMouseLeave}
+      <Card 
+        className="group overflow-hidden hover:ring-2 hover:ring-primary/50 hover:shadow-glow 
+                   transition-all duration-500 cursor-pointer relative bg-card 
+                   hover:-translate-y-3 hover:brightness-105 animate-scale-in
+                   border-2 border-primary/10 hover:border-primary/30"
+        onClick={handleCardClick}
       >
-        <Card 
-          className={`group overflow-hidden hover:shadow-2xl hover:shadow-primary/20
-                     transition-all duration-300 cursor-pointer relative bg-card/95 backdrop-blur-sm
-                     border-2 ${isHovered ? 'border-primary ring-2 ring-primary/40' : 'border-border/50'}`}
-          onClick={handleCardClick}
-        >
         {/* Out of Stock Overlay */}
         {!product.in_stock && (
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
@@ -227,19 +204,12 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
             <CarouselContent>
               {productImages.map((image, index) => (
                 <CarouselItem key={index}>
-                  <motion.div
-                    animate={{
-                      scale: isHovered ? 1.1 : 1,
-                    }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <OptimizedProductImage
-                      src={image}
-                      alt={`${product.name} - Image ${index + 1}`}
-                      className="w-full h-72"
-                      priority={index === 0}
-                    />
-                  </motion.div>
+                  <OptimizedProductImage
+                    src={image}
+                    alt={`${product.name} - Image ${index + 1}`}
+                    className="w-full h-72"
+                    priority={index === 0}
+                  />
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -250,13 +220,6 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
               </>
             )}
           </Carousel>
-          
-          {/* Hover overlay with gradient */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isHovered ? 1 : 0 }}
-            className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none"
-          />
         </div>
 
         <CardContent className="p-6 space-y-4">
@@ -308,7 +271,7 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
             )}
             <Badge variant="secondary" className="text-xs">
               <TrendingUp className="h-3 w-3 mr-1" />
-              {soldCount} sold this week
+              {Math.floor(Math.random() * 30) + 15} sold this week
             </Badge>
           </div>
         </CardContent>
@@ -324,11 +287,12 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
               handleAddToCart();
             }}
             disabled={loading || !product.in_stock || added}
-            className={`w-full h-14 text-base font-bold uppercase relative overflow-hidden
-                       transition-all hover:shadow-accent hover:scale-105 ${
-              added ? 'animate-pulse bg-green-600 hover:bg-green-600' : 'bg-accent hover:bg-accent-dark'
+            className={`w-full h-14 text-base font-black uppercase relative overflow-hidden
+                       transition-bounce hover:shadow-glow ${
+              added ? 'animate-pulse bg-green-600 hover:bg-green-600' : ''
             }`}
             size="lg"
+            variant={added ? "secondary" : "hero"}
           >
             {loading ? (
               <>
@@ -351,8 +315,8 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
           <Button
             type="button"
             variant="outline"
-            className="w-full hover:bg-primary/10 hover:border-primary font-semibold uppercase text-sm
-                       transition-all hover:scale-105"
+            className="w-full hover:bg-primary/10 hover:border-primary font-bold
+                       transition-smooth hover:scale-105"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -363,7 +327,6 @@ const ProductCard = memo(function ProductCard({ product, onAuthRequired, stockLe
           </Button>
         </CardFooter>
       </Card>
-      </motion.div>
 
       <ProductDetailModal
         product={product}

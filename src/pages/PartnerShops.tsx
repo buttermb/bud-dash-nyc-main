@@ -99,7 +99,7 @@ const PartnerShops = () => {
           <section className="mb-12">
             <h2 className="text-2xl font-semibold mb-4">Requirements</h2>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-              <li>Valid New York state retail license</li>
+              <li>Valid New York state cannabis retail license</li>
               <li>Physical location in Brooklyn, Queens, or Manhattan</li>
               <li>Third-party lab testing for all products</li>
               <li>Liability insurance coverage</li>
@@ -171,7 +171,7 @@ const PartnerShops = () => {
                 <Label htmlFor="license">License Number *</Label>
                 <Input
                   id="license"
-                  placeholder="NY state retail license number"
+                  placeholder="NY state cannabis retail license number"
                   value={formData.license}
                   onChange={(e) => setFormData({ ...formData, license: e.target.value })}
                   required

@@ -31,7 +31,6 @@ import { CourierPinProvider } from "./contexts/CourierPinContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { lazy, Suspense } from "react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { AuthErrorBoundary } from "./components/AuthErrorBoundary";
 import { SkipToContent } from "./components/SkipToContent";
 import { LoadingFallback } from "./components/LoadingFallback";
 import { LiveChatWidget } from "./components/LiveChatWidget";
@@ -44,7 +43,6 @@ import { CartBadgeAnimation } from "./components/CartBadgeAnimation";
 // Eager load critical pages
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import AdminLayout from "./pages/admin/AdminLayout"; // Eager load AdminLayout to avoid context issues
 
 // Lazy load non-critical pages
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
@@ -68,15 +66,15 @@ const CourierEarnings = lazy(() => import("./pages/CourierEarnings"));
 const CourierHistory = lazy(() => import("./pages/CourierHistory"));
 const CourierProfile = lazy(() => import("./pages/CourierProfile"));
 const MerchantDashboard = lazy(() => import("./pages/MerchantDashboard"));
-import AdminLogin from "./pages/AdminLogin";
+const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
 const Cart = lazy(() => import("./pages/Cart"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const MyOrders = lazy(() => import("./pages/MyOrders"));
-import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
-// AdminLayout is now eagerly imported above
+const AdminProtectedRoute = lazy(() => import("./components/admin/AdminProtectedRoute"));
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminLiveMap = lazy(() => import("./pages/admin/AdminLiveMap"));
@@ -88,7 +86,6 @@ const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminUserDetails = lazy(() => import("./pages/admin/AdminUserDetails"));
 const RiskFactorManagement = lazy(() => import("./pages/admin/RiskFactorManagement"));
 const UserAccount = lazy(() => import("./pages/UserAccount"));
-const VerifyID = lazy(() => import("./pages/VerifyID"));
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AdminAuditLogs = lazy(() => import("./pages/admin/AdminAuditLogs"));
 const AdminAgeVerification = lazy(() => import("./pages/admin/AdminAgeVerification"));
@@ -119,7 +116,6 @@ const GlobalSearch = lazy(() => import("./pages/admin/GlobalSearch"));
 const SystemSettings = lazy(() => import("./pages/admin/SystemSettings"));
 const ButtonTester = lazy(() => import("./pages/admin/ButtonTester"));
 const AdminLiveChat = lazy(() => import("./pages/admin/AdminLiveChat"));
-const ErrorLogs = lazy(() => import("./pages/admin/ErrorLogs"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -137,22 +133,20 @@ const queryClient = new QueryClient({
 
 
 const App = () => (
-  <AuthErrorBoundary>
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <AuthProvider>
-            <DeviceTracker />
-            <AdminProvider>
-              <CourierProvider>
-                <CourierPinProvider>
-                  <TooltipProvider>
-                    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                      <div suppressHydrationWarning>
-                      <SkipToContent />
-                      <OfflineBanner />
-                      <InstallPWA />
-                      <CartBadgeAnimation />
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <DeviceTracker />
+          <AdminProvider>
+            <CourierProvider>
+              <CourierPinProvider>
+                <TooltipProvider>
+                  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                    <SkipToContent />
+                    <OfflineBanner />
+                    <InstallPWA />
+                    <CartBadgeAnimation />
                     
                     <Toaster />
                     <Sonner />
@@ -215,7 +209,6 @@ const App = () => (
                       <Route path="/order-tracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
                       <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
                       <Route path="/account" element={<ProtectedRoute><UserAccount /></ProtectedRoute>} />
-                      <Route path="/verify-id" element={<ProtectedRoute><VerifyID /></ProtectedRoute>} />
                       <Route path="/settings/notifications" element={
                         <ProtectedRoute><NotificationPreferences /></ProtectedRoute>
                       } />
@@ -250,7 +243,7 @@ const App = () => (
                         <Route path="coa-management" element={<COAManagement />} />
                 <Route path="giveaway" element={<AdminGiveaway />} />
                 <Route path="giveaways" element={<AdminGiveaways />} />
-                <Route path="giveaways/manage" element={<AdminGiveawayManagement />} />
+                <Route path="giveaways/manage" element={<Suspense fallback={<LoadingFallback />}><AdminGiveawayManagement /></Suspense>} />
                 <Route path="giveaways/new" element={<AdminGiveawayForm />} />
                 <Route path="giveaways/:id/edit" element={<AdminGiveawayForm />} />
                 <Route path="giveaways/:id/analytics" element={<AdminGiveawayAnalytics />} />
@@ -263,24 +256,21 @@ const App = () => (
                 <Route path="settings" element={<SystemSettings />} />
                 <Route path="button-tester" element={<ButtonTester />} />
                 <Route path="live-chat" element={<AdminLiveChat />} />
-                <Route path="error-logs" element={<ErrorLogs />} />
               </Route>
 
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
-                  </div>
-                  </BrowserRouter>
-                  <LiveChatWidget />
-                </TooltipProvider>
-              </CourierPinProvider>
-            </CourierProvider>
-          </AdminProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
-    </ErrorBoundary>
-  </AuthErrorBoundary>
+                </BrowserRouter>
+                <LiveChatWidget />
+              </TooltipProvider>
+            </CourierPinProvider>
+          </CourierProvider>
+        </AdminProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

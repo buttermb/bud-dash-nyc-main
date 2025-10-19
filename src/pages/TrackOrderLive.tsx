@@ -314,7 +314,7 @@ export default function TrackOrderLive() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Status</span>
-                <span className="font-semibold capitalize">{order.status?.replace(/_/g, ' ') || 'Pending'}</span>
+                <span className="font-semibold capitalize">{order.status.replace(/_/g, ' ')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Placed At</span>

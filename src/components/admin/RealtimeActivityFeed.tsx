@@ -64,7 +64,7 @@ export function RealtimeActivityFeed({ activities }: RealtimeActivityFeedProps) 
                     </div>
                   </div>
                   <Badge variant="secondary" className="text-xs">
-                    {activity.type?.replace('_', ' ') || activity.type || 'Activity'}
+                    {activity.type.replace('_', ' ')}
                   </Badge>
                 </motion.div>
               ))

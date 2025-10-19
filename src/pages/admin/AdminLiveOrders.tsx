@@ -101,10 +101,7 @@ const AdminLiveOrders = () => {
     }
   };
 
-  const getStatusBadge = (status: string | undefined) => {
-    if (!status) {
-      return { variant: "secondary", label: "Unknown", color: "bg-gray-500" };
-    }
+  const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: any; label: string; color: string }> = {
       accepted: { variant: "default", label: "Accepted", color: "bg-blue-500" },
       confirmed: { variant: "default", label: "Confirmed", color: "bg-purple-500" },
@@ -114,15 +111,14 @@ const AdminLiveOrders = () => {
     return variants[status] || { variant: "secondary", label: status, color: "bg-gray-500" };
   };
 
-  const getNextStatus = (currentStatus: string | undefined) => {
-    if (!currentStatus) return null;
+  const getNextStatus = (currentStatus: string) => {
     const statusFlow: Record<string, string> = {
       accepted: "confirmed",
       confirmed: "preparing",
       preparing: "out_for_delivery",
       out_for_delivery: "delivered",
     };
-    return statusFlow[currentStatus] || null;
+    return statusFlow[currentStatus];
   };
 
   if (loading) {
@@ -196,8 +192,8 @@ const AdminLiveOrders = () => {
                         Delivery Address
                       </div>
                       <div className="text-sm pl-6">
-                        <p>{order.delivery_address || 'No address provided'}</p>
-                        <p className="text-muted-foreground capitalize">{order.delivery_borough || 'Unknown borough'}</p>
+                        <p>{order.delivery_address}</p>
+                        <p className="text-muted-foreground capitalize">{order.delivery_borough}</p>
                       </div>
                       {order.delivery_notes && (
                         <p className="text-sm text-muted-foreground pl-6 italic">
@@ -214,10 +210,10 @@ const AdminLiveOrders = () => {
                       </div>
                       {order.courier ? (
                         <div className="text-sm pl-6">
-                          <p className="font-medium">{order.courier.full_name || 'Unknown courier'}</p>
-                          <p className="text-muted-foreground">{order.courier.phone || 'No phone'}</p>
+                          <p className="font-medium">{order.courier.full_name}</p>
+                          <p className="text-muted-foreground">{order.courier.phone}</p>
                           <p className="text-muted-foreground">
-                            {order.courier.vehicle_type || 'Vehicle'} - {order.courier.vehicle_plate || 'N/A'}
+                            {order.courier.vehicle_type} - {order.courier.vehicle_plate}
                           </p>
                           <Badge variant="outline" className="mt-1">
                             {order.courier.is_online ? "Online" : "Offline"}
@@ -261,14 +257,14 @@ const AdminLiveOrders = () => {
                   {/* Actions */}
                   {nextStatus && (
                     <div className="flex gap-2 pt-2">
-                        <Button
-                          size="sm"
-                          onClick={() => updateOrderStatus(order.id, nextStatus)}
-                          className="flex items-center gap-2"
-                        >
-                          <CheckCircle className="h-4 w-4" />
-                          Mark as {nextStatus?.replace('_', ' ') || 'Next Status'}
-                        </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => updateOrderStatus(order.id, nextStatus)}
+                        className="flex items-center gap-2"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        Mark as {nextStatus.replace('_', ' ')}
+                      </Button>
                     </div>
                   )}
                 </CardContent>

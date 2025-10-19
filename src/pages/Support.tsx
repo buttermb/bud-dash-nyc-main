@@ -1,6 +1,5 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { SEOHead } from "@/components/SEOHead";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,16 +26,12 @@ const Support = () => {
 
   return (
     <div className="min-h-screen flex flex-col pb-20 md:pb-0">
-      <SEOHead 
-        title="Support - New York Minute NYC"
-        description="Get help with your delivery order. Contact our support team via live chat, email, or phone. Available 8 AM - 10 PM EST daily."
-      />
       <Navigation />
       
-      <main className="flex-1 py-20 md:py-24">
+      <main className="flex-1 py-20">
         <div className="container max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h1 className="heading-bold mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Customer Support
             </h1>
             <p className="text-xl text-muted-foreground">
@@ -107,7 +102,7 @@ const Support = () => {
                     />
                   </div>
 
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" className="w-full" variant="hero">
                     Send Message
                   </Button>
                 </form>

@@ -77,10 +77,7 @@ export default function AdminOrders() {
   const { eta } = useETATracking(selectedOrder?.id || null);
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    if (!newStatus) return;
-    
-    const statusLabel = newStatus?.replace('_', ' ') || newStatus;
-    if (!confirm(`Change order status to "${statusLabel}"?`)) return;
+    if (!confirm(`Change order status to "${newStatus.replace('_', ' ')}"?`)) return;
 
     setUpdating(true);
     try {
@@ -88,7 +85,7 @@ export default function AdminOrders() {
         body: {
           orderId,
           status: newStatus,
-          message: `Status updated to ${statusLabel}`
+          message: `Status updated to ${newStatus.replace('_', ' ')}`
         }
       });
 
@@ -96,7 +93,7 @@ export default function AdminOrders() {
 
       toast({
         title: '✓ Status updated',
-        description: `Order status changed to ${statusLabel}`
+        description: `Order status changed to ${newStatus.replace('_', ' ')}`
       });
 
       await refetch();
@@ -293,7 +290,7 @@ export default function AdminOrders() {
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <p className="font-semibold">${parseFloat((order.total_amount || 0).toString()).toFixed(2)}</p>
+                    <p className="font-semibold">${parseFloat(order.total_amount.toString()).toFixed(2)}</p>
                   </td>
                   <td className="px-6 py-4">{getStatusBadge(order.status)}</td>
                   <td className="px-6 py-4">
@@ -465,19 +462,19 @@ export default function AdminOrders() {
                     <div className="space-y-2">
                       {selectedOrder.order_items?.map((item, idx) => (
                         <div key={idx} className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-                          {item.products?.image_url && (
+                          {item.products.image_url && (
                             <img 
                               src={item.products.image_url} 
-                              alt={item.products.name || 'Product'}
+                              alt={item.products.name}
                               className="w-12 h-12 rounded object-cover"
                             />
                           )}
                           <div className="flex-1">
                             <p className="font-semibold">
-                              {item.quantity}x {item.products?.name || 'Unknown product'}
+                              {item.quantity}x {item.products.name}
                             </p>
                           </div>
-                          <p className="font-semibold">${parseFloat((item.price || 0).toString()).toFixed(2)}</p>
+                          <p className="font-semibold">${parseFloat(item.price.toString()).toFixed(2)}</p>
                         </div>
                       ))}
                     </div>
@@ -486,7 +483,7 @@ export default function AdminOrders() {
                   <div className="pt-4 border-t">
                     <div className="flex justify-between text-xl font-bold">
                       <span>Total:</span>
-                      <span>${parseFloat((selectedOrder.total_amount || 0).toString()).toFixed(2)}</span>
+                      <span>${parseFloat(selectedOrder.total_amount.toString()).toFixed(2)}</span>
                     </div>
                     {selectedOrder.delivered_at && (
                       <p className="text-sm text-muted-foreground mt-2">

@@ -531,9 +531,9 @@ const SidebarMenuSkeleton = React.forwardRef<
     showIcon?: boolean;
   }
 >(({ className, showIcon = false, ...props }, ref) => {
-  // Use stable width to prevent hydration issues
+  // Random width between 50 to 90%.
   const width = React.useMemo(() => {
-    return "70%";
+    return `${Math.floor(Math.random() * 40) + 50}%`;
   }, []);
 
   return (

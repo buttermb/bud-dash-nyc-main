@@ -1,14 +1,7 @@
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 
 export default function GiveawayRules() {
-  const [dateStr, setDateStr] = useState('');
-  
-  useEffect(() => {
-    setDateStr(new Date().toLocaleDateString());
-  }, []);
-
   return (
     <div className="min-h-screen bg-background py-12">
       <div className="max-w-4xl mx-auto px-4">
@@ -23,7 +16,7 @@ export default function GiveawayRules() {
         <div className="bg-card border border-border rounded-lg p-8 space-y-8">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-black mb-2">Official Giveaway Rules</h1>
-            <p className="text-muted-foreground">Last Updated: {dateStr || 'Loading...'}</p>
+            <p className="text-muted-foreground">Last Updated: {new Date().toLocaleDateString()}</p>
           </div>
 
           <section>
@@ -81,7 +74,7 @@ export default function GiveawayRules() {
               <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                 <h3 className="font-bold text-lg mb-2">🥇 Grand Prize - 1 Winner</h3>
                 <p className="text-muted-foreground">1 LB Premium Flower - Retail Value: $4,000</p>
-                <p className="text-muted-foreground mt-2">Full pound of premium flower delivered same-day to your door</p>
+                <p className="text-muted-foreground mt-2">Full pound of premium cannabis flower delivered same-day to your door</p>
               </div>
               <div className="p-4 bg-gray-500/10 border border-gray-500/20 rounded-lg">
                 <h3 className="font-bold text-lg mb-2">🥈 Second Prize - 1 Winner</h3>

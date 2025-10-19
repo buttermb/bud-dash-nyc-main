@@ -84,7 +84,7 @@ export function SignatureCapture({ orderId, onComplete, customerName }: Signatur
 
         <div className="p-3 bg-muted/50 rounded-lg">
           <p className="text-xs text-muted-foreground">
-            By signing, the customer confirms receipt of order #{orderId?.slice(0, 8).toUpperCase() || 'UNKNOWN'} 
+            By signing, the customer confirms receipt of order #{orderId.slice(0, 8).toUpperCase()} 
             and age verification (21+).
           </p>
         </div>

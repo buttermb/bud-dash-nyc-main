@@ -28,12 +28,12 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section id="how-it-works" className="py-16 md:py-24 bg-muted/20">
+    <section id="how-it-works" className="py-16 md:py-32 bg-muted/30">
       <div className="container px-4 mx-auto">
-        <div className="text-center space-y-3 md:space-y-4 mb-12 md:mb-16">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight">How It Works</h2>
-          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-            Three simple steps to premium delivery
+        <div className="text-center space-y-4 md:space-y-6 mb-12 md:mb-24">
+          <h2 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-wider">How It Works</h2>
+          <p className="text-lg md:text-2xl text-muted-foreground max-w-3xl mx-auto font-medium">
+            Three simple steps to get premium flower delivered
           </p>
         </div>
 

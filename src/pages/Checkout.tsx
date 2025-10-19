@@ -173,32 +173,20 @@ const Checkout = () => {
   const calculateDeliveryFee = (isGuest = !user) => {
     if (!borough) return 0;
     
-    // Base delivery fees
-    let baseFee = 0;
-    if (borough === "brooklyn" || borough === "queens") {
-      baseFee = isGuest ? 5.50 : 5.00;
-    } else if (borough === "manhattan") {
-      baseFee = isGuest ? 11.00 : 10.00;
-    }
-    
-    // Express delivery logic
-    if (deliveryType === "express") {
-      // FREE express for orders $500+
-      if (subtotal >= 500) return 0;
-      
-      // 30% discount on express for orders $100-$499
-      if (subtotal >= 100) {
-        return baseFee * 0.70; // 30% off
-      }
-      
-      // 30% surcharge for express on orders < $100
-      return baseFee * 1.30;
-    }
-    
-    // Standard/Economy delivery - free for orders $100+
+    // Free delivery for orders $100+ (both member and guest)
     if (subtotal >= 100) return 0;
     
-    return baseFee;
+    // Brooklyn/Queens pricing
+    if (borough === "brooklyn" || borough === "queens") {
+      return isGuest ? 5.50 : 5.00;
+    }
+    
+    // Manhattan pricing (includes $5 city surcharge)
+    if (borough === "manhattan") {
+      return isGuest ? 11.00 : 10.00;
+    }
+    
+    return 0;
   };
 
   const deliveryFee = calculateDeliveryFee();
@@ -674,11 +662,7 @@ const Checkout = () => {
                             <span className="text-xs font-normal text-primary">~25-45 min</span>
                           </h4>
                           <p className="text-xs text-muted-foreground">
-                            {subtotal >= 500 
-                              ? 'FREE express delivery!' 
-                              : subtotal >= 100 
-                                ? '30% off delivery fee' 
-                                : '30% extra delivery fee'}
+                            {subtotal >= 500 ? 'FREE!' : subtotal >= 100 ? '+30% delivery fee' : '+30% delivery fee'}
                           </p>
                         </div>
                       </div>

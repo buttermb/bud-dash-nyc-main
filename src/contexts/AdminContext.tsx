@@ -14,7 +14,6 @@ interface AdminContextType {
   admin: AdminUser | null;
   session: Session | null;
   loading: boolean;
-  error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -25,158 +24,82 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
   const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-
-  const clearAuthData = () => {
-    // Clear all auth-related data from storage
-    localStorage.removeItem('sb-vltveasdxtfvvqbzxzuf-auth-token');
-    sessionStorage.clear();
-    
-    // Clear any cached queries
-    try {
-      window.location.reload();
-    } catch (e) {
-      console.error('Failed to reload:', e);
-    }
-  };
 
   const verifyAdmin = async (currentSession: Session) => {
     try {
-      setError(null);
+      // Check if user has admin role - use RPC function for efficiency
+      const isAdmin = await has_role(currentSession.user.id, 'admin');
       
-      // Verify the session is still valid with Supabase
-      const { data: { user }, error: userError } = await supabase.auth.getUser(currentSession.access_token);
-      
-      if (userError || !user) {
-        console.error("Session invalid - user doesn't exist:", userError);
-        clearAuthData();
-        await supabase.auth.signOut();
-        setError("Session expired. Please log in again.");
-        setLoading(false);
-        return;
-      }
-      
-      // Get admin details directly
-      const { data: adminData, error: adminError } = await supabase
-        .from("admin_users")
-        .select("id, email, full_name, role")
-        .eq("user_id", currentSession.user.id)
-        .eq("is_active", true)
-        .maybeSingle();
+      if (isAdmin) {
+        // Get admin details
+        const { data: adminData, error: adminError } = await supabase
+          .from("admin_users")
+          .select("id, email, full_name, role")
+          .eq("user_id", currentSession.user.id)
+          .eq("is_active", true)
+          .maybeSingle();
 
-      if (adminError) {
-        console.error("Admin lookup error:", adminError);
-        
-        // If it's a 403/user not found error, clear auth
-        if (adminError.code === 'PGRST116' || adminError.message?.includes('does not exist')) {
-          clearAuthData();
-          await supabase.auth.signOut();
-          setError("Admin account not found. Please log in again.");
-          setLoading(false);
-          return;
+        if (adminError) throw adminError;
+
+        if (adminData) {
+          setAdmin({
+            id: adminData.id,
+            email: adminData.email,
+            full_name: adminData.full_name,
+            role: adminData.role
+          });
+          setSession(currentSession);
+        } else {
+          setAdmin(null);
+          setSession(null);
         }
-        
-        throw adminError;
-      }
-
-      if (adminData && adminData.role) {
-        setAdmin({
-          id: adminData.id,
-          email: adminData.email,
-          full_name: adminData.full_name || 'Admin',
-          role: adminData.role
-        });
-        setSession(currentSession);
-        setError(null);
       } else {
-        clearAuthData();
-        await supabase.auth.signOut();
         setAdmin(null);
         setSession(null);
-        setError("Admin account not found or inactive");
       }
-    } catch (err: any) {
-      // Only log detailed errors in development
-      if (import.meta.env.DEV) {
-        console.error("Admin verification failed:", err);
-      } else {
-        // In production, log to security events table (fire and forget)
-        supabase.from('security_events').insert({
-          event_type: 'admin_verification_failed',
-          user_id: currentSession.user.id,
-          details: { error: err instanceof Error ? err.message : 'Unknown error' }
-        });
-      }
-      
-      // Clear auth data on verification failure
-      clearAuthData();
-      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Admin verification failed:", error);
       setAdmin(null);
       setSession(null);
-      setError(err.message || "Admin verification failed");
     } finally {
       setLoading(false);
     }
   };
 
+  // Helper function to check admin role using RPC
+  const has_role = async (userId: string, role: string): Promise<boolean> => {
+    const { data, error } = await supabase.rpc('has_role', {
+      _user_id: userId,
+      _role: role as 'admin' | 'courier' | 'user'
+    });
+    return !error && data === true;
+  };
 
   useEffect(() => {
-    let mounted = true;
-    
-    const initAuth = async () => {
-      try {
-        // Check existing session
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Session fetch error:", error);
-          if (mounted) {
-            setError(error.message);
-            setLoading(false);
-          }
-          return;
-        }
-
-        if (session && mounted) {
-          await verifyAdmin(session);
-        } else if (mounted) {
-          setLoading(false);
-        }
-      } catch (err: any) {
-        // Only log in development
-        if (import.meta.env.DEV) {
-          console.error("Auth initialization error:", err);
-        }
-        if (mounted) {
-          setError(err.message || "Failed to initialize auth");
-          setLoading(false);
-        }
+    // Check existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        verifyAdmin(session);
+      } else {
+        setLoading(false);
       }
-    };
-
-    initAuth();
+    });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        if (!mounted) return;
-        
         if (session) {
           verifyAdmin(session);
         } else {
           setAdmin(null);
           setSession(null);
-          setError(null);
           setLoading(false);
         }
       }
     );
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -189,7 +112,11 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
       if (authError) throw authError;
       if (!authData.session) throw new Error("No session returned");
 
-      // Get admin details directly
+      // Check admin role using RPC function
+      const isAdmin = await has_role(authData.user.id, 'admin');
+      if (!isAdmin) throw new Error("You don't have admin access");
+
+      // Get admin details
       const { data: adminData, error: adminError } = await supabase
         .from("admin_users")
         .select("id, email, full_name, role")
@@ -198,7 +125,7 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         .maybeSingle();
 
       if (adminError) throw adminError;
-      if (!adminData) throw new Error("You don't have admin access");
+      if (!adminData) throw new Error("Admin account is not active");
 
       setSession(authData.session);
       setAdmin({
@@ -255,7 +182,7 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AdminContext.Provider value={{ admin, session, loading, error, signIn, signOut }}>
+    <AdminContext.Provider value={{ admin, session, loading, signIn, signOut }}>
       {children}
     </AdminContext.Provider>
   );

@@ -25,17 +25,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log('Initial session:', !!session);
         setSession(session);
         setUser(session?.user ?? null);
-        
-        // Identify user in LogRocket
-        if (session?.user && import.meta.env.PROD) {
-          import('logrocket').then((LogRocket) => {
-            LogRocket.default.identify(session.user.id, {
-              email: session.user.email,
-              created_at: session.user.created_at,
-            });
-          });
-        }
-        
         setLoading(false);
       }
     });
@@ -48,17 +37,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (mounted) {
           setSession(session);
           setUser(session?.user ?? null);
-          
-          // Identify user in LogRocket on sign in
-          if (session?.user && event === 'SIGNED_IN' && import.meta.env.PROD) {
-            import('logrocket').then((LogRocket) => {
-              LogRocket.default.identify(session.user.id, {
-                email: session.user.email,
-                created_at: session.user.created_at,
-              });
-            });
-          }
-          
           setLoading(false);
         }
       }

@@ -86,7 +86,7 @@ const PurchaseLimits = () => {
           <p>• Flower limit: 3 ounces (85.05g) per day</p>
           <p>• Concentrate limit: 24 grams per day</p>
           <p>• Limits reset daily at 12:00 AM EST</p>
-          <p>• Per NYC regulations</p>
+          <p>• Per NYC cannabis regulations</p>
         </div>
       </CardContent>
     </Card>

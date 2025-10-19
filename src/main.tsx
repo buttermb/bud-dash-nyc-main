@@ -17,8 +17,8 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { PerformanceMonitor } from "./utils/performance";
+import { initializeSecurityObfuscation } from "./utils/securityObfuscation";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { validateAndCleanSession } from "./utils/sessionValidator";
 
 // Log app initialization
 console.log('[NYM] Starting app initialization...');
@@ -30,7 +30,14 @@ console.log('[NYM] Theme state:', {
   prefersDark: window.matchMedia('(prefers-color-scheme: dark)').matches
 });
 
-// Security obfuscation removed - was security theater that didn't provide real protection
+// Initialize security obfuscation in production
+if (import.meta.env.PROD) {
+  try {
+    initializeSecurityObfuscation();
+  } catch (error) {
+    console.error('[NYM] Security obfuscation failed:', error);
+  }
+}
 
 // Register service worker for PWA capabilities and caching
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
@@ -66,29 +73,6 @@ if (import.meta.env.DEV) {
     console.error('[NYM] Performance monitoring failed:', error);
   }
 }
-
-// Validate session before rendering (fixes production token issues)
-validateAndCleanSession().then(() => {
-  console.log('[NYM] Session validated');
-}).catch(err => {
-  console.error('[NYM] Session validation failed:', err);
-});
-
-// LogRocket disabled - causes same React hook errors as Sentry
-// Both tools patch browser APIs in ways incompatible with Vite + React
-// Alternative: Use ErrorBoundary components with manual error logging
-// if (import.meta.env.PROD) {
-//   Promise.all([
-//     import('logrocket'),
-//     import('logrocket-react')
-//   ]).then(([LogRocket, setupLogRocketReact]) => {
-//     LogRocket.default.init('r9hn2j/bb');
-//     setupLogRocketReact.default(LogRocket.default);
-//     console.log('[NYM] LogRocket initialized with React integration');
-//   }).catch(err => {
-//     console.error('[NYM] LogRocket initialization failed:', err);
-//   });
-// }
 
 // Render application with error handling
 try {
