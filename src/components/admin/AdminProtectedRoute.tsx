@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Loader2 } from "lucide-react";
 
 interface AdminProtectedRouteProps {
