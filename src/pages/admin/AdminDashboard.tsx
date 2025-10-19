@@ -82,8 +82,8 @@ const AdminDashboard = () => {
       const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
       const [unresolvedFlags, activeOrders] = await Promise.all([
-        supabase.from("fraud_flags").select("id", { count: "exact", head: true }).is("resolved_at", null),
-        supabase.from("orders").select("id", { count: "exact", head: true }).gte("created_at", oneHourAgo.toISOString()),
+        supabase.from("fraud_flags").select("*", { count: "exact" }).is("resolved_at", null),
+        supabase.from("orders").select("*", { count: "exact" }).gte("created_at", oneHourAgo.toISOString()),
       ]);
 
       setSystemHealth({
