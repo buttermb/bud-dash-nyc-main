@@ -145,6 +145,7 @@ const App = () => (
               <CourierPinProvider>
                 <TooltipProvider>
                   <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                    <div suppressHydrationWarning>
                     <SkipToContent />
                     <OfflineBanner />
                     <InstallPWA />
@@ -264,6 +265,7 @@ const App = () => (
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
+                  </div>
                 </BrowserRouter>
                 <LiveChatWidget />
               </TooltipProvider>
