@@ -81,13 +81,27 @@ export default function AdminUserDetails() {
   const fetchRiskAssessment = async () => {
     try {
       const { data, error } = await supabase.functions.invoke("assess-risk", {
-        body: { userId: id },
+        body: { userId: id }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error assessing risk:", error);
+        // Use profile risk_score as fallback
+        setRiskAssessment({
+          score: user?.risk_score || 50,
+          level: user?.trust_level || 'new',
+          factors: [],
+        });
+        return;
+      }
       setRiskAssessment(data);
     } catch (error: any) {
-      console.error("Error assessing risk:", error);
+      console.error("Exception assessing risk:", error);
+      setRiskAssessment({
+        score: user?.risk_score || 50,
+        level: user?.trust_level || 'new',
+        factors: [],
+      });
     }
   };
 

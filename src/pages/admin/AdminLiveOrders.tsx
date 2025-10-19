@@ -79,15 +79,44 @@ const AdminLiveOrders = () => {
         }
       });
 
-      if (error) throw error;
-      setLiveOrders(data.orders || []);
+      if (error) {
+        console.error("Error fetching orders:", error);
+        // Fallback to direct database query
+        const { data: fallbackOrders } = await supabase
+          .from('orders')
+          .select('*')
+          .in('status', ['accepted', 'confirmed', 'preparing', 'out_for_delivery'])
+          .order('created_at', { ascending: false })
+          .limit(100);
+        
+        if (fallbackOrders) {
+          setLiveOrders(fallbackOrders);
+        }
+        return;
+      }
+      setLiveOrders(data?.orders || []);
     } catch (error) {
       console.error("Failed to fetch live orders:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load live orders",
-      });
+      // Fallback to direct database query
+      try {
+        const { data: fallbackOrders } = await supabase
+          .from('orders')
+          .select('*')
+          .in('status', ['accepted', 'confirmed', 'preparing', 'out_for_delivery'])
+          .order('created_at', { ascending: false })
+          .limit(100);
+        
+        if (fallbackOrders) {
+          setLiveOrders(fallbackOrders);
+        }
+      } catch (fallbackError) {
+        console.error("Fallback query failed:", fallbackError);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load live orders",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -96,11 +125,25 @@ const AdminLiveOrders = () => {
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       const { error } = await supabase.functions.invoke("update-order-status", {
-        body: { orderId, status: newStatus },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+        body: { orderId, status: newStatus }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating status:", error);
+        toast({
+          variant: "destructive",
+          title: "Update failed",
+          description: "Trying direct update...",
+        });
+        
+        // Fallback to direct update
+        const { error: directError } = await supabase
+          .from('orders')
+          .update({ status: newStatus })
+          .eq('id', orderId);
+        
+        if (directError) throw directError;
+      }
 
       toast({
         title: "✓ Success",

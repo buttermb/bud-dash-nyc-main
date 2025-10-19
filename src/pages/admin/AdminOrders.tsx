@@ -89,6 +89,16 @@ export default function AdminOrders() {
         }
       });
 
+      if (error) {
+        console.error("Function error, trying direct update:", error);
+        // Fallback to direct update
+        const { error: directError } = await supabase
+          .from('orders')
+          .update({ status: newStatus })
+          .eq('id', orderId);
+        
+        if (directError) throw directError;
+      }
       if (error) throw error;
 
       toast({

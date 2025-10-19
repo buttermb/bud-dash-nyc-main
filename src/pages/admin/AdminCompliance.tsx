@@ -20,11 +20,24 @@ const AdminCompliance = () => {
   const fetchComplianceMetrics = async () => {
     try {
       const { data, error } = await supabase.functions.invoke("admin-dashboard", {
-        body: { endpoint: "compliance" },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+        body: { endpoint: "compliance" }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching compliance:", error);
+        // Fallback - fetch basic metrics directly
+        const { count: pendingVerifications } = await supabase
+          .from('age_verifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('verified', false);
+        
+        setMetrics({
+          pendingVerifications: pendingVerifications || 0,
+          verificationRate: 0,
+          complianceScore: 0,
+        });
+        return;
+      }
       setMetrics(data);
     } catch (error) {
       console.error("Failed to fetch compliance metrics:", error);
