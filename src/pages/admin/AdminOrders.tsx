@@ -77,7 +77,7 @@ export default function AdminOrders() {
   const { eta } = useETATracking(selectedOrder?.id || null);
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    if (!confirm(`Change order status to "${newStatus.replace('_', ' ')}"?`)) return;
+    if (!confirm(`Change order status to "${(newStatus || 'pending').replace(/_/g, ' ')}"`)) return;
 
     setUpdating(true);
     try {
@@ -85,7 +85,7 @@ export default function AdminOrders() {
         body: {
           orderId,
           status: newStatus,
-          message: `Status updated to ${newStatus.replace('_', ' ')}`
+          message: `Status updated to ${(newStatus || 'pending').replace(/_/g, ' ')}`
         }
       });
 
@@ -93,7 +93,7 @@ export default function AdminOrders() {
 
       toast({
         title: '✓ Status updated',
-        description: `Order status changed to ${newStatus.replace('_', ' ')}`
+        description: `Order status changed to ${(newStatus || 'pending').replace(/_/g, ' ')}`
       });
 
       await refetch();
