@@ -74,26 +74,15 @@ validateAndCleanSession().then(() => {
   console.error('[NYM] Session validation failed:', err);
 });
 
-// Sentry temporarily disabled - was causing React hook errors
-// TODO: Re-implement with proper React integration
-// if (import.meta.env.PROD) {
-//   import('@sentry/react').then((Sentry) => {
-//     Sentry.init({
-//       dsn: "https://6099e29c19e8cc84fcc39a505b32e3dc@o4510213707333632.ingest.us.sentry.io/4510213708316672",
-//       environment: import.meta.env.MODE,
-//       tracesSampleRate: 0.1,
-//       replaysSessionSampleRate: 0.1,
-//       replaysOnErrorSampleRate: 1.0,
-//       integrations: [
-//         Sentry.browserTracingIntegration(),
-//         Sentry.replayIntegration(),
-//       ],
-//     });
-//     console.log('[NYM] Sentry initialized');
-//   }).catch(err => {
-//     console.error('[NYM] Sentry initialization failed:', err);
-//   });
-// }
+// Initialize LogRocket after DOM is ready
+if (import.meta.env.PROD) {
+  import('logrocket').then((LogRocket) => {
+    LogRocket.default.init('r9hn2j/bb');
+    console.log('[NYM] LogRocket initialized');
+  }).catch(err => {
+    console.error('[NYM] LogRocket initialization failed:', err);
+  });
+}
 
 // Render application with error handling
 try {
