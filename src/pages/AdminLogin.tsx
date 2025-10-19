@@ -1,43 +1,58 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
-import { useAdmin } from "@/contexts/AdminContext";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Loader2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 const AdminLogin = () => {
-  const { admin, signIn, loading: authLoading } = useAdmin();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  // Redirect authenticated admins
-  if (admin && !loading) {
-    return <Navigate to="/admin/dashboard" replace />;
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      await signIn(email, password);
-      // Wait a bit for state to update, then redirect
-      setTimeout(() => {
-        navigate("/admin/dashboard", { replace: true });
-      }, 100);
-    } catch (error) {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) throw authError;
+      if (!authData.session) throw new Error("No session returned");
+
+      // Check admin role directly from user_roles table
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", authData.user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (roleError || !roleData) {
+        await supabase.auth.signOut();
+        throw new Error("You don't have admin access");
+      }
+
+      toast({
+        title: "Welcome back!",
+        description: "Logged in successfully",
+      });
+
+      navigate("/admin/dashboard", { replace: true });
+    } catch (error: any) {
+      console.error("Admin sign in error:", error);
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error.message || "Invalid credentials",
+      });
       setLoading(false);
     }
   };
