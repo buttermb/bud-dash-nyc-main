@@ -137,6 +137,9 @@ if (!intercepted) {
 }
 
 export const DevTools = () => {
+  // Only show in development - disable in production to prevent errors
+  if (import.meta.env.PROD) return null;
+  
   const [isOpen, setIsOpen] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([...globalLogs]);
   const [network, setNetwork] = useState<NetworkEntry[]>([...globalNetwork]);
