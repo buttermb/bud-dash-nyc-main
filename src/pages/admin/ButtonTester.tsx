@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { Play, CheckCircle, XCircle, AlertCircle, Loader2, Download, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
+import { formatBugType } from "@/utils/stringHelpers";
+import { isValidBugReport } from "@/utils/typeGuards";
 
 interface ButtonTest {
   label: string;
@@ -867,7 +869,14 @@ const ButtonTester = () => {
                         {page.bugs.length > 0 && (
                           <div className="bg-muted/50 rounded p-3 space-y-2">
                             <h4 className="font-semibold text-sm">🐛 Bugs Detected:</h4>
-                            {page.bugs.map((bug, bugIndex) => (
+                            {page.bugs.map((bug, bugIndex) => {
+                              // Validate bug object
+                              if (!isValidBugReport(bug)) {
+                                console.warn('Invalid bug report:', bug);
+                                return null;
+                              }
+                              
+                              return (
                               <div key={bugIndex} className="text-xs flex items-start gap-2">
                                 <Badge 
                                   variant="outline" 
@@ -876,14 +885,15 @@ const ButtonTester = () => {
                                   {bug.severity}
                                 </Badge>
                                 <div className="flex-1">
-                                  <p className="font-medium">{bug.type?.replace('-', ' ').toUpperCase() || 'UNKNOWN'}</p>
+                                  <p className="font-medium">{formatBugType(bug.type)?.toUpperCase() || 'UNKNOWN'}</p>
                                   <p className="text-muted-foreground">{bug.message}</p>
                                   {bug.element && (
                                     <p className="text-muted-foreground truncate">Element: {bug.element}</p>
                                   )}
                                 </div>
                               </div>
-                            ))}
+                            );
+                            }).filter(Boolean)}
                           </div>
                         )}
                         

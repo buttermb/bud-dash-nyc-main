@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, User, Package, ShoppingCart, MapPin, Mail, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { formatStatus } from "@/utils/stringHelpers";
 
 const GlobalSearch = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -164,7 +165,7 @@ const GlobalSearch = () => {
                           <div className="flex items-center gap-2">
                             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                             <h3 className="font-semibold">Order #{order.order_number}</h3>
-                            <Badge>{(order.status || 'pending').replace(/_/g, ' ')}</Badge>
+                            <Badge>{formatStatus(order.status)}</Badge>
                           </div>
                           <div className="text-sm text-muted-foreground">
                             Customer: {order.profiles?.full_name || order.customer_name || "Guest"}

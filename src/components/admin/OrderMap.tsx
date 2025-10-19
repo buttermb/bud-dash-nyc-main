@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Navigation, Layers, Route, Eye, EyeOff, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { formatStatus } from '@/utils/stringHelpers';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -219,7 +220,7 @@ export const OrderMap = ({ orders, activeCouriers = [], selectedOrderId, onOrder
               📍 ${order.delivery_address}
             </div>
             <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
-              Status: <span style="color: ${statusColor}; font-weight: 600;">${(order.status || 'pending').replace('_', ' ').toUpperCase()}</span>
+              Status: <span style="color: ${statusColor}; font-weight: 600;">${formatStatus(order.status).toUpperCase()}</span>
             </div>
             ${order.eta_minutes ? `
               <div style="font-size: 12px; background: #eff6ff; padding: 6px; border-radius: 4px; border-left: 3px solid #3b82f6;">

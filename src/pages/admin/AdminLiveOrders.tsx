@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { MapPin, Package, Clock, Truck, Phone, DollarSign, CheckCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatStatus } from "@/utils/stringHelpers";
 
 const AdminLiveOrders = () => {
   const { session } = useAdminAuth();
@@ -324,7 +325,7 @@ const AdminLiveOrders = () => {
                         className="flex items-center gap-2"
                       >
                         <CheckCircle className="h-4 w-4" />
-                        Mark as {(nextStatus || 'pending').replace(/_/g, ' ')}
+                        Mark as {formatStatus(nextStatus)}
                       </Button>
                     </div>
                   )}

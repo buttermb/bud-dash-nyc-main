@@ -11,6 +11,7 @@ import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
 import { OrderMap } from '@/components/admin/OrderMap';
 import { CourierDispatchPanel } from '@/components/admin/CourierDispatchPanel';
 import { useETATracking } from '@/hooks/useETATracking';
+import { formatStatus } from '@/utils/stringHelpers';
 
 interface Order {
   id: string;
@@ -77,7 +78,7 @@ export default function AdminOrders() {
   const { eta } = useETATracking(selectedOrder?.id || null);
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    if (!confirm(`Change order status to "${(newStatus || 'pending').replace(/_/g, ' ')}"`)) return;
+    if (!confirm(`Change order status to "${formatStatus(newStatus)}"`)) return;
 
     setUpdating(true);
     try {
@@ -85,7 +86,7 @@ export default function AdminOrders() {
         body: {
           orderId,
           status: newStatus,
-          message: `Status updated to ${(newStatus || 'pending').replace(/_/g, ' ')}`
+          message: `Status updated to ${formatStatus(newStatus)}`
         }
       });
 
@@ -103,7 +104,7 @@ export default function AdminOrders() {
 
       toast({
         title: '✓ Status updated',
-        description: `Order status changed to ${(newStatus || 'pending').replace(/_/g, ' ')}`
+        description: `Order status changed to ${formatStatus(newStatus)}`
       });
 
       await refetch();
@@ -124,10 +125,11 @@ export default function AdminOrders() {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = statusOptions.find(s => s.value === (status || 'pending'));
+    const safeStatus = status || 'pending';
+    const statusConfig = statusOptions.find(s => s.value === safeStatus);
     return (
       <Badge className={statusConfig?.color || 'bg-gray-100'}>
-        {statusConfig?.label || (status || 'pending').replace(/_/g, ' ')}
+        {statusConfig?.label || formatStatus(safeStatus)}
       </Badge>
     );
   };

@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, ShoppingCart, AlertTriangle, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatActionType } from "@/utils/stringHelpers";
+import { isValidActivity } from "@/utils/typeGuards";
 
 interface ActivityItem {
   type: string;
@@ -38,7 +40,14 @@ export function RealtimeActivityFeed({ activities }: RealtimeActivityFeedProps) 
         <div className="space-y-3 max-h-96 overflow-y-auto">
           <AnimatePresence mode="popLayout">
             {activities.length > 0 ? (
-              activities.map((activity, idx) => (
+              activities.map((activity, idx) => {
+                // Validate activity before processing
+                if (!isValidActivity(activity)) {
+                  console.warn('Invalid activity object:', activity);
+                  return null;
+                }
+                
+                return (
                 <motion.div
                   key={`${activity.timestamp}-${idx}`}
                   initial={{ opacity: 0, x: -20, height: 0 }}
@@ -64,10 +73,11 @@ export function RealtimeActivityFeed({ activities }: RealtimeActivityFeedProps) 
                     </div>
                   </div>
                   <Badge variant="secondary" className="text-xs">
-                    {(activity.type || 'activity').replace('_', ' ')}
+                    {formatActionType(activity.type)}
                   </Badge>
                 </motion.div>
-              ))
+              );
+              }).filter(Boolean)
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}

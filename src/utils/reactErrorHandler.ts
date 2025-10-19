@@ -10,6 +10,15 @@ export const handleComponentError = (error: Error, errorInfo?: React.ErrorInfo) 
   if (import.meta.env.DEV) {
     console.error('Component Error:', error);
     console.error('Error Info:', errorInfo);
+    
+    // Log specific details for replace errors
+    if (error.message?.includes('replace')) {
+      console.error('Replace Error Details:', {
+        error: error.message,
+        stack: error.stack,
+        componentStack: errorInfo?.componentStack
+      });
+    }
   }
 
   // Show user-friendly message
