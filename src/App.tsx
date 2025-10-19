@@ -118,6 +118,7 @@ const GlobalSearch = lazy(() => import("./pages/admin/GlobalSearch"));
 const SystemSettings = lazy(() => import("./pages/admin/SystemSettings"));
 const ButtonTester = lazy(() => import("./pages/admin/ButtonTester"));
 const AdminLiveChat = lazy(() => import("./pages/admin/AdminLiveChat"));
+const ErrorLogs = lazy(() => import("./pages/admin/ErrorLogs"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -260,6 +261,7 @@ const App = () => (
                 <Route path="settings" element={<SystemSettings />} />
                 <Route path="button-tester" element={<ButtonTester />} />
                 <Route path="live-chat" element={<AdminLiveChat />} />
+                <Route path="error-logs" element={<ErrorLogs />} />
               </Route>
 
                       <Route path="*" element={<NotFound />} />

@@ -28,7 +28,17 @@ export class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     this.setState({ errorInfo });
+    
+    // Track to analytics
     analytics.trackError('error_boundary', error.message);
+    
+    // Track to monitoring service
+    import('@/lib/monitoring').then(({ monitoring }) => {
+      monitoring.trackError(error, {
+        page: window.location.pathname,
+        componentStack: errorInfo.componentStack,
+      });
+    });
   }
 
   private handleReset = () => {

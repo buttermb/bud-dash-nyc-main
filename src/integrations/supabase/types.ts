@@ -282,6 +282,36 @@ export type Database = {
         }
         Relationships: []
       }
+      application_logs: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          id: string
+          log_level: string | null
+          message: string
+          page_url: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          log_level?: string | null
+          message: string
+          page_url?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          log_level?: string | null
+          message?: string
+          page_url?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -1230,6 +1260,48 @@ export type Database = {
           multiple_accounts?: boolean | null
           os?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      error_logs: {
+        Row: {
+          context: Json | null
+          created_at: string | null
+          error_message: string
+          error_stack: string | null
+          error_type: string
+          id: string
+          page_url: string | null
+          resolved: boolean | null
+          severity: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string | null
+          error_message: string
+          error_stack?: string | null
+          error_type: string
+          id?: string
+          page_url?: string | null
+          resolved?: boolean | null
+          severity?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string | null
+          error_message?: string
+          error_stack?: string | null
+          error_type?: string
+          id?: string
+          page_url?: string | null
+          resolved?: boolean | null
+          severity?: string | null
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

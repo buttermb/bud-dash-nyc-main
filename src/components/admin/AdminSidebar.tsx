@@ -22,7 +22,8 @@ import {
   Bell,
   Search,
   Bug,
-  MessageCircle
+  MessageCircle,
+  AlertCircle
 } from "lucide-react";
 import {
   Sidebar,
@@ -92,6 +93,7 @@ const menuGroups = [
       { title: "Current Giveaway", url: "/admin/giveaway", icon: Gift },
       { title: "Coupon Codes", url: "/admin/coupons", icon: Ticket },
       { title: "Test Notifications", url: "/admin/notifications", icon: Bell },
+      { title: "Error Logs", url: "/admin/error-logs", icon: AlertCircle },
       { title: "Button Tester", url: "/admin/button-tester", icon: Bug },
     ]
   }
