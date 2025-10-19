@@ -57,10 +57,8 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
           window.location.reload();
         });
         
-        // Check for updates more frequently (every 5 minutes)
-        setInterval(() => {
-          registration.update();
-        }, 5 * 60 * 1000);
+        // Only check for updates on page load, not on interval
+        // This prevents random reloads while user is actively using the app
       },
       (error) => {
         console.error('[NYM] ServiceWorker registration failed:', error);

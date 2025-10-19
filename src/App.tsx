@@ -147,7 +147,8 @@ setupGlobalErrorHandlers();
 
 
 const App = () => {
-  useVersionCheck();
+  // Version check disabled - service worker handles updates
+  // useVersionCheck();
 
   // Run production health check on mount
   useEffect(() => {
