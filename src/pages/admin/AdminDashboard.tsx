@@ -53,27 +53,48 @@ const AdminDashboard = () => {
   }, [session]);
 
   const setupRealtimeSubscription = () => {
-    const channel = supabase
-      .channel('admin-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
-        setRealtimeActivity(prev => [{
-          type: 'new_order',
-          message: `New order #${payload.new.order_number}`,
-          timestamp: new Date(),
-          data: payload.new
-        }, ...prev].slice(0, 10));
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'fraud_flags' }, (payload) => {
-        setSystemAlerts(prev => [{
-          type: 'fraud_alert',
-          severity: 'high',
-          message: `Fraud detected: ${payload.new.flag_type}`,
-          timestamp: new Date()
-        }, ...prev].slice(0, 5));
-      })
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
+    const setupChannel = async () => {
+      channel = supabase
+        .channel('admin-realtime', {
+          config: {
+            broadcast: { self: false },
+            presence: { key: '' }
+          }
+        })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
+          setRealtimeActivity(prev => [{
+            type: 'new_order',
+            message: `New order #${payload.new.order_number}`,
+            timestamp: new Date(),
+            data: payload.new
+          }, ...prev].slice(0, 10));
+        })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'fraud_flags' }, (payload) => {
+          setSystemAlerts(prev => [{
+            type: 'fraud_alert',
+            severity: 'high',
+            message: `Fraud detected: ${payload.new.flag_type}`,
+            timestamp: new Date()
+          }, ...prev].slice(0, 5));
+        })
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Failed to subscribe to admin dashboard channel');
+          }
+        });
+    };
 
-    return () => { supabase.removeChannel(channel); };
+    setupChannel();
+
+    return () => { 
+      if (channel) {
+        supabase.removeChannel(channel).then(() => {
+          channel = null;
+        });
+      }
+    };
   };
 
   const fetchSystemHealth = async () => {

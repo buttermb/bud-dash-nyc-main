@@ -32,8 +32,10 @@ const AdminLiveChat = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Load sessions
+  // Load sessions with proper cleanup
   useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
     const loadSessions = async () => {
       const { data } = await supabase
         .from('chat_sessions')
@@ -46,28 +48,46 @@ const AdminLiveChat = () => {
 
     loadSessions();
 
-    // Subscribe to new sessions
-    const channel = supabase
-      .channel('admin_chat_sessions')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'chat_sessions'
-        },
-        () => loadSessions()
-      )
-      .subscribe();
+    const setupChannel = async () => {
+      channel = supabase
+        .channel('admin_chat_sessions', {
+          config: {
+            broadcast: { self: false },
+            presence: { key: '' }
+          }
+        })
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'chat_sessions'
+          },
+          () => loadSessions()
+        )
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Failed to subscribe to chat sessions channel');
+          }
+        });
+    };
+
+    setupChannel();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel).then(() => {
+          channel = null;
+        });
+      }
     };
   }, []);
 
-  // Load messages for selected session
+  // Load messages for selected session with proper cleanup
   useEffect(() => {
     if (!selectedSession) return;
+
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const loadMessages = async () => {
       const { data } = await supabase
@@ -81,25 +101,41 @@ const AdminLiveChat = () => {
 
     loadMessages();
 
-    // Subscribe to new messages
-    const channel = supabase
-      .channel(`admin_chat_${selectedSession}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'chat_messages',
-          filter: `session_id=eq.${selectedSession}`
-        },
-        (payload) => {
-          setMessages(prev => [...prev, payload.new as Message]);
-        }
-      )
-      .subscribe();
+    const setupChannel = async () => {
+      channel = supabase
+        .channel(`admin_chat_${selectedSession}`, {
+          config: {
+            broadcast: { self: false },
+            presence: { key: '' }
+          }
+        })
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chat_messages',
+            filter: `session_id=eq.${selectedSession}`
+          },
+          (payload) => {
+            setMessages(prev => [...prev, payload.new as Message]);
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Failed to subscribe to chat messages channel');
+          }
+        });
+    };
+
+    setupChannel();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel).then(() => {
+          channel = null;
+        });
+      }
     };
   }, [selectedSession]);
 

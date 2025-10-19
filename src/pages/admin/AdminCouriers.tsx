@@ -38,18 +38,36 @@ export default function AdminCouriers() {
   const { toast } = useToast();
 
   useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
     fetchCouriers();
     
-    // Set up realtime subscription
-    const channel = supabase
-      .channel('couriers-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'couriers' }, () => {
-        fetchCouriers();
-      })
-      .subscribe();
+    const setupChannel = async () => {
+      channel = supabase
+        .channel('couriers-changes', {
+          config: {
+            broadcast: { self: false },
+            presence: { key: '' }
+          }
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'couriers' }, () => {
+          fetchCouriers();
+        })
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Failed to subscribe to couriers channel');
+          }
+        });
+    };
+
+    setupChannel();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel).then(() => {
+          channel = null;
+        });
+      }
     };
   }, []);
 

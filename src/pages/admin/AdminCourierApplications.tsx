@@ -53,27 +53,45 @@ const AdminCourierApplications = () => {
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
     fetchApplications();
 
-    // Realtime subscription for courier applications
-    const channel = supabase
-      .channel('admin-courier-apps-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'courier_applications'
-        },
-        (payload) => {
-          console.log('Courier application updated:', payload);
-          fetchApplications();
-        }
-      )
-      .subscribe();
+    const setupChannel = async () => {
+      channel = supabase
+        .channel('admin-courier-apps-updates', {
+          config: {
+            broadcast: { self: false },
+            presence: { key: '' }
+          }
+        })
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'courier_applications'
+          },
+          (payload) => {
+            console.log('Courier application updated:', payload);
+            fetchApplications();
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Failed to subscribe to courier applications channel');
+          }
+        });
+    };
+
+    setupChannel();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel).then(() => {
+          channel = null;
+        });
+      }
     };
   }, []);
 

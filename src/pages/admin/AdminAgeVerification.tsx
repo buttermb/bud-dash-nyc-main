@@ -28,12 +28,20 @@ const AdminAgeVerification = () => {
   const [rejectionReason, setRejectionReason] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (session) {
-      fetchVerificationRequests();
+    if (!session) return;
+    
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
+    fetchVerificationRequests();
 
-      // Realtime subscription for age verifications
-      const channel = supabase
-        .channel('admin-verifications-updates')
+    const setupChannel = async () => {
+      channel = supabase
+        .channel('admin-verifications-updates', {
+          config: {
+            broadcast: { self: false },
+            presence: { key: '' }
+          }
+        })
         .on(
           'postgres_changes',
           {
@@ -46,12 +54,22 @@ const AdminAgeVerification = () => {
             fetchVerificationRequests();
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Failed to subscribe to age verifications channel');
+          }
+        });
+    };
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
+    setupChannel();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel).then(() => {
+          channel = null;
+        });
+      }
+    };
   }, [session]);
 
   const fetchVerificationRequests = async () => {

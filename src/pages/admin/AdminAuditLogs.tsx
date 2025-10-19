@@ -49,12 +49,20 @@ const AdminAuditLogs = () => {
   const [filterAction, setFilterAction] = useState<string>("all");
 
   useEffect(() => {
-    if (session) {
-      fetchAuditLogs();
+    if (!session) return;
+    
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
+    fetchAuditLogs();
 
-      // Realtime subscription for audit logs
-      const channel = supabase
-        .channel('admin-audit-logs-updates')
+    const setupChannel = async () => {
+      channel = supabase
+        .channel('admin-audit-logs-updates', {
+          config: {
+            broadcast: { self: false },
+            presence: { key: '' }
+          }
+        })
         .on(
           'postgres_changes',
           {
@@ -79,12 +87,22 @@ const AdminAuditLogs = () => {
             fetchAuditLogs();
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Failed to subscribe to audit logs channel');
+          }
+        });
+    };
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
+    setupChannel();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel).then(() => {
+          channel = null;
+        });
+      }
+    };
   }, [session]);
 
   const fetchAuditLogs = async () => {
