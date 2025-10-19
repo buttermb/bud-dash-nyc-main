@@ -5,12 +5,14 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { productionLogger } from './productionLogger';
+import { formatStatus, safeStatus } from './stringHelpers';
 
 export interface HealthCheckResult {
   supabase: boolean;
   serviceWorker: boolean;
   cache: boolean;
   realtime: boolean;
+  stringHelpers: boolean;
   issues: string[];
 }
 
@@ -20,6 +22,7 @@ export const runProductionHealthCheck = async (): Promise<HealthCheckResult> => 
     serviceWorker: false,
     cache: false,
     realtime: false,
+    stringHelpers: false,
     issues: [],
   };
 
@@ -110,8 +113,41 @@ export const runProductionHealthCheck = async (): Promise<HealthCheckResult> => 
     productionLogger.error('Realtime health check error', { error });
   }
 
+  // Check String Helpers
+  try {
+    // Test formatStatus with various inputs
+    const testCases = [
+      { input: 'pending', expected: 'pending' },
+      { input: null, expected: 'pending' },
+      { input: undefined, expected: 'pending' },
+      { input: '', expected: 'pending' },
+      { input: 'in_transit', expected: 'in transit' },
+    ];
+
+    let allTestsPassed = true;
+    for (const test of testCases) {
+      try {
+        const output = formatStatus(test.input as any);
+        if (!output || typeof output !== 'string') {
+          allTestsPassed = false;
+          result.issues.push(`formatStatus failed for input: ${test.input}`);
+          productionLogger.error('formatStatus test failed', { input: test.input, output });
+        }
+      } catch (error) {
+        allTestsPassed = false;
+        result.issues.push(`formatStatus threw error for input: ${test.input}`);
+        productionLogger.error('formatStatus threw error', { input: test.input, error });
+      }
+    }
+
+    result.stringHelpers = allTestsPassed;
+  } catch (error) {
+    result.issues.push('String helpers check failed');
+    productionLogger.error('String helpers health check error', { error });
+  }
+
   // Log summary
-  const allHealthy = result.supabase && result.serviceWorker && result.cache && result.realtime;
+  const allHealthy = result.supabase && result.serviceWorker && result.cache && result.realtime && result.stringHelpers;
   if (!allHealthy) {
     productionLogger.warning('Health check completed with issues', result);
   } else {

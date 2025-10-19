@@ -138,10 +138,9 @@ export default defineConfig(({ mode }) => ({
       },
       mangle: {
         safari10: true,
-        properties: {
-          regex: /^_/
-        }
+        properties: false, // Don't mangle properties to preserve .replace() and other string methods
       },
+      keep_fnames: true, // Preserve function names for debugging
       format: {
         comments: false,
       }

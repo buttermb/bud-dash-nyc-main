@@ -368,7 +368,7 @@ export default function AdminCourierDetails() {
                       <TableCell className="font-semibold">${order.total_amount}</TableCell>
                       <TableCell>
                         <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
-                          {formatStatus(order.status)}
+                          {formatStatus(order?.status || 'pending')}
                         </Badge>
                       </TableCell>
                     </TableRow>
