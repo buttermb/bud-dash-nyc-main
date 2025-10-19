@@ -67,14 +67,14 @@ const CourierEarnings = lazy(() => import("./pages/CourierEarnings"));
 const CourierHistory = lazy(() => import("./pages/CourierHistory"));
 const CourierProfile = lazy(() => import("./pages/CourierProfile"));
 const MerchantDashboard = lazy(() => import("./pages/MerchantDashboard"));
-const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+import AdminLogin from "./pages/AdminLogin";
 const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
 const Cart = lazy(() => import("./pages/Cart"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const MyOrders = lazy(() => import("./pages/MyOrders"));
-const AdminProtectedRoute = lazy(() => import("./components/admin/AdminProtectedRoute"));
+import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
 // AdminLayout is now eagerly imported above
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
