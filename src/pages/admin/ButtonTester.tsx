@@ -876,7 +876,7 @@ const ButtonTester = () => {
                                   {bug.severity}
                                 </Badge>
                                 <div className="flex-1">
-                                  <p className="font-medium">{bug.type.replace('-', ' ').toUpperCase()}</p>
+                                  <p className="font-medium">{bug.type?.replace('-', ' ').toUpperCase() || 'UNKNOWN'}</p>
                                   <p className="text-muted-foreground">{bug.message}</p>
                                   {bug.element && (
                                     <p className="text-muted-foreground truncate">Element: {bug.element}</p>
