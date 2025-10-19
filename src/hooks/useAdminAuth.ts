@@ -8,8 +8,12 @@ export const useAdminAuth = () => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!isMounted) return;
+      
       setSession(session);
       
       if (session) {
@@ -21,14 +25,20 @@ export const useAdminAuth = () => {
           .eq("role", "admin")
           .maybeSingle();
         
-        setIsAdmin(!!data);
+        if (isMounted) {
+          setIsAdmin(!!data);
+        }
       }
       
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!isMounted) return;
+      
       setSession(session);
       
       if (session) {
@@ -39,15 +49,24 @@ export const useAdminAuth = () => {
           .eq("role", "admin")
           .maybeSingle();
         
-        setIsAdmin(!!data);
+        if (isMounted) {
+          setIsAdmin(!!data);
+        }
       } else {
-        setIsAdmin(false);
+        if (isMounted) {
+          setIsAdmin(false);
+        }
       }
       
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return { session, loading, isAdmin };
