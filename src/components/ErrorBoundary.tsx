@@ -29,16 +29,44 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     this.setState({ errorInfo });
     
+    // Check if this is an auth error
+    const isAuthError = error.message?.includes('JWT') || 
+                        error.message?.includes('auth') || 
+                        error.message?.includes('User from sub claim');
+    
+    if (isAuthError) {
+      // Clear all auth data
+      try {
+        localStorage.removeItem('sb-vltveasdxtfvvqbzxzuf-auth-token');
+        sessionStorage.clear();
+        
+        // Redirect to login after a brief delay
+        setTimeout(() => {
+          window.location.href = '/admin/login';
+        }, 1500);
+      } catch (e) {
+        console.error('Failed to clear auth data:', e);
+      }
+    }
+    
     // Track to analytics
-    analytics.trackError('error_boundary', error.message);
+    try {
+      analytics.trackError('error_boundary', error.message);
+    } catch (e) {
+      console.error('Failed to track to analytics:', e);
+    }
     
     // Track to monitoring service
-    import('@/lib/monitoring').then(({ monitoring }) => {
-      monitoring.trackError(error, {
-        page: window.location.pathname,
-        componentStack: errorInfo.componentStack,
-      });
-    });
+    try {
+      import('@/lib/monitoring').then(({ monitoring }) => {
+        monitoring.trackError(error, {
+          page: window.location.pathname,
+          componentStack: errorInfo.componentStack || '',
+        });
+      }).catch(e => console.error('Failed to import monitoring:', e));
+    } catch (e) {
+      console.error('Failed to track to monitoring:', e);
+    }
   }
 
   private handleReset = () => {

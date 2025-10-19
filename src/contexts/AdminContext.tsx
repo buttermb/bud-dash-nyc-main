@@ -28,9 +28,35 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  const clearAuthData = () => {
+    // Clear all auth-related data from storage
+    localStorage.removeItem('sb-vltveasdxtfvvqbzxzuf-auth-token');
+    sessionStorage.clear();
+    
+    // Clear any cached queries
+    try {
+      window.location.reload();
+    } catch (e) {
+      console.error('Failed to reload:', e);
+    }
+  };
+
   const verifyAdmin = async (currentSession: Session) => {
     try {
       setError(null);
+      
+      // Verify the session is still valid with Supabase
+      const { data: { user }, error: userError } = await supabase.auth.getUser(currentSession.access_token);
+      
+      if (userError || !user) {
+        console.error("Session invalid - user doesn't exist:", userError);
+        clearAuthData();
+        await supabase.auth.signOut();
+        setError("Session expired. Please log in again.");
+        setLoading(false);
+        return;
+      }
+      
       // Get admin details directly
       const { data: adminData, error: adminError } = await supabase
         .from("admin_users")
@@ -41,6 +67,16 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
       if (adminError) {
         console.error("Admin lookup error:", adminError);
+        
+        // If it's a 403/user not found error, clear auth
+        if (adminError.code === 'PGRST116' || adminError.message?.includes('does not exist')) {
+          clearAuthData();
+          await supabase.auth.signOut();
+          setError("Admin account not found. Please log in again.");
+          setLoading(false);
+          return;
+        }
+        
         throw adminError;
       }
 
@@ -54,6 +90,8 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         setSession(currentSession);
         setError(null);
       } else {
+        clearAuthData();
+        await supabase.auth.signOut();
         setAdmin(null);
         setSession(null);
         setError("Admin account not found or inactive");
@@ -70,6 +108,10 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
           details: { error: err instanceof Error ? err.message : 'Unknown error' }
         });
       }
+      
+      // Clear auth data on verification failure
+      clearAuthData();
+      await supabase.auth.signOut();
       setAdmin(null);
       setSession(null);
       setError(err.message || "Admin verification failed");

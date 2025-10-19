@@ -31,6 +31,7 @@ import { CourierPinProvider } from "./contexts/CourierPinContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { lazy, Suspense } from "react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { AuthErrorBoundary } from "./components/AuthErrorBoundary";
 import { SkipToContent } from "./components/SkipToContent";
 import { LoadingFallback } from "./components/LoadingFallback";
 import { LiveChatWidget } from "./components/LiveChatWidget";
@@ -136,21 +137,22 @@ const queryClient = new QueryClient({
 
 
 const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <DeviceTracker />
-          <AdminProvider>
-            <CourierProvider>
-              <CourierPinProvider>
-                <TooltipProvider>
-                  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                    <div suppressHydrationWarning>
-                    <SkipToContent />
-                    <OfflineBanner />
-                    <InstallPWA />
-                    <CartBadgeAnimation />
+  <AuthErrorBoundary>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <DeviceTracker />
+            <AdminProvider>
+              <CourierProvider>
+                <CourierPinProvider>
+                  <TooltipProvider>
+                    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                      <div suppressHydrationWarning>
+                      <SkipToContent />
+                      <OfflineBanner />
+                      <InstallPWA />
+                      <CartBadgeAnimation />
                     
                     <Toaster />
                     <Sonner />
@@ -268,16 +270,17 @@ const App = () => (
                     </Routes>
                   </Suspense>
                   </div>
-                </BrowserRouter>
-                <LiveChatWidget />
-              </TooltipProvider>
-            </CourierPinProvider>
-          </CourierProvider>
-        </AdminProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-  </ErrorBoundary>
+                  </BrowserRouter>
+                  <LiveChatWidget />
+                </TooltipProvider>
+              </CourierPinProvider>
+            </CourierProvider>
+          </AdminProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+    </ErrorBoundary>
+  </AuthErrorBoundary>
 );
 
 export default App;
