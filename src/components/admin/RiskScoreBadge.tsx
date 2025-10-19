@@ -43,7 +43,7 @@ export function TrustLevelBadge({ level }: TrustLevelBadgeProps) {
 
   return (
     <Badge variant={getVariant(level)}>
-      {level.toUpperCase()}
+      {(level || 'unknown').toUpperCase()}
     </Badge>
   );
 }
@@ -66,7 +66,7 @@ export function AccountStatusBadge({ status }: AccountStatusBadgeProps) {
 
   return (
     <Badge variant={getVariant(status)}>
-      {status.toUpperCase()}
+      {(status || 'unknown').toUpperCase()}
     </Badge>
   );
 }

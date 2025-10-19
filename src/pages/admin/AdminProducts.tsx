@@ -225,8 +225,8 @@ export default function AdminProducts() {
 
   // Filter and sort products
   const filteredProducts = products?.filter((product) => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.strain_type?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (product.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (product.strain_type || '').toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
     
@@ -236,10 +236,10 @@ export default function AdminProducts() {
 
     // Advanced filters
     const matchesAdvCategory = advancedFilters.category.length === 0 ||
-      advancedFilters.category.includes(product.category);
+      advancedFilters.category.includes(product.category || 'uncategorized');
     
     const matchesAdvStrain = advancedFilters.strainType.length === 0 ||
-      advancedFilters.strainType.includes(product.strain_type);
+      advancedFilters.strainType.includes(product.strain_type || 'unknown');
     
     const matchesAdvPrice = (product.price || 0) >= advancedFilters.priceRange[0] &&
       (product.price || 0) <= advancedFilters.priceRange[1];

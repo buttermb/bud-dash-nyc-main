@@ -166,7 +166,7 @@ export default function AdminGiveaway() {
           <div className="flex items-center gap-4 mb-2">
             <h1 className="text-3xl font-bold">{giveaway.title}</h1>
             <Badge variant={giveaway.status === 'active' ? 'default' : 'secondary'} className="text-sm">
-              {giveaway.status.toUpperCase()}
+              {(giveaway.status || 'active').toUpperCase()}
             </Badge>
           </div>
           <p className="text-muted-foreground">

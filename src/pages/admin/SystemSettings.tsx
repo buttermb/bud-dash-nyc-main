@@ -179,7 +179,7 @@ const SystemSettings = () => {
       attention: { variant: "secondary", icon: AlertTriangle, label: "Attention" },
       warning: { variant: "destructive", icon: AlertTriangle, label: "Warning" }
     };
-    const config = variants[status] || variants.healthy;
+    const config = variants[status || 'healthy'] || variants.healthy;
     const Icon = config.icon;
     
     return (

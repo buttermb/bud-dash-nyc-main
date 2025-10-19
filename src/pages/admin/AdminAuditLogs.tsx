@@ -142,7 +142,7 @@ const AdminAuditLogs = () => {
   };
 
   const getActionBadge = (action: string) => {
-    const actionLower = action.toLowerCase();
+    const actionLower = (action || '').toLowerCase();
     
     if (actionLower.includes('create') || actionLower.includes('insert')) {
       return <Badge className="bg-green-600">Create</Badge>;
@@ -161,13 +161,13 @@ const AdminAuditLogs = () => {
 
   const filteredLogs = auditLogs.filter(log => {
     const matchesSearch = 
-      log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.entity_type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.entity_id?.toLowerCase().includes(searchQuery.toLowerCase());
+      (log.action || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (log.entity_type || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (log.entity_id || '').toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesFilter = 
       filterAction === "all" ||
-      log.action.toLowerCase().includes(filterAction.toLowerCase());
+      (log.action || '').toLowerCase().includes(filterAction.toLowerCase());
 
     return matchesSearch && matchesFilter;
   });

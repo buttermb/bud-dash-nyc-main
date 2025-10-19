@@ -430,7 +430,7 @@ export default function AdminUserDetails() {
                           variant={flag.severity === "critical" ? "destructive" : "default"}
                         >
                           <AlertTriangle className="h-4 w-4" />
-                          <AlertTitle>{flag.flag_type.toUpperCase()}</AlertTitle>
+                          <AlertTitle>{(flag.flag_type || 'unknown').toUpperCase()}</AlertTitle>
                           <AlertDescription className="flex justify-between items-center">
                             <span>{flag.description}</span>
                             <Button

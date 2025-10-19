@@ -126,7 +126,7 @@ const AdminLiveOrders = () => {
       preparing: { variant: "default", label: "Preparing", color: "bg-orange-500" },
       out_for_delivery: { variant: "default", label: "Out for Delivery", color: "bg-green-500" },
     };
-    return variants[status] || { variant: "secondary", label: status, color: "bg-gray-500" };
+    return variants[status || 'pending'] || { variant: "secondary", label: status || 'pending', color: "bg-gray-500" };
   };
 
   const getNextStatus = (currentStatus: string) => {
@@ -136,7 +136,7 @@ const AdminLiveOrders = () => {
       preparing: "out_for_delivery",
       out_for_delivery: "delivered",
     };
-    return statusFlow[currentStatus];
+    return statusFlow[currentStatus || 'pending'];
   };
 
   if (loading) {

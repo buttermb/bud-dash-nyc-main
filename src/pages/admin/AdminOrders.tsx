@@ -114,10 +114,10 @@ export default function AdminOrders() {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = statusOptions.find(s => s.value === status);
+    const statusConfig = statusOptions.find(s => s.value === (status || 'pending'));
     return (
       <Badge className={statusConfig?.color || 'bg-gray-100'}>
-        {statusConfig?.label || status}
+        {statusConfig?.label || (status || 'pending').replace(/_/g, ' ')}
       </Badge>
     );
   };

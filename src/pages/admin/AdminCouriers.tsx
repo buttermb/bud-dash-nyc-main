@@ -116,9 +116,9 @@ export default function AdminCouriers() {
   };
 
   const filteredCouriers = couriers.filter(courier =>
-    courier.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    courier.email.toLowerCase().includes(search.toLowerCase()) ||
-    courier.phone.includes(search)
+    (courier.full_name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (courier.email || '').toLowerCase().includes(search.toLowerCase()) ||
+    (courier.phone || '').includes(search)
   );
 
   const stats = {

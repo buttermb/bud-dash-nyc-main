@@ -164,7 +164,7 @@ const GlobalSearch = () => {
                           <div className="flex items-center gap-2">
                             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                             <h3 className="font-semibold">Order #{order.order_number}</h3>
-                            <Badge>{order.status}</Badge>
+                            <Badge>{(order.status || 'pending').replace(/_/g, ' ')}</Badge>
                           </div>
                           <div className="text-sm text-muted-foreground">
                             Customer: {order.profiles?.full_name || order.customer_name || "Guest"}
