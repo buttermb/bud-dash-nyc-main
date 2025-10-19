@@ -7,7 +7,7 @@
 // Version: 3.0.0 | Last Updated: October 2025 | CACHE BREAK
 
 // Advanced Service Worker for PWA with optimized caching strategies
-const CACHE_VERSION = 'v6-clean'; // Complete cache reset
+const CACHE_VERSION = 'v7-fresh-2025'; // Force complete cache reset
 const CACHE_NAME = `nym-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `nym-runtime-${CACHE_VERSION}`;
 const IMAGE_CACHE = `nym-images-${CACHE_VERSION}`;
@@ -27,29 +27,43 @@ const PRECACHE_URLS = [
   '/manifest.json',
 ];
 
-// Install event - cache essential assets
+// Install event - cache essential assets and force activation
 self.addEventListener('install', (event) => {
+  console.log('[SW] Installing new service worker...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting())
+      .then(() => {
+        console.log('[SW] Skip waiting - forcing activation');
+        return self.skipWaiting();
+      })
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - aggressively clean up ALL old caches
 self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating new service worker...');
   const currentCaches = [CACHE_NAME, RUNTIME_CACHE, IMAGE_CACHE, API_CACHE];
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
+        console.log('[SW] Found caches:', cacheNames);
         return cacheNames.filter((cacheName) => !currentCaches.includes(cacheName));
       })
       .then((cachesToDelete) => {
+        console.log('[SW] Deleting old caches:', cachesToDelete);
         return Promise.all(cachesToDelete.map((cacheToDelete) => {
+          console.log('[SW] Deleting cache:', cacheToDelete);
           return caches.delete(cacheToDelete);
         }));
       })
-      .then(() => self.clients.claim())
+      .then(() => {
+        console.log('[SW] Taking control of all clients');
+        return self.clients.claim();
+      })
+      .then(() => {
+        console.log('[SW] Service worker activated successfully');
+      })
   );
 });
 

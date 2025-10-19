@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react";
 import InstallPWA from "@/components/InstallPWA";
 import { Suspense } from "react";
 import { LoadingFallback } from "@/components/LoadingFallback";
+import { AdminErrorBoundary } from "@/components/admin/AdminErrorBoundary";
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -50,9 +51,11 @@ const AdminLayout = () => {
             </nav>
           </header>
           <main className="flex-1 overflow-auto bg-muted/10 pb-safe">
-            <Suspense fallback={<LoadingFallback />}>
-              <Outlet />
-            </Suspense>
+            <AdminErrorBoundary>
+              <Suspense fallback={<LoadingFallback />}>
+                <Outlet />
+              </Suspense>
+            </AdminErrorBoundary>
           </main>
         </div>
       </div>
