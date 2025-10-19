@@ -39,17 +39,28 @@ if (import.meta.env.PROD) {
   }
 }
 
-// Register service worker for PWA capabilities and caching
+// Register service worker with immediate activation
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then(
+    navigator.serviceWorker.register('/sw.js?v=' + Date.now()).then(
       (registration) => {
         console.log('[NYM] ServiceWorker registered:', registration.scope);
         
-        // Check for updates every hour
+        // Force immediate activation of new service worker
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+        
+        // Listen for controller change (new SW activated)
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          console.log('[NYM] New service worker activated, reloading...');
+          window.location.reload();
+        });
+        
+        // Check for updates more frequently (every 5 minutes)
         setInterval(() => {
           registration.update();
-        }, 60 * 60 * 1000);
+        }, 5 * 60 * 1000);
       },
       (error) => {
         console.error('[NYM] ServiceWorker registration failed:', error);

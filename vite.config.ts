@@ -131,19 +131,12 @@ export default defineConfig(({ mode }) => ({
     cssMinify: true,
     terserOptions: {
       compress: {
-        drop_console: ['log', 'debug', 'info'], // Keep console.warn and console.error for production debugging
+        drop_console: ['log'], // Only drop console.log, keep errors/warnings
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.debug', 'console.info'],
-        passes: 2,
       },
-      mangle: {
-        safari10: true,
-        properties: false, // Don't mangle properties to preserve .replace() and other string methods
-      },
-      keep_fnames: true, // Preserve function names for debugging
       format: {
         comments: false,
-      }
+      },
     },
     sourcemap: 'hidden', // Generate hidden source maps for production debugging
     rollupOptions: {

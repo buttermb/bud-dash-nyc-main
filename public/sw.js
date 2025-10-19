@@ -6,18 +6,16 @@
 // Contact: contact@webflowstudios.dev for technical inquiries
 // Version: 4.0.0 | Last Updated: January 2025 | FORCE CACHE BUST
 
-// Advanced Service Worker for PWA with optimized caching strategies
-const CACHE_VERSION = `v8-${Date.now()}`; // Force complete cache reset with timestamp
+// Cache Configuration - Simplified versioning
+const CACHE_VERSION = 'v9'; // Increment this manually on each deploy
 const CACHE_NAME = `nym-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `nym-runtime-${CACHE_VERSION}`;
 const IMAGE_CACHE = `nym-images-${CACHE_VERSION}`;
-const API_CACHE = `nym-api-${CACHE_VERSION}`;
 
 // Cache durations (in seconds)
 const CACHE_DURATION = {
   images: 7 * 24 * 60 * 60, // 7 days
-  api: 30, // 30 seconds (reduced for production freshness)
-  static: 30 * 24 * 60 * 60, // 30 days
+  static: 1 * 60 * 60, // 1 hour (reduced from 30 days)
 };
 
 // Endpoints that should always fetch fresh data
@@ -57,30 +55,34 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event - aggressively clean up ALL old caches
+// Activate event - nuclear cache clear
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating new service worker...');
-  const currentCaches = [CACHE_NAME, RUNTIME_CACHE, IMAGE_CACHE, API_CACHE];
+  console.log('[SW] Activating new service worker - NUCLEAR CACHE CLEAR');
+  
   event.waitUntil(
-    caches.keys()
-      .then((cacheNames) => {
-        console.log('[SW] Found caches:', cacheNames);
-        return cacheNames.filter((cacheName) => !currentCaches.includes(cacheName));
-      })
-      .then((cachesToDelete) => {
-        console.log('[SW] Deleting old caches:', cachesToDelete);
-        return Promise.all(cachesToDelete.map((cacheToDelete) => {
-          console.log('[SW] Deleting cache:', cacheToDelete);
-          return caches.delete(cacheToDelete);
-        }));
-      })
-      .then(() => {
-        console.log('[SW] Taking control of all clients');
-        return self.clients.claim();
-      })
-      .then(() => {
-        console.log('[SW] Service worker activated successfully');
-      })
+    (async () => {
+      // Delete ALL caches regardless of version
+      const cacheNames = await caches.keys();
+      console.log('[SW] Deleting all caches:', cacheNames);
+      
+      await Promise.all(
+        cacheNames.map(cacheName => {
+          console.log('[SW] Deleting:', cacheName);
+          return caches.delete(cacheName);
+        })
+      );
+      
+      // Force immediate control
+      await self.clients.claim();
+      
+      // Notify all clients to reload
+      const clients = await self.clients.matchAll();
+      clients.forEach(client => {
+        client.postMessage({ type: 'CACHE_CLEARED', version: CACHE_VERSION });
+      });
+      
+      console.log('[SW] All caches cleared, service worker activated');
+    })()
   );
 });
 
@@ -92,72 +94,32 @@ function isCacheExpired(cachedResponse, maxAge) {
   return age > maxAge;
 }
 
-// Fetch event - optimized caching strategies
+// Fetch event - simplified caching strategy
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (event.request.url.startsWith('chrome-extension://')) return;
 
   const url = new URL(event.request.url);
 
-  // Check if this is a realtime/critical endpoint - always bypass cache
-  const shouldBypassCache = REALTIME_BYPASS_PATTERNS.some(pattern => 
-    url.pathname.includes(pattern)
-  ) || ADMIN_ENDPOINTS.some(endpoint => 
-    url.pathname.includes(endpoint)
-  );
+  // Network-first for admin routes - always get fresh data
+  if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/courier')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
 
-  // Network first with cache fallback and validation for API calls
+  // API calls - Network only for admin/realtime
   if (url.pathname.includes('/rest/v1/') || url.pathname.includes('/functions/v1/')) {
+    const isAdminOrRealtime = ADMIN_ENDPOINTS.some(endpoint => url.pathname.includes(endpoint));
+    
+    if (isAdminOrRealtime) {
+      // Never cache admin API calls
+      event.respondWith(fetch(event.request));
+      return;
+    }
+    
+    // For other API calls, network first with fallback
     event.respondWith(
-      (async () => {
-        try {
-          // Always fetch fresh for critical endpoints
-          if (shouldBypassCache) {
-            return await fetch(event.request);
-          }
-
-          const response = await fetch(event.request);
-          if (response.status === 200) {
-            const cache = await caches.open(API_CACHE);
-            const clonedResponse = response.clone();
-            
-            // Validate response has complete data before caching
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-              try {
-                const data = await clonedResponse.clone().json();
-                
-                // Basic validation - ensure data has expected structure
-                if (Array.isArray(data)) {
-                  // For arrays, check items have id and required fields
-                  const hasValidStructure = data.every(item => 
-                    item && typeof item === 'object' && item.id
-                  );
-                  if (!hasValidStructure) {
-                    console.warn('[SW] Invalid data structure, not caching', url.pathname);
-                    return response;
-                  }
-                }
-              } catch (e) {
-                // If JSON parsing fails, don't cache
-                return response;
-              }
-            }
-            
-            await cache.put(event.request, clonedResponse);
-          }
-          return response;
-        } catch (error) {
-          // Only use cache if not a critical endpoint
-          if (!shouldBypassCache) {
-            const cached = await caches.match(event.request);
-            if (cached && !isCacheExpired(cached, CACHE_DURATION.api)) {
-              return cached;
-            }
-          }
-          return new Response('Offline', { status: 503 });
-        }
-      })()
+      fetch(event.request).catch(() => caches.match(event.request))
     );
     return;
   }
@@ -349,15 +311,21 @@ async function syncOrderStatus() {
   }
 }
 
-// Message event - Handle messages from the app
+// Message event - handle commands from clients
 self.addEventListener('message', (event) => {
-  console.log('Service worker received message:', event.data);
+  console.log('[SW] Received message:', event.data);
   
   if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[SW] Forcing immediate activation');
     self.skipWaiting();
   }
   
-  // Handle notification requests from the app
+  if (event.data && event.data.type === 'CLEAR_CACHES') {
+    event.waitUntil(
+      caches.keys().then(names => Promise.all(names.map(name => caches.delete(name))))
+    );
+  }
+  
   if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
     const { title, body, tag, icon, badge, data, requireInteraction } = event.data;
     
