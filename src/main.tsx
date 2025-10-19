@@ -19,6 +19,20 @@ import "./index.css";
 import { PerformanceMonitor } from "./utils/performance";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { validateAndCleanSession } from "./utils/sessionValidator";
+import * as Sentry from "@sentry/react";
+
+// Initialize Sentry for error tracking
+Sentry.init({
+  dsn: "https://6099e29c19e8cc84fcc39a505b32e3dc@o4510213707333632.ingest.us.sentry.io/4510213708316672",
+  environment: import.meta.env.MODE,
+  tracesSampleRate: 1.0,
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+});
 
 // Log app initialization
 console.log('[NYM] Starting app initialization...');
