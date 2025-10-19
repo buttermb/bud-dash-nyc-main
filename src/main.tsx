@@ -76,9 +76,13 @@ validateAndCleanSession().then(() => {
 
 // Initialize LogRocket after DOM is ready
 if (import.meta.env.PROD) {
-  import('logrocket').then((LogRocket) => {
+  Promise.all([
+    import('logrocket'),
+    import('logrocket-react')
+  ]).then(([LogRocket, setupLogRocketReact]) => {
     LogRocket.default.init('r9hn2j/bb');
-    console.log('[NYM] LogRocket initialized');
+    setupLogRocketReact.default(LogRocket.default);
+    console.log('[NYM] LogRocket initialized with React integration');
   }).catch(err => {
     console.error('[NYM] LogRocket initialization failed:', err);
   });
