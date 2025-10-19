@@ -29,12 +29,14 @@ import { CourierProvider } from "./contexts/CourierContext";
 import { DeviceTracker } from "./components/DeviceTracker";
 import { CourierPinProvider } from "./contexts/CourierPinContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { AdminErrorBoundary } from "./components/admin/AdminErrorBoundary";
 import { SkipToContent } from "./components/SkipToContent";
 import { LoadingFallback } from "./components/LoadingFallback";
 import { LiveChatWidget } from "./components/LiveChatWidget";
 import { DevTools } from "./components/dev/DevTools";
+import { setupGlobalErrorHandlers, handleQueryError, handleMutationError } from "./utils/reactErrorHandler";
 
 import { NotificationPreferences } from "./components/NotificationPreferences";
 import OfflineBanner from "./components/OfflineBanner";
@@ -121,16 +123,23 @@ const AdminLiveChat = lazy(() => import("./pages/admin/AdminLiveChat"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000, // Data stays fresh for 1 minute
-      gcTime: 10 * 60 * 1000, // Garbage collection after 10 minutes
-      refetchOnWindowFocus: false, // Reduce unnecessary API calls on focus
-      refetchOnMount: false, // Don't refetch when component mounts if data exists
-      refetchOnReconnect: true, // Refetch when internet connection is restored
-      retry: 2, // Retry failed requests twice
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+      staleTime: 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: true,
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+    mutations: {
+      retry: 1,
+      onError: handleMutationError,
     },
   },
 });
+
+// Setup global error handlers
+setupGlobalErrorHandlers();
 
 
 const App = () => (
@@ -215,48 +224,48 @@ const App = () => (
                       } />
 
                       {/* Admin Routes */}
-                      <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
+                      <Route path="/admin" element={<AdminProtectedRoute><AdminErrorBoundary><AdminLayout /></AdminErrorBoundary></AdminProtectedRoute>}>
                         <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                        <Route path="dashboard" element={<AdminDashboard />} />
-                        <Route path="orders" element={<AdminOrders />} />
-                        <Route path="live-map" element={<AdminLiveMap />} />
-                        <Route path="live-orders" element={<AdminLiveOrders />} />
-                        <Route path="couriers" element={<AdminCouriers />} />
-                        <Route path="couriers/:id" element={<AdminCourierDetails />} />
-                        <Route path="compliance" element={<AdminCompliance />} />
-                        <Route path="users" element={<AdminUsers />} />
-                        <Route path="users/:id" element={<AdminUserDetails />} />
-                        <Route path="risk-factors" element={<RiskFactorManagement />} />
-                        <Route path="analytics" element={<AdminAnalytics />} />
-                        <Route path="audit-logs" element={<AdminAuditLogs />} />
-                        <Route path="age-verification" element={<AdminAgeVerification />} />
-                        <Route path="courier-applications" element={<AdminCourierApplications />} />
-                        <Route path="delivery-safety" element={<AdminDeliverySafety />} />
-                        <Route path="products" element={<AdminProducts />} />
-                        <Route path="products/new" element={<ProductForm />} />
-                        <Route path="products/:id/edit" element={<ProductForm />} />
-                        <Route path="products/:id/duplicate" element={<ProductForm />} />
-                        <Route path="products/analytics" element={<ProductAnalytics />} />
-                        <Route path="inventory" element={<InventoryManagement />} />
-                        <Route path="media" element={<MediaLibrary />} />
-                        <Route path="templates" element={<ProductTemplates />} />
-                        <Route path="import-export" element={<ImportExport />} />
-                        <Route path="coa-management" element={<COAManagement />} />
-                <Route path="giveaway" element={<AdminGiveaway />} />
-                <Route path="giveaways" element={<AdminGiveaways />} />
-                <Route path="giveaways/manage" element={<Suspense fallback={<LoadingFallback />}><AdminGiveawayManagement /></Suspense>} />
-                <Route path="giveaways/new" element={<AdminGiveawayForm />} />
-                <Route path="giveaways/:id/edit" element={<AdminGiveawayForm />} />
-                <Route path="giveaways/:id/analytics" element={<AdminGiveawayAnalytics />} />
-                <Route path="giveaways/:id/winners" element={<AdminGiveawayWinners />} />
-                <Route path="coupons" element={<CouponList />} />
-                <Route path="coupons/create" element={<CouponForm />} />
-                <Route path="coupons/:id/edit" element={<CouponEdit />} />
-                <Route path="notifications" element={<AdminNotifications />} />
-                <Route path="search" element={<GlobalSearch />} />
-                <Route path="settings" element={<SystemSettings />} />
-                <Route path="button-tester" element={<ButtonTester />} />
-                <Route path="live-chat" element={<AdminLiveChat />} />
+                        <Route path="dashboard" element={<AdminErrorBoundary><AdminDashboard /></AdminErrorBoundary>} />
+                        <Route path="orders" element={<AdminErrorBoundary><AdminOrders /></AdminErrorBoundary>} />
+                        <Route path="live-map" element={<AdminErrorBoundary><AdminLiveMap /></AdminErrorBoundary>} />
+                        <Route path="live-orders" element={<AdminErrorBoundary><AdminLiveOrders /></AdminErrorBoundary>} />
+                        <Route path="couriers" element={<AdminErrorBoundary><AdminCouriers /></AdminErrorBoundary>} />
+                        <Route path="couriers/:id" element={<AdminErrorBoundary><AdminCourierDetails /></AdminErrorBoundary>} />
+                        <Route path="compliance" element={<AdminErrorBoundary><AdminCompliance /></AdminErrorBoundary>} />
+                        <Route path="users" element={<AdminErrorBoundary><AdminUsers /></AdminErrorBoundary>} />
+                        <Route path="users/:id" element={<AdminErrorBoundary><AdminUserDetails /></AdminErrorBoundary>} />
+                        <Route path="risk-factors" element={<AdminErrorBoundary><RiskFactorManagement /></AdminErrorBoundary>} />
+                        <Route path="analytics" element={<AdminErrorBoundary><AdminAnalytics /></AdminErrorBoundary>} />
+                        <Route path="audit-logs" element={<AdminErrorBoundary><AdminAuditLogs /></AdminErrorBoundary>} />
+                        <Route path="age-verification" element={<AdminErrorBoundary><AdminAgeVerification /></AdminErrorBoundary>} />
+                        <Route path="courier-applications" element={<AdminErrorBoundary><AdminCourierApplications /></AdminErrorBoundary>} />
+                        <Route path="delivery-safety" element={<AdminErrorBoundary><AdminDeliverySafety /></AdminErrorBoundary>} />
+                        <Route path="products" element={<AdminErrorBoundary><AdminProducts /></AdminErrorBoundary>} />
+                        <Route path="products/new" element={<AdminErrorBoundary><ProductForm /></AdminErrorBoundary>} />
+                        <Route path="products/:id/edit" element={<AdminErrorBoundary><ProductForm /></AdminErrorBoundary>} />
+                        <Route path="products/:id/duplicate" element={<AdminErrorBoundary><ProductForm /></AdminErrorBoundary>} />
+                        <Route path="products/analytics" element={<AdminErrorBoundary><ProductAnalytics /></AdminErrorBoundary>} />
+                        <Route path="inventory" element={<AdminErrorBoundary><InventoryManagement /></AdminErrorBoundary>} />
+                        <Route path="media" element={<AdminErrorBoundary><MediaLibrary /></AdminErrorBoundary>} />
+                        <Route path="templates" element={<AdminErrorBoundary><ProductTemplates /></AdminErrorBoundary>} />
+                        <Route path="import-export" element={<AdminErrorBoundary><ImportExport /></AdminErrorBoundary>} />
+                        <Route path="coa-management" element={<AdminErrorBoundary><COAManagement /></AdminErrorBoundary>} />
+                <Route path="giveaway" element={<AdminErrorBoundary><AdminGiveaway /></AdminErrorBoundary>} />
+                <Route path="giveaways" element={<AdminErrorBoundary><AdminGiveaways /></AdminErrorBoundary>} />
+                <Route path="giveaways/manage" element={<AdminErrorBoundary><Suspense fallback={<LoadingFallback />}><AdminGiveawayManagement /></Suspense></AdminErrorBoundary>} />
+                <Route path="giveaways/new" element={<AdminErrorBoundary><AdminGiveawayForm /></AdminErrorBoundary>} />
+                <Route path="giveaways/:id/edit" element={<AdminErrorBoundary><AdminGiveawayForm /></AdminErrorBoundary>} />
+                <Route path="giveaways/:id/analytics" element={<AdminErrorBoundary><AdminGiveawayAnalytics /></AdminErrorBoundary>} />
+                <Route path="giveaways/:id/winners" element={<AdminErrorBoundary><AdminGiveawayWinners /></AdminErrorBoundary>} />
+                <Route path="coupons" element={<AdminErrorBoundary><CouponList /></AdminErrorBoundary>} />
+                <Route path="coupons/create" element={<AdminErrorBoundary><CouponForm /></AdminErrorBoundary>} />
+                <Route path="coupons/:id/edit" element={<AdminErrorBoundary><CouponEdit /></AdminErrorBoundary>} />
+                <Route path="notifications" element={<AdminErrorBoundary><AdminNotifications /></AdminErrorBoundary>} />
+                <Route path="search" element={<AdminErrorBoundary><GlobalSearch /></AdminErrorBoundary>} />
+                <Route path="settings" element={<AdminErrorBoundary><SystemSettings /></AdminErrorBoundary>} />
+                <Route path="button-tester" element={<AdminErrorBoundary><ButtonTester /></AdminErrorBoundary>} />
+                <Route path="live-chat" element={<AdminErrorBoundary><AdminLiveChat /></AdminErrorBoundary>} />
               </Route>
 
                       <Route path="*" element={<NotFound />} />
