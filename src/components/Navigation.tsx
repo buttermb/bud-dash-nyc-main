@@ -23,7 +23,6 @@ import MobileBottomNav from "./MobileBottomNav";
 import { useGuestCart } from "@/hooks/useGuestCart";
 import { SearchBar } from "./SearchBar";
 import { haptics } from "@/utils/haptics";
-import { EnhancedMobileMenu } from "./premium/EnhancedMobileMenu";
 
 const Navigation = () => {
   const { user, signOut } = useAuth();
@@ -33,7 +32,6 @@ const Navigation = () => {
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [showCart, setShowCart] = useState(false);
   const [cartUpdateKey, setCartUpdateKey] = useState(0);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Force re-render when cart updates
   useEffect(() => {
@@ -273,25 +271,99 @@ const Navigation = () => {
               </div>
             )}
 
-            {/* Mobile Menu Button */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-12 w-12 touch-manipulation active:scale-95 transition-transform md:hidden"
-              aria-label="Open mobile menu"
-              onClick={() => {
-                haptics.medium();
-                setShowMobileMenu(true);
-              }}
-            >
-              <Menu className="w-6 h-6" />
-            </Button>
+            {/* Mobile Menu */}
+            <Sheet>
+              <SheetTrigger asChild className="md:hidden">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-12 w-12 touch-manipulation active:scale-95 transition-transform"
+                  aria-label="Open mobile menu"
+                >
+                  <Menu className="w-6 h-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-[85vw] sm:w-[400px]">
+                <div className="mb-6 mt-4">
+                  <SearchBar variant="full" />
+                </div>
+                <nav className="flex flex-col gap-6" aria-label="Mobile navigation menu">
+                  {navLinks.map((link) => (
+                    link.scroll ? (
+                      <a
+                        key={link.label}
+                        href={link.href}
+                        onClick={handleNavClick(link.href, link.scroll, () => {
+                          const closeButton = document.querySelector('[aria-label="Close"]') as HTMLButtonElement;
+                          closeButton?.click();
+                        })}
+                        className="text-lg font-medium transition-colors hover:text-primary cursor-pointer py-2 px-3 rounded-lg hover:bg-muted active:scale-95 touch-manipulation"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        key={link.label}
+                        to={link.href}
+                        onClick={() => {
+                          setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 0);
+                          const closeButton = document.querySelector('[aria-label="Close"]') as HTMLButtonElement;
+                          closeButton?.click();
+                        }}
+                        className="text-lg font-medium transition-colors hover:text-primary cursor-pointer py-2 px-3 rounded-lg hover:bg-muted active:scale-95 touch-manipulation"
+                      >
+                        {link.label}
+                      </Link>
+                    )
+                  ))}
+                  {user ? (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        className="h-12 text-base touch-manipulation active:scale-95"
+                        onClick={() => {
+                          navigate("/my-orders");
+                          const closeButton = document.querySelector('[aria-label="Close"]') as HTMLButtonElement;
+                          closeButton?.click();
+                        }}
+                      >
+                        My Orders
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="h-12 text-base touch-manipulation active:scale-95"
+                        onClick={async () => {
+                          await signOut();
+                          navigate("/");
+                        }}
+                      >
+                        Sign Out
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        className="h-12 text-base touch-manipulation active:scale-95"
+                        onClick={() => openAuth("signin")}
+                      >
+                        Sign In
+                      </Button>
+                      <Button 
+                        variant="hero" 
+                        className="h-12 text-base touch-manipulation active:scale-95"
+                        onClick={() => openAuth("signup")}
+                      >
+                        Sign Up
+                      </Button>
+                    </>
+                  )}
+                </nav>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </header>
-
-      {/* Enhanced Mobile Menu */}
-      <EnhancedMobileMenu isOpen={showMobileMenu} onClose={() => setShowMobileMenu(false)} />
 
       <AuthModal
         open={showAuthModal}

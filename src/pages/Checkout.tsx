@@ -813,7 +813,37 @@ const Checkout = () => {
                   />
                 </div>
 
-                {/* Delivery zone info hidden from customers */}
+                {detectedZipcode.length === 5 && (() => {
+                  const neighborhood = getNeighborhoodFromZip(detectedZipcode);
+                  if (!neighborhood) return null;
+                  
+                  return (
+                    <Card className="border-2 animate-in fade-in-50 duration-300">
+                      <CardContent className="pt-4">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-16 h-16 ${getRiskColor(neighborhood.risk)} rounded-lg flex flex-col items-center justify-center text-white flex-shrink-0`}>
+                            <div className="text-2xl font-bold">{neighborhood.risk}</div>
+                            <div className="text-xs">/10</div>
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-semibold text-lg">{neighborhood.name}</div>
+                            <div className="text-sm text-muted-foreground">{neighborhood.borough}</div>
+                            <div className={`text-sm font-semibold mt-1 flex items-center gap-2 ${getRiskTextColor(neighborhood.risk)}`}>
+                              <AlertTriangle className="w-4 h-4" />
+                              {getRiskLabel(neighborhood.risk)} Delivery Zone
+                            </div>
+                          </div>
+                          {neighborhood.risk >= 7 && (
+                            <div className="text-xs bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 px-3 py-2 rounded-lg">
+                              <div className="font-bold">High Risk Area</div>
+                              <div>Extra verification required</div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
               </CardContent>
             </Card>
 
@@ -956,6 +986,12 @@ const Checkout = () => {
                       ${deliveryFee.toFixed(2)}
                     </span>
                   </div>
+                  {borough === "manhattan" && deliveryFee > 0 && (
+                    <div className="text-xs text-muted-foreground pl-4">
+                      <div>Base fee: ${user ? "5.00" : "5.50"}</div>
+                      <div>City surcharge: ${user ? "5.00" : "5.50"}</div>
+                    </div>
+                  )}
                   {welcomeDiscountAmount > 0 && (
                     <div className="flex justify-between text-sm text-primary">
                       <span className="flex items-center gap-2">

@@ -7,15 +7,12 @@ const Hero = () => {
   const navigate = useNavigate();
   
   return (
-    <section className="relative min-h-[85vh] md:min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Bold gradient background */}
-      <div className="absolute inset-0 bg-gradient-hero z-0" />
+    <section className="relative min-h-[85vh] md:min-h-screen flex items-center justify-center overflow-hidden bg-background">
+      {/* Solid gradient background - no image */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-muted/20 to-background z-0" />
       
-      {/* Animated glow effect */}
-      <div className="absolute inset-0 z-0 animate-glow-pulse opacity-30">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/40 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary-glow/30 rounded-full blur-3xl" />
-      </div>
+      {/* Additional subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-hero z-0" />
 
       {/* Content */}
       <div className="container relative z-10 px-4 py-16 md:py-32 mx-auto">
@@ -28,17 +25,17 @@ const Hero = () => {
             </Badge>
           </div>
 
-          {/* Main Heading - BOLD & IMPACTFUL */}
-          <h1 className="heading-massive animate-fade-in drop-shadow-[0_0_35px_rgba(45,212,191,0.4)]">
-            NYC'S BOLDEST{" "}
-            <span className="bg-gradient-vibrant bg-clip-text text-transparent text-glow">
+          {/* Main Heading - Condensed for Mobile */}
+          <h1 className="text-4xl sm:text-5xl md:text-8xl font-black tracking-wider uppercase leading-tight animate-fade-in">
+            New York's Premium{" "}
+            <span className="bg-gradient-primary bg-clip-text text-transparent">
               Flower Delivery
             </span>
           </h1>
 
-          {/* Subheading - Bold & Clear */}
-          <p className="text-xl sm:text-2xl md:text-4xl text-foreground/90 max-w-3xl mx-auto font-bold animate-fade-in tracking-tight">
-            Premium Cannabis • Same-Day • NYC Wide
+          {/* Subheading - Brief on Mobile */}
+          <p className="text-lg sm:text-xl md:text-3xl text-muted-foreground max-w-2xl mx-auto font-medium animate-fade-in">
+            Premium flower, pre-rolls, and edibles delivered fast across NYC
           </p>
 
           {/* Trust Indicators - Simplified for Mobile */}
@@ -63,13 +60,12 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* CTA Buttons - Premium & Bold */}
+          {/* CTA Buttons - Touch-Friendly */}
           <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center pt-6 md:pt-8">
             <Button 
               variant="hero" 
               size="lg" 
-              className="text-lg md:text-2xl px-10 md:px-16 py-7 md:py-10 min-h-[60px] font-black uppercase
-                       shadow-glow hover:shadow-neon hover:scale-110 transition-bounce animate-float"
+              className="text-lg md:text-xl px-8 md:px-12 py-6 md:py-8 min-h-[56px] hover:scale-105 transition-all duration-300"
               onClick={() => {
                 const productsSection = document.getElementById('products');
                 productsSection?.scrollIntoView({ behavior: 'smooth' });
@@ -80,9 +76,7 @@ const Hero = () => {
             <Button 
               variant="outline" 
               size="lg" 
-              className="text-lg md:text-2xl px-10 md:px-16 py-7 md:py-10 min-h-[60px] font-black uppercase
-                       border-2 hover:bg-primary hover:text-primary-foreground hover:scale-110 transition-bounce
-                       hover:shadow-glow"
+              className="text-lg md:text-xl px-8 md:px-12 py-6 md:py-8 min-h-[56px] hover:scale-105 transition-all duration-300"
               onClick={() => navigate('/track-order')}
             >
               Track Order

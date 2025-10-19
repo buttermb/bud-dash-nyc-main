@@ -55,22 +55,18 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
 
-    /* Bold Premium Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(173 80% 40%) 0%, hsl(173 100% 50%) 100%);
-    --gradient-vibrant: linear-gradient(45deg, hsl(173 100% 50%), hsl(173 80% 40%), hsl(173 60% 30%));
-    --gradient-neon: linear-gradient(90deg, hsl(173 100% 50%), hsl(173 80% 40%), hsl(173 100% 45%));
-    --gradient-hero: linear-gradient(135deg, hsl(173 80% 40%) 0%, hsl(173 60% 30%) 50%, hsl(222 47% 11%) 100%);
-    --gradient-bold: linear-gradient(135deg, hsl(173 100% 50%) 0%, hsl(173 80% 40%) 50%, hsl(173 60% 30%) 100%);
-    
-    /* Premium Shadows & Glow Effects */
-    --shadow-elegant: 0 20px 60px -10px hsl(173 80% 40% / 0.4);
-    --shadow-glow: 0 0 60px hsl(173 100% 50% / 0.6);
-    --shadow-strong: 0 10px 40px -10px hsl(173 80% 40% / 0.5);
-    --neon-glow: 0 0 5px hsl(173 100% 50%), 0 0 10px hsl(173 100% 50%), 0 0 20px hsl(173 100% 50%), 0 0 40px hsl(173 100% 50%);
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(173 80% 40%), hsl(173 100% 50%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(222 47% 98%));
+    --gradient-accent: linear-gradient(135deg, hsl(173 80% 40%), hsl(173 60% 30%));
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(222 47% 98%) 50%, hsl(173 80% 95%) 100%);
 
-    /* Smooth Transitions */
+    /* Shadows */
+    --shadow-elegant: 0 20px 60px -10px hsl(173 80% 40% / 0.3);
+    --shadow-glow: 0 0 60px hsl(173 100% 50% / 0.5);
+
+    /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
   .dark {
@@ -248,96 +244,5 @@
       pointer-events: auto;
       user-select: auto;
     }
-  }
-  
-  /* Premium Typography Styles */
-  .heading-massive {
-    font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
-    font-size: clamp(3rem, 10vw, 7rem);
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    line-height: 0.9;
-    text-transform: uppercase;
-  }
-  
-  .heading-bold {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-    font-size: clamp(1.5rem, 5vw, 3rem);
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-  }
-  
-  /* Premium Effects */
-  .text-glow {
-    text-shadow: 
-      0 0 10px currentColor,
-      0 0 20px currentColor,
-      0 0 40px currentColor;
-  }
-  
-  .neon-glow {
-    box-shadow: var(--neon-glow);
-  }
-  
-  .premium-card {
-    background: linear-gradient(135deg, hsl(173 80% 40%) 0%, hsl(173 100% 50%) 100%);
-    position: relative;
-  }
-  
-  .premium-card::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    background: linear-gradient(135deg, hsl(173 100% 50%), hsl(173 80% 40%), hsl(173 100% 45%));
-    border-radius: inherit;
-    z-index: -1;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  
-  .premium-card:hover::before {
-    opacity: 1;
-  }
-  
-  /* Holographic Effect */
-  @keyframes holographic-shift {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-  }
-  
-  .holographic {
-    background: linear-gradient(
-      45deg,
-      hsl(173 80% 40%),
-      hsl(173 100% 50%),
-      hsl(173 60% 30%),
-      hsl(173 80% 40%)
-    );
-    background-size: 400% 400%;
-    animation: holographic-shift 10s ease infinite;
-  }
-  
-  /* Gradient Border Animation */
-  @keyframes gradient-rotate {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  
-  .gradient-border {
-    border: 3px solid transparent;
-    background-clip: padding-box;
-    position: relative;
-  }
-  
-  .gradient-border::before {
-    content: '';
-    position: absolute;
-    inset: -3px;
-    background: var(--gradient-vibrant);
-    border-radius: inherit;
-    z-index: -1;
-    animation: gradient-rotate 3s linear infinite;
   }
 }
