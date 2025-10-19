@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft } from "lucide-react";
+import DOMPurify from 'dompurify';
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -72,7 +73,12 @@ const BlogPost = () => {
         </p>
 
         <div className="prose prose-lg max-w-none dark:prose-invert">
-          <div dangerouslySetInnerHTML={{ __html: post.content }} />
+          <div dangerouslySetInnerHTML={{ 
+            __html: DOMPurify.sanitize(post.content, {
+              ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre'],
+              ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel']
+            }) 
+          }} />
         </div>
       </div>
     </div>

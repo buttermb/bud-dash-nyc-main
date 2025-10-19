@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface CourierPinContextType {
   hasPinSetup: boolean;
@@ -15,39 +16,15 @@ export const CourierPinProvider = ({ children }: { children: ReactNode }) => {
   const [hasPinSetup, setHasPinSetup] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [autoLockTimeout, setAutoLockTimeout] = useState<NodeJS.Timeout | null>(null);
 
+  // Check server-side PIN session on mount
   useEffect(() => {
-    checkPinSetup();
-    
-    // Check if session is already unlocked
-    const sessionUnlocked = sessionStorage.getItem('courier_session_unlocked');
-    if (sessionUnlocked === 'true') {
-      setIsUnlocked(true);
-    }
-    
-    // Auto-lock after 30 minutes of inactivity
-    let inactivityTimer: NodeJS.Timeout;
-    
-    const resetTimer = () => {
-      clearTimeout(inactivityTimer);
-      if (isUnlocked) {
-        inactivityTimer = setTimeout(() => {
-          lockSession();
-        }, 30 * 60 * 1000); // 30 minutes
-      }
-    };
+    checkPinStatus();
+  }, []);
 
-    const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
-    events.forEach(event => window.addEventListener(event, resetTimer));
-    resetTimer();
-
-    return () => {
-      clearTimeout(inactivityTimer);
-      events.forEach(event => window.removeEventListener(event, resetTimer));
-    };
-  }, [isUnlocked]);
-
-  const checkPinSetup = async () => {
+  const checkPinStatus = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -55,20 +32,20 @@ export const CourierPinProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      const { data, error } = await supabase
+      // Check if PIN is set up
+      const { data: courier } = await supabase
         .from('couriers')
-        .select('pin_hash, pin_set_at')
+        .select('id, admin_pin, pin_set_at')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (!error && data?.pin_hash) {
+      if (courier?.admin_pin) {
         // Check if PIN needs to be reset (30 days since last set)
-        if (data.pin_set_at) {
-          const pinSetDate = new Date(data.pin_set_at);
+        if (courier.pin_set_at) {
+          const pinSetDate = new Date(courier.pin_set_at);
           const daysSinceSet = (Date.now() - pinSetDate.getTime()) / (1000 * 60 * 60 * 24);
           
           if (daysSinceSet > 30) {
-            // PIN expired after 30 days, need to set new one
             setHasPinSetup(false);
           } else {
             setHasPinSetup(true);
@@ -76,65 +53,187 @@ export const CourierPinProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setHasPinSetup(true);
         }
+
+        // Check if we have a valid session token
+        const storedToken = sessionStorage.getItem('courier_session_token');
+        if (storedToken && courier.id) {
+          try {
+            const { data: isValid } = await supabase.rpc('validate_courier_pin_session', {
+              p_session_token: storedToken,
+              p_courier_id: courier.id
+            });
+
+            if (isValid) {
+              setIsUnlocked(true);
+              setSessionToken(storedToken);
+            } else {
+              sessionStorage.removeItem('courier_session_token');
+            }
+          } catch (error) {
+            if (import.meta.env.DEV) {
+              console.error('Session validation failed:', error);
+            }
+            sessionStorage.removeItem('courier_session_token');
+          }
+        }
       }
     } catch (error) {
-      console.error('Error checking PIN setup:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error checking PIN setup:', error);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  // Auto-lock timer
+  const resetAutoLockTimer = () => {
+    if (autoLockTimeout) {
+      clearTimeout(autoLockTimeout);
+    }
+
+    const timeout = setTimeout(() => {
+      lockSession();
+      toast.info('Session locked due to inactivity');
+    }, 30 * 60 * 1000); // 30 minutes
+
+    setAutoLockTimeout(timeout);
+  };
+
+  useEffect(() => {
+    if (!isUnlocked) return;
+
+    const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
+    events.forEach(event => window.addEventListener(event, resetAutoLockTimer));
+    resetAutoLockTimer();
+
+    return () => {
+      events.forEach(event => window.removeEventListener(event, resetAutoLockTimer));
+      if (autoLockTimeout) {
+        clearTimeout(autoLockTimeout);
+      }
+    };
+  }, [isUnlocked]);
+
   const setupPin = async (pin: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    // Simple hash (in production, use proper hashing on backend)
-    const pinHash = btoa(pin);
+    // Hash PIN server-side
+    const { data: pinHash, error: hashError } = await supabase.rpc('hash_admin_pin', {
+      pin_text: pin
+    });
+
+    if (hashError) throw hashError;
 
     const { error } = await supabase
       .from('couriers')
       .update({ 
-        pin_hash: pinHash,
-        pin_set_at: new Date().toISOString(),
-        pin_last_verified_at: new Date().toISOString()
+        admin_pin: pinHash,
+        pin_set_at: new Date().toISOString()
       })
       .eq('user_id', user.id);
 
     if (error) throw error;
 
     setHasPinSetup(true);
-    setIsUnlocked(true);
-    sessionStorage.setItem('courier_session_unlocked', 'true');
+    
+    // Auto-verify after setup
+    await verifyPin(pin);
   };
 
   const verifyPin = async (pin: string): Promise<boolean> => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Not authenticated');
+        return false;
+      }
 
-    const { data } = await supabase
-      .from('couriers')
-      .select('pin_hash, pin_set_at')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    const pinHash = btoa(pin);
-    if (data?.pin_hash === pinHash) {
-      // Update last verified timestamp
-      await supabase
+      const { data: courier } = await supabase
         .from('couriers')
-        .update({ pin_last_verified_at: new Date().toISOString() })
-        .eq('user_id', user.id);
-      
-      setIsUnlocked(true);
-      sessionStorage.setItem('courier_session_unlocked', 'true');
-      return true;
+        .select('id, user_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!courier) {
+        toast.error('Courier not found');
+        return false;
+      }
+
+      // Verify PIN server-side
+      const { data: isValid, error: verifyError } = await supabase.rpc('verify_admin_pin', {
+        courier_user_id: courier.user_id,
+        pin: pin
+      });
+
+      if (verifyError) {
+        if (import.meta.env.DEV) {
+          console.error('PIN verification error:', verifyError);
+        }
+        toast.error('PIN verification failed');
+        return false;
+      }
+
+      if (isValid) {
+        // Create server-side session
+        const { data: token, error: sessionError } = await supabase.rpc('create_courier_pin_session', {
+          p_courier_id: courier.id
+        });
+
+        if (sessionError || !token) {
+          if (import.meta.env.DEV) {
+            console.error('Session creation error:', sessionError);
+          }
+          toast.error('Failed to create session');
+          return false;
+        }
+
+        // Store session token (not unlock status)
+        setSessionToken(token);
+        sessionStorage.setItem('courier_session_token', token);
+        setIsUnlocked(true);
+        
+        // Log successful verification (fire and forget)
+        supabase.from('security_events').insert({
+          event_type: 'courier_pin_verification',
+          user_id: courier.user_id,
+          details: { success: true }
+        });
+
+        // Set up auto-lock
+        resetAutoLockTimer();
+        
+        toast.success('PIN verified successfully');
+        return true;
+      } else {
+        // Log failed attempt (fire and forget)
+        supabase.from('security_events').insert({
+          event_type: 'courier_pin_verification',
+          user_id: courier.user_id,
+          details: { success: false }
+        });
+        
+        toast.error('Invalid PIN');
+        return false;
+      }
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('PIN verification error:', error);
+      }
+      toast.error('Failed to verify PIN');
+      return false;
     }
-    return false;
   };
 
   const lockSession = () => {
     setIsUnlocked(false);
-    sessionStorage.removeItem('courier_session_unlocked');
+    setSessionToken(null);
+    sessionStorage.removeItem('courier_session_token');
+    if (autoLockTimeout) {
+      clearTimeout(autoLockTimeout);
+      setAutoLockTimeout(null);
+    }
   };
 
   if (loading) {

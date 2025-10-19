@@ -59,7 +59,17 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         setError("Admin account not found or inactive");
       }
     } catch (err: any) {
-      console.error("Admin verification failed:", err);
+      // Only log detailed errors in development
+      if (import.meta.env.DEV) {
+        console.error("Admin verification failed:", err);
+      } else {
+        // In production, log to security events table (fire and forget)
+        supabase.from('security_events').insert({
+          event_type: 'admin_verification_failed',
+          user_id: currentSession.user.id,
+          details: { error: err instanceof Error ? err.message : 'Unknown error' }
+        });
+      }
       setAdmin(null);
       setSession(null);
       setError(err.message || "Admin verification failed");
@@ -92,7 +102,10 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
           setLoading(false);
         }
       } catch (err: any) {
-        console.error("Auth initialization error:", err);
+        // Only log in development
+        if (import.meta.env.DEV) {
+          console.error("Auth initialization error:", err);
+        }
         if (mounted) {
           setError(err.message || "Failed to initialize auth");
           setLoading(false);

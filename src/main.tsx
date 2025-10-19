@@ -17,7 +17,6 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { PerformanceMonitor } from "./utils/performance";
-import { initializeSecurityObfuscation } from "./utils/securityObfuscation";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
 // Log app initialization
@@ -30,14 +29,7 @@ console.log('[NYM] Theme state:', {
   prefersDark: window.matchMedia('(prefers-color-scheme: dark)').matches
 });
 
-// Initialize security obfuscation in production
-if (import.meta.env.PROD) {
-  try {
-    initializeSecurityObfuscation();
-  } catch (error) {
-    console.error('[NYM] Security obfuscation failed:', error);
-  }
-}
+// Security obfuscation removed - was security theater that didn't provide real protection
 
 // Register service worker for PWA capabilities and caching
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
