@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
@@ -11,25 +11,28 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  errorInfo: ErrorInfo | null;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
     error: null,
+    errorInfo: null,
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, errorInfo: null };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    this.setState({ errorInfo });
     analytics.trackError('error_boundary', error.message);
   }
 
   private handleReset = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false, error: null, errorInfo: null });
     window.location.reload();
   };
 
@@ -57,8 +60,14 @@ export class ErrorBoundary extends Component<Props, State> {
                   <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
                     Error details
                   </summary>
-                  <pre className="mt-2 p-3 bg-muted rounded text-xs overflow-auto">
+                  <pre className="mt-2 p-3 bg-muted rounded text-xs overflow-auto max-h-48">
                     {this.state.error.message}
+                    {import.meta.env.DEV && this.state.errorInfo && (
+                      <>
+                        {'\n\n'}
+                        {this.state.errorInfo.componentStack}
+                      </>
+                    )}
                   </pre>
                 </details>
               )}

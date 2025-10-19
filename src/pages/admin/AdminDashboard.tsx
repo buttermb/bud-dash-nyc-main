@@ -36,6 +36,7 @@ interface DashboardMetrics {
 }
 
 const AdminDashboard = () => {
+  const [mounted, setMounted] = useState(false);
   const { session } = useAdmin();
   const navigate = useNavigate();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
@@ -43,6 +44,10 @@ const AdminDashboard = () => {
   const [realtimeActivity, setRealtimeActivity] = useState<any[]>([]);
   const [systemAlerts, setSystemAlerts] = useState<any[]>([]);
   const [systemHealth, setSystemHealth] = useState({ status: "healthy", unresolvedFlags: 0, activeUsers: 0, ordersLastHour: 0 });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (session) {
@@ -112,7 +117,7 @@ const AdminDashboard = () => {
   };
 
 
-  if (loading) {
+  if (!mounted || loading) {
     return (
       <div className="p-6 space-y-6">
         <div className="space-y-2">
