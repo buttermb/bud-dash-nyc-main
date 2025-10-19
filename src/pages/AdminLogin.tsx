@@ -14,16 +14,17 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Show loading state
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   // Redirect authenticated admins
-  if (admin) {
+  if (admin && !loading) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
@@ -33,10 +34,10 @@ const AdminLogin = () => {
     
     try {
       await signIn(email, password);
-      // Don't set loading to false - let the Navigate component handle the redirect
-      // The admin state will be updated and trigger the Navigate
+      // Redirect will happen automatically when admin state updates
+      navigate("/admin/dashboard");
     } catch (error) {
-      // Only set loading to false on error
+      console.error("Login error:", error);
       setLoading(false);
     }
   };
