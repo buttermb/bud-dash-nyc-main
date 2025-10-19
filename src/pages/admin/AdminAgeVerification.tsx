@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAdmin } from "@/contexts/AdminContext";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,13 +22,13 @@ interface VerificationRequest {
 }
 
 const AdminAgeVerification = () => {
-  const { admin } = useAdmin();
+  const { session } = useAdminAuth();
   const [requests, setRequests] = useState<VerificationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [rejectionReason, setRejectionReason] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (admin) {
+    if (session) {
       fetchVerificationRequests();
 
       // Realtime subscription for age verifications
@@ -52,7 +52,7 @@ const AdminAgeVerification = () => {
         supabase.removeChannel(channel);
       };
     }
-  }, [admin]);
+  }, [session]);
 
   const fetchVerificationRequests = async () => {
     try {
@@ -120,7 +120,7 @@ const AdminAgeVerification = () => {
       await supabase.from("security_events").insert({
         event_type: "age_verification_approved",
         user_id: userId,
-        details: { verification_id: verificationId, admin_id: admin?.id }
+        details: { verification_id: verificationId, admin_id: session?.user?.id }
       });
 
       toast.success("✓ Age verification approved");
@@ -172,7 +172,7 @@ const AdminAgeVerification = () => {
         details: { 
           verification_id: verificationId, 
           reason, 
-          admin_id: admin?.id 
+          admin_id: session?.user?.id 
         }
       });
 

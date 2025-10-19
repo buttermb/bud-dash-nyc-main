@@ -37,8 +37,10 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useAdmin } from "@/contexts/AdminContext";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import { ChevronDown } from "lucide-react";
 
 const menuGroups = [
@@ -99,8 +101,14 @@ const menuGroups = [
 
 export function AdminSidebar() {
   const { state } = useSidebar();
-  const { admin, signOut } = useAdmin();
+  const { session } = useAdminAuth();
   const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast({ title: "Signed out successfully" });
+    navigate("/admin/login");
+  };
   const location = useLocation();
   const isCollapsed = state === "collapsed";
 
@@ -114,8 +122,7 @@ export function AdminSidebar() {
         {!isCollapsed && (
           <div className="space-y-1">
             <h2 className="text-lg font-semibold">Admin Portal</h2>
-            <p className="text-sm text-muted-foreground">{admin?.full_name}</p>
-            <p className="text-xs text-muted-foreground capitalize">{admin?.role?.replace('_', ' ')}</p>
+            <p className="text-sm text-muted-foreground">{session?.user?.email}</p>
           </div>
         )}
         {isCollapsed && (
@@ -172,10 +179,7 @@ export function AdminSidebar() {
         <Button
           variant="ghost"
           className="w-full justify-start"
-          onClick={async () => {
-            await signOut();
-            navigate("/admin/login");
-          }}
+          onClick={handleSignOut}
         >
           <LogOut className="h-4 w-4" />
           {!isCollapsed && <span className="ml-2">Sign Out</span>}

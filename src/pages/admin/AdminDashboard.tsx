@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAdmin } from "@/contexts/AdminContext";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -36,7 +36,7 @@ interface DashboardMetrics {
 }
 
 const AdminDashboard = () => {
-  const { session } = useAdmin();
+  const { session } = useAdminAuth();
   const navigate = useNavigate();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);

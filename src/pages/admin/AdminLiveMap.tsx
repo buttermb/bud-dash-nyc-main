@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAdmin } from "@/contexts/AdminContext";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminAlerts } from "@/components/admin/AdminAlerts";
 import { Badge } from "@/components/ui/badge";
@@ -40,7 +40,7 @@ interface ActivityItem {
 }
 
 const AdminLiveMap = () => {
-  const { session } = useAdmin();
+  const { session } = useAdminAuth();
   const { toast } = useToast();
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [stats, setStats] = useState<RealtimeStats | null>(null);

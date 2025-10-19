@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAdmin } from "@/contexts/AdminContext";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -61,7 +61,7 @@ interface UserProfile {
 }
 
 export default function AdminUsers() {
-  const { session } = useAdmin();
+  const { session } = useAdminAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);

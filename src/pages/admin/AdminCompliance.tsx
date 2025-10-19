@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAdmin } from "@/contexts/AdminContext";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Shield, Users, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const AdminCompliance = () => {
-  const { session } = useAdmin();
+  const { session } = useAdminAuth();
   const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

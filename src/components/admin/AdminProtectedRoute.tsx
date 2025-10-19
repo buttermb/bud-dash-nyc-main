@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { useAdmin } from "@/contexts/AdminContext";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Loader2 } from "lucide-react";
 
 interface AdminProtectedRouteProps {
@@ -7,7 +7,7 @@ interface AdminProtectedRouteProps {
 }
 
 const AdminProtectedRoute = ({ children }: AdminProtectedRouteProps) => {
-  const { admin, loading } = useAdmin();
+  const { isAdmin, loading } = useAdminAuth();
 
   if (loading) {
     return (
@@ -17,7 +17,7 @@ const AdminProtectedRoute = ({ children }: AdminProtectedRouteProps) => {
     );
   }
 
-  if (!admin) {
+  if (!isAdmin) {
     return <Navigate to="/admin/login" replace />;
   }
 
