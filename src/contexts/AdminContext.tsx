@@ -28,10 +28,15 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
   const verifyAdmin = async (currentSession: Session) => {
     try {
-      // Check if user has admin role - use RPC function for efficiency
-      const isAdmin = await has_role(currentSession.user.id, 'admin');
+      // Check if user has admin role directly from user_roles table
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", currentSession.user.id)
+        .eq("role", "admin")
+        .maybeSingle();
       
-      if (isAdmin) {
+      if (!roleError && roleData) {
         // Get admin details
         const { data: adminData, error: adminError } = await supabase
           .from("admin_users")
@@ -65,15 +70,6 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Helper function to check admin role using RPC
-  const has_role = async (userId: string, role: string): Promise<boolean> => {
-    const { data, error } = await supabase.rpc('has_role', {
-      _user_id: userId,
-      _role: role as 'admin' | 'courier' | 'user'
-    });
-    return !error && data === true;
   };
 
   useEffect(() => {
@@ -112,9 +108,15 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
       if (authError) throw authError;
       if (!authData.session) throw new Error("No session returned");
 
-      // Check admin role using RPC function
-      const isAdmin = await has_role(authData.user.id, 'admin');
-      if (!isAdmin) throw new Error("You don't have admin access");
+      // Check admin role directly from user_roles table
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", authData.user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (roleError || !roleData) throw new Error("You don't have admin access");
 
       // Get admin details
       const { data: adminData, error: adminError } = await supabase
