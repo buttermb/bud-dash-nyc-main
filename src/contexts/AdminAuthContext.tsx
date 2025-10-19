@@ -14,7 +14,6 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminCheckDone, setAdminCheckDone] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -22,7 +21,7 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
     const checkAdminStatus = async (currentSession: Session | null) => {
       if (!isMounted) return;
 
-      if (currentSession && !adminCheckDone) {
+      if (currentSession) {
         const { data } = await supabase
           .from("user_roles")
           .select("role")
@@ -32,15 +31,13 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
         
         if (isMounted) {
           setIsAdmin(!!data);
-          setAdminCheckDone(true);
+          setLoading(false);
         }
-      } else if (!currentSession) {
-        setIsAdmin(false);
-        setAdminCheckDone(false);
-      }
-      
-      if (isMounted) {
-        setLoading(false);
+      } else {
+        if (isMounted) {
+          setIsAdmin(false);
+          setLoading(false);
+        }
       }
     };
 
@@ -55,7 +52,7 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!isMounted) return;
       setSession(session);
-      setAdminCheckDone(false); // Reset check when auth state changes
+      setLoading(true);
       checkAdminStatus(session);
     });
 
@@ -63,7 +60,7 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [adminCheckDone]);
+  }, []);
 
   return (
     <AdminAuthContext.Provider value={{ session, loading, isAdmin }}>
