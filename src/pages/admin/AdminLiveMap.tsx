@@ -671,7 +671,7 @@ const AdminLiveMap = () => {
                                     )}
                                   </div>
                                   <Badge className={getStatusColor(order.status)}>
-                                    {order.status?.replace('_', ' ') || 'pending'}
+                                    {(order.status || 'pending').replace(/_/g, ' ')}
                                   </Badge>
                                 </div>
 
