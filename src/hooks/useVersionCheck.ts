@@ -50,11 +50,22 @@ async function clearAllCaches() {
 export function useVersionCheck() {
   const checkInProgress = useRef(false);
   const currentVersion = useRef<string | null>(null);
+  const lastCheckTime = useRef<number>(0);
+  const MIN_CHECK_INTERVAL = 60000; // Don't check more than once per minute
 
   useEffect(() => {
     const checkVersion = async () => {
+      // Prevent concurrent checks
       if (checkInProgress.current) return;
+      
+      // Respect minimum check interval
+      const now = Date.now();
+      if (now - lastCheckTime.current < MIN_CHECK_INTERVAL) {
+        return;
+      }
+      
       checkInProgress.current = true;
+      lastCheckTime.current = now;
 
       try {
         // Fetch with cache-busting
@@ -76,15 +87,18 @@ export function useVersionCheck() {
           return;
         }
         
-        // Check if version changed
+        // Check if version changed - must be different AND stored version must exist
         const storedVersion = localStorage.getItem(VERSION_KEY);
-        if (storedVersion && storedVersion !== newVersion) {
+        const versionChanged = storedVersion && storedVersion !== newVersion && currentVersion.current !== newVersion;
+        
+        if (versionChanged) {
           toast.info('New version available! Updating...', {
             duration: 3000
           });
           
           await clearAllCaches();
           localStorage.setItem(VERSION_KEY, newVersion);
+          currentVersion.current = newVersion;
           
           // Reload after short delay
           setTimeout(() => {
@@ -101,13 +115,17 @@ export function useVersionCheck() {
     // Check immediately on mount
     checkVersion();
 
-    // Check periodically
+    // Check periodically (less frequent)
     const interval = setInterval(checkVersion, CHECK_INTERVAL);
 
-    // Check on visibility change (when user returns to tab)
+    // Check on visibility change but with throttling
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        checkVersion();
+        // Only check if enough time has passed since last check
+        const timeSinceLastCheck = Date.now() - lastCheckTime.current;
+        if (timeSinceLastCheck > MIN_CHECK_INTERVAL) {
+          checkVersion();
+        }
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
