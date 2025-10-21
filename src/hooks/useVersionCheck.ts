@@ -118,21 +118,8 @@ export function useVersionCheck() {
     // Check periodically (less frequent)
     const interval = setInterval(checkVersion, CHECK_INTERVAL);
 
-    // Check on visibility change but with throttling
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        // Only check if enough time has passed since last check
-        const timeSinceLastCheck = Date.now() - lastCheckTime.current;
-        if (timeSinceLastCheck > MIN_CHECK_INTERVAL) {
-          checkVersion();
-        }
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
     return () => {
       clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 }
