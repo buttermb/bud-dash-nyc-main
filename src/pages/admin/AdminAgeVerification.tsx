@@ -85,16 +85,11 @@ const AdminAgeVerification = () => {
 
       if (error) throw error;
 
-      // Fetch user emails
-      const userIds = verifications?.map((v: any) => v.user_id) || [];
-      const { data } = await supabase.auth.admin.listUsers();
-      const users = data?.users || [];
-      
+      // Email requires service role key - showing user_id instead
       const enrichedRequests = verifications?.map((v: any) => {
-        const user = users.find((u: any) => u.id === v.user_id);
         return {
           ...v,
-          user_email: user?.email || "Unknown"
+          user_email: `User: ${v.user_id.slice(0, 8)}...` // Show partial user_id instead of email
         };
       }) || [];
 

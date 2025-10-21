@@ -39,43 +39,20 @@ if (import.meta.env.PROD) {
   }
 }
 
-// Register service worker with cache clearing
+// Register service worker (production only)
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', async () => {
     try {
-      // Clear all old service workers and caches first
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      for (const registration of registrations) {
-        await registration.unregister();
-        console.log('[NYM] Unregistered old service worker');
-      }
-      
-      // Clear all caches
-      const cacheNames = await caches.keys();
-      for (const cacheName of cacheNames) {
-        await caches.delete(cacheName);
-        console.log('[NYM] Deleted cache:', cacheName);
-      }
-      
-      // Register fresh service worker
+      // Register service worker
       const registration = await navigator.serviceWorker.register('/sw.js?v=10');
-      console.log('[NYM] Fresh ServiceWorker registered:', registration.scope);
+      console.log('[NYM] ServiceWorker registered:', registration.scope);
       
-      // Force immediate activation
+      // Only activate new service workers, don't force reload
       if (registration.waiting) {
         registration.waiting.postMessage({ type: 'SKIP_WAITING' });
       }
-      
-      // Only reload once on controller change, then disable listener
-      let hasReloaded = false;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!hasReloaded) {
-          console.log('[NYM] New service worker activated');
-          hasReloaded = true;
-        }
-      });
     } catch (error) {
-      console.error('[NYM] ServiceWorker setup failed:', error);
+      console.error('[NYM] ServiceWorker registration failed:', error);
     }
   });
 }
