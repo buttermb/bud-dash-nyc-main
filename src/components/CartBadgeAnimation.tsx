@@ -24,7 +24,7 @@ export function CartBadgeAnimation() {
     },
     enabled: !!user,
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
 
   const dbCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);

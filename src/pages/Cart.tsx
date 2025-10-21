@@ -36,7 +36,7 @@ const Cart = () => {
     },
     enabled: !!user,
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
 
   // Fetch product details for guest cart items

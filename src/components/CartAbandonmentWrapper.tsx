@@ -21,7 +21,7 @@ const CartAbandonmentWrapper = () => {
     },
     enabled: !!user,
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
 
   const handleCheckout = () => {
