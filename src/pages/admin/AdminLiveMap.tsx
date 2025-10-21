@@ -389,7 +389,6 @@ const AdminLiveMap = () => {
 
   return (
     <div ref={containerRef} className={isFullscreen ? "h-screen flex flex-col overflow-hidden bg-background" : "min-h-screen bg-background"}>
-      <audio ref={audioRef} src="/notification.mp3" preload="auto" />
       
       <AdminAlerts />
 

@@ -5,26 +5,14 @@ import {
   notifyEarningsUpdatePersistent 
 } from './serviceWorkerNotifications';
 
-// Play order sound
+// Play order sound - uses built-in notification sound system
 export const playOrderSound = () => {
-  try {
-    const audio = new Audio('/notification.wav');
-    audio.volume = 1.0;
-    audio.play().catch(err => console.log('Audio play failed:', err));
-  } catch (error) {
-    console.error('Error playing sound:', error);
-  }
+  playNotificationSound(true);
 };
 
-// Play success sound
+// Play success sound - uses built-in notification sound system  
 export const playSuccessSound = () => {
-  try {
-    const audio = new Audio('/notification.wav');
-    audio.volume = 1.0;
-    audio.play().catch(err => console.log('Audio play failed:', err));
-  } catch (error) {
-    console.error('Error playing sound:', error);
-  }
+  playNotificationSound(true);
 };
 
 // Vibrate on mobile
