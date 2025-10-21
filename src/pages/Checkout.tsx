@@ -437,7 +437,7 @@ const Checkout = () => {
                 </CardHeader>
                 <CardContent className="space-y-3 md:space-y-4">
                   <div className="space-y-2 w-full">
-                    <Label htmlFor="guest-name" className="text-sm">Full Name *</Label>
+                    <Label htmlFor="guest-name" className="text-sm font-medium">Full Name *</Label>
                     <Input
                       id="guest-name"
                       name="name"
@@ -445,12 +445,13 @@ const Checkout = () => {
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
                       placeholder="John Doe"
-                      className="w-full h-12 md:h-14 text-base touch-target"
+                      className="w-full h-12 text-base"
                       required
+                      autoFocus
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="guest-phone" className="text-sm">Phone Number *</Label>
+                    <Label htmlFor="guest-phone" className="text-sm font-medium">Phone Number *</Label>
                     <Input
                       id="guest-phone"
                       name="tel"
@@ -460,15 +461,15 @@ const Checkout = () => {
                       value={guestPhone}
                       onChange={(e) => setGuestPhone(e.target.value)}
                       placeholder="(555) 123-4567"
-                      className="h-12 md:h-14 text-base touch-target"
+                      className="h-12 text-base"
                       required
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground mt-1.5">
                       For delivery updates
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="guest-email" className="text-sm">Email Address *</Label>
+                    <Label htmlFor="guest-email" className="text-sm font-medium">Email Address *</Label>
                     <Input
                       id="guest-email"
                       name="email"
@@ -478,10 +479,10 @@ const Checkout = () => {
                       value={guestEmail}
                       onChange={(e) => setGuestEmail(e.target.value)}
                       placeholder="john@example.com"
-                      className="h-12 md:h-14 text-base touch-target"
+                      className="h-12 text-base"
                       required
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground mt-1.5">
                       Order confirmation sent here
                     </p>
                   </div>

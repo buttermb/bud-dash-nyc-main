@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AuthModalProps {
   open: boolean;
@@ -173,90 +174,109 @@ const AuthModal = ({ open, onOpenChange, mode, onModeChange }: AuthModalProps) =
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-sm font-medium">Email</Label>
             <Input
               id="email"
               type="email"
+              autoComplete="email"
               placeholder="you@example.com"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
                 setErrors({ ...errors, email: "" });
               }}
-              className={errors.email ? "border-destructive" : ""}
+              className={cn("h-11 transition-colors", errors.email && "border-destructive focus-visible:ring-destructive")}
+              autoFocus
             />
             {errors.email && (
-              <p className="text-sm text-destructive">{errors.email}</p>
+              <p className="text-xs text-destructive mt-1.5 flex items-start gap-1">
+                <span className="text-destructive">⚠</span>
+                <span>{errors.email}</span>
+              </p>
             )}
           </div>
 
           {mode === "signup" && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName" className="text-sm font-medium">Full Name</Label>
                 <Input
                   id="fullName"
                   type="text"
+                  autoComplete="name"
                   placeholder="John Doe"
                   value={fullName}
                   onChange={(e) => {
                     setFullName(e.target.value);
                     setErrors({ ...errors, fullName: "" });
                   }}
-                  className={errors.fullName ? "border-destructive" : ""}
+                  className={cn("h-11 transition-colors", errors.fullName && "border-destructive focus-visible:ring-destructive")}
                 />
                 {errors.fullName && (
-                  <p className="text-sm text-destructive">{errors.fullName}</p>
+                  <p className="text-xs text-destructive mt-1.5 flex items-start gap-1">
+                    <span className="text-destructive">⚠</span>
+                    <span>{errors.fullName}</span>
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="1234567890"
+                  autoComplete="tel"
+                  inputMode="numeric"
+                  placeholder="(555) 123-4567"
                   value={phone}
                   onChange={(e) => {
                     setPhone(e.target.value);
                     setErrors({ ...errors, phone: "" });
                   }}
-                  className={errors.phone ? "border-destructive" : ""}
+                  className={cn("h-11 transition-colors", errors.phone && "border-destructive focus-visible:ring-destructive")}
                 />
                 {errors.phone && (
-                  <p className="text-sm text-destructive">{errors.phone}</p>
+                  <p className="text-xs text-destructive mt-1.5 flex items-start gap-1">
+                    <span className="text-destructive">⚠</span>
+                    <span>{errors.phone}</span>
+                  </p>
                 )}
               </div>
             </>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="text-sm font-medium">Password</Label>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
                   setErrors({ ...errors, password: "" });
                 }}
-                className={errors.password ? "border-destructive pr-10" : "pr-10"}
+                className={cn("h-11 pr-10 transition-colors", errors.password && "border-destructive focus-visible:ring-destructive")}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
             {errors.password && (
-              <p className="text-sm text-destructive">{errors.password}</p>
+              <p className="text-xs text-destructive mt-1.5 flex items-start gap-1">
+                <span className="text-destructive">⚠</span>
+                <span>{errors.password}</span>
+              </p>
             )}
-            {mode === "signup" && (
-              <p className="text-xs text-muted-foreground mt-1">
+            {mode === "signup" && !errors.password && (
+              <p className="text-xs text-muted-foreground mt-1.5">
                 Must be at least 8 characters with a letter and number
               </p>
             )}
@@ -264,27 +284,31 @@ const AuthModal = ({ open, onOpenChange, mode, onModeChange }: AuthModalProps) =
 
           {mode === "signup" && (
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</Label>
               <Input
                 id="confirmPassword"
                 type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
                   setErrors({ ...errors, confirmPassword: "" });
                 }}
-                className={errors.confirmPassword ? "border-destructive" : ""}
+                className={cn("h-11 transition-colors", errors.confirmPassword && "border-destructive focus-visible:ring-destructive")}
               />
               {errors.confirmPassword && (
-                <p className="text-sm text-destructive">{errors.confirmPassword}</p>
+                <p className="text-xs text-destructive mt-1.5 flex items-start gap-1">
+                  <span className="text-destructive">⚠</span>
+                  <span>{errors.confirmPassword}</span>
+                </p>
               )}
             </div>
           )}
 
           {mode === "signup" && (
             <div className="space-y-2">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-start space-x-3 p-3 rounded-lg border bg-muted/30">
                 <Checkbox
                   id="age"
                   checked={ageConfirmed}
@@ -292,18 +316,22 @@ const AuthModal = ({ open, onOpenChange, mode, onModeChange }: AuthModalProps) =
                     setAgeConfirmed(checked as boolean);
                     setErrors({ ...errors, ageConfirmed: "" });
                   }}
+                  className="mt-0.5"
                 />
-                <Label htmlFor="age" className="text-sm font-normal cursor-pointer">
+                <Label htmlFor="age" className="text-sm font-normal cursor-pointer leading-relaxed">
                   I confirm I am 21 years or older
                 </Label>
               </div>
               {errors.ageConfirmed && (
-                <p className="text-sm text-destructive">{errors.ageConfirmed}</p>
+                <p className="text-xs text-destructive mt-1.5 flex items-start gap-1">
+                  <span className="text-destructive">⚠</span>
+                  <span>{errors.ageConfirmed}</span>
+                </p>
               )}
             </div>
           )}
 
-          <Button type="submit" variant="hero" className="w-full" disabled={loading}>
+          <Button type="submit" variant="hero" className="w-full h-11 text-base font-medium" disabled={loading}>
             {loading ? "Please wait..." : mode === "signin" ? "Sign In" : "Create Account"}
           </Button>
 

@@ -176,6 +176,52 @@
     min-height: 44px;
   }
   
+  /* Enhanced form field animations */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    transform: scale(1.01);
+    transition: transform 0.15s ease-out, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  /* Smooth label transitions */
+  label {
+    transition: color 0.2s ease;
+  }
+  
+  /* Better button press feedback */
+  button:active:not(:disabled) {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Smooth hover states */
+  button:hover:not(:disabled),
+  a:hover {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Loading state animations */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+  
+  .loading-shimmer {
+    animation: shimmer 1.5s infinite linear;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+  }
+  
   /* Better scrolling on iOS */
   .scroll-container {
     -webkit-overflow-scrolling: touch;

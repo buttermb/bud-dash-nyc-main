@@ -48,78 +48,8 @@ async function clearAllCaches() {
 }
 
 export function useVersionCheck() {
-  const checkInProgress = useRef(false);
-  const currentVersion = useRef<string | null>(null);
-  const lastCheckTime = useRef<number>(0);
-  const MIN_CHECK_INTERVAL = 60000; // Don't check more than once per minute
-
+  // Version checking disabled to prevent unwanted refreshes
   useEffect(() => {
-    const checkVersion = async () => {
-      // Prevent concurrent checks
-      if (checkInProgress.current) return;
-      
-      // Respect minimum check interval
-      const now = Date.now();
-      if (now - lastCheckTime.current < MIN_CHECK_INTERVAL) {
-        return;
-      }
-      
-      checkInProgress.current = true;
-      lastCheckTime.current = now;
-
-      try {
-        // Fetch with cache-busting
-        const response = await fetch(`/index.html?t=${Date.now()}`, {
-          cache: 'no-cache',
-          headers: { 'Cache-Control': 'no-cache' }
-        });
-        
-        const html = await response.text();
-        
-        // Extract build timestamp from meta tag or generate from content hash
-        const metaMatch = html.match(/<meta name="build-time" content="([^"]+)"/);
-        const newVersion = metaMatch ? metaMatch[1] : html.substring(0, 100);
-        
-        // Initialize version on first check
-        if (currentVersion.current === null) {
-          currentVersion.current = newVersion;
-          localStorage.setItem(VERSION_KEY, newVersion);
-          return;
-        }
-        
-        // Check if version changed - must be different AND stored version must exist
-        const storedVersion = localStorage.getItem(VERSION_KEY);
-        const versionChanged = storedVersion && storedVersion !== newVersion && currentVersion.current !== newVersion;
-        
-        if (versionChanged) {
-          toast.info('New version available! Updating...', {
-            duration: 3000
-          });
-          
-          await clearAllCaches();
-          localStorage.setItem(VERSION_KEY, newVersion);
-          currentVersion.current = newVersion;
-          
-          // Reload after short delay
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
-        }
-      } catch (error) {
-        console.error('Version check failed:', error);
-      } finally {
-        checkInProgress.current = false;
-      }
-    };
-
-    // Check immediately on mount
-    checkVersion();
-
-    // Check periodically (less frequent)
-    const interval = setInterval(checkVersion, CHECK_INTERVAL);
-
-    return () => {
-      clearInterval(interval);
-    };
+    // No-op - version checking disabled
   }, []);
 }
