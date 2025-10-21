@@ -41,7 +41,7 @@ const ProductCatalog = () => {
   }, [queryClient]);
 
   // Fetch all products with batch inventory
-  const { data: allProducts = [], isLoading, error } = useQuery({
+  const { data: allProducts = [], isLoading, error, refetch } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -132,9 +132,9 @@ const ProductCatalog = () => {
             </p>
             <Button
               size="lg"
-              onClick={() => window.location.reload()}
+              onClick={() => refetch()}
             >
-              Refresh Page
+              Retry Loading
             </Button>
           </div>
         ) : (

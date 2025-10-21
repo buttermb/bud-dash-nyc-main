@@ -30,7 +30,12 @@ export class ErrorBoundary extends Component<Props, State> {
 
   private handleReset = () => {
     this.setState({ hasError: false, error: null });
-    window.location.reload();
+    // Try soft reset first - only reload if error persists
+    setTimeout(() => {
+      if (this.state.hasError) {
+        window.location.reload();
+      }
+    }, 100);
   };
 
   private handleGoHome = () => {

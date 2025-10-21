@@ -16,18 +16,54 @@ export const AdminQuickStatsHeader = () => {
   useEffect(() => {
     let isMounted = true;
     
-    const loadStats = async () => {
-      if (isMounted) {
-        await fetchQuickStats();
+    const fetchQuickStats = async () => {
+      try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const [ordersRes, couriersRes] = await Promise.all([
+          supabase
+            .from('orders')
+            .select('total_amount, status')
+            .gte('created_at', today.toISOString()),
+          supabase
+            .from('couriers')
+            .select('is_online')
+            .eq('is_online', true)
+        ]);
+
+        if (!isMounted) return;
+
+        const activeOrders = ordersRes.data?.filter(o => 
+          ['pending', 'accepted', 'picked_up'].includes(o.status)
+        ).length || 0;
+
+        const todayRevenue = ordersRes.data?.reduce((sum, o) => 
+          sum + Number(o.total_amount || 0), 0
+        ) || 0;
+
+        setStats({
+          activeOrders,
+          todayRevenue,
+          onlineCouriers: couriersRes.data?.length || 0
+        });
+      } catch (error) {
+        if (isMounted) {
+          console.error('Failed to fetch quick stats:', error);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
     
-    loadStats();
+    fetchQuickStats();
     
-    // Refresh every 60 seconds (reduced from 30 for better performance)
+    // Refresh every 60 seconds
     const interval = setInterval(() => {
       if (isMounted) {
-        loadStats();
+        fetchQuickStats();
       }
     }, 60000);
     
@@ -36,42 +72,6 @@ export const AdminQuickStatsHeader = () => {
       clearInterval(interval);
     };
   }, []);
-
-  const fetchQuickStats = async () => {
-    try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const [ordersRes, couriersRes] = await Promise.all([
-        supabase
-          .from('orders')
-          .select('total_amount, status')
-          .gte('created_at', today.toISOString()),
-        supabase
-          .from('couriers')
-          .select('is_online')
-          .eq('is_online', true)
-      ]);
-
-      const activeOrders = ordersRes.data?.filter(o => 
-        ['pending', 'accepted', 'picked_up'].includes(o.status)
-      ).length || 0;
-
-      const todayRevenue = ordersRes.data?.reduce((sum, o) => 
-        sum + Number(o.total_amount || 0), 0
-      ) || 0;
-
-      setStats({
-        activeOrders,
-        todayRevenue,
-        onlineCouriers: couriersRes.data?.length || 0
-      });
-    } catch (error) {
-      console.error('Failed to fetch quick stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (
