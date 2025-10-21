@@ -39,32 +39,44 @@ if (import.meta.env.PROD) {
   }
 }
 
-// Register service worker with immediate activation
+// Register service worker with cache clearing
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    // Use static version instead of Date.now() to prevent constant updates
-    navigator.serviceWorker.register('/sw.js?v=9').then(
-      (registration) => {
-        console.log('[NYM] ServiceWorker registered:', registration.scope);
-        
-        // Force immediate activation of new service worker
-        if (registration.waiting) {
-          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        }
-        
-        // Listen for controller change (new SW activated)
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          console.log('[NYM] New service worker activated, reloading...');
-          window.location.reload();
-        });
-        
-        // Only check for updates on page load, not on interval
-        // This prevents random reloads while user is actively using the app
-      },
-      (error) => {
-        console.error('[NYM] ServiceWorker registration failed:', error);
+  window.addEventListener('load', async () => {
+    try {
+      // Clear all old service workers and caches first
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.unregister();
+        console.log('[NYM] Unregistered old service worker');
       }
-    );
+      
+      // Clear all caches
+      const cacheNames = await caches.keys();
+      for (const cacheName of cacheNames) {
+        await caches.delete(cacheName);
+        console.log('[NYM] Deleted cache:', cacheName);
+      }
+      
+      // Register fresh service worker
+      const registration = await navigator.serviceWorker.register('/sw.js?v=10');
+      console.log('[NYM] Fresh ServiceWorker registered:', registration.scope);
+      
+      // Force immediate activation
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+      
+      // Only reload once on controller change, then disable listener
+      let hasReloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!hasReloaded) {
+          console.log('[NYM] New service worker activated');
+          hasReloaded = true;
+        }
+      });
+    } catch (error) {
+      console.error('[NYM] ServiceWorker setup failed:', error);
+    }
   });
 }
 

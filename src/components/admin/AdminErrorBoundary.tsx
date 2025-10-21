@@ -58,12 +58,9 @@ export class AdminErrorBoundary extends Component<Props, State> {
       errorInfo: errorInfo?.componentStack || 'No stack trace available',
     });
     
-    // Try to recover from WebSocket errors automatically
+    // Log WebSocket errors but don't auto-recover (prevents reload loops)
     if (isWebSocketError) {
-      console.log('WebSocket error detected, attempting recovery in 3s...');
-      setTimeout(() => {
-        this.handleReset();
-      }, 3000);
+      console.log('WebSocket error detected. Manual recovery required.');
     }
   }
 
