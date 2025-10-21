@@ -42,6 +42,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ChevronDown } from "lucide-react";
+import { AdminQuickStatsHeader } from "@/components/admin/AdminQuickStatsHeader";
 
 const menuGroups = [
   {
@@ -120,9 +121,12 @@ export function AdminSidebar() {
     <Sidebar className={isCollapsed ? "w-14" : "w-60"} collapsible="icon">
       <SidebarHeader className="border-b p-4">
         {!isCollapsed && (
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold">Admin Portal</h2>
-            <p className="text-sm text-muted-foreground">{session?.user?.email}</p>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold">Admin Portal</h2>
+              <p className="text-sm text-muted-foreground truncate">{session?.user?.email}</p>
+            </div>
+            <AdminQuickStatsHeader />
           </div>
         )}
         {isCollapsed && (
