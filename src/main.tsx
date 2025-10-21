@@ -42,7 +42,8 @@ if (import.meta.env.PROD) {
 // Register service worker with immediate activation
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js?v=' + Date.now()).then(
+    // Use static version instead of Date.now() to prevent constant updates
+    navigator.serviceWorker.register('/sw.js?v=9').then(
       (registration) => {
         console.log('[NYM] ServiceWorker registered:', registration.scope);
         
