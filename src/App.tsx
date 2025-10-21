@@ -46,6 +46,7 @@ import { NotificationPreferences } from "./components/NotificationPreferences";
 import OfflineBanner from "./components/OfflineBanner";
 import InstallPWA from "./components/InstallPWA";
 import { CartBadgeAnimation } from "./components/CartBadgeAnimation";
+import { KeyboardShortcutsDialog } from "./components/KeyboardShortcutsDialog";
 
 // Eager load critical pages
 import Index from "./pages/Index";
@@ -194,6 +195,7 @@ const App = () => {
                         <OfflineBanner />
                         <InstallPWA />
                         <CartBadgeAnimation />
+                        <KeyboardShortcutsDialog />
                     
                     <Toaster />
                     <Sonner />
