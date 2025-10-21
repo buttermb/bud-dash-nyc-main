@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminAlerts } from "@/components/admin/AdminAlerts";
 import { formatStatus, safeStatus } from "@/utils/stringHelpers";

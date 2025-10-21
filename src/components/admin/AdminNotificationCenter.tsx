@@ -26,7 +26,8 @@ export const AdminNotificationCenter = () => {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    setupRealtimeNotifications();
+    const cleanup = setupRealtimeNotifications();
+    return cleanup;
   }, []);
 
   useEffect(() => {

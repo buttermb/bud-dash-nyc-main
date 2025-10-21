@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -54,44 +54,54 @@ const AdminDashboard = () => {
 
   const setupRealtimeSubscription = () => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
+    let isMounted = true;
     
     const setupChannel = async () => {
-      channel = supabase
-        .channel('admin-realtime', {
-          config: {
-            broadcast: { self: false },
-            presence: { key: '' }
-          }
-        })
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
-          setRealtimeActivity(prev => [{
-            type: 'new_order',
-            message: `New order #${payload.new.order_number}`,
-            timestamp: new Date(),
-            data: payload.new
-          }, ...prev].slice(0, 10));
-        })
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'fraud_flags' }, (payload) => {
-          setSystemAlerts(prev => [{
-            type: 'fraud_alert',
-            severity: 'high',
-            message: `Fraud detected: ${payload.new.flag_type}`,
-            timestamp: new Date()
-          }, ...prev].slice(0, 5));
-        })
-        .subscribe((status) => {
-          if (status === 'CHANNEL_ERROR') {
-            console.error('Failed to subscribe to admin dashboard channel');
-          }
-        });
+      try {
+        channel = supabase
+          .channel('admin-dashboard-realtime', {
+            config: {
+              broadcast: { self: false },
+              presence: { key: '' }
+            }
+          })
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
+            if (isMounted) {
+              setRealtimeActivity(prev => [{
+                type: 'new_order',
+                message: `New order #${payload.new.order_number}`,
+                timestamp: new Date(),
+                data: payload.new
+              }, ...prev].slice(0, 10));
+            }
+          })
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'fraud_flags' }, (payload) => {
+            if (isMounted) {
+              setSystemAlerts(prev => [{
+                type: 'fraud_alert',
+                severity: 'high',
+                message: `Fraud detected: ${payload.new.flag_type}`,
+                timestamp: new Date()
+              }, ...prev].slice(0, 5));
+            }
+          })
+          .subscribe((status) => {
+            if (status === 'CHANNEL_ERROR' && isMounted) {
+              console.error('Failed to subscribe to admin dashboard channel');
+            }
+          });
+      } catch (error) {
+        console.error('Error setting up realtime channel:', error);
+      }
     };
 
     setupChannel();
 
     return () => { 
+      isMounted = false;
       if (channel) {
-        supabase.removeChannel(channel).then(() => {
-          channel = null;
+        supabase.removeChannel(channel).catch(err => {
+          console.error('Error removing channel:', err);
         });
       }
     };

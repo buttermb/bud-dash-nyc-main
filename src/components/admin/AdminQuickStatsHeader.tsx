@@ -14,11 +14,27 @@ export const AdminQuickStatsHeader = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchQuickStats();
+    let isMounted = true;
     
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchQuickStats, 30000);
-    return () => clearInterval(interval);
+    const loadStats = async () => {
+      if (isMounted) {
+        await fetchQuickStats();
+      }
+    };
+    
+    loadStats();
+    
+    // Refresh every 60 seconds (reduced from 30 for better performance)
+    const interval = setInterval(() => {
+      if (isMounted) {
+        loadStats();
+      }
+    }, 60000);
+    
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const fetchQuickStats = async () => {
