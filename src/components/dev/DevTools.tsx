@@ -413,13 +413,13 @@ export const DevTools = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="logs" className="flex-1 flex flex-col p-4 pt-2 space-y-2 overflow-hidden">
-            <div className="flex gap-2">
+          <TabsContent value="logs" className="flex-1 flex flex-col p-4 pt-2 space-y-2 min-h-0">
+            <div className="flex gap-2 flex-wrap">
               <Input
                 placeholder="Filter logs..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="flex-1"
+                className="flex-1 min-w-[200px]"
               />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -427,7 +427,7 @@ export const DevTools = () => {
                     <Filter className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent className="bg-popover z-50">
                   <DropdownMenuItem onClick={() => setTypeFilter('all')}>
                     {typeFilter === 'all' && <Check className="mr-2 h-4 w-4" />}
                     All
@@ -458,56 +458,60 @@ export const DevTools = () => {
               >
                 <ArrowDown className="h-4 w-4" />
               </Button>
-              <Button onClick={clearLogs} size="icon" variant="outline">
+              <Button onClick={clearLogs} size="icon" variant="outline" title="Clear logs">
                 <Trash2 className="h-4 w-4" />
               </Button>
-              <Button onClick={exportLogs} size="icon" variant="outline">
+              <Button onClick={exportLogs} size="icon" variant="outline" title="Export logs">
                 <Download className="h-4 w-4" />
               </Button>
             </div>
 
-            <ScrollArea className="flex-1 rounded-md border bg-muted/30 p-2" ref={logScrollRef}>
-              <div className="font-mono text-xs space-y-1">
-                {filteredLogs.length === 0 ? (
-                  <div className="text-muted-foreground text-center py-8">No logs to display</div>
-                ) : (
-                  filteredLogs.map((log) => (
-                    <div key={log.id} className={`p-2 rounded border ${getTypeColor(log.type)} group relative`}>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100"
-                        onClick={() => copyToClipboard(log.message)}
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                      <div className="flex items-start gap-2">
-                        <Badge variant="outline" className="shrink-0 mt-0.5 text-xs">
-                          {log.type}
-                        </Badge>
-                        <span className="text-muted-foreground shrink-0 text-xs">
-                          {log.timestamp.toLocaleTimeString()}
-                        </span>
-                        <pre className="flex-1 whitespace-pre-wrap break-all pr-8">
-                          {log.message}
-                        </pre>
-                      </div>
-                      {log.stack && log.type === 'error' && (
-                        <details className="mt-2 text-xs opacity-70">
-                          <summary className="cursor-pointer hover:opacity-100">Stack trace</summary>
-                          <pre className="mt-1 p-2 bg-background/50 rounded overflow-auto max-h-32">
-                            {log.stack}
+            <div className="flex-1 min-h-0 rounded-md border bg-background">
+              <ScrollArea className="h-full p-3" ref={logScrollRef}>
+                <div className="space-y-2">
+                  {filteredLogs.length === 0 ? (
+                    <div className="text-muted-foreground text-center py-8">No logs to display</div>
+                  ) : (
+                    filteredLogs.map((log) => (
+                      <div key={log.id} className={`p-3 rounded-lg border ${getTypeColor(log.type)} group relative hover:shadow-sm transition-shadow`}>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => copyToClipboard(log.message)}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                        <div className="flex items-start gap-3 pr-10">
+                          <Badge variant="outline" className="shrink-0 mt-0.5">
+                            {log.type}
+                          </Badge>
+                          <span className="text-muted-foreground shrink-0 text-xs mt-1">
+                            {log.timestamp.toLocaleTimeString()}
+                          </span>
+                          <pre className="flex-1 whitespace-pre-wrap break-words text-sm leading-relaxed">
+                            {log.message}
                           </pre>
-                        </details>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
+                        </div>
+                        {log.stack && log.type === 'error' && (
+                          <details className="mt-3 text-xs">
+                            <summary className="cursor-pointer hover:text-primary transition-colors font-medium">
+                              View stack trace
+                            </summary>
+                            <pre className="mt-2 p-3 bg-muted/50 rounded-md overflow-auto max-h-48 text-xs">
+                              {log.stack}
+                            </pre>
+                          </details>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
           </TabsContent>
 
-          <TabsContent value="network" className="flex-1 flex flex-col p-4 pt-2 space-y-2 overflow-hidden">
+          <TabsContent value="network" className="flex-1 flex flex-col p-4 pt-2 space-y-2 min-h-0">
             <div className="flex gap-2">
               <Button onClick={clearNetwork} size="sm" variant="outline">
                 <Trash2 className="h-4 w-4 mr-2" />
@@ -519,67 +523,69 @@ export const DevTools = () => {
               </Button>
             </div>
 
-            <ScrollArea className="flex-1 rounded-md border bg-muted/30 p-2" ref={networkScrollRef}>
-              <div className="font-mono text-xs space-y-1">
-                {network.length === 0 ? (
-                  <div className="text-muted-foreground text-center py-8">No network requests</div>
-                ) : (
-                  network.slice().reverse().map((req) => (
-                    <div 
-                      key={req.id} 
-                      className="p-2 rounded border bg-background hover:bg-muted/50 group relative cursor-pointer transition-colors"
-                      onClick={() => setSelectedNetwork(req)}
-                    >
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copyToClipboard(req.url);
-                        }}
+            <div className="flex-1 min-h-0 rounded-md border bg-background">
+              <ScrollArea className="h-full p-3" ref={networkScrollRef}>
+                <div className="space-y-2">
+                  {network.length === 0 ? (
+                    <div className="text-muted-foreground text-center py-8">No network requests</div>
+                  ) : (
+                    network.slice().reverse().map((req) => (
+                      <div 
+                        key={req.id} 
+                        className="p-3 rounded-lg border bg-card hover:bg-accent/50 group relative cursor-pointer transition-all hover:shadow-sm"
+                        onClick={() => setSelectedNetwork(req)}
                       >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="outline" className="shrink-0 font-semibold">
-                          {req.method}
-                        </Badge>
-                        {req.status && (
-                          <span className={`shrink-0 font-bold ${getStatusColor(req.status)}`}>
-                            {req.status}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyToClipboard(req.url);
+                          }}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                        <div className="flex items-center gap-2 flex-wrap pr-10">
+                          <Badge variant="outline" className="shrink-0 font-semibold">
+                            {req.method}
+                          </Badge>
+                          {req.status && (
+                            <span className={`shrink-0 font-bold ${getStatusColor(req.status)}`}>
+                              {req.status}
+                            </span>
+                          )}
+                          {req.error && (
+                            <AlertTriangle className="h-4 w-4 text-red-500" />
+                          )}
+                          <span className={`text-xs shrink-0 font-semibold ${
+                            req.duration && req.duration < 100 ? 'text-green-500' :
+                            req.duration && req.duration < 500 ? 'text-yellow-500' :
+                            'text-red-500'
+                          }`}>
+                            {req.duration}ms
                           </span>
-                        )}
-                        {req.error && (
-                          <AlertTriangle className="h-4 w-4 text-red-500" />
-                        )}
-                        <span className={`text-xs shrink-0 font-semibold ${
-                          req.duration && req.duration < 100 ? 'text-green-500' :
-                          req.duration && req.duration < 500 ? 'text-yellow-500' :
-                          'text-red-500'
-                        }`}>
-                          {req.duration}ms
-                        </span>
-                        <span className="text-muted-foreground shrink-0 text-xs">
-                          {req.timestamp.toLocaleTimeString()}
-                        </span>
-                      </div>
-                      <div className="mt-1 text-xs break-all pr-8 font-medium">
-                        {req.url}
-                      </div>
-                      {req.error && (
-                        <div className="mt-1 text-xs text-red-500 font-semibold">
-                          Error: {req.error}
+                          <span className="text-muted-foreground shrink-0 text-xs">
+                            {req.timestamp.toLocaleTimeString()}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
+                        <div className="mt-2 text-xs break-all font-medium">
+                          {req.url}
+                        </div>
+                        {req.error && (
+                          <div className="mt-2 text-xs text-red-500 font-semibold">
+                            Error: {req.error}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
           </TabsContent>
 
-          <TabsContent value="storage" className="flex-1 flex flex-col p-4 pt-2 space-y-2 overflow-hidden">
+          <TabsContent value="storage" className="flex-1 flex flex-col p-4 pt-2 space-y-2 min-h-0">
             <div className="flex gap-2">
               <Button 
                 onClick={() => {
@@ -594,34 +600,37 @@ export const DevTools = () => {
               </Button>
             </div>
 
-            <ScrollArea className="flex-1 rounded-md border bg-muted/30 p-2">
-              <div className="font-mono text-xs space-y-2">
-                {Object.keys(storage).length === 0 ? (
-                  <div className="text-muted-foreground text-center py-8">No storage items</div>
-                ) : (
-                  Object.entries(storage).map(([key, value]) => (
-                    <div key={key} className="p-2 rounded border bg-background group relative">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100"
-                        onClick={() => copyToClipboard(JSON.stringify(value, null, 2))}
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                      <div className="font-semibold text-primary mb-1 pr-8">{key}</div>
-                      <pre className="text-xs whitespace-pre-wrap break-all text-muted-foreground">
-                        {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
-                      </pre>
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
+            <div className="flex-1 min-h-0 rounded-md border bg-background">
+              <ScrollArea className="h-full p-3">
+                <div className="space-y-3">
+                  {Object.keys(storage).length === 0 ? (
+                    <div className="text-muted-foreground text-center py-8">No storage items</div>
+                  ) : (
+                    Object.entries(storage).map(([key, value]) => (
+                      <div key={key} className="p-3 rounded-lg border bg-card group relative hover:shadow-sm transition-shadow">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => copyToClipboard(JSON.stringify(value, null, 2))}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                        <div className="font-semibold text-primary mb-2 pr-10 text-sm">{key}</div>
+                        <pre className="text-xs whitespace-pre-wrap break-all text-muted-foreground leading-relaxed">
+                          {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                        </pre>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
           </TabsContent>
 
-          <TabsContent value="performance" className="flex-1 flex flex-col p-4 pt-2 space-y-2 overflow-hidden">
-            <ScrollArea className="flex-1 rounded-md border bg-muted/30 p-4">
+          <TabsContent value="performance" className="flex-1 flex flex-col p-4 pt-2 space-y-2 min-h-0">
+            <div className="flex-1 min-h-0 rounded-md border bg-background">
+              <ScrollArea className="h-full p-4">
               <div className="space-y-4">
                 {performance ? (
                   <>
@@ -737,6 +746,7 @@ export const DevTools = () => {
                 )}
               </div>
             </ScrollArea>
+            </div>
           </TabsContent>
         </Tabs>
         </Card>
