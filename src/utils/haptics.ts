@@ -1,10 +1,11 @@
 /**
  * Haptic feedback utilities for mobile devices
+ * Provides consistent tactile feedback for user interactions
  */
 
 export const haptics = {
   /**
-   * Light tap feedback (button press)
+   * Light tap feedback (button press, UI interactions)
    */
   light: () => {
     if ('vibrate' in navigator) {

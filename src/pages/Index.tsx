@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { SEOHead } from "@/components/SEOHead";
 import { EnhancedLoadingState } from "@/components/EnhancedLoadingState";
 import { ParallaxHero } from "@/components/home/ParallaxHero";
+import { BackToTop } from "@/components/mobile/BackToTop";
 import { motion } from "framer-motion";
 
 // Lazy load non-critical components for better initial page load
@@ -123,6 +124,9 @@ const Index = () => {
       <Suspense fallback={null}>
         <Footer />
       </Suspense>
+      
+      {/* Mobile Back to Top */}
+      <BackToTop />
       </div>
     </>
   );
