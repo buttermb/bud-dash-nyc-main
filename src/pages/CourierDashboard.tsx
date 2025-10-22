@@ -604,8 +604,23 @@ export default function CourierDashboard() {
               updateStatusMutation.mutate({ orderId: activeOrder.id, newStatus: 'delivered' });
             }
           } else {
-            toast.error('Customer under 21 - Cannot complete delivery');
-            // TODO: Handle underage rejection flow - return to store
+            // Handle underage rejection - customer is under 21
+            toast.error('Customer under 21 - Cannot complete delivery', {
+              description: 'Order must be returned to store',
+              duration: 5000
+            });
+            
+            // Update order status to reflect rejection
+            if (activeOrder) {
+              updateStatusMutation.mutate({ 
+                orderId: activeOrder.id, 
+                newStatus: 'pending' // Return order to pending for reassignment
+              });
+            }
+            
+            // Reset courier state
+            setOrderStatus('pickup');
+            setShowAgeVerification(false);
           }
         }}
       />
