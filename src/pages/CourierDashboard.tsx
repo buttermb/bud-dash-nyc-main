@@ -1079,16 +1079,8 @@ export default function CourierDashboard() {
           <button className="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 py-4 font-black text-lg transition">
             CASH OUT NOW
           </button>
-      
-      {/* Keyboard Shortcuts */}
-      <CourierKeyboardShortcuts
-        hasActiveOrder={!!activeOrder}
-        hasPendingOrder={availableOrders.length > 0}
-        onAcceptOrder={() => availableOrders[0] && acceptOrder.mutate(availableOrders[0].id)}
-        onToggleOnline={handleToggleOnline}
-        onViewEarnings={() => setCurrentView('earnings')}
-        onNavigate={() => activeOrder && openNavigation(activeOrder, 'delivery')}
-      />
+        </div>
+      )}
 
       {/* Delivery Notification Modal - Always Rendered */}
       <DeliveryNotificationModal />
@@ -1126,7 +1118,7 @@ export default function CourierDashboard() {
       <CourierKeyboardShortcuts
         hasActiveOrder={!!activeOrder}
         hasPendingOrder={availableOrders.length > 0}
-        onAcceptOrder={() => availableOrders[0] && acceptOrder.mutate(availableOrders[0].id)}
+        onAcceptOrder={() => availableOrders[0] && acceptOrderMutation.mutate(availableOrders[0].id)}
         onToggleOnline={handleToggleOnline}
         onViewEarnings={() => setCurrentView('earnings')}
         onNavigate={() => activeOrder && openNavigation(activeOrder, 'delivery')}
