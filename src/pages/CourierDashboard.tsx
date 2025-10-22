@@ -24,6 +24,15 @@ import OnlineStatusCard from '@/components/courier/OnlineStatusCard';
 import QuickStatsCard from '@/components/courier/QuickStatsCard';
 import AvailableOrdersCard from '@/components/courier/AvailableOrdersCard';
 import DeliveryNotificationModal from '@/components/courier/DeliveryNotificationModal';
+import DailyGoalsTracker from '@/components/courier/DailyGoalsTracker';
+import QuickActionsMenu from '@/components/courier/QuickActionsMenu';
+import EnhancedStats from '@/components/courier/EnhancedStats';
+import TodayEarningSummary from '@/components/courier/TodayEarningSummary';
+import DeviceStatusBar from '@/components/courier/DeviceStatusBar';
+import ShiftTimer from '@/components/courier/ShiftTimer';
+import EnhancedOrderCard from '@/components/courier/EnhancedOrderCard';
+import CourierKeyboardShortcuts from '@/components/courier/CourierKeyboardShortcuts';
+import { useEnhancedAudio } from '@/hooks/useEnhancedAudio';
 import { 
   requestNotificationPermission, 
   notifyNewOrder, 
@@ -96,6 +105,7 @@ export default function CourierDashboard() {
   const [distanceToCustomer, setDistanceToCustomer] = useState<number | null>(null);
   const [geofenceCheckInterval, setGeofenceCheckInterval] = useState<NodeJS.Timeout | null>(null);
   const previousOrderCountRef = useRef(0);
+  const audio = useEnhancedAudio();
 
   // Check for first-time user and location permission
   useEffect(() => {
@@ -134,8 +144,8 @@ export default function CourierDashboard() {
           console.log('🆕 New order detected (INSERT):', payload);
           const newOrder = payload.new as any;
           
-          // Play sound and vibrate
-          playOrderSound();
+          // Play enhanced sound and vibrate
+          audio.playNewOrderSound();
           vibrateDevice([200, 100, 200, 100, 200]);
           
           // Show notification
@@ -397,6 +407,7 @@ export default function CourierDashboard() {
       return data;
     },
     onSuccess: () => {
+      audio.playSuccessSound();
       toast.success('Order accepted!');
       queryClient.invalidateQueries({ queryKey: ['courier-my-orders'] });
       queryClient.invalidateQueries({ queryKey: ['courier-available-orders'] });
@@ -435,6 +446,7 @@ export default function CourierDashboard() {
       ]);
       
       if (variables.newStatus === 'delivered') {
+        audio.playEarningsSound();
         setOrderStatus('pickup');
         setCurrentView('completed');
       }
@@ -623,6 +635,7 @@ export default function CourierDashboard() {
             </div>
           </div>
           <div className="flex items-center space-x-3">
+            <DeviceStatusBar />
             <div className="text-right">
               <div className="text-2xl font-black text-teal-400">${todayEarnings.toFixed(2)}</div>
               <div className="text-xs text-slate-400">Your Earnings Today</div>
@@ -1053,51 +1066,29 @@ export default function CourierDashboard() {
       {/* Earnings View */}
       {currentView === 'earnings' && (
         <div className="p-4 space-y-4">
-          <div className="bg-gradient-to-br from-teal-900/30 to-slate-900 border-2 border-teal-500/30 p-6">
-            <div className="text-center mb-6">
-              <div className="text-sm text-teal-400 font-bold mb-2">TODAY'S EARNINGS</div>
-              <div className="text-6xl font-black mb-2">${todayEarnings.toFixed(0)}</div>
-              <div className="text-slate-400">+ ${todayTips.toFixed(0)} tips</div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-800/50 border border-slate-700 p-4 text-center">
-                <div className="text-3xl font-black mb-1">{todayDeliveries}</div>
-                <div className="text-xs text-slate-400">Deliveries</div>
-              </div>
-              <div className="bg-slate-800/50 border border-slate-700 p-4 text-center">
-                <div className="text-3xl font-black mb-1 flex items-center justify-center">
-                  4.9
-                  <Star size={20} fill="#fbbf24" className="text-yellow-500 ml-1" />
-                </div>
-                <div className="text-xs text-slate-400">Rating</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-800 border border-slate-700 p-6">
-            <div className="text-sm font-bold text-teal-400 mb-4">EARNINGS BREAKDOWN</div>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Base Pay</span>
-                <span className="font-bold">${(todayEarnings - todayTips).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Tips</span>
-                <span className="font-bold text-teal-400">${todayTips.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between pt-3 border-t border-slate-700">
-                <span className="font-bold">Total</span>
-                <span className="font-black text-xl">${todayEarnings.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
+          <TodayEarningSummary
+            earnings={todayEarnings}
+            commission={todayEarnings * 0.15}
+            tips={parseFloat(stats?.tips_earned || '0')}
+            bonuses={0}
+            deliveries={stats?.deliveries_completed || 0}
+            hoursWorked={5}
+            dailyGoal={100}
+          />
 
           <button className="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 py-4 font-black text-lg transition">
             CASH OUT NOW
           </button>
-        </div>
-      )}
+      
+      {/* Keyboard Shortcuts */}
+      <CourierKeyboardShortcuts
+        hasActiveOrder={!!activeOrder}
+        hasPendingOrder={availableOrders.length > 0}
+        onAcceptOrder={() => availableOrders[0] && acceptOrder.mutate(availableOrders[0].id)}
+        onToggleOnline={handleToggleOnline}
+        onViewEarnings={() => setCurrentView('earnings')}
+        onNavigate={() => activeOrder && openNavigation(activeOrder, 'delivery')}
+      />
 
       {/* Delivery Notification Modal - Always Rendered */}
       <DeliveryNotificationModal />
@@ -1130,6 +1121,16 @@ export default function CourierDashboard() {
       </div>
 
       <InstallPWA />
+      
+      {/* Keyboard Shortcuts */}
+      <CourierKeyboardShortcuts
+        hasActiveOrder={!!activeOrder}
+        hasPendingOrder={availableOrders.length > 0}
+        onAcceptOrder={() => availableOrders[0] && acceptOrder.mutate(availableOrders[0].id)}
+        onToggleOnline={handleToggleOnline}
+        onViewEarnings={() => setCurrentView('earnings')}
+        onNavigate={() => activeOrder && openNavigation(activeOrder, 'delivery')}
+      />
     </div>
   );
 }
