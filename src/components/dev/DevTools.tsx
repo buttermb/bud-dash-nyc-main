@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bug, X, Trash2, Download, Terminal, Network, AlertTriangle, Database, Gauge, Copy, Filter, ArrowDown, Check } from 'lucide-react';
+import { Bug, X, Trash2, Download, Terminal, Network, AlertTriangle, Database, Gauge, Copy, Filter, ArrowDown, Check, Pin, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface LogEntry {
   id: number;
@@ -26,6 +27,8 @@ interface NetworkEntry {
   status?: number;
   duration?: number;
   error?: string;
+  requestBody?: any;
+  responseBody?: any;
 }
 
 // Global stores for logs and network requests
@@ -96,16 +99,28 @@ if (!intercepted) {
       timestamp: new Date(),
       method: (options as any)?.method || 'GET',
       url: typeof url === 'string' ? url : url.toString(),
+      requestBody: (options as any)?.body,
     };
 
     try {
       const response = await originalFetch(...args);
       const duration = Date.now() - startTime;
+      
+      // Clone response to read body
+      const clonedResponse = response.clone();
+      let responseBody;
+      try {
+        responseBody = await clonedResponse.text();
+        try {
+          responseBody = JSON.parse(responseBody);
+        } catch {}
+      } catch {}
 
       globalNetwork.push({
         ...networkEntry,
         status: response.status,
         duration,
+        responseBody,
       });
       
       if (globalNetwork.length > 100) {
@@ -152,8 +167,34 @@ export const DevTools = () => {
   const [autoScroll, setAutoScroll] = useState(true);
   const [storage, setStorage] = useState<Record<string, any>>({});
   const [performance, setPerformance] = useState<any>(null);
+  const [isPinned, setIsPinned] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+  const [selectedNetwork, setSelectedNetwork] = useState<NetworkEntry | null>(null);
   const logScrollRef = useRef<HTMLDivElement>(null);
   const networkScrollRef = useRef<HTMLDivElement>(null);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + Shift + D to toggle
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        setIsOpen(prev => !prev);
+      }
+      // Ctrl/Cmd + K to clear logs
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k' && isOpen) {
+        e.preventDefault();
+        clearLogs();
+      }
+      // Escape to close
+      if (e.key === 'Escape' && isOpen && !isPinned) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isPinned]);
 
   // Sync global stores to local state every 500ms
   useEffect(() => {
@@ -179,10 +220,13 @@ export const DevTools = () => {
       if (window.performance) {
         const perf = window.performance;
         const timing = perf.timing;
+        const navigation = perf.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
         setPerformance({
           loadTime: timing.loadEventEnd - timing.navigationStart,
           domReady: timing.domContentLoadedEventEnd - timing.navigationStart,
           memory: (perf as any).memory,
+          resources: perf.getEntriesByType('resource').length,
+          navigation,
         });
       }
     }, 500);
@@ -216,14 +260,31 @@ export const DevTools = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `logs-${new Date().toISOString()}.json`;
+    a.download = `devtools-logs-${new Date().toISOString()}.json`;
     a.click();
     toast.success('Logs exported successfully');
+  };
+
+  const exportNetwork = () => {
+    const data = JSON.stringify(network, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `devtools-network-${new Date().toISOString()}.json`;
+    a.click();
+    toast.success('Network data exported successfully');
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Copied to clipboard');
+  };
+
+  const clearAll = () => {
+    clearLogs();
+    clearNetwork();
+    toast.success('All data cleared');
   };
 
   const filteredLogs = logs
@@ -256,11 +317,12 @@ export const DevTools = () => {
         onClick={() => setIsOpen(true)}
         size="icon"
         variant="outline"
-        className="fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full shadow-lg"
+        className="fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full shadow-lg hover:scale-110 transition-transform"
+        title="DevTools (⌘⇧D)"
       >
         <Bug className="h-5 w-5" />
         {(errorCount > 0 || warnCount > 0) && (
-          <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-red-500">
+          <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-red-500 animate-pulse">
             {errorCount + warnCount}
           </Badge>
         )}
@@ -268,28 +330,68 @@ export const DevTools = () => {
     );
   }
 
+  const sizeClass = isMaximized 
+    ? "inset-4" 
+    : "inset-x-4 bottom-4 md:right-4 md:left-auto md:w-[700px]";
+  const heightClass = isMaximized ? "h-[calc(100vh-2rem)]" : "h-[600px]";
+
   return (
-    <div className="fixed inset-x-4 bottom-4 z-50 md:right-4 md:left-auto md:w-[700px]">
-      <Card className="h-[600px] flex flex-col shadow-2xl border-2">
-        <div className="flex items-center justify-between p-4 border-b">
-          <div className="flex items-center gap-2">
-            <Bug className="h-5 w-5" />
-            <h3 className="font-semibold">DevTools</h3>
-            {errorCount > 0 && (
-              <Badge variant="destructive" className="rounded-full">
-                {errorCount} errors
+    <>
+      <div className={`fixed ${sizeClass} z-50`}>
+        <Card className={`${heightClass} flex flex-col shadow-2xl border-2 bg-background/95 backdrop-blur`}>
+          <div className="flex items-center justify-between p-4 border-b bg-muted/50">
+            <div className="flex items-center gap-2">
+              <Bug className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold">DevTools</h3>
+              {errorCount > 0 && (
+                <Badge variant="destructive" className="rounded-full animate-pulse">
+                  {errorCount}
+                </Badge>
+              )}
+              {warnCount > 0 && (
+                <Badge variant="outline" className="rounded-full bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+                  {warnCount}
+                </Badge>
+              )}
+              <Badge variant="outline" className="text-xs">
+                ⌘⇧D
               </Badge>
-            )}
-            {warnCount > 0 && (
-              <Badge variant="outline" className="rounded-full bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
-                {warnCount} warnings
-              </Badge>
-            )}
+            </div>
+            <div className="flex items-center gap-1">
+              <Button 
+                onClick={clearAll} 
+                size="icon" 
+                variant="ghost"
+                title="Clear all (⌘K)"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+              <Button 
+                onClick={() => setIsPinned(!isPinned)} 
+                size="icon" 
+                variant={isPinned ? "default" : "ghost"}
+                title="Pin (prevents ESC close)"
+              >
+                <Pin className="h-4 w-4" />
+              </Button>
+              <Button 
+                onClick={() => setIsMaximized(!isMaximized)} 
+                size="icon" 
+                variant="ghost"
+                title="Toggle size"
+              >
+                {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </Button>
+              <Button 
+                onClick={() => setIsOpen(false)} 
+                size="icon" 
+                variant="ghost"
+                title="Close (ESC)"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          <Button onClick={() => setIsOpen(false)} size="icon" variant="ghost">
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
           <TabsList className="mx-4 mt-2">
@@ -411,6 +513,10 @@ export const DevTools = () => {
                 <Trash2 className="h-4 w-4 mr-2" />
                 Clear
               </Button>
+              <Button onClick={exportNetwork} size="sm" variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
             </div>
 
             <ScrollArea className="flex-1 rounded-md border bg-muted/30 p-2" ref={networkScrollRef}>
@@ -418,40 +524,51 @@ export const DevTools = () => {
                 {network.length === 0 ? (
                   <div className="text-muted-foreground text-center py-8">No network requests</div>
                 ) : (
-                  network.map((req) => (
-                    <div key={req.id} className="p-2 rounded border bg-background hover:bg-muted/50 group relative">
+                  network.slice().reverse().map((req) => (
+                    <div 
+                      key={req.id} 
+                      className="p-2 rounded border bg-background hover:bg-muted/50 group relative cursor-pointer transition-colors"
+                      onClick={() => setSelectedNetwork(req)}
+                    >
                       <Button
                         size="icon"
                         variant="ghost"
                         className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100"
-                        onClick={() => copyToClipboard(req.url)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyToClipboard(req.url);
+                        }}
                       >
                         <Copy className="h-3 w-3" />
                       </Button>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="outline" className="shrink-0">
+                        <Badge variant="outline" className="shrink-0 font-semibold">
                           {req.method}
                         </Badge>
                         {req.status && (
-                          <span className={`shrink-0 font-semibold ${getStatusColor(req.status)}`}>
+                          <span className={`shrink-0 font-bold ${getStatusColor(req.status)}`}>
                             {req.status}
                           </span>
                         )}
                         {req.error && (
                           <AlertTriangle className="h-4 w-4 text-red-500" />
                         )}
-                        <span className="text-muted-foreground text-xs shrink-0">
+                        <span className={`text-xs shrink-0 font-semibold ${
+                          req.duration && req.duration < 100 ? 'text-green-500' :
+                          req.duration && req.duration < 500 ? 'text-yellow-500' :
+                          'text-red-500'
+                        }`}>
                           {req.duration}ms
                         </span>
                         <span className="text-muted-foreground shrink-0 text-xs">
                           {req.timestamp.toLocaleTimeString()}
                         </span>
                       </div>
-                      <div className="mt-1 text-xs break-all pr-8">
+                      <div className="mt-1 text-xs break-all pr-8 font-medium">
                         {req.url}
                       </div>
                       {req.error && (
-                        <div className="mt-1 text-xs text-red-500">
+                        <div className="mt-1 text-xs text-red-500 font-semibold">
                           Error: {req.error}
                         </div>
                       )}
@@ -509,26 +626,36 @@ export const DevTools = () => {
                 {performance ? (
                   <>
                     <div className="space-y-2">
-                      <h4 className="font-semibold text-sm">Page Load Metrics</h4>
+                      <h4 className="font-semibold text-sm flex items-center gap-2">
+                        <Gauge className="h-4 w-4" />
+                        Page Load Metrics
+                      </h4>
                       <div className="space-y-1 text-xs">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Total Load Time:</span>
-                          <span className="font-mono">{performance.loadTime}ms</span>
+                          <span className="font-mono font-semibold">{performance.loadTime}ms</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">DOM Ready:</span>
-                          <span className="font-mono">{performance.domReady}ms</span>
+                          <span className="font-mono font-semibold">{performance.domReady}ms</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Resources Loaded:</span>
+                          <span className="font-mono">{performance.resources}</span>
                         </div>
                       </div>
                     </div>
 
                     {performance.memory && (
                       <div className="space-y-2">
-                        <h4 className="font-semibold text-sm">Memory Usage</h4>
+                        <h4 className="font-semibold text-sm flex items-center gap-2">
+                          <Database className="h-4 w-4" />
+                          Memory Usage
+                        </h4>
                         <div className="space-y-1 text-xs">
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">JS Heap Size:</span>
-                            <span className="font-mono">
+                            <span className="text-muted-foreground">JS Heap Used:</span>
+                            <span className="font-mono font-semibold">
                               {(performance.memory.usedJSHeapSize / 1048576).toFixed(2)} MB
                             </span>
                           </div>
@@ -544,12 +671,23 @@ export const DevTools = () => {
                               {(performance.memory.jsHeapSizeLimit / 1048576).toFixed(2)} MB
                             </span>
                           </div>
+                          <div className="mt-2 pt-2 border-t">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Usage:</span>
+                              <span className="font-mono font-semibold">
+                                {((performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit) * 100).toFixed(1)}%
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
 
                     <div className="space-y-2">
-                      <h4 className="font-semibold text-sm">Current Stats</h4>
+                      <h4 className="font-semibold text-sm flex items-center gap-2">
+                        <Terminal className="h-4 w-4" />
+                        DevTools Stats
+                      </h4>
                       <div className="space-y-1 text-xs">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Console Logs:</span>
@@ -560,12 +698,34 @@ export const DevTools = () => {
                           <span className="font-mono">{network.length}</span>
                         </div>
                         <div className="flex justify-between">
+                          <span className="text-muted-foreground">Storage Items:</span>
+                          <span className="font-mono">{Object.keys(storage).length}</span>
+                        </div>
+                        <div className="flex justify-between">
                           <span className="text-muted-foreground">Errors:</span>
-                          <span className="font-mono text-red-500">{errorCount}</span>
+                          <span className="font-mono text-red-500 font-bold">{errorCount}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Warnings:</span>
-                          <span className="font-mono text-yellow-500">{warnCount}</span>
+                          <span className="font-mono text-yellow-500 font-bold">{warnCount}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm">Keyboard Shortcuts</h4>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Toggle DevTools:</span>
+                          <kbd className="px-2 py-1 bg-muted rounded border">⌘⇧D</kbd>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Clear Logs:</span>
+                          <kbd className="px-2 py-1 bg-muted rounded border">⌘K</kbd>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Close:</span>
+                          <kbd className="px-2 py-1 bg-muted rounded border">ESC</kbd>
                         </div>
                       </div>
                     </div>
@@ -579,7 +739,116 @@ export const DevTools = () => {
             </ScrollArea>
           </TabsContent>
         </Tabs>
-      </Card>
-    </div>
+        </Card>
+      </div>
+
+      {/* Network Request Details Dialog */}
+      <Dialog open={!!selectedNetwork} onOpenChange={() => setSelectedNetwork(null)}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Network className="h-5 w-5" />
+              Network Request Details
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedNetwork && (
+            <ScrollArea className="flex-1">
+              <div className="space-y-4 p-4">
+                <div>
+                  <h4 className="font-semibold text-sm mb-2">General</h4>
+                  <div className="space-y-1 text-xs font-mono">
+                    <div className="flex gap-2">
+                      <span className="text-muted-foreground w-24">Method:</span>
+                      <Badge variant="outline">{selectedNetwork.method}</Badge>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="text-muted-foreground w-24">Status:</span>
+                      <span className={getStatusColor(selectedNetwork.status)}>
+                        {selectedNetwork.status || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="text-muted-foreground w-24">Duration:</span>
+                      <span>{selectedNetwork.duration}ms</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="text-muted-foreground w-24">Time:</span>
+                      <span>{selectedNetwork.timestamp.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-sm mb-2">URL</h4>
+                  <div className="p-2 bg-muted rounded text-xs font-mono break-all">
+                    {selectedNetwork.url}
+                  </div>
+                </div>
+
+                {selectedNetwork.requestBody && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-sm">Request Body</h4>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => copyToClipboard(
+                          typeof selectedNetwork.requestBody === 'string' 
+                            ? selectedNetwork.requestBody 
+                            : JSON.stringify(selectedNetwork.requestBody, null, 2)
+                        )}
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copy
+                      </Button>
+                    </div>
+                    <pre className="p-3 bg-muted rounded text-xs font-mono overflow-auto max-h-48">
+                      {typeof selectedNetwork.requestBody === 'string'
+                        ? selectedNetwork.requestBody
+                        : JSON.stringify(selectedNetwork.requestBody, null, 2)}
+                    </pre>
+                  </div>
+                )}
+
+                {selectedNetwork.responseBody && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-sm">Response Body</h4>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => copyToClipboard(
+                          typeof selectedNetwork.responseBody === 'string'
+                            ? selectedNetwork.responseBody
+                            : JSON.stringify(selectedNetwork.responseBody, null, 2)
+                        )}
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copy
+                      </Button>
+                    </div>
+                    <pre className="p-3 bg-muted rounded text-xs font-mono overflow-auto max-h-64">
+                      {typeof selectedNetwork.responseBody === 'string'
+                        ? selectedNetwork.responseBody
+                        : JSON.stringify(selectedNetwork.responseBody, null, 2)}
+                    </pre>
+                  </div>
+                )}
+
+                {selectedNetwork.error && (
+                  <div>
+                    <h4 className="font-semibold text-sm mb-2 text-red-500">Error</h4>
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded text-xs font-mono">
+                      {selectedNetwork.error}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
