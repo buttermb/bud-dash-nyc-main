@@ -8,8 +8,10 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Shield, TrendingUp, CheckCircle, AlertTriangle, FileText } from "lucide-react";
+import { Shield, TrendingUp, CheckCircle, AlertTriangle, FileText, Gift } from "lucide-react";
 import PurchaseGiveawayEntries from "@/components/account/PurchaseGiveawayEntries";
+import LoyaltyPoints from "@/components/LoyaltyPoints";
+import IDVerificationUpload from "@/components/IDVerificationUpload";
 
 export default function UserAccount() {
   const navigate = useNavigate();
@@ -234,6 +236,22 @@ export default function UserAccount() {
           
           {/* Giveaway Entries */}
           <PurchaseGiveawayEntries />
+
+          {/* Loyalty Points */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Gift className="w-5 h-5" />
+                Loyalty & Rewards
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LoyaltyPoints />
+            </CardContent>
+          </Card>
+
+          {/* ID Verification */}
+          {!profile.id_verified && <IDVerificationUpload />}
         </div>
 
         {/* Sidebar */}

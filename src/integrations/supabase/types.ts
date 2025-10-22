@@ -3172,14 +3172,8 @@ export type Database = {
         }
         Returns: number
       }
-      calculate_risk_score: {
-        Args: { p_user_id: string }
-        Returns: number
-      }
-      check_is_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      calculate_risk_score: { Args: { p_user_id: string }; Returns: number }
+      check_is_admin: { Args: { _user_id: string }; Returns: boolean }
       create_courier_pin_session: {
         Args: { p_courier_id: string }
         Returns: string
@@ -3205,34 +3199,16 @@ export type Database = {
         Args: { _product_id: string; _quantity: number }
         Returns: boolean
       }
-      generate_admin_pin: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_entry_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_otp: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_referral_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_tracking_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_admin_pin: { Args: never; Returns: string }
+      generate_entry_number: { Args: never; Returns: string }
+      generate_otp: { Args: never; Returns: string }
+      generate_referral_code: { Args: never; Returns: string }
+      generate_tracking_code: { Args: never; Returns: string }
       generate_user_id_code: {
         Args: { p_borough: string; p_user_id: string }
         Returns: string
       }
-      get_admin_dashboard_metrics: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_admin_dashboard_metrics: { Args: never; Returns: Json }
       get_admin_orders: {
         Args: { limit_count?: number; offset_count?: number }
         Returns: {
@@ -3255,7 +3231,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["admin_role"]
       }
       get_couriers_with_daily_earnings: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           email: string
@@ -3270,10 +3246,7 @@ export type Database = {
           vehicle_type: string
         }[]
       }
-      get_order_by_tracking_code: {
-        Args: { code: string }
-        Returns: Json
-      }
+      get_order_by_tracking_code: { Args: { code: string }; Returns: Json }
       get_order_tracking_by_code: {
         Args: { tracking_code_param: string }
         Returns: {
@@ -3302,30 +3275,15 @@ export type Database = {
         }
         Returns: boolean
       }
-      hash_admin_pin: {
-        Args: { pin_text: string }
-        Returns: string
-      }
+      hash_admin_pin: { Args: { pin_text: string }; Returns: string }
       increment_coupon_usage: {
         Args: { coupon_id: string }
         Returns: undefined
       }
-      is_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      is_age_verified: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      is_device_blocked: {
-        Args: { _fingerprint: string }
-        Returns: boolean
-      }
-      is_ip_blocked: {
-        Args: { _ip_address: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_age_verified: { Args: { _user_id: string }; Returns: boolean }
+      is_device_blocked: { Args: { _fingerprint: string }; Returns: boolean }
+      is_ip_blocked: { Args: { _ip_address: string }; Returns: boolean }
       log_document_access: {
         Args: { _access_type: string; _verification_id: string }
         Returns: undefined
