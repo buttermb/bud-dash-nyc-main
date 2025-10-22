@@ -14,8 +14,12 @@ interface Message {
   created_at: string;
 }
 
-export const LiveChatWidget = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface LiveChatWidgetProps {
+  onClose?: () => void;
+}
+
+export const LiveChatWidget = ({ onClose }: LiveChatWidgetProps = {}) => {
+  const [isOpen, setIsOpen] = useState(!!onClose);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -182,7 +186,10 @@ export const LiveChatWidget = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setIsOpen(false)}
+          onClick={() => {
+            setIsOpen(false);
+            onClose?.();
+          }}
           className="hover:bg-primary-foreground/10"
         >
           <X className="w-5 h-5" />

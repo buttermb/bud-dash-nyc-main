@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Mail, MessageSquare, Phone, Clock } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { LiveChatWidget } from "@/components/LiveChatWidget";
 
 const Support = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ const Support = () => {
     orderNumber: "",
     message: "",
   });
+  const [showChat, setShowChat] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,7 +124,11 @@ const Support = () => {
                   <p className="text-muted-foreground mb-4">
                     Get instant help from our support team
                   </p>
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => setShowChat(true)}
+                  >
                     Start Live Chat
                   </Button>
                 </CardContent>
@@ -229,6 +235,7 @@ const Support = () => {
       </main>
 
       <Footer />
+      {showChat && <LiveChatWidget onClose={() => setShowChat(false)} />}
     </div>
   );
 };

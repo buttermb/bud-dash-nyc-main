@@ -34,7 +34,6 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AdminErrorBoundary } from "./components/admin/AdminErrorBoundary";
 import { SkipToContent } from "./components/SkipToContent";
 import { LoadingFallback } from "./components/LoadingFallback";
-import { LiveChatWidget } from "./components/LiveChatWidget";
 import { DevTools } from "./components/dev/DevTools";
 import { setupGlobalErrorHandlers, handleQueryError, handleMutationError } from "./utils/reactErrorHandler";
 import { useVersionCheck } from "./hooks/useVersionCheck";
@@ -311,7 +310,6 @@ const App = () => {
                     </Routes>
                   </Suspense>
                  </BrowserRouter>
-                <LiveChatWidget />
                 <DevTools />
               </TooltipProvider>
             </CourierPinProvider>
