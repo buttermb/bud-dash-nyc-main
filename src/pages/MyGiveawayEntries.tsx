@@ -257,6 +257,7 @@ export default function MyGiveawayEntries() {
                         type="text"
                         value={entry.referralLink}
                         readOnly
+                        aria-label="Referral link"
                         className="flex-1 bg-background px-4 py-3 rounded-lg text-sm border border-border focus:border-primary focus:outline-none transition-colors"
                         onClick={(e) => e.currentTarget.select()}
                       />

@@ -35,7 +35,13 @@ export default function UserAccount() {
         .from("profiles")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
+
+      if (!profileData) {
+        toast.error("Profile not found. Please contact support.");
+        navigate("/");
+        return;
+      }
 
       const { data: ordersData } = await supabase
         .from("orders")
