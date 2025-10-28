@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 
 export const useAdminKeyboardShortcuts = () => {
   const navigate = useNavigate();
+  const [shortcutsVisible, setShortcutsVisible] = useState(false);
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -12,6 +13,13 @@ export const useAdminKeyboardShortcuts = () => {
         e.preventDefault();
         navigate('/admin/search');
         toast({ title: 'Opening Global Search' });
+        return;
+      }
+
+      // Check if ? is pressed (for shortcuts help)
+      if (e.key === '?' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setShortcutsVisible(true);
         return;
       }
 
@@ -48,6 +56,14 @@ export const useAdminKeyboardShortcuts = () => {
             navigate('/admin/live-orders');
             toast({ title: 'Live Orders' });
             break;
+          case 'a':
+            navigate('/admin/analytics');
+            toast({ title: 'Analytics' });
+            break;
+          case 's':
+            navigate('/admin/settings');
+            toast({ title: 'Settings' });
+            break;
         }
       }
     };
@@ -55,4 +71,6 @@ export const useAdminKeyboardShortcuts = () => {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [navigate]);
+
+  return { shortcutsVisible, setShortcutsVisible };
 };
