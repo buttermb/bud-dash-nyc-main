@@ -7,13 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Shield, TrendingUp, CheckCircle, AlertTriangle, FileText, Gift, Settings } from "lucide-react";
+import { Shield, TrendingUp, CheckCircle, AlertTriangle, FileText, Gift, Settings, User, Package } from "lucide-react";
 import CopyButton from "@/components/CopyButton";
 import { BetterEmptyState } from "@/components/BetterEmptyState";
 import PurchaseGiveawayEntries from "@/components/account/PurchaseGiveawayEntries";
 import LoyaltyPoints from "@/components/LoyaltyPoints";
 import IDVerificationUpload from "@/components/IDVerificationUpload";
+import Navigation from "@/components/Navigation";
 
 export default function UserAccount() {
   const navigate = useNavigate();
@@ -33,11 +35,19 @@ export default function UserAccount() {
         return;
       }
 
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
+      
+      if (profileError) throw profileError;
+      if (!profileData) {
+        toast.error("Profile not found. Creating profile...");
+        // Profile will be created by trigger or admin
+        navigate("/");
+        return;
+      }
 
       const { data: ordersData } = await supabase
         .from("orders")
@@ -72,42 +82,66 @@ export default function UserAccount() {
     return "text-red-600";
   };
 
-  if (loading) {
-    return <div className="container mx-auto p-6">Loading...</div>;
-  }
-
-  if (!profile) {
-    return <div className="container mx-auto p-6">Profile not found</div>;
-  }
-
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <h1 className="text-3xl font-bold mb-6">My Account</h1>
+    <>
+      <Navigation />
+      <div className="container mx-auto p-6 max-w-6xl">
+        <h1 className="text-3xl font-bold mb-6">My Account</h1>
 
-      {/* Account Status Alert */}
-      {profile.account_status !== "active" && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Your account status is: {profile.account_status.toUpperCase()}
-            {profile.account_status === "suspended" && " - Please contact support."}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Account Overview */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Trust Score Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                Your Trust Score
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+        {/* Loading State */}
+        {loading && (
+          <div className="space-y-6">
+            <Skeleton className="h-12 w-full" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="h-48" />
+                ))}
+              </div>
               <div className="space-y-4">
+                {[...Array(2)].map((_, i) => (
+                  <Skeleton key={i} className="h-48" />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!loading && !profile && (
+          <BetterEmptyState
+            icon={User}
+            title="Profile not found"
+            description="We couldn't load your account information. Please try refreshing the page."
+            action={{ label: "Refresh Page", onClick: () => window.location.reload() }}
+          />
+        )}
+
+        {!loading && profile && (
+          <>
+            {/* Account Status Alert */}
+            {profile.account_status !== "active" && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Your account status is: {profile.account_status.toUpperCase()}
+                  {profile.account_status === "suspended" && " - Please contact support."}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Account Overview */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Trust Score Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="w-5 h-5" />
+                      Your Trust Score
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-4xl font-bold">
@@ -172,11 +206,11 @@ export default function UserAccount() {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
 
-          {/* Spending Overview */}
-          <Card>
+                {/* Spending Overview */}
+                <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
@@ -205,8 +239,8 @@ export default function UserAccount() {
             </CardContent>
           </Card>
 
-          {/* Recent Orders */}
-          <Card>
+                {/* Recent Orders */}
+                <Card>
             <CardHeader>
               <CardTitle>Recent Orders</CardTitle>
             </CardHeader>
@@ -243,11 +277,11 @@ export default function UserAccount() {
             </CardContent>
           </Card>
           
-          {/* Giveaway Entries */}
-          <PurchaseGiveawayEntries />
+                {/* Giveaway Entries */}
+                <PurchaseGiveawayEntries />
 
-          {/* Loyalty Points */}
-          <Card>
+                {/* Loyalty Points */}
+                <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Gift className="w-5 h-5" />
@@ -259,14 +293,14 @@ export default function UserAccount() {
             </CardContent>
           </Card>
 
-          {/* ID Verification */}
-          {!profile.id_verified && <IDVerificationUpload />}
-        </div>
+                {/* ID Verification */}
+                {!profile.id_verified && <IDVerificationUpload />}
+              </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Account Limits */}
-          <Card>
+              {/* Sidebar */}
+              <div className="space-y-6">
+                  {/* Account Limits */}
+                <Card>
             <CardHeader>
               <CardTitle>Spending Limits</CardTitle>
             </CardHeader>
@@ -293,8 +327,8 @@ export default function UserAccount() {
             </CardContent>
           </Card>
 
-          {/* Account Info */}
-          <Card>
+                {/* Account Info */}
+                <Card>
             <CardHeader>
               <CardTitle>Account Info</CardTitle>
             </CardHeader>
@@ -319,8 +353,8 @@ export default function UserAccount() {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card>
+                {/* Quick Actions */}
+                <Card>
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
@@ -343,6 +377,9 @@ export default function UserAccount() {
           </Card>
         </div>
       </div>
-    </div>
+          </>
+        )}
+      </div>
+    </>
   );
 }
