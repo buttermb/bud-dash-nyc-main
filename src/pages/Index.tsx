@@ -17,6 +17,8 @@ const ProductTrustElements = lazy(() => import("@/components/ProductTrustElement
 const HowItWorks = lazy(() => import("@/components/HowItWorks"));
 const TrendingProducts = lazy(() => import("@/components/TrendingProducts"));
 const InstallPWA = lazy(() => import("@/components/InstallPWA"));
+const EmailCaptureSection = lazy(() => import("@/components/EmailCaptureSection"));
+const FeaturedReviews = lazy(() => import("@/components/FeaturedReviews"));
 
 
 const Index = () => {
@@ -108,6 +110,31 @@ const Index = () => {
           <ProductTrustElements />
         </Suspense>
       </motion.div>
+
+      {/* Customer Reviews */}
+      <motion.section 
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="bg-background"
+      >
+        <Suspense fallback={<EnhancedLoadingState variant="card" count={3} />}>
+          <FeaturedReviews />
+        </Suspense>
+      </motion.section>
+
+      {/* Newsletter Signup */}
+      <motion.section 
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <Suspense fallback={null}>
+          <EmailCaptureSection />
+        </Suspense>
+      </motion.section>
       
       {/* PWA Install Prompt */}
       <motion.div
