@@ -28,6 +28,7 @@ export default function CourierHistory() {
   const [orders, setOrders] = useState<HistoryOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [period, setPeriod] = useState<'today' | 'week' | 'month'>('today');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     if (courier && orders.length === 0) {
@@ -88,8 +89,13 @@ export default function CourierHistory() {
     );
   }
 
-  const totalDeliveries = orders.length;
-  const totalEarned = orders.reduce((sum, o) => sum + o.courier_commission + (o.tip_amount || 0), 0);
+  // Filter orders by status if needed
+  const filteredOrders = statusFilter === 'all' 
+    ? orders 
+    : orders.filter(o => o.status === statusFilter);
+
+  const totalDeliveries = filteredOrders.length;
+  const totalEarned = filteredOrders.reduce((sum, o) => sum + o.courier_commission + (o.tip_amount || 0), 0);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
@@ -108,8 +114,9 @@ export default function CourierHistory() {
         </div>
       </div>
 
-      {/* Period Selector */}
-      <div className="p-4">
+      {/* Filters */}
+      <div className="px-4 space-y-3">
+        {/* Period Selector */}
         <div className="bg-white rounded-xl shadow p-2 flex gap-2">
           {(['today', 'week', 'month'] as const).map(p => (
             <button
@@ -129,6 +136,42 @@ export default function CourierHistory() {
             </button>
           ))}
         </div>
+
+        {/* Status Filter */}
+        {orders.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`px-4 py-2 rounded-full font-semibold text-sm whitespace-nowrap ${
+                statusFilter === 'all' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'bg-white text-gray-600'
+              }`}
+            >
+              All ({orders.length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('delivered')}
+              className={`px-4 py-2 rounded-full font-semibold text-sm whitespace-nowrap ${
+                statusFilter === 'delivered' 
+                  ? 'bg-green-600 text-white' 
+                  : 'bg-white text-gray-600'
+              }`}
+            >
+              Delivered ({orders.filter(o => o.status === 'delivered').length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('cancelled')}
+              className={`px-4 py-2 rounded-full font-semibold text-sm whitespace-nowrap ${
+                statusFilter === 'cancelled' 
+                  ? 'bg-red-600 text-white' 
+                  : 'bg-white text-gray-600'
+              }`}
+            >
+              Cancelled ({orders.filter(o => o.status === 'cancelled').length})
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Summary Stats */}
@@ -151,15 +194,21 @@ export default function CourierHistory() {
       <div className="px-4">
         <h3 className="font-bold text-lg mb-3">Completed Deliveries</h3>
         
-        {orders.length === 0 ? (
+        {filteredOrders.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📦</div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">No deliveries yet</h3>
-            <p className="text-gray-600">Your completed deliveries will appear here</p>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              {orders.length === 0 ? 'No deliveries yet' : 'No matching deliveries'}
+            </h3>
+            <p className="text-gray-600">
+              {orders.length === 0 
+                ? 'Your completed deliveries will appear here' 
+                : 'Try adjusting your filters'}
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
-            {orders.map(order => (
+            {filteredOrders.map(order => (
               <div key={order.id} className="bg-white rounded-xl shadow p-4">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">

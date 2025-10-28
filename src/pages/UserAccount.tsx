@@ -86,7 +86,17 @@ export default function UserAccount() {
     <>
       <Navigation />
       <div className="container mx-auto p-6 max-w-6xl">
+<<<<<<< Updated upstream
         <h1 className="text-3xl font-bold mb-6">My Account</h1>
+=======
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">My Account</h1>
+          <Button onClick={() => navigate("/account/settings")}>
+            <Settings className="w-4 h-4 mr-2" />
+            Edit Profile
+          </Button>
+        </div>
+>>>>>>> Stashed changes
 
         {/* Loading State */}
         {loading && (

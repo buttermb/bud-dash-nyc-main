@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw, AlertTriangle, MapPin, Clock } from 'lucide-react';
+import { Loader2, RefreshCw, AlertTriangle, MapPin, Clock, Check, X } from 'lucide-react';
 import { getNeighborhoodFromZip, getRiskColor, getRiskLabel, getRiskTextColor } from '@/utils/neighborhoods';
 import { useRealtimeOrders } from '@/hooks/useRealtimeOrders';
 import { OrderMap } from '@/components/admin/OrderMap';
@@ -73,6 +74,7 @@ export default function AdminOrders() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [showMap, setShowMap] = useState(true);
+  const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
 
   const { orders, loading, refetch } = useRealtimeOrders({
     statusFilter: statusFilter === 'all' ? undefined : [statusFilter]
@@ -119,6 +121,37 @@ export default function AdminOrders() {
     } catch (error: any) {
       toast({
         title: 'Failed to update status',
+        description: error.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const bulkUpdateStatus = async (newStatus: string) => {
+    if (selectedOrders.size === 0) return;
+    const count = selectedOrders.size;
+    
+    setUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .in('id', Array.from(selectedOrders));
+      
+      if (error) throw error;
+      
+      toast({
+        title: `✓ ${count} order(s) updated`,
+        description: `Status changed to ${formatStatus(newStatus)}`
+      });
+      
+      setSelectedOrders(new Set());
+      await refetch();
+    } catch (error: any) {
+      toast({
+        title: 'Bulk update failed',
         description: error.message,
         variant: 'destructive'
       });
@@ -237,12 +270,53 @@ export default function AdminOrders() {
         </div>
       )}
 
+      {/* Bulk Actions Bar */}
+      {selectedOrders.size > 0 && (
+        <div className="bg-primary text-primary-foreground p-4 rounded-lg flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <span className="font-semibold">{selectedOrders.size} order(s) selected</span>
+          </div>
+          <div className="flex gap-2">
+            {statusOptions.map(option => (
+              <Button
+                key={option.value}
+                variant="secondary"
+                size="sm"
+                onClick={() => bulkUpdateStatus(option.value)}
+                disabled={updating}
+              >
+                Set as {option.label}
+              </Button>
+            ))}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setSelectedOrders(new Set())}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Orders Table */}
       <div className="bg-card rounded-xl shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-muted border-b">
               <tr>
+                <th className="px-6 py-4 w-12">
+                  <Checkbox
+                    checked={selectedOrders.size === filteredOrders.length && filteredOrders.length > 0}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedOrders(new Set(filteredOrders.map(o => o.id)));
+                      } else {
+                        setSelectedOrders(new Set());
+                      }
+                    }}
+                  />
+                </th>
                 <th className="px-6 py-4 text-left text-xs font-bold uppercase">Order #</th>
                 <th className="px-6 py-4 text-left text-xs font-bold uppercase">Customer</th>
                 <th className="px-6 py-4 text-left text-xs font-bold uppercase">Merchant</th>
@@ -257,6 +331,20 @@ export default function AdminOrders() {
                 const neighborhood = order.addresses?.zip_code ? getNeighborhoodFromZip(order.addresses.zip_code) : null;
                 return (
                 <tr key={order.id} className="hover:bg-muted/50">
+                  <td className="px-6 py-4">
+                    <Checkbox
+                      checked={selectedOrders.has(order.id)}
+                      onCheckedChange={(checked) => {
+                        const newSet = new Set(selectedOrders);
+                        if (checked) {
+                          newSet.add(order.id);
+                        } else {
+                          newSet.delete(order.id);
+                        }
+                        setSelectedOrders(newSet);
+                      }}
+                    />
+                  </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       {neighborhood && (

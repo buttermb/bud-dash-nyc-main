@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import CopyButton from "@/components/CopyButton";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { ArrowLeft } from "lucide-react";
 
 interface Profile {
   user_id: string;
@@ -38,17 +40,23 @@ export default function AccountSettings() {
           return;
         }
         setEmail(user.email || "");
-        const { data } = await supabase
-          .from("profiles")
-          .select("user_id, full_name, phone, id_verified, user_id_code, marketing_opt_in")
-          .eq("user_id", user.id)
-          .single();
+      const { data, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, phone, id_verified, user_id_code, marketing_opt_in")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
+        if (profileError) throw profileError;
+        
         if (data) {
           setProfile(data as Profile);
           setFullName(data.full_name || "");
           setPhone(data.phone || "");
           setMarketingOptIn(Boolean(data.marketing_opt_in));
+        } else {
+          toast.error("Profile not found");
+          navigate("/account");
+          return;
         }
       } catch (e) {
         toast.error("Failed to load settings");
@@ -94,7 +102,22 @@ export default function AccountSettings() {
 
   return (
     <div className="container mx-auto p-6 max-w-3xl">
-      <h1 className="text-3xl font-bold mb-6">Account Settings</h1>
+      <Breadcrumbs items={[
+        { label: "Home", href: "/" },
+        { label: "Account", href: "/account" },
+        { label: "Settings" }
+      ]} />
+      
+      <div className="flex items-center gap-4 mb-6">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={() => navigate("/account")}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h1 className="text-3xl font-bold">Account Settings</h1>
+      </div>
 
       <Card className="mb-6">
         <CardHeader>
