@@ -16,12 +16,14 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground hover:scale-105",
         link: "text-primary underline-offset-4 hover:underline hover:brightness-110",
         hero: "bg-gradient-to-r from-primary via-primary to-primary bg-[length:200%_100%] text-primary-foreground hover:bg-[position:100%_0] shadow-strong hover:shadow-elegant hover:scale-105 hover:brightness-110 font-semibold relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent before:translate-x-[-200%] hover:before:translate-x-[200%] before:transition-transform before:duration-700",
+        mobile: "w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-lg active:scale-95 md:w-auto md:shadow-none md:active:scale-100", // Mobile-optimized variant
       },
       size: {
         default: "h-11 px-4 py-2 min-h-[44px]", // 44px minimum for touch targets
         sm: "h-10 rounded-md px-3 min-h-[40px]",
         lg: "h-12 rounded-md px-8 min-h-[48px]",
         icon: "h-11 w-11 min-h-[44px] min-w-[44px]", // 44px minimum for touch
+        mobile: "h-12 px-6 min-h-[48px] text-base", // Extra large for mobile
       },
     },
     defaultVariants: {

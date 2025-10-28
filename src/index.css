@@ -98,6 +98,75 @@
   * {
     @apply border-border;
   }
+  
+  /* Mobile-first improvements */
+  @media (max-width: 768px) {
+    /* Better tap targets */
+    button, a, input, select, textarea {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Improved touch interactions */
+    button, a {
+      -webkit-tap-highlight-color: transparent;
+      tap-highlight-color: transparent;
+    }
+    
+    /* Smooth scrolling for iOS */
+    html {
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Better font rendering on mobile */
+    body {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+    
+    /* Larger click targets for mobile */
+    .mobile-touch-safe {
+      min-height: 44px;
+      min-width: 44px;
+      padding: 12px;
+    }
+    
+    /* Safe area insets for notched devices */
+    .safe-area-top {
+      padding-top: env(safe-area-inset-top);
+    }
+    
+    .safe-area-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .safe-area-inset {
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+    
+    /* Better mobile spacing */
+    .mobile-padding {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    
+    /* Mobile-friendly container */
+    .mobile-container {
+      width: 100%;
+      max-width: 100%;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    /* Prevent zoom on input focus (iOS Safari) */
+    input, select, textarea {
+      font-size: 16px;
+    }
+  }
 
   body {
     @apply bg-background text-foreground;
