@@ -7,11 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Shield, TrendingUp, CheckCircle, AlertTriangle, FileText, Gift } from "lucide-react";
+import { Shield, TrendingUp, CheckCircle, AlertTriangle, FileText, Gift, Settings, User, Package } from "lucide-react";
+import CopyButton from "@/components/CopyButton";
+import { BetterEmptyState } from "@/components/BetterEmptyState";
 import PurchaseGiveawayEntries from "@/components/account/PurchaseGiveawayEntries";
 import LoyaltyPoints from "@/components/LoyaltyPoints";
 import IDVerificationUpload from "@/components/IDVerificationUpload";
+import Navigation from "@/components/Navigation";
 
 export default function UserAccount() {
   const navigate = useNavigate();
@@ -31,14 +35,16 @@ export default function UserAccount() {
         return;
       }
 
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
-
+      
+      if (profileError) throw profileError;
       if (!profileData) {
-        toast.error("Profile not found. Please contact support.");
+        toast.error("Profile not found. Creating profile...");
+        // Profile will be created by trigger or admin
         navigate("/");
         return;
       }
@@ -76,42 +82,76 @@ export default function UserAccount() {
     return "text-red-600";
   };
 
-  if (loading) {
-    return <div className="container mx-auto p-6">Loading...</div>;
-  }
-
-  if (!profile) {
-    return <div className="container mx-auto p-6">Profile not found</div>;
-  }
-
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <h1 className="text-3xl font-bold mb-6">My Account</h1>
+    <>
+      <Navigation />
+      <div className="container mx-auto p-6 max-w-6xl">
+<<<<<<< Updated upstream
+        <h1 className="text-3xl font-bold mb-6">My Account</h1>
+=======
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">My Account</h1>
+          <Button onClick={() => navigate("/account/settings")}>
+            <Settings className="w-4 h-4 mr-2" />
+            Edit Profile
+          </Button>
+        </div>
+>>>>>>> Stashed changes
 
-      {/* Account Status Alert */}
-      {profile.account_status !== "active" && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Your account status is: {profile.account_status.toUpperCase()}
-            {profile.account_status === "suspended" && " - Please contact support."}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Account Overview */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Trust Score Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                Your Trust Score
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+        {/* Loading State */}
+        {loading && (
+          <div className="space-y-6">
+            <Skeleton className="h-12 w-full" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="h-48" />
+                ))}
+              </div>
               <div className="space-y-4">
+                {[...Array(2)].map((_, i) => (
+                  <Skeleton key={i} className="h-48" />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!loading && !profile && (
+          <BetterEmptyState
+            icon={User}
+            title="Profile not found"
+            description="We couldn't load your account information. Please try refreshing the page."
+            action={{ label: "Refresh Page", onClick: () => window.location.reload() }}
+          />
+        )}
+
+        {!loading && profile && (
+          <>
+            {/* Account Status Alert */}
+            {profile.account_status !== "active" && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Your account status is: {profile.account_status.toUpperCase()}
+                  {profile.account_status === "suspended" && " - Please contact support."}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Account Overview */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Trust Score Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="w-5 h-5" />
+                      Your Trust Score
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-4xl font-bold">
@@ -176,11 +216,11 @@ export default function UserAccount() {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
 
-          {/* Spending Overview */}
-          <Card>
+                {/* Spending Overview */}
+                <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
@@ -209,14 +249,18 @@ export default function UserAccount() {
             </CardContent>
           </Card>
 
-          {/* Recent Orders */}
-          <Card>
+                {/* Recent Orders */}
+                <Card>
             <CardHeader>
               <CardTitle>Recent Orders</CardTitle>
             </CardHeader>
             <CardContent>
               {orders.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No orders yet</p>
+                <BetterEmptyState
+                  title="No orders yet"
+                  description="Your recent orders will appear here once you place one."
+                  action={{ label: "Browse Products", onClick: () => navigate("/") }}
+                />
               ) : (
                 <div className="space-y-4">
                   {orders.map((order) => (
@@ -227,11 +271,14 @@ export default function UserAccount() {
                           {new Date(order.created_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right space-y-1">
                         <p className="font-semibold">${order.total_amount?.toFixed(2)}</p>
                         <Badge variant={order.status === "delivered" ? "default" : "outline"}>
                           {order.status}
                         </Badge>
+                        {order.order_number && (
+                          <div className="flex justify-end"><CopyButton text={order.order_number} label="Order #" size="icon" showLabel={false} /></div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -240,11 +287,11 @@ export default function UserAccount() {
             </CardContent>
           </Card>
           
-          {/* Giveaway Entries */}
-          <PurchaseGiveawayEntries />
+                {/* Giveaway Entries */}
+                <PurchaseGiveawayEntries />
 
-          {/* Loyalty Points */}
-          <Card>
+                {/* Loyalty Points */}
+                <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Gift className="w-5 h-5" />
@@ -256,14 +303,14 @@ export default function UserAccount() {
             </CardContent>
           </Card>
 
-          {/* ID Verification */}
-          {!profile.id_verified && <IDVerificationUpload />}
-        </div>
+                {/* ID Verification */}
+                {!profile.id_verified && <IDVerificationUpload />}
+              </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Account Limits */}
-          <Card>
+              {/* Sidebar */}
+              <div className="space-y-6">
+                  {/* Account Limits */}
+                <Card>
             <CardHeader>
               <CardTitle>Spending Limits</CardTitle>
             </CardHeader>
@@ -290,15 +337,20 @@ export default function UserAccount() {
             </CardContent>
           </Card>
 
-          {/* Account Info */}
-          <Card>
+                {/* Account Info */}
+                <Card>
             <CardHeader>
               <CardTitle>Account Info</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">User ID</span>
-                <span className="font-mono text-xs">{profile.user_id_code || "Pending"}</span>
+                <span className="font-mono text-xs flex items-center gap-2">
+                  {profile.user_id_code || "Pending"}
+                  {profile.user_id_code && (
+                    <CopyButton text={profile.user_id_code} label="User ID" size="icon" showLabel={false} />
+                  )}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Member Since</span>
@@ -311,8 +363,8 @@ export default function UserAccount() {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card>
+                {/* Quick Actions */}
+                <Card>
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
@@ -320,6 +372,10 @@ export default function UserAccount() {
               <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/my-orders")}>
                 <FileText className="w-4 h-4 mr-2" />
                 View All Orders
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/account/settings")}>
+                <Settings className="w-4 h-4 mr-2" />
+                Account Settings
               </Button>
               {!profile.id_verified && (
                 <Button variant="outline" className="w-full justify-start">
@@ -331,6 +387,9 @@ export default function UserAccount() {
           </Card>
         </div>
       </div>
-    </div>
+          </>
+        )}
+      </div>
+    </>
   );
 }

@@ -115,6 +115,7 @@ const AdminGiveawayWinners = lazy(() => import("./pages/admin/AdminGiveawayWinne
 const AdminGiveawayForm = lazy(() => import("./pages/admin/AdminGiveawayForm"));
 const GiveawayRules = lazy(() => import("./pages/GiveawayRules"));
 const MyGiveawayEntries = lazy(() => import("./pages/MyGiveawayEntries"));
+const AccountSettings = lazy(() => import("./pages/AccountSettings"));
 const CouponList = lazy(() => import("./pages/admin/CouponList"));
 const CouponForm = lazy(() => import("./pages/admin/CouponForm"));
 const CouponEdit = lazy(() => import("./pages/admin/CouponEdit"));
@@ -257,6 +258,7 @@ const App = () => {
                       <Route path="/order-tracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
                       <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
                       <Route path="/account" element={<ProtectedRoute><UserAccount /></ProtectedRoute>} />
+                      <Route path="/account/settings" element={<ProtectedRoute><AccountSettings /></ProtectedRoute>} />
                       <Route path="/settings/notifications" element={
                         <ProtectedRoute><NotificationPreferences /></ProtectedRoute>
                       } />

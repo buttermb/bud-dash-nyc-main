@@ -17,6 +17,10 @@ export const OptimizedProductImage = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  // Extract base URL and prepare responsive sources
+  const imageName = src.split('/').pop()?.split('.')[0] || '';
+  const isPublicImage = src.includes('/products/') || src.includes('/public/');
+  
   return (
     <div className={`relative overflow-hidden ${className}`}>
       {isLoading && !error && (
@@ -27,6 +31,7 @@ export const OptimizedProductImage = ({
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}
         decoding="async"
+        fetchPriority={priority ? 'high' : 'auto'}
         onLoad={() => setIsLoading(false)}
         onError={() => {
           setIsLoading(false);
@@ -37,6 +42,10 @@ export const OptimizedProductImage = ({
           ${isLoading ? 'opacity-0' : 'opacity-100'}
           ${error ? 'opacity-50' : ''}
         `}
+        style={{
+          contentVisibility: 'auto',
+          willChange: isLoading ? 'opacity' : 'auto',
+        }}
       />
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-muted">

@@ -8,14 +8,17 @@ import { Loader2, Leaf, Cookie, Droplets, Cigarette, Wind, ChevronRight, Chevron
 import { cn } from "@/lib/utils";
 import { useInventoryBatch } from "@/hooks/useInventoryBatch";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 
 const INITIAL_CATEGORIES_TO_SHOW = 2;
 
 const ProductCatalog = () => {
   const queryClient = useQueryClient();
-  const [searchQuery, setSearchQuery] = useState("");
   const [showAllCategories, setShowAllCategories] = useState(false);
   const isMobile = useIsMobile();
+  
+  // Persistent search query that remembers between sessions
+  const [searchQuery, setSearchQuery] = useLocalStorageState("product-catalog-search", "");
 
   // Realtime subscription for product updates
   useEffect(() => {

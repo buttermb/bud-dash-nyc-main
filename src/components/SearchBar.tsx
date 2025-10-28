@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useDebounce } from '@/hooks/useDebounce';
+import { RecentSearches } from './RecentSearches';
 
 interface SearchBarProps {
   variant?: 'full' | 'icon';
@@ -64,6 +65,10 @@ export function SearchBar({ variant = 'full' }: SearchBarProps) {
     setSearch('');
   };
 
+  const handleSearchSubmit = (searchTerm: string) => {
+    setSearch(searchTerm);
+  };
+
   return (
     <>
       {variant === 'icon' ? (
@@ -103,6 +108,11 @@ export function SearchBar({ variant = 'full' }: SearchBarProps) {
               />
               {loading && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
             </div>
+            {search.length === 0 && (
+              <div className="p-3 border-b">
+                <RecentSearches onSelect={handleSearchSubmit} />
+              </div>
+            )}
             <Command.List className="max-h-[400px] overflow-y-auto p-2">
               {!search && (
                 <div className="py-6 text-center text-sm text-muted-foreground">

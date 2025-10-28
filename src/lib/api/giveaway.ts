@@ -9,7 +9,7 @@ export async function getGiveaway(slug: string) {
     .select('*')
     .eq('slug', slug)
     .eq('status', 'active')
-    .maybeSingle();
+    .single();
 
   if (error) {
     console.error('Error:', error);

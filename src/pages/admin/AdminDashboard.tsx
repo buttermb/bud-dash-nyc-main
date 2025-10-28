@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedMetricCard } from "@/components/admin/AnimatedMetricCard";
 import { RealtimeActivityFeed } from "@/components/admin/RealtimeActivityFeed";
 import { QuickActionGrid } from "@/components/admin/QuickActionGrid";
+import { RealtimeIndicator } from "@/components/RealtimeIndicator";
 import { motion } from "framer-motion";
 
 interface DashboardMetrics {
@@ -43,6 +44,8 @@ const AdminDashboard = () => {
   const [realtimeActivity, setRealtimeActivity] = useState<any[]>([]);
   const [systemAlerts, setSystemAlerts] = useState<any[]>([]);
   const [systemHealth, setSystemHealth] = useState({ status: "healthy", unresolvedFlags: 0, activeUsers: 0, ordersLastHour: 0 });
+  const [isConnected, setIsConnected] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
 
   useEffect(() => {
     if (session) {
@@ -67,6 +70,7 @@ const AdminDashboard = () => {
           })
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
             if (isMounted) {
+              setLastUpdate(new Date());
               setRealtimeActivity(prev => [{
                 type: 'new_order',
                 message: `New order #${payload.new.order_number}`,
@@ -77,6 +81,7 @@ const AdminDashboard = () => {
           })
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'fraud_flags' }, (payload) => {
             if (isMounted) {
+              setLastUpdate(new Date());
               setSystemAlerts(prev => [{
                 type: 'fraud_alert',
                 severity: 'high',
@@ -86,12 +91,18 @@ const AdminDashboard = () => {
             }
           })
           .subscribe((status) => {
+            if (isMounted) {
+              setIsConnected(status === 'SUBSCRIBED');
+              if (status === 'SUBSCRIBED') setLastUpdate(new Date());
+            }
             if (status === 'CHANNEL_ERROR' && isMounted) {
               console.error('Failed to subscribe to admin dashboard channel');
+              setIsConnected(false);
             }
           });
       } catch (error) {
         console.error('Error setting up realtime channel:', error);
+        if (isMounted) setIsConnected(false);
       }
     };
 
@@ -173,16 +184,19 @@ const AdminDashboard = () => {
             Real-time metrics and key performance indicators
           </p>
         </div>
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 500 }}
-        >
-          <Badge variant={systemHealth.status === "healthy" ? "default" : "destructive"} className="gap-1">
-            <Activity className="h-3 w-3" />
-            {systemHealth.status === "healthy" ? "System Healthy" : "Attention Required"}
-          </Badge>
-        </motion.div>
+        <div className="flex items-center gap-3">
+          <RealtimeIndicator isConnected={isConnected} lastUpdate={lastUpdate} />
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 500 }}
+          >
+            <Badge variant={systemHealth.status === "healthy" ? "default" : "destructive"} className="gap-1">
+              <Activity className="h-3 w-3" />
+              {systemHealth.status === "healthy" ? "System Healthy" : "Attention Required"}
+            </Badge>
+          </motion.div>
+        </div>
       </motion.div>
 
       {/* System Health Snapshot with Animation */}

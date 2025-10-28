@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import { ShoppingBag, Package } from "lucide-react";
+import { QuickReorderButton } from "@/components/QuickReorderButton";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { PullToRefresh } from "@/components/PullToRefresh";
@@ -59,7 +60,14 @@ export default function MyOrders() {
     try {
       const { data, error } = await supabase
         .from("orders")
-        .select("*")
+        .select(`
+          *,
+          order_items (
+            product_id,
+            quantity,
+            selected_weight
+          )
+        `)
         .eq("user_id", user?.id)
         .order("created_at", { ascending: false });
 
@@ -182,7 +190,13 @@ export default function MyOrders() {
                             <p className="text-sm text-muted-foreground">Delivery</p>
                             <p className="font-semibold">{order.delivery_borough}</p>
                           </div>
-                          <div className="flex items-end justify-end">
+                          <div className="flex items-end justify-end gap-2">
+                            {order.order_items && order.order_items.length > 0 && (
+                              <QuickReorderButton
+                                orderId={order.id}
+                                orderItems={order.order_items}
+                              />
+                            )}
                             <Button
                               variant="outline"
                               onClick={() => {
